@@ -4692,6 +4692,26 @@ function drawHub() {
     return;
   }
   drawNjStreet();
+
+  // Holland Tunnel portal at the east edge — a real structure you drive into
+  if (state.scene === 'hub') {
+    const px0 = 1226, py0 = 196;
+    px(ctx, px0, py0, 54, 14, '#5a4a38'); // fascia
+    px(ctx, px0, py0, 54, 4, '#7a6848');
+    px(ctx, px0 + 4, py0 + 14, 8, 104, '#4a3e30'); // left pillar
+    px(ctx, px0 + 42, py0 + 14, 8, 104, '#4a3e30'); // right pillar
+    px(ctx, px0 + 12, py0 + 14, 30, 104, '#0a0c12'); // tunnel mouth darkness
+    px(ctx, px0 + 12, py0 + 14, 30, 8, '#161a24');
+    const glow = .5 + Math.sin(state.time * 2.2) * .3;
+    ctx.save();
+    ctx.globalAlpha = glow;
+    px(ctx, px0 + 16, py0 + 20, 4, 3, '#e8b822'); // interior lights receding
+    px(ctx, px0 + 24, py0 + 24, 3, 2, '#e8b822');
+    px(ctx, px0 + 30, py0 + 28, 2, 2, '#e8b822');
+    ctx.restore();
+    outlineText(ctx, 'HOLLAND TUNNEL', px0 + 27, py0 + 10, '#ffe78a', 5, 'center');
+    outlineText(ctx, 'NEW YORK →', px0 + 27, py0 + 130, '#9fd4ec', 5, 'center');
+  }
 }
 
 function drawNjStreet() {
