@@ -286,6 +286,9 @@ export class AudioSys {
       if (this.musicMode === 'nyc' && Math.random() < .02) this.sfx('honk'); // cabbies
       if (this.musicMode === 'nyc' && Math.random() < .008) { for (let i = 0; i < 5; i++) setTimeout(() => this.tone(660 + i * 90, .06, 'sine', .006), i * 90); } // distant siren
       if (this.musicMode === 'nyc' && Math.random() < .025) this.noise(.02 + Math.random() * .03, .005, 0, 2400 + Math.random() * 800); // bus brakes
+      if (this.musicMode === 'dream' && Math.random() < .12) this.noise(.3 + Math.random() * .25, .006, 0, 500 + Math.random() * 300); // waves rolling in
+      if (this.musicMode === 'dream' && Math.random() < .008) this.tone(1400 + Math.random() * 600, .16, 'sine', .004, 0, -300); // gull cry
+      if (this.musicMode === 'dream' && Math.random() < .03) this.noise(.5, .004, 0, 900); // wind
     }, 180);
   }
 }
