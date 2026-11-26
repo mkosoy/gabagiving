@@ -1944,7 +1944,7 @@ function wakeFromDream() {
   setScene('house', 250, 306);
   state.mode = 'explore';
   state.flags.houseStep = 6;
-  state.flags.derekMission = true;
+  if (!state.flags.derekPaid) state.flags.derekMission = true;
   objective(houseObjective());
   startDialog([
     { speaker: 'narrator', text: 'Tony jolts awake on the couch. The documentary credits roll. The robe is somehow tighter around the jaw.' },
@@ -1955,9 +1955,13 @@ function wakeFromDream() {
       { speaker: 'tony', text: 'The guy’s ninety-something, what damage could he— you know what, don’t answer that.' },
       { speaker: 'derek', text: 'I can smooth this over, but we’ll need some cash. Walking-around money. Figure a hundred fifty.' },
       { speaker: 'tony', text: 'A hundred fifty. For a burrito incident. Fine — I know a few places money tends to fall outta people’s pockets. I’ll find you by the gas station.' },
-      { speaker: 'derek', text: 'Hurry, Tony. And Tony — this stays between us. Attorney-client, whatever.' }
+      { speaker: 'derek', text: 'Hurry, Tony. And Tony — this stays between us. Attorney-client, whatever.' },
+      ...(state.flags.derekPaid ? [
+        { speaker: 'tony', text: 'Funny thing, Derek. I got this feelin’ I already paid you. Like a dream inside the dream.' },
+        { speaker: 'derek', text: 'You DID look vaguely familiar at the gas station. Déjà vu. Billable either way.' }
+      ] : [])
     ], () => {
-      objective('Find $150 around the neighborhood for Derek');
+      if (!state.flags.derekPaid) objective('Find $150 around the neighborhood for Derek');
     });
   });
 }
