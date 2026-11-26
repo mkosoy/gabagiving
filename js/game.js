@@ -3556,7 +3556,7 @@ function updateBlackjack(dt) {
   bj.t += dt;
   if (bj.phase === 'player') {
     const hint = bjTotal(bj.player) >= 17 ? 'stand?' : 'hit?';
-    const inp = moveInput();
+    const inp = { x: axis.x, y: axis.y }; // touch stick only — keyboard must not feed gesture detection
     // dominant-axis only, and the stick must return to neutral between gestures
     const hitDir = inp.x < -.6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3;
     const standDir = (inp.x > .6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3) || (inp.y > .6 && inp.y > Math.abs(inp.x) * 1.3);
