@@ -4937,6 +4937,24 @@ function nycInteractions() {
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
+    { x: 200, y: 236, w: 40, h: 34, radius: 40, label: 'Elaine', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'elaine', text: 'George! Did you know a man in a tracksuit punched a goose near my office? Everyone is talking about it. Everyone!' },
+        { speaker: 'george', text: 'A goose?! I don’t know anything about — okay ONE goose. But he started it! They all start it! It’s their whole thing!' }
+      ] : [
+        { speaker: 'elaine', text: 'You’re the big guy with the — yeah. Jerry says I shouldn’t talk to you. So obviously I’m talking to you.' },
+        { speaker: 'tony', text: 'Smart. Tell Jerry he still owes me for the — actually, forget it. You didn’t hear anything. Nice boots.' }
+      ]);
+    } },
+    { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'jerry', text: 'George. Please tell me you’re not doing crimes with the mailman again. The last time, my super got a subpoena. A SUBPOENA, George!' },
+        { speaker: 'george', text: 'That was ONE time! And technically it was Newman’s scheme! I was a passenger! A very well-compensated passenger!' }
+      ] : [
+        { speaker: 'jerry', text: 'You know, you look exactly like every guy my mother warns me about. All at once. It’s honestly impressive.' },
+        { speaker: 'tony', text: 'You’re the comedian. I seen you on the TV. You’re funnier than my brother-in-law, which — low bar, but respect.' }
+      ]);
+    } },
     { x: 300, y: 232, w: 40, h: 36, radius: 44, label: 'Kramer', action: () => {
       if (!state.mission && nextKramerMission()) {
         const mid = nextKramerMission();
