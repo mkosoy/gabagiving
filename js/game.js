@@ -4126,7 +4126,22 @@ function drawWorld() {
     }
     if ((state.flags.heat || 0) > 0.3) {
       drawPanel(W - 172, H - 50, 164, 20, '#33141a', '#ff7a5e');
-      outlineText(ctx, `HEAT ${'!'.repeat(Math.max(1, Math.round(state.flags.heat)))}`, W - 162, H - 44, '#ff9a7a', 7);
+      // GTA-style wanted stars
+      const stars = Math.min(5, Math.max(1, Math.round(state.flags.heat)));
+      for (let si = 0; si < 5; si++) {
+        const sx = W - 162 + si * 15, sy = H - 44;
+        const lit = si < stars;
+        const flash = lit && state.flags.heat >= 3 && Math.floor(state.time * 4) % 2 === 0;
+        ctx.fillStyle = lit ? (flash ? '#fff1a6' : '#ffd24a') : 'rgba(255,255,255,.16)';
+        ctx.beginPath();
+        for (let pi = 0; pi < 10; pi++) {
+          const ang = -Math.PI / 2 + pi * Math.PI / 5;
+          const rad = pi % 2 === 0 ? 6 : 2.6;
+          const x = sx + Math.cos(ang) * rad, y = sy + Math.sin(ang) * rad;
+          pi === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath(); ctx.fill();
+      }
       px(ctx, W - 90, H - 46, Math.min(76, state.flags.heat * 15), 6, '#ff7a5e');
     }
     const blink = (Math.sin(state.time * 3) + 1) / 2;
