@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1616,6 +1616,22 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  bigSalad: {
+    title: 'THE BIG SALAD',
+    payout: 120, heat: 0,
+    steps: [
+      { scene: 'monks', x: 320, y: 300, radius: 80, objective: 'Pick up the big salad at Monk’s. A BIG salad. Big.', label: 'Pick up the salad' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Deliver the salad' }
+    ]
+  },
+  soupNaziRun: {
+    title: 'SOUP FOR NEWMAN',
+    payout: 160, heat: .5,
+    steps: [
+      { scene: 'soup', x: 320, y: 300, radius: 80, objective: 'Get the soup. Follow the rules. Do NOT annoy the man.', label: 'Order the soup' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman — soup unopened', label: 'Deliver the soup' }
+    ]
+  },
   heatMagnet: {
     title: 'HEAT MAGNET',
     payout: 220, heat: 0, survive: 30,
@@ -1641,7 +1657,7 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'ryeExpress', 'heatMagnet', 'pineFresh'];
+const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'ryeExpress', 'heatMagnet', 'pineFresh'];
 function nextMission() {
   return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -1682,6 +1698,14 @@ function advanceMission() {
       turkeyTax: [
         { speaker: 'silvio', text: 'Moist but complete. The bird, she is paid for. You did good — keep the vig.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I collected protection money and everyone was SO POLITE. Is this what power feels like?!' : 'Happy Thanksgiving, Sil. Tell the bird I said so.' }
+      ],
+      bigSalad: [
+        { speaker: 'newman', text: 'Yes. YES. Look at the SIZE of it. Big. You have done well. The mail provides. Well — YOU provided. Same thing, essentially.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I carried a salad across state lines! I peaked in college, you know! I had a future!' : 'I’ve moved a lotta things for a lotta people. First salad.' }
+      ],
+      soupNaziRun: [
+        { speaker: 'newman', text: 'Mulligatawny! You actually GOT it! You followed the rules? The line? The ordering? Then you are… adequate!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it. Perfect order. I want that on my tombstone.' : 'Guy runs soup like a crime family. Respect. No bread, though. Cost extra. Even for me.' }
       ],
       pineFresh: [
         { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
@@ -1740,6 +1764,14 @@ function updateMission() {
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I feel terrible doing this. I also feel terrible NOT doing this. I feel terrible! That’s the constant!' : 'The veal WAS perfect. That’s why you’re still open, Artie.' }
+        ],
+        bigSalad: [
+          { speaker: 'narrator', text: 'One big salad, boxed. It is, undeniably, big. The waitress knows better than to ask who it’s for.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why am I the salad guy? When did I become the salad guy?!' : 'Big salad. Heavy, too. Must be the croutons. Dense croutons.' }
+        ],
+        soupNaziRun: [
+          { speaker: 'narrator', text: 'You stand in line correctly. You order without small talk. You pay without comment. The soup is yours. The system WORKS.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it. Perfect order. PERFECTLY.' : 'In and out. Quiet. Respectful. Like a hit, but with soup.' }
         ],
         pineFresh: [
           { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
@@ -3633,6 +3665,8 @@ function hubInteractions() {
         const offers = {
           packageJob: { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
           catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
+          bigSalad: { speaker: 'newman', text: 'Hungry work, the mail. Fetch me a salad from Monk’s. A BIG salad. Not the small. If it’s small, I will know. I ALWAYS know. $120.' },
+          soupNaziRun: { speaker: 'newman', text: 'Soup. From the Soup Man. I am… no longer welcome there. A misunderstanding involving the bread line. You go. Follow the rules EXACTLY or there will be NO SOUP. $160.' },
           heatMagnet: { speaker: 'newman', text: 'This one is simple. I may have told the police YOU are the mail thief. You’ll have some heat for a bit. Survive it, come back, $220. What — don’t look at me like that, it’s a COMPLIMENT. They believed me instantly!' },
           ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
           pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
