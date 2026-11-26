@@ -2911,6 +2911,15 @@ function clubInteractions() {
         { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
       ], () => { state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 25); initArmWrestle(); });
     } });
+    list.push({ x: 600, y: 250, w: 40, h: 50, radius: 26, label: 'Slot machine', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The Bing’s one slot machine. Silvio won it in a card game. The previous owner won it in a worse card game. It has never paid out since 1987, allegedly.' },
+        { speaker: 'george', text: 'Slots! The thinking man’s no-skill game! Twenty bucks a pull — I have a system: I pull exactly until I’m out of money!' }
+      ] : [
+        { speaker: 'narrator', text: 'The back-corner slot. It eats coins, dreams, and Christopher’s paychecks, in that order.' },
+        { speaker: 'tony', text: 'One machine, no witnesses, infinite hope. The perfect Italian dessert.' }
+      ], () => initSlots());
+    } });
     list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
       if ((state.flags.tribute || 0) < 50) {
         startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
@@ -3947,6 +3956,123 @@ function drawGooseChase() {
   } else {
     outlineText(ctx, g.won ? 'CAUGHT! +$60' : 'THE GOOSE ENDURES.', 320, 390, g.won ? '#8ffff2' : '#ff8a7a', 10, 'center');
   }
+}
+
+// ---------- Slots: the Bing's back-corner machine ----------
+const SLOT_SYMBOLS = [
+  { glyph: '7', color: '#ffdf4a', weight: 1 },
+  { glyph: '$', color: '#8ffff2', weight: 2 },
+  { glyph: 'B', color: '#ff8a7a', weight: 3 }, // bell-adjacent
+  { glyph: 'C', color: '#ff9ad4', weight: 4 }, // cherry-adjacent
+  { glyph: 'L', color: '#b8e86a', weight: 5 }  // lemon-adjacent
+];
+function slotSymbol() {
+  const total = SLOT_SYMBOLS.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  for (const s of SLOT_SYMBOLS) { r -= s.weight; if (r <= 0) return s.glyph; }
+  return 'L';
+}
+
+function initSlots() {
+  state.slots = { reels: ['7', '7', '7'], spinning: false, spinT: 0, result: null, resultT: 0, pulls: 0 };
+  state.mode = 'slots';
+  audio.sfx('pickup');
+}
+
+function updateSlots(dt) {
+  const s = state.slots;
+  if (!s) { state.mode = 'explore'; return; }
+  if (s.spinning) {
+    s.spinT -= dt;
+    // reels cycle fast while spinning
+    if (Math.floor(state.time * 14) !== s.lastTick) {
+      s.lastTick = Math.floor(state.time * 14);
+      s.reels = [slotSymbol(), slotSymbol(), slotSymbol()];
+      audio.sfx('card');
+    }
+    if (s.spinT <= 0) {
+      s.spinning = false;
+      s.reels = [slotSymbol(), slotSymbol(), slotSymbol()];
+      const [a, b, c] = s.reels;
+      let win = 0, msg = '';
+      if (a === '7' && b === '7' && c === '7') { win = 500; msg = 'JACKPOT! TRIPLE SEVENS! +$500'; }
+      else if (a === b && b === c) { win = 100; msg = 'THREE OF A KIND! +$100'; }
+      else if (a === b || b === c || a === c) { win = 30; msg = 'PAIR! +$30'; }
+      if (win) {
+        state.flags.tribute = (state.flags.tribute || 0) + win;
+        audio.sfx('cash');
+        audio.sfx('success');
+      } else {
+        audio.sfx('denied');
+        msg = 'nothing. the machine blinks, unbothered.';
+      }
+      s.result = { win, msg };
+      s.resultT = 2.6;
+    }
+    return;
+  }
+  if (s.result) {
+    s.resultT -= dt;
+    if (s.resultT <= 0) {
+      s.result = null;
+      // exit after the hand if broke or done after several pulls — player can leave anytime with movement
+      if ((state.flags.tribute || 0) < 20) {
+        state.mode = 'explore';
+        startDialog([{ speaker: 'narrator', text: 'The machine senses your empty pockets and loses interest in you completely.' }]);
+        return;
+      }
+    }
+    return;
+  }
+  if (consume(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) || consume(['KeyW'])) {
+    state.mode = 'explore';
+    return;
+  }
+  if (interactPressed()) {
+    if ((state.flags.tribute || 0) < 20) {
+      audio.sfx('denied');
+      startDialog([{ speaker: 'narrator', text: 'Twenty a pull. You have less than twenty. The machine judges you silently, which is its only move.' }]);
+      return;
+    }
+    state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 20);
+    s.spinning = true;
+    s.spinT = 1.6 + Math.random() * .8;
+    s.pulls += 1;
+    audio.sfx('pickup');
+  }
+}
+
+function drawSlots() {
+  const s = state.slots;
+  px(ctx, 0, 0, 640, 416, '#16101e');
+  outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
+  // machine body
+  px(ctx, 170, 90, 300, 210, '#3a2a4a');
+  px(ctx, 178, 98, 284, 130, '#241a30');
+  px(ctx, 178, 96, 284, 4, '#c8a040');
+  // reels
+  for (let i = 0; i < 3; i++) {
+    const rx = 208 + i * 92;
+    px(ctx, rx, 118, 64, 84, s && s.spinning ? '#f4efdc' : '#fffbe8');
+    px(ctx, rx + 3, 121, 58, 78, '#e8e0c8');
+    const glyph = s ? s.reels[i] : '7';
+    const sym = SLOT_SYMBOLS.find((x) => x.glyph === glyph) || SLOT_SYMBOLS[0];
+    outlineText(ctx, glyph, rx + 32, 140, sym.color, 34, 'center');
+  }
+  // lever
+  px(ctx, 478, 120, 12, 90, '#6a5a7a');
+  px(ctx, 472, 108, 24, 18, s && s.spinning ? '#ff8a7a' : '#c02828');
+  // paytable
+  outlineText(ctx, '777 = $500 · 3-of-kind = $100 · pair = $30', 320, 246, '#9d8fc9', 8, 'center');
+  outlineText(ctx, `cash: $${state.flags.tribute || 0} · $20/pull`, 320, 266, '#ffe78a', 9, 'center');
+  if (s && s.result) {
+    outlineText(ctx, s.result.msg, 320, 316, s.result.win ? '#8ffff2' : '#ff8a7a', 12, 'center');
+  } else if (s && s.spinning) {
+    outlineText(ctx, 'spinning…', 320, 316, '#9d8fc9', 10, 'center');
+  } else {
+    outlineText(ctx, 'E = PULL · move to walk away', 320, 316, '#ffe78a', 9, 'center');
+  }
+  px(ctx, 170, 236, 300, 4, '#c8a040');
 }
 
 function initBlackjack() {
@@ -6595,6 +6721,7 @@ function render() {
   else if (state.mode === 'armwrestle') drawArmWrestle();
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
+  else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
@@ -6729,6 +6856,8 @@ function update(dt) {
     updateTransit(dt);
   } else if (state.mode === 'blackjack') {
     updateBlackjack(dt);
+  } else if (state.mode === 'slots') {
+    updateSlots(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
