@@ -1601,8 +1601,8 @@ function updateExplore(dt) {
     for (const c of (state.nycCars || [])) {
       if (c.honkBack > 0) {
         c.honkBack -= dt;
-        if (!c.honking) { c.honking = true; audio.sfx('honk'); }
-      } else c.honking = false;
+        if (c.honkBack <= 0 && !c.honked) { c.honked = true; audio.sfx('honk'); }
+      } else c.honked = false;
     }
   }
   // Pine Barrens: the Russian is out there. Rarely, a figure crosses the treeline.
@@ -1645,7 +1645,7 @@ function updateExplore(dt) {
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
   }
   // GTA staples: horn and radio in a borrowed car
-  if (state.flags.freeRoam && p.inCar && consume(['KeyH'])) {
+  if (state.flags.freeRoam && p.inCar && (consume(['KeyH']) || consume(['KeyF']))) {
     audio.sfx('honk');
     for (const n of ambientFor(state.scene)) {
       const d = Math.hypot(n.x - p.x, n.y - p.y);
@@ -4342,6 +4342,8 @@ function nycInteractions() {
       state.player.inCar = true;
       state.player.speed = 210;
       state.player.carColor = '#e8b822';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
       audio.sfx('door');
       audio.sfx('honk');
@@ -4357,6 +4359,8 @@ function nycInteractions() {
       state.player.inCar = true;
       state.player.speed = 150;
       state.player.carColor = '#dcd8cc';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 2);
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'FEDERAL OFFENSE!', '#ff9a7a');
@@ -6309,7 +6313,7 @@ function update(dt) {
     pressed.clear();
     return;
   }
-  if (!['title', 'ending'].includes(state.mode) && consume(['KeyR'])) {
+  if (!['title', 'ending'].includes(state.mode) && !state.player.inCar && consume(['KeyR'])) {
     resetGame();
     pressed.clear();
     return;
