@@ -657,7 +657,7 @@ function drawHelp() {
   outlineText(ctx, 'T: fast travel between regions', 174, 186, '#fff', 9);
   outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
   const st = state.stats;
-  outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 200, '#8fb8ff', 8, 'center');
+  outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 214, '#8fb8ff', 8, 'center');
   outlineText(ctx, 'Click ? again to close', 320, 228, '#ffe78a', 8, 'center');
 }
 
