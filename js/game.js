@@ -3263,6 +3263,17 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 240, y: 380, w: 60, h: 28, radius: 40, label: 'Buy a round', action: () => {
+    if (state.money < 100) { toast('A round for the house is $100.'); return; }
+    state.money -= 100;
+    state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+    audio.sfx('cash');
+    audio.sfx('success');
+    startDialog([
+      { speaker: 'narrator', text: 'You put a hundred on the bar and say the two most beautiful words in the English language. The Bing erupts. Glasses rise. Somewhere, a cop losing your description in his notebook.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A HUNDRED DOLLARS! I just spent a HUNDRED DOLLARS on STRANGERS! …They love me though. They really love me!' : 'Everybody eats, everybody drinks, everybody forgets what I look like. Best hundred in the business.' }
+    ]);
+  } });
   list.push({ x: 320, y: 330, w: 60, h: 30, radius: 42, label: 'Dice game', action: () => {
     if (state.mode === 'craps') return;
     if (state.money < 25) { toast('The dice game is $25 minimum.'); return; }
