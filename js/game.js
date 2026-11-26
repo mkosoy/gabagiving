@@ -1180,6 +1180,7 @@ function updateCop(dt) {
     const d = Math.hypot(dx, dy) || 1;
     unit.x += dx / d * speed * dt;
     unit.y += dy / d * speed * dt;
+    unit.angle = Math.atan2(dy, dx) + Math.PI / 2;
   }
   const dx = (p.x + 8) - c.x, dy = (p.y + 8) - c.y;
   const d = Math.hypot(dx, dy) || 1;
@@ -1246,7 +1247,7 @@ function drawHubEventProps() {
 function drawCop() {
   if (state.scene !== 'hub' && state.scene !== 'nyc') return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
-    drawCar(c.x, c.y, '#e8ecf2');
+    drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
     px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
@@ -4735,7 +4736,8 @@ function drawClub() {
 function drawPlayer() {
   const kind = state.player.kind;
   if (state.player.inCar) {
-    drawCar(state.player.x - 12, state.player.y + 2, state.player.carColor || '#8f1f2e');
+    const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
+    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
     return;
   }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
@@ -5081,7 +5083,13 @@ function drawPeptides() {
   outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
-function drawCar(x, y, color = '#8f1f2e', target = false) {
+function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
+  if (angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.translate(-x, -y);
+  }
   // shadow
   px(ctx, x - 15, y - 19, 30, 40, 'rgba(0,0,0,.35)');
   // body
@@ -5102,6 +5110,7 @@ function drawCar(x, y, color = '#8f1f2e', target = false) {
   px(ctx, x + 5, y - 20, 5, 3, '#fff3b0');
   px(ctx, x - 10, y + 17, 5, 3, '#ff5d52');
   px(ctx, x + 5, y + 17, 5, 3, '#ff5d52');
+  if (angle) ctx.restore();
   // wheels
   px(ctx, x - 15, y - 13, 4, 9, '#05070c');
   px(ctx, x + 11, y - 13, 4, 9, '#05070c');
