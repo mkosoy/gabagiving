@@ -1597,9 +1597,31 @@ function updateExplore(dt) {
       audio.step(p.kind);
     }
     const nx = p.x + input.x * sp;
-    if (!blockedAt(nx, p.y)) p.x = nx;
+    const hitWallX = blockedAt(nx, p.y);
+    if (!hitWallX) p.x = nx;
     const ny = p.y + input.y * sp;
-    if (!blockedAt(p.x, ny)) p.y = ny;
+    const hitWallY = blockedAt(p.x, ny);
+    if (!hitWallY) p.y = ny;
+    if (p.inCar && (hitWallX || hitWallY) && (p.carV || 0) > .55) {
+      p.carDamage = (p.carDamage || 0) + 1;
+      p.carV = .2;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .4);
+      audio.sfx('crash');
+      spawnEffect(p.x + 8, p.y - 8, p.carDamage >= 3 ? 'TOTALED!' : 'CRUNCH', '#ff9a7a');
+      if (p.carDamage >= 3) {
+        p.inCar = false;
+        p.carColor = null;
+        p.carDamage = 0;
+        p.speed = p.kind === 'george' ? 96 : 88;
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The car is totaled. George exits through the door that no longer opens, onto the street, in front of witnesses.' },
+          { speaker: 'george', text: 'The brakes! The BRAKES in this city are all defective! I’m writing a letter!' }
+        ] : [
+          { speaker: 'narrator', text: 'Totaled. Tony steps out, looks at the wreck, and walks away at exactly the speed of a man who has never seen this car before.' },
+          { speaker: 'tony', text: 'What car? I’m a pedestrian. Always have been. Beautiful neighborhood for walking.' }
+        ]);
+      }
+    }
     if (p.inCar) {
       for (const n of ambientFor(state.scene)) {
         if (n.diveT > 0) continue;
