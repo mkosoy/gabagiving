@@ -1354,14 +1354,17 @@ function updateNycTaxis(dt) {
   for (const c of state.nycCars) {
     if (c.honkT > 0) c.honkT -= dt;
     if (c.brakeT > 0) c.brakeT -= dt;
-    if (!p.inCar && Math.abs(p.y - (c.y + 8)) < 22 && (c.dir > 0 ? (c.x < p.x && p.x - c.x < 92) : (c.x > p.x && c.x - p.x < 92))) {
-      if (c.brakeT <= -1.2) {
-        c.brakeT = 1;
-        if (c.honkT <= 0) { c.honkT = 1.4; audio.sfx('honk'); spawnEffect(c.x + 15, c.y - 6, 'HONK!', '#ffe78a'); }
-      } else if (c.brakeT <= 0) {
-        c.brakeT = .0001;
+    const blocked = !p.inCar && Math.abs(p.y - (c.y + 8)) < 22 && (c.dir > 0 ? (c.x < p.x && p.x - c.x < 92) : (c.x > p.x && c.x - p.x < 92));
+    if (blocked) {
+      c.brakeT = Math.max(c.brakeT, .3);
+      c.stuckT = (c.stuckT || 0) + dt;
+      if (c.stuckT > 1.2 && c.honkT <= 0) {
+        c.honkT = 1.4;
+        c.stuckT = 0;
+        audio.sfx('honk');
+        spawnEffect(c.x + 15, c.y - 6, 'HONK!', '#ffe78a');
       }
-    }
+    } else c.stuckT = 0;
     if (c.brakeT > 0) {
       c.x += c.dir * 8 * dt;
     } else {
