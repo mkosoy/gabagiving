@@ -1198,6 +1198,8 @@ function updateCop(dt) {
   if (heat >= spawnAt && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
     audio.sfx('honk');
+    audio.sfx('denied');
+    spawnEffect(state.player.x + 8, state.player.y - 34, isNight() ? 'NIGHT PATROL!' : 'WANTED!', '#ff6a6a');
     spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
   }
   const c = state.cop;
