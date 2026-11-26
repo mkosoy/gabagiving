@@ -4390,6 +4390,29 @@ function shoreInteractions() {
         { speaker: 'tony', text: 'My old man never took us down the shore. First time I saw the ocean I was nineteen, on a… work trip. Funny what you remember.' }
       ]);
     } },
+    { x: 100, y: 130, w: 90, h: 80, radius: 48, label: 'Zoltar fortune machine', action: () => {
+      if ((state.flags.tribute || 0) < 1) {
+        startDialog([{ speaker: 'narrator', text: 'Zoltar requires one dollar. Even mechanical prophets have overhead.' }]);
+        return;
+      }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 1);
+      audio.sfx('pickup');
+      const fortunes = state.player.kind === 'george' ? [
+        'Zoltar sees… a man who argues about chairs. Greatness? No. But persistent. VERY persistent.',
+        'Zoltar sees a big salad in your future. It is not for you. It is never for you.',
+        'The spirits say: you will die in a small apartment, but with excellent posture.',
+        'Zoltar sees you saying "it’s not a lie if YOU believe it" at a deposition. The spirits are concerned.'
+      ] : [
+        'Zoltar sees… a big man with a heavy heart. Also duck food. The spirits are very specific today.',
+        'The spirits say: your enemies fear you, your family needs you, and your backyard needs a ducks-only policy.',
+        'Zoltar sees two paths: therapy or the other thing. The machine recommends the therapy. It is only a dollar for this wisdom.',
+        'A great fortune approaches — along with several small federal investigations. Zoltar suggests taffy.'
+      ];
+      startDialog([
+        { speaker: 'narrator', text: 'The machine whirs. Zoltar’s eyes light up. His painted mustache has seen a thousand boardwalk summers and judged every one of them.' },
+        { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
+      ]);
+    } },
     { x: 520, y: 200, w: 100, h: 60, radius: 46, label: 'Feed the gulls', action: () => {
       audio.sfx('turkey');
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
