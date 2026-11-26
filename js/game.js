@@ -1341,7 +1341,39 @@ function drawBrawler() {
   if (b.barkT > 0 && b.bark) outlineText(ctx, b.bark, b.x + 8, b.y - 16, '#ffb1a1', 7, 'center');
 }
 
+function updateNycTaxis(dt) {
+  if (state.scene !== 'nyc') return;
+  if (!state.nycCars) {
+    state.nycCars = [
+      { x: 100, y: 292, dir: 1, speed: 66, brakeT: 0, honkT: 0 },
+      { x: 500, y: 292, dir: 1, speed: 54, brakeT: 0, honkT: 0 },
+      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 }
+    ];
+  }
+  const p = state.player;
+  for (const c of state.nycCars) {
+    if (c.honkT > 0) c.honkT -= dt;
+    if (c.brakeT > 0) c.brakeT -= dt;
+    if (!p.inCar && Math.abs(p.y - (c.y + 8)) < 22 && (c.dir > 0 ? (c.x < p.x && p.x - c.x < 92) : (c.x > p.x && c.x - p.x < 92))) {
+      if (c.brakeT <= -1.2) {
+        c.brakeT = 1;
+        if (c.honkT <= 0) { c.honkT = 1.4; audio.sfx('honk'); spawnEffect(c.x + 15, c.y - 6, 'HONK!', '#ffe78a'); }
+      } else if (c.brakeT <= 0) {
+        c.brakeT = .0001;
+      }
+    }
+    if (c.brakeT > 0) {
+      c.x += c.dir * 8 * dt;
+    } else {
+      c.x += c.dir * c.speed * dt;
+    }
+    if (c.dir > 0 && c.x > 840) { c.x = -70; c.brakeT = 0; }
+    if (c.dir < 0 && c.x < -80) { c.x = 840; c.brakeT = 0; }
+  }
+}
+
 function updateHubEvents(dt) {
+  updateNycTaxis(dt);
   if (!state.flags.freeRoam || state.scene !== 'hub') return;
   // persistent reactive traffic: cars brake and honk at pedestrians, crash into the player's car
   if (!state.hubCars) {
@@ -3276,11 +3308,10 @@ function drawNyc() {
   if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
-  // moving taxis on the road, both directions
-  for (let i = 0; i < 3; i++) {
-    const cx = ((state.time * (60 + i * 24) + i * 300) % 940) - 80;
-    const tx = i === 1 ? 848 - cx : cx;
-    const cy = 292 + (i % 2) * 30;
+  // persistent reactive taxis — they brake and honk at jaywalkers
+  if (!state.nycCars) updateNycTaxis(0);
+  for (const c of (state.nycCars || [])) {
+    const tx = c.x, cy = c.y;
     px(ctx, tx - 2, cy - 2, 34, 15, 'rgba(0,0,0,.3)');
     px(ctx, tx, cy, 30, 11, '#c9a015');
     px(ctx, tx + 2, cy + 1, 26, 9, '#e8b822');
@@ -3288,12 +3319,8 @@ function drawNyc() {
     px(ctx, tx + 12, cy - 2, 6, 3, '#fff3b0');
     px(ctx, tx + 3, cy + 10, 5, 3, '#05070c');
     px(ctx, tx + 22, cy + 10, 5, 3, '#05070c');
-    // honk reaction when the player jaywalks in front
-    const p = state.player;
-    if (!p.inCar && Math.abs(p.y - cy) < 20 && Math.abs(p.x - tx) < 46 && Math.floor(state.time * 1.5) % 3 === 0) {
-      outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
-      if (Math.random() < .02) audio.sfx('honk');
-    }
+    if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
+    if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
   }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
