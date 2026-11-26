@@ -1353,6 +1353,14 @@ function hubInteractions() {
 
 function drawHub() {
   if (drawSceneArt(sceneArt.hub, 640, 416)) {
+    // Traffic keeps the free-roam neighborhood alive.
+    for (let i = 0; i < 2; i++) {
+      const cx = ((state.time * (54 + i * 22) + i * 310) % 760) - 60;
+      const cy = i ? 268 : 246;
+      px(ctx, i ? 700 - cx : cx, cy, 34, 13, '#101521');
+      px(ctx, (i ? 700 - cx : cx) + 5, cy + 3, 24, 7, i ? '#7e2733' : '#31445e');
+      px(ctx, (i ? 700 - cx : cx) + (i ? 2 : 28), cy + 5, 3, 3, '#ffe59b');
+    }
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     ctx.fillStyle = `rgba(255,210,92,${.12 + pulse * .16})`;
     ctx.beginPath();
@@ -1394,9 +1402,13 @@ function drawNjStreet() {
     px(ctx,x-12,174,32,28, ['#d9782e','#c9492e','#dda23a'][i%3]);
     px(ctx,x-5,164,20,18, ['#e58e35','#d35a31','#e6b646'][i%3]);
   }
-  // cars along road
-  px(ctx,54,304,90,44,'#161920'); px(ctx,60,310,78,32,'#31445e');
-  px(ctx,498,304,86,44,'#161920'); px(ctx,504,310,74,32,'#7e2733');
+  // cars moving along the road
+  for (let i = 0; i < 2; i++) {
+    const cx = ((state.time * (50 + i * 18) + i * 280) % 760) - 70;
+    const x = i ? 690 - cx : cx;
+    const y = 304 + i * 18;
+    px(ctx,x,y,78,32,'#161920'); px(ctx,x+6,y+6,66,20,i?'#7e2733':'#31445e');
+  }
   // AJ with glowing phone showing tiny Plav
   drawPerson(ctx, 454, 166, 'aj', 'left', state.frame);
   px(ctx, 444, 177, 9, 14, '#111827');
@@ -1406,13 +1418,20 @@ function drawNjStreet() {
 }
 
 function drawSatriale() {
+  const t = state.time;
+  const ajX = 350 + Math.sin(t * .85) * 15;
+  const ajY = 354 + Math.cos(t * .7) * 4;
+  const bobbyX = 112 + Math.sin(t * .55) * 5;
+  const artieX = 488 + Math.sin(t * 1.8) * 3;
+  const irinaX = 524 + Math.sin(t * .62) * 22;
+  const juniorX = 316 + Math.sin(t * 1.1) * 4;
   if (drawSceneArt(sceneArt.satriale, 640, 416)) {
     // AJ trails Augustus while the pork-store regulars work, lean, and react.
-    drawPerson(ctx, 350, 354, 'aj', 'up', state.frame, { pose: 'phone' });
-    drawPerson(ctx, 112, 150, 'bobby', 'down', state.frame, { pose: 'lean' });
-    drawPerson(ctx, 488, 148, 'artie', 'down', state.frame + 1, { pose: 'work' });
-    drawPerson(ctx, 524, 314, 'irina', 'left', state.frame + 2, { pose: 'lean' });
-    drawPerson(ctx, 316, 140, 'junior', 'down', state.frame + 3, { pose: 'angry' });
+    drawPerson(ctx, ajX, ajY, 'aj', 'up', state.frame, { pose: 'phone' });
+    drawPerson(ctx, bobbyX, 150, 'bobby', 'down', state.frame, { pose: 'lean' });
+    drawPerson(ctx, artieX, 148, 'artie', 'down', state.frame + 1, { pose: 'work' });
+    drawPerson(ctx, irinaX, 314, irinaX > 524 ? 'left' : 'right', state.frame + 2, { pose: 'lean' });
+    drawPerson(ctx, juniorX, 140, 'junior', 'down', state.frame + 3, { pose: 'angry' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#6c3d32');
@@ -1447,12 +1466,12 @@ function drawSatriale() {
     px(ctx,492+i*15,328,10,8,'#699b42');
   }
   // AJ follower
-  drawPerson(ctx, 350, 354, 'aj', 'up', state.frame);
-  // characters in fixed spots
-  drawPerson(ctx, 112, 150, 'bobby', 'down', state.frame);
-  drawPerson(ctx, 488, 148, 'artie', 'down', state.frame + 1);
-  drawPerson(ctx, 524, 314, 'irina', 'left', state.frame + 2);
-  drawPerson(ctx, 316, 140, 'junior', 'down', state.frame + 3);
+  drawPerson(ctx, ajX, ajY, 'aj', 'up', state.frame);
+  // characters pace and react rather than standing frozen
+  drawPerson(ctx, bobbyX, 150, 'bobby', 'down', state.frame);
+  drawPerson(ctx, artieX, 148, 'artie', 'down', state.frame + 1);
+  drawPerson(ctx, irinaX, 314, irinaX > 524 ? 'left' : 'right', state.frame + 2);
+  drawPerson(ctx, juniorX, 140, 'junior', 'down', state.frame + 3);
 }
 
 function drawProduce() {
@@ -2101,15 +2120,16 @@ function drawColumn(x, y) {
 }
 
 function drawRome() {
+  const t = state.time;
+  const crowd = [
+    [212, 284, 'guard', 0], [238, 296, 'meadow', 1], [296, 296, 'carmela', 2], [326, 284, 'aj', 3]
+  ];
   if (drawSceneArt(sceneArt.rome, 800, 440)) {
     // Living “empty-square” stream performance and imperial court over the illustrated forum.
-    drawPerson(ctx, 266, 228, 'plav', 'down', state.frame, { pose: 'perform' });
-    drawPerson(ctx, 212, 284, 'guard', 'up', state.frame, { pose: 'watch' });
-    drawPerson(ctx, 238, 296, 'meadow', 'up', state.frame + 2, { pose: 'watch' });
-    drawPerson(ctx, 296, 296, 'carmela', 'up', state.frame + 3, { pose: 'watch' });
-    drawPerson(ctx, 326, 284, 'aj', 'up', state.frame + 4, { pose: 'watch' });
-    drawPerson(ctx, 660, 150, 'augustus', 'down', state.frame, { pose: 'imperial' });
-    drawPerson(ctx, 724, 154, 'guard', 'down', state.frame, { pose: 'guard' });
+    drawPerson(ctx, 266 + Math.sin(t * 1.5) * 5, 228, 'plav', 'down', state.frame, { pose: 'perform' });
+    crowd.forEach(([x, y, kind, i]) => drawPerson(ctx, x + Math.sin(t * .9 + i) * 3, y + Math.cos(t * 1.2 + i) * 2, kind, 'up', state.frame + i, { pose: 'watch' }));
+    drawPerson(ctx, 660 + Math.sin(t * .8) * 4, 150, 'augustus', 'down', state.frame, { pose: 'imperial' });
+    drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'guard', 'down', state.frame, { pose: 'guard' });
     return;
   }
   // sky/warm backdrop and street
@@ -2141,17 +2161,14 @@ function drawRome() {
   px(ctx, 238, 281, 58, 5, '#9a623b');
   px(ctx, 238, 210, 5, 76, '#9a623b');
   px(ctx, 291, 210, 5, 76, '#9a623b');
-  drawPerson(ctx, 206, 274, 'guard', 'up', state.frame);
-  drawPerson(ctx, 230, 286, 'meadow', 'up', state.frame + 2);
-  drawPerson(ctx, 286, 286, 'carmela', 'up', state.frame + 3);
-  drawPerson(ctx, 316, 274, 'aj', 'up', state.frame + 4);
+  crowd.forEach(([x, y, kind, i]) => drawPerson(ctx, x - 6 + Math.sin(t * .9 + i) * 3, y - 10 + Math.cos(t * 1.2 + i) * 2, kind, 'up', state.frame + i));
   outlineText(ctx, 'LIVE-ish', 244, 198, '#7b2f23', 7);
 
   // Augustus dais
   px(ctx, 690, 130, 84, 52, '#c4b48e');
   px(ctx, 700, 140, 64, 32, '#e4d7b7');
-  drawPerson(ctx, 660, 150, 'augustus', 'down', state.frame);
-  drawPerson(ctx, 724, 154, 'guard', 'down', state.frame);
+  drawPerson(ctx, 660 + Math.sin(t * .8) * 4, 150, 'augustus', 'down', state.frame);
+  drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'guard', 'down', state.frame);
   // glow-up chamber entrance
   px(ctx, 744, 150, 48, 34, '#6b442e');
   px(ctx, 750, 156, 36, 28, '#2a1724');
@@ -2180,10 +2197,10 @@ function drawApartment() {
   if (drawSceneArt(sceneArt.apartment, 640, 416)) {
     if (!state.flags.hasBat) drawBat(ctx, 288, 230, -0.7);
     // The apartment group is staged in poses instead of a standing line-up.
-    drawPerson(ctx, 108, 226, 'jerry', 'right', state.frame, { pose: 'sit' });
-    if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350, 282, 'george', 'up', state.frame, { pose: 'sit' });
-    if (state.flags.kramerIn) drawPerson(ctx, 500, 116, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
-    if (state.flags.elaineIn) drawPerson(ctx, 146, 230, 'elaine', 'left', state.frame + 1, { pose: 'sit' });
+    drawPerson(ctx, 108 + Math.sin(state.time * .9) * 2, 226, 'jerry', 'right', state.frame, { pose: 'sit' });
+    if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350 + Math.sin(state.time * 3.2) * 3, 282, 'george', 'up', state.frame * 1.3, { pose: 'sit' });
+    if (state.flags.kramerIn) drawPerson(ctx, 500 + Math.sin(state.time * 5) * 2, 116, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
+    if (state.flags.elaineIn) drawPerson(ctx, 146 + Math.sin(state.time * 1.1) * 3, 230, 'elaine', 'left', state.frame + 1, { pose: 'sit' });
     // Recognizable apartment details: cereal shelf, Superman figurine, and the bike by the entry.
     for (let i = 0; i < 5; i++) {
       px(ctx, 52 + i * 16, 106, 11, 17, ['#d94b35','#f0c84d','#4d88c9','#65a848','#c65ca2'][i]);
@@ -2238,10 +2255,10 @@ function drawApartment() {
   px(ctx, 236, 111, 30, 36, '#e0d2a8');
   outlineText(ctx, 'YANKEES', 236, 124, '#2f4b78', 5);
   // characters
-  drawPerson(ctx, 130, 170, 'jerry', 'down', state.frame);
-  if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350, 282, 'george', 'up', state.frame);
-  if (state.flags.kramerIn) drawPerson(ctx, 500, 116, 'kramer', 'down', state.frame + 2);
-  if (state.flags.elaineIn) drawPerson(ctx, 468, 138, 'elaine', 'down', state.frame + 1);
+  drawPerson(ctx, 130 + Math.sin(state.time * .8) * 8, 170, 'jerry', Math.sin(state.time * .8) > 0 ? 'right' : 'left', state.frame);
+  if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350 + Math.sin(state.time * 3.2) * 3, 282, 'george', 'up', state.frame * 1.3);
+  if (state.flags.kramerIn) drawPerson(ctx, 500 + Math.sin(state.time * 5) * 2, 116, 'kramer', 'down', state.frame + 2);
+  if (state.flags.elaineIn) drawPerson(ctx, 468 + Math.sin(state.time * 1.1) * 5, 138, 'elaine', 'down', state.frame + 1);
   outlineText(ctx, 'APARTMENT 5A', 320, 396, 'rgba(80,40,20,.25)', 8, 'center');
 }
 
@@ -2249,9 +2266,9 @@ function drawClub() {
   if (drawSceneArt(sceneArt.club, 640, 416)) {
     drawTurkey(ctx, 320, 204, 1.6, true);
     // Crew members sit around the private table with individual idle motion.
-    drawPerson(ctx, 250, 156, 'christopher', 'down', state.frame, { pose: 'sit' });
-    drawPerson(ctx, 390, 156, 'paulie', 'down', state.frame + 1, { pose: 'sit' });
-    drawPerson(ctx, 320, 126, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
+    drawPerson(ctx, 250 + Math.sin(state.time * .9) * 3, 156, 'christopher', 'down', state.frame, { pose: 'sit' });
+    drawPerson(ctx, 390 + Math.sin(state.time * 1.2) * 3, 156, 'paulie', 'down', state.frame + 1, { pose: 'sit' });
+    drawPerson(ctx, 320 + Math.sin(state.time * .7) * 2, 126, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#160e1e');
@@ -2278,9 +2295,9 @@ function drawClub() {
     px(ctx, 258 + i * 32, 224, 18, 10, '#eee2c8');
   }
   // crew
-  drawPerson(ctx, 232, 154, 'christopher', 'down', state.frame);
-  drawPerson(ctx, 404, 154, 'paulie', 'down', state.frame + 1);
-  drawPerson(ctx, 320, 118, 'silvio', 'down', state.frame + 2);
+  drawPerson(ctx, 232 + Math.sin(state.time * .9) * 3, 154, 'christopher', 'down', state.frame);
+  drawPerson(ctx, 404 + Math.sin(state.time * 1.2) * 3, 154, 'paulie', 'down', state.frame + 1);
+  drawPerson(ctx, 320 + Math.sin(state.time * .7) * 2, 118, 'silvio', 'down', state.frame + 2);
   // empty head chair
   px(ctx, 292, 248, 58, 34, '#382015');
   px(ctx, 302, 252, 38, 22, '#6d3427');
