@@ -142,6 +142,13 @@ export class AudioSys {
       },
       artie: () => [148, 166].forEach((f, i) => this.tone(f * jitter(), .045, 'triangle', .03, i * .045, 8)),
       irina: () => [205, 232].forEach((f, i) => this.tone(f * jitter(), .04, 'triangle', .028, i * .04, 12)),
+      steinbrenner: () => {
+        // blustery booming boss bark, three explosive syllables
+        this.formant(96 * jitter(), .06, 'sawtooth', .07, 0, 42, 700);
+        this.formant(118 * jitter(), .05, 'sawtooth', .06, .055, -18, 820);
+        this.formant(88 * jitter(), .09, 'sawtooth', .065, .1, -34, 600);
+        this.noise(.05, .02, .03, 900);
+      },
       junior: () => {
         this.tone(84 * jitter(), .08, 'sawtooth', .055, 0, -30);
         this.noise(.05, .018, .025, 700);

@@ -31,6 +31,7 @@ const sceneArt = {
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
+  yankees: loadArt('./assets/bg-yankees.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
@@ -191,7 +192,7 @@ const names = {
   tony: 'Tony', aj: 'AJ', carmela: 'Carmela', meadow: 'Meadow', melfi: 'Dr. Melfi',
   augustus: 'Augustus', christopher: 'Christopher', paulie: 'Paulie', silvio: 'Silvio',
   jerry: 'Jerry', george: 'George', kramer: 'Kramer', elaine: 'Elaine', plav: 'Plav',
-  narrator: '', system: 'Objective', janice: 'Janice', guard: 'Roman Guard',
+  narrator: '', system: 'Objective', janice: 'Janice', guard: 'Roman Guard', steinbrenner: 'Steinbrenner',
   womanA: 'Rose', womanB: 'Linda', womanC: 'Debbie', womanD: 'Marie', paulieSuit: 'Paulie',
   bobby: 'Bobby', artie: 'Artie', irina: 'Irina', junior: 'Uncle Junior'
 };
@@ -647,6 +648,18 @@ const scenes = {
     draw: drawSoup,
     interactions: soupInteractions
   },
+  yankees: {
+    w: 640, h: 416, label: 'Yankee Stadium · Front Office', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(230,40,200,100),
+      r(50,290,140,90),
+      r(555,90,80,200),
+      r(280,150,60,40)
+    ],
+    draw: drawYankees,
+    interactions: yankeesInteractions
+  },
   satriale: {
     w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
     colliders: [
@@ -761,6 +774,9 @@ const ambientSpecs = {
   soup: [
     { kind: 'womanD', x: 430, y: 100, region: { x: 390, y: 40, w: 100, h: 240 }, speed: 22 },
     { kind: 'christopher', x: 300, y: 330, region: { x: 260, y: 310, w: 240, h: 60 }, speed: 26 }
+  ],
+  yankees: [
+    { kind: 'womanB', x: 480, y: 200, region: { x: 430, y: 160, w: 100, h: 160 }, speed: 24 }
   ]
 };
 
@@ -1987,6 +2003,78 @@ function soupInteractions() {
   ];
 }
 
+function drawYankees() {
+  if (drawSceneArt(sceneArt.yankees, 640, 416)) {
+    // Steinbrenner holds court behind the big desk, trembling with fury
+    const shake = Math.sin(state.time * 13) * 1.2;
+    drawPerson(ctx, 322 + shake, 78, 'junior', 'down', state.frame * 1.4, { pose: 'angry' });
+    // steam of rage
+    if (Math.sin(state.time * 2) > .6) {
+      px(ctx, 316, 62, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, 330, 62, 3, 6, 'rgba(255,120,90,.5)');
+    }
+    // George sleeping under his desk when scheme active
+    if (state.flags.deskNap) {
+      px(ctx, 100, 372, 34, 10, '#3a2c1e');
+      px(ctx, 104, 368, 12, 8, '#d19a73');
+      outlineText(ctx, 'z z z', 118, 348 + Math.sin(state.time * 2) * 3, '#bcd8ff', 8, 'center');
+    }
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#1c2a52');
+  outlineText(ctx, 'YANKEES', 320, 200, '#fff', 16, 'center');
+}
+
+const steinbrennerRants = [
+  'Costanza! The mustard! I specifically ordered the spicy brown! This is yellow! YELLOW!',
+  'In my day, ballplayers ate dirt and thanked the diamond for the privilege!',
+  'I want the stadium hot dogs elongated! Not longer — elongated! There’s a difference!',
+  'Who authorized these expenditures?! Costanza, was it you? It has your stink on it!',
+  'The cotton candy vendor looked at me funny. Fire him. Fire his family too!'
+];
+
+function yankeesInteractions() {
+  return [
+    { x: 280, y: 60, w: 110, h: 60, radius: 46, label: 'Steinbrenner', action: () => {
+      const rant = steinbrennerRants[Math.floor(Math.random() * steinbrennerRants.length)];
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'steinbrenner', text: rant },
+        { speaker: 'george', text: 'Sir, I — yes. Immediately. I was just about to elongate the mustard myself.' },
+        { speaker: 'narrator', text: 'George backs away in the exact rhythm of a man who has never once done what he was asked.' }
+      ]);
+      else startDialog([
+        { speaker: 'steinbrenner', text: 'Who are you?! You look like you intimidate people for a living!' },
+        { speaker: 'tony', text: 'I’m in waste management. Same thing, different paperwork.' },
+        { speaker: 'steinbrenner', text: 'HA! I like this guy! Costanza, why can’t you be more like waste management?' }
+      ]);
+    } },
+    { x: 60, y: 300, w: 120, h: 80, radius: 44, label: 'George’s desk', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'tony', text: 'There’s a pillow under this desk. A pillow. In an office. The youth today.' }]);
+      } else if (!state.flags.deskNap) {
+        state.flags.deskNap = true;
+        state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+        spawnEffect(state.player.x, state.player.y - 16, 'NAP MODE', '#bcd8ff');
+        startDialog([
+          { speaker: 'narrator', text: 'George slides under the desk into his custom nap nook. It has a pillow, a blanket, and a small framed photo of a sandwich.' },
+          { speaker: 'george', text: 'This is not sleeping. This is horizontal productivity.' },
+          { speaker: 'steinbrenner', text: 'COSTANZA! ...Huh. Where is he? Must be working hard somewhere.' }
+        ]);
+      } else {
+        state.flags.deskNap = false;
+        startDialog([{ speaker: 'george', text: 'Rested. Recharged. Ready to do approximately nothing for the rest of the day.' }]);
+      }
+    } },
+    { x: 545, y: 100, w: 80, h: 120, radius: 42, label: 'Trophies', action: () => startDialog(
+      state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'I told Susan I designed these. The trophies. She believed me for eleven minutes.' }
+      ] : [
+        { speaker: 'tony', text: 'Gold trophies in a case. Reminds me — I gotta collect something from a guy who collects things.' }
+      ]) },
+    { x: 560, y: 350, w: 70, h: 60, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+  ];
+}
+
 function satrialeInteractions() {
   if (state.flags.freeRoam) {
     return [
@@ -2167,6 +2255,7 @@ function travelHub(place) {
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
     soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
+    yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -2187,6 +2276,7 @@ function hubInteractions() {
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
+    { x: 460, y: 60, w: 110, h: 40, label: 'Yankees office', action: () => travelHub('yankees') },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
