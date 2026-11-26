@@ -458,9 +458,12 @@ function blockedAt(x, y) {
   const scene = scenes[state.scene];
   if (!scene) return false;
   const pr = playerRect(x, y);
-  const colliders = state.scene === 'njstreet'
-    ? scene.colliders.concat([movingCarRect(0), movingCarRect(1)])
-    : scene.colliders;
+  let colliders = scene.colliders;
+  if (state.scene === 'njstreet') {
+    const cars = [movingCarRect(0), movingCarRect(1)];
+    const alreadyInTraffic = cars.some((c) => rectsOverlap(playerRect(), c));
+    if (!alreadyInTraffic) colliders = colliders.concat(cars);
+  }
   return colliders.some((c) => rectsOverlap(pr, c));
 }
 
@@ -1128,7 +1131,7 @@ function startAugustusBonus() {
   state.player.kind = 'augustus';
   state.flags.augustusAJ = false;
   state.flags.satStep = 0;
-  setScene('njstreet', 170, 330);
+  setScene('njstreet', 170, 276);
   objective('Bonus: find AJ in New Jersey');
   startDialog([
     { speaker: 'narrator', text: 'BONUS LEVEL — After too much imperial looksmaxxing, Augustus falls asleep in Rome and wakes up in suburban New Jersey.' },
