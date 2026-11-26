@@ -29,6 +29,7 @@ const sceneArt = {
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
+  soup: loadArt('./assets/bg-soup.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
@@ -616,6 +617,17 @@ const scenes = {
     draw: drawMonks,
     interactions: monksInteractions
   },
+  soup: {
+    w: 640, h: 416, label: 'The Soup Stand · Manhattan', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(8,20,180,330),
+      r(520,20,112,300),
+      r(300,340,200,68)
+    ],
+    draw: drawSoup,
+    interactions: soupInteractions
+  },
   satriale: {
     w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
     colliders: [
@@ -726,6 +738,10 @@ const ambientSpecs = {
     { kind: 'womanA', x: 320, y: 380, region: { x: 120, y: 372, w: 380, h: 28 }, speed: 34 },
     { kind: 'womanB', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
     { kind: 'bobby', x: 60, y: 240, region: { x: 30, y: 130, w: 60, h: 220 }, speed: 20 }
+  ],
+  soup: [
+    { kind: 'womanD', x: 400, y: 100, region: { x: 300, y: 60, w: 180, h: 240 }, speed: 22 },
+    { kind: 'christopher', x: 380, y: 260, region: { x: 300, y: 60, w: 180, h: 240 }, speed: 26 }
   ]
 };
 
@@ -1703,6 +1719,69 @@ function monksInteractions() {
   return list;
 }
 
+function drawSoup() {
+  if (drawSceneArt(sceneArt.soup, 640, 416)) {
+    // the Soup Man glares from behind the counter
+    drawPerson(ctx, 100, 120 + Math.sin(state.time * .9) * 30, 'artie', 'right', state.frame, { pose: 'stand' });
+    // steam rises off the pots
+    for (let i = 0; i < 3; i++) {
+      const sy = (state.time * 26 + i * 40) % 70;
+      const sx = 60 + i * 42;
+      ctx.fillStyle = `rgba(255,255,255,${.3 - sy * .004})`;
+      ctx.beginPath();
+      ctx.ellipse(sx + Math.sin(state.time * 2 + i) * 4, 60 - sy * .5, 5 + sy * .08, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // impatient line shuffles
+    drawPerson(ctx, 330, 96, 'womanA', 'left', state.frame + 1, { pose: 'stand' });
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#5a6a72');
+  outlineText(ctx, 'SOUP', 320, 200, '#ffe5a0', 16, 'center');
+}
+
+function soupInteractions() {
+  return [
+    { x: 200, y: 80, w: 60, h: 80, radius: 40, label: 'Order soup', action: () => {
+      if (state.player.kind === 'george' && !state.flags.soupLesson) {
+        state.flags.soupLesson = true;
+        audio.sfx('denied');
+        spawnEffect(state.player.x, state.player.y - 16, 'NO SOUP FOR YOU!', '#ff8e8e');
+        moveActor(state.player, state.player.x + 60, state.player.y + 60, 170);
+        startDialog([
+          { speaker: 'george', text: 'Yes, hi, hello — I was wondering, and feel free to say no — but is the mulligatawny today truly—' },
+          { speaker: 'artie', text: 'You are talking too much! NO SOUP FOR YOU! Next!' },
+          { speaker: 'george', text: 'But I— I rehearsed it! I had a whole rhythm!' },
+          { speaker: 'narrator', text: 'George is swept toward the door by the sheer force of soup discipline.' }
+        ]);
+      } else if (state.player.kind === 'george') {
+        audio.sfx('pickup');
+        state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+        spawnEffect(state.player.x, state.player.y - 16, 'SOUP +1', '#ffe78a');
+        startDialog([
+          { speaker: 'george', text: 'Crab bisque. Bread. No questions. I know the rules now. I respect the rules.' },
+          { speaker: 'artie', text: 'Good. You learn. Next!' }
+        ]);
+      } else {
+        audio.sfx('pickup');
+        spawnEffect(state.player.x, state.player.y - 16, 'SOUP +1', '#ffe78a');
+        startDialog([
+          { speaker: 'tony', text: 'Lobster bisque. And the bread better be fresh.' },
+          { speaker: 'artie', text: '...For you, extra bread. Big man, big soup. Next!' },
+          { speaker: 'tony', text: 'Guy knows how to run a line. Satriale’s could use him.' }
+        ]);
+      }
+    } },
+    { x: 430, y: 60, w: 80, h: 60, radius: 40, label: 'Bread shelf', action: () => startDialog(
+      state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'If you take the bread before you pay, is it stealing or is it pre-ownership? Asking for me.' }
+      ] : [
+        { speaker: 'tony', text: 'Nice bread. At my house, Carmela hides the good bread from me. Don’t ask.' }
+      ]) },
+    { x: 300, y: 370, w: 100, h: 44, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+  ];
+}
+
 function satrialeInteractions() {
   if (state.flags.freeRoam) {
     return [
@@ -1882,6 +1961,7 @@ function travelHub(place) {
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
+    soup: ['soup', 320, 380, 'The soup stand. The rules are the rules.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -1901,6 +1981,7 @@ function hubInteractions() {
     { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
+    { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
