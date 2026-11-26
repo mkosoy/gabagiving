@@ -361,7 +361,9 @@ function menuEntries() {
       ['deskNap', 'Under-desk nap nook', 'Yankees office'],
       ['soupLesson', 'Soup discipline', 'the soup stand'],
       ['fakeDisability', 'Fake disability', 'Yankees office'],
-      ['cheapInvites', 'Cheap invitations', 'Monk’s Café']
+      ['cheapInvites', 'Cheap invitations', 'Monk’s Café'],
+      ['fedGeese', 'Feed the geese', 'Gabagool Park'],
+      ['pawnedWatch', 'Fence goods at the pawn shop', 'east side']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -628,12 +630,14 @@ const scenes = {
     interactions: njInteractions
   },
   hub: {
-    w: 640, h: 416, label: 'North Caldwell · Free Roam', music: 'house',
+    w: 1280, h: 416, label: 'North Caldwell · Free Roam', music: 'house',
     colliders: [
-      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(0,0,1280,8), r(0,408,1280,8), r(0,0,8,416), r(1272,0,8,416),
       r(20,8,280,136), r(420,8,210,142),
       r(18,248,150,130), r(448,232,184,158),
-      r(260,292,120,68), r(330,168,92,36)
+      r(260,292,120,68), r(330,168,92,36),
+      r(672,8,180,120), r(920,8,170,120), r(1140,8,120,120),
+      r(700,300,150,100), r(960,290,140,110), r(1160,300,100,100)
     ],
     draw: drawHub,
     interactions: hubInteractions
@@ -791,7 +795,10 @@ const ambientSpecs = {
     { kind: 'womanB', x: 210, y: 244, region: { x: 180, y: 222, w: 170, h: 70 }, speed: 32 },
     { kind: 'christopher', x: 480, y: 204, region: { x: 420, y: 178, w: 130, h: 66 }, speed: 36 },
     { kind: 'womanA', x: 100, y: 206, region: { x: 40, y: 168, w: 130, h: 70 }, speed: 28 },
-    { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 }
+    { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 },
+    { kind: 'womanC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
+    { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
+    { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 }
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
@@ -2456,6 +2463,44 @@ function hubInteractions() {
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 460, y: 96, w: 110, h: 30, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
+        { speaker: 'jerry', text: 'You don’t own a car, George. You’ve never pumped gas in your life.' },
+        { speaker: 'george', text: 'I’ve been emotionally pumping gas for years!' }
+      ]);
+      else startDialog([
+        { speaker: 'tony', text: 'Christopher’s cousin runs this place. Skims the register. I allow it. Family discount.' },
+        { speaker: 'narrator', text: 'The pumps are old but the coffee inside is somehow older.' }
+      ]);
+    } },
+    { x: 1165, y: 340, w: 80, h: 50, radius: 44, label: 'Pawn shop', action: () => {
+      if ((state.flags.tribute || 0) >= 100 && !state.flags.pawnedWatch) {
+        state.flags.pawnedWatch = true;
+        state.flags.tribute += 150;
+        spawnEffect(state.player.x, state.player.y - 16, '+$150 FENCED', '#9be59b');
+        audio.sfx('pickup');
+        startDialog([
+          { speaker: 'tony', text: 'That watch? Fell off a truck. Then fell onto my wrist. Now it’s falling into your display case. Circle of life.' },
+          { speaker: 'narrator', text: 'The pawnbroker doesn’t ask questions. Questions are bad for business in this neighborhood.' }
+        ]);
+      } else startDialog(state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'I once pawned a gift. Susan never found out. Well — she found out. But not immediately!' }
+      ] : [
+        { speaker: 'tony', text: 'Bring tribute over a hundred bucks and maybe we talk business. Otherwise it’s just VCRs and regret in there.' }
+      ]);
+    } },
+    { x: 1020, y: 330, w: 90, h: 50, radius: 44, label: 'Gabagool Park', action: () => {
+      if (!state.flags.fedGeese) {
+        state.flags.fedGeese = true;
+        spawnEffect(state.player.x, state.player.y - 16, 'HONK HONK', '#fff1a6');
+        audio.sfx('turkey');
+        startDialog([
+          { speaker: 'narrator', text: 'The geese accept the offering. This is a mistake. There are now forty percent more geese than a minute ago.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why do they keep looking at me like that? I’m not bread! I’M NOT BREAD!' : 'I’m not feeding these things. Last time they unionized.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'The geese remember you. Geese never forget. That’s not a comforting trait in a goose.' }]);
+    } },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
@@ -2490,14 +2535,83 @@ function hubInteractions() {
   return list;
 }
 
+function drawHubEast() {
+  // procedural east neighborhood: asphalt road, sidewalks, lawns, buildings
+  // ground: north grass, road band, south grass
+  px(ctx, 640, 8, 640, 190, '#3d5a34');
+  px(ctx, 640, 198, 640, 90, '#2b2f36');
+  px(ctx, 640, 288, 640, 128, '#42613a');
+  // sidewalks
+  px(ctx, 640, 190, 640, 10, '#8e8e86');
+  px(ctx, 640, 286, 640, 10, '#8e8e86');
+  // road dashes
+  for (let x = 650; x < 1280; x += 42) px(ctx, x, 240, 22, 3, '#d8c86a');
+  // north buildings: brick apartments, gas station, house row
+  px(ctx, 672, 18, 172, 108, '#6e3f30');
+  px(ctx, 680, 26, 156, 12, '#522c22');
+  for (let wx = 686; wx < 836; wx += 26) for (let wy = 46; wy < 116; wy += 26) {
+    px(ctx, wx, wy, 16, 18, '#c8e2ee');
+    px(ctx, wx, wy, 16, 3, '#e8f4fa');
+  }
+  outlineText(ctx, 'COSTANZA CT', 758, 40, '#ffd9a0', 7, 'center');
+  // gas station
+  px(ctx, 920, 18, 162, 108, '#d8d2c4');
+  px(ctx, 920, 18, 162, 22, '#b3312c');
+  outlineText(ctx, 'MOLTISANTI MOTORS', 1001, 24, '#fff1d0', 7, 'center');
+  px(ctx, 940, 56, 30, 44, '#b3312c');
+  px(ctx, 984, 56, 30, 44, '#b3312c');
+  px(ctx, 946, 62, 18, 22, '#22303e');
+  px(ctx, 990, 62, 18, 22, '#22303e');
+  px(ctx, 1032, 60, 40, 30, '#9fd4ec');
+  // east end cap house
+  px(ctx, 1140, 18, 112, 108, '#7a5c38');
+  px(ctx, 1150, 34, 28, 24, '#c8e2ee');
+  px(ctx, 1196, 34, 28, 24, '#c8e2ee');
+  px(ctx, 1168, 74, 26, 52, '#4a2f1e');
+  outlineText(ctx, 'MELFI CT', 1196, 64, '#ffe1b0', 7, 'center');
+  // south side: park with pond + geese
+  px(ctx, 660, 300, 120, 8, '#6b5a40');
+  for (let tx = 660; tx < 850; tx += 30) {
+    px(ctx, tx, 330 + (tx % 60), 6, 22, '#4a3826');
+    px(ctx, tx - 8, 318 + (tx % 60), 22, 16, '#2e5230');
+  }
+  // pond
+  ctx.fillStyle = '#2e5a72';
+  ctx.beginPath();
+  ctx.ellipse(1060, 352, 74, 30, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#3e7290';
+  ctx.beginPath();
+  ctx.ellipse(1060, 348, 60, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // park geese (animated)
+  for (let i = 0; i < 4; i++) {
+    const gx = 990 + i * 34 + Math.sin(state.time * 1.2 + i * 2) * 8;
+    const gy = 322 + (i % 2) * 14;
+    px(ctx, gx, gy, 10, 4, '#f4f0dc');
+    px(ctx, gx + 7, gy - 3, 3, 5, '#f4f0dc');
+    px(ctx, gx + 10, gy - 2, 2, 1, '#e58d2a');
+  }
+  outlineText(ctx, 'GABAGOOL PARK', 1060, 396, '#cfe8c8', 7, 'center');
+  // south-east shops block
+  px(ctx, 1160, 302, 96, 96, '#54406e');
+  px(ctx, 1168, 312, 80, 20, '#8a76a8');
+  outlineText(ctx, 'PAWN', 1208, 318, '#ffe28a', 8, 'center');
+  px(ctx, 1176, 344, 26, 40, '#2a1e38');
+  px(ctx, 1214, 344, 26, 30, '#c8e2ee');
+  // west-side connector sign
+  outlineText(ctx, 'EAST SIDE →', 1268, 220, '#ffe78a', 7, 'right');
+}
+
 function drawHub() {
+  drawHubEast();
   if (drawSceneArt(sceneArt.hub, 640, 416)) {
     // Traffic keeps the free-roam neighborhood alive.
     for (let i = 0; i < 2; i++) {
-      const cx = ((state.time * (54 + i * 22) + i * 310) % 760) - 60;
+      const cx = ((state.time * (54 + i * 22) + i * 310) % 1400) - 60;
       const cy = i ? 268 : 246;
       // horizontal traffic: sideways-simplified but detailed enough to read as cars
-      const tx = i ? 700 - cx : cx;
+      const tx = i ? 1340 - cx : cx;
       px(ctx, tx - 2, cy - 2, 38, 17, 'rgba(0,0,0,.3)');
       px(ctx, tx, cy, 34, 13, '#0d1017');
       px(ctx, tx + 1, cy + 1, 32, 11, i ? '#7e2733' : '#31445e');
