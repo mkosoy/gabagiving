@@ -357,7 +357,7 @@ const scenes = {
       r(252,8,16,66), r(252,136,16,46), r(352,8,16,58), r(352,126,16,56),
       r(8,174,262,16), r(330,174,302,16),
       r(352,190,16,76), r(352,322,16,86),
-      r(62,45,110,126), r(200,20,62,55), r(18,70,54,58),
+      r(62,45,110,100), r(200,20,62,55), r(18,70,54,58),
       r(392,26,138,108), r(568,86,56,88), r(408,122,70,28),
       r(55,280,175,100), r(24,318,42,42), r(392,210,190,36), r(414,292,160,96)
     ],
@@ -525,7 +525,7 @@ function houseInteractions() {
   const s = state.flags.houseStep;
   const list = [];
   if (s === 0) list.push({ x: 214, y: 30, w: 38, h: 34, label: 'Flip TV', action: tvSequence });
-  if (s === 1) list.push({ x: 20, y: 105, w: 34, h: 28, label: 'Read card', action: readCard });
+  if (s === 1) list.push({ x: 20, y: 105, w: 34, h: 28, radius: 56, label: 'Read card', action: readCard });
   if (s === 2) list.push({ x: 108, y: 10, w: 58, h: 28, label: 'Look outside', action: lookWindow });
   if (s === 3) list.push({ x: 474, y: 82, w: 38, h: 36, label: 'Talk to AJ', action: talkAJ });
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
@@ -930,10 +930,17 @@ function updateDrive(dt) {
   d.shake = Math.max(0, d.shake - dt);
   if (d.progress >= 100) {
     d.finished = true;
-    startDialog([
-      { speaker: 'narrator', text: 'The black sedan jerks into a narrow apartment lot. A nervous little man bolts inside.' },
-      { speaker: 'tony', text: 'Now I got him.' }
-    ], () => enterApartment());
+    if (state.flags.freeRoam) {
+      startDialog([
+        { speaker: 'narrator', text: 'The debtor escapes again, but Tony considers the chase a successful cardio exercise.' },
+        { speaker: 'tony', text: 'That’s enough driving. I’m gonna go annoy somebody in person.' }
+      ], () => enterHub(false));
+    } else {
+      startDialog([
+        { speaker: 'narrator', text: 'The black sedan jerks into a narrow apartment lot. A nervous little man bolts inside.' },
+        { speaker: 'tony', text: 'Now I got him.' }
+      ], () => enterApartment());
+    }
   }
 }
 
@@ -1118,11 +1125,6 @@ function meetAugustusAJ() {
 }
 
 function satrialeInteractions() {
-  const s = state.flags.satStep;
-  if (s === 0) return [{ x: 100, y: 142, w: 42, h: 42, label: 'Talk to Bobby', action: talkSatBobby }];
-  if (s === 1) return [{ x: 476, y: 140, w: 42, h: 42, label: 'Talk to Artie', action: talkSatArtie }];
-  if (s === 2) return [{ x: 512, y: 304, w: 42, h: 44, label: 'Talk to Irina', action: talkSatIrina }];
-  if (s === 3) return [{ x: 300, y: 132, w: 46, h: 44, label: 'Talk to Junior', action: talkSatJunior }];
   if (state.flags.freeRoam) {
     return [
       { x: 46, y: 318, w: 110, h: 50, label: 'Produce crate', action: () => startDialog([
@@ -1135,6 +1137,11 @@ function satrialeInteractions() {
       ]) }
     ];
   }
+  const s = state.flags.satStep;
+  if (s === 0) return [{ x: 100, y: 142, w: 42, h: 42, label: 'Talk to Bobby', action: talkSatBobby }];
+  if (s === 1) return [{ x: 476, y: 140, w: 42, h: 42, label: 'Talk to Artie', action: talkSatArtie }];
+  if (s === 2) return [{ x: 512, y: 304, w: 42, h: 44, label: 'Talk to Irina', action: talkSatIrina }];
+  if (s === 3) return [{ x: 300, y: 132, w: 46, h: 44, label: 'Talk to Junior', action: talkSatJunior }];
   return [];
 }
 
@@ -1307,7 +1314,7 @@ function hubInteractions() {
     { x: 116, y: 128, w: 82, h: 46, label: 'Tony’s house', action: () => travelHub('house') },
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
-    { x: 500, y: 286, w: 108, h: 76, label: 'Bada Bing', action: () => travelHub('club') },
+    { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
     { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
       initDrive();
@@ -2470,6 +2477,11 @@ function update(dt) {
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   }
   if (state.help && consume(cancelCodes)) state.help = false;
+  if (!['title', 'ending'].includes(state.mode) && consume(['KeyR'])) {
+    resetGame();
+    pressed.clear();
+    return;
+  }
 
   if (state.mode === 'title') {
     if (interactPressed()) startGame();
