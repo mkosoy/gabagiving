@@ -29,6 +29,7 @@ const sceneArt = {
   hub: loadArt('./assets/bg-njhub.webp'),
   nyc: loadArt('./assets/bg-nyc.webp'),
   pines: loadArt('./assets/bg-pines.webp'),
+  bodega: loadArt('./assets/bg-bodega.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -276,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee'];
 function saveWorld() {
   try {
     const out = {};
@@ -753,6 +754,17 @@ const scenes = {
     ],
     draw: drawNyc,
     interactions: nycInteractions
+  },
+  bodega: {
+    w: 640, h: 416, label: 'Bodega · W 81st', music: 'nyc',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      // shelf walls north/east/west, center aisle shelves, deli counter north-center
+      r(8,8,250,120), r(390,8,242,120), r(8,128,60,200), r(572,128,60,200),
+      r(258,8,124,90), r(180,180,120,60), r(340,180,120,60)
+    ],
+    draw: drawBodega,
+    interactions: bodegaInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -3141,6 +3153,7 @@ function travelHub(place) {
     rome: ['rome', 430, 330, 'The marble arch hums with imperial nonsense.'],
     club: ['club', 320, 330, 'The Bing is quiet again — suspiciously quiet.'],
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
+    bodega: ['bodega', 60, 350, 'The bodega smells like coffee, lottery dreams, and cat.'],
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
     soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
@@ -3694,6 +3707,79 @@ function drawTransit() {
   if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
 }
 
+function drawBodega() {
+  if (!drawSceneArt(sceneArt.bodega, 640, 416)) px(ctx, 0, 0, 640, 416, '#4a3a28');
+  // the cat shifts position slightly, as cats do
+  const cx = 480 + Math.sin(state.time * .3) * 4;
+  px(ctx, cx, 60, 14, 8, '#3a3430');
+  px(ctx, cx + 11, 57, 5, 5, '#3a3430');
+  px(ctx, cx + 12, 56, 1, 1, '#e8b822');
+  px(ctx, cx + 14, 56, 1, 1, '#e8b822');
+  if (Math.floor(state.time * 2) % 4 === 0) px(ctx, cx + 2, 68, 10, 2, '#3a3430'); // tail twitch
+  outlineText(ctx, 'Exit', 24, 380, '#ffe78a', 7, 'left');
+}
+
+function bodegaInteractions() {
+  return [
+    { x: 4, y: 330, w: 60, h: 76, radius: 42, label: 'Leave', action: leaveOutside },
+    { x: 258, y: 8, w: 124, h: 90, radius: 52, label: 'Deli counter', action: () => {
+      if (!state.flags.gotCoffee) {
+        state.flags.gotCoffee = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+        audio.sfx('pickup');
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'Bodega coffee, $2, hot enough to strip paint. George adds six sugars and calls it breakfast.' },
+          { speaker: 'george', text: 'This is the best coffee in Manhattan. Don’t tell Monk’s I said that. Don’t tell anyone anything I say, ever.' }
+        ] : [
+          { speaker: 'narrator', text: 'Bodega coffee. Tony judges it against a lifetime of espresso and finds it… acceptable. Barely. It’s hot.' },
+          { speaker: 'tony', text: 'Two bucks. In Jersey this is a dollar. In Manhattan it’s two. That’s the whole economy in one cup.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'More coffee? Your heart says yes. Your other organs are holding a vote.' }]);
+    } },
+    { x: 460, y: 40, w: 80, h: 60, radius: 44, label: 'Pet the cat', action: () => {
+      audio.sfx('turkey');
+      startDialog([
+        { speaker: 'narrator', text: 'The bodega cat allows exactly two pets, then bites the air near your hand as a warning. Standard bodega cat contract.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I respect a cat with boundaries. I have NO boundaries and look how that’s working out!' : 'This cat’s got more authority than most of my captains.' }
+      ]);
+    } },
+    { x: 390, y: 100, w: 120, h: 40, radius: 44, label: 'Scratch ticket', action: () => {
+      const cd = 30;
+      if ((state.flags.scratchT || 0) + cd > Date.now() / 1000) {
+        startDialog([{ speaker: 'narrator', text: 'The clerk shakes his head. One ticket per customer per… while. He doesn’t make the rules. He absolutely makes the rules.' }]);
+        return;
+      }
+      if ((state.flags.tribute || 0) < 5) {
+        startDialog([{ speaker: 'narrator', text: 'Scratch tickets are $5. You have less than $5. The lottery is not for you today.' }]);
+        return;
+      }
+      state.flags.scratchT = Date.now() / 1000;
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+      audio.sfx('pickup');
+      const roll = Math.random();
+      if (roll < .12) {
+        state.flags.tribute = (state.flags.tribute || 0) + 100;
+        audio.sfx('success');
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 8, 'JACKPOT! +$100', '#8ffff2');
+        startDialog([
+          { speaker: 'narrator', text: 'A HUNDRED DOLLARS! The clerk is genuinely happy for you. He’s never seen this happen. Nobody has.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I WON! I NEVER WIN! This changes EVERYTHING! …It’s a hundred dollars. It changes nothing! BUT STILL!' : 'Heh. Reminds me of the numbers game, except legal and worse odds. I’ll take it.' }
+        ]);
+      } else if (roll < .35) {
+        state.flags.tribute = (state.flags.tribute || 0) + 10;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'Ten dollars. You doubled your money. You are now up $5 on the transaction and down nothing on the dream.' }]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'Nothing. Three shiny little nothing symbols. The ticket goes in the gutter outside, where it joins its family.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'RIGGED! The whole lottery is a tax on people who are bad at math! …I’ll take another.' : 'Shoulda bought the cannoli instead.' }
+        ]);
+      }
+    } }
+  ];
+}
+
 function drawPines() {
   if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
   // drifting mist
@@ -4047,6 +4133,7 @@ function nycInteractions() {
         { speaker: 'narrator', text: 'The 1 train wheezes uptown. Someone is performing magic tricks for no one.' }
       ], () => travelHub('yankees'));
     } },
+    { x: 540, y: 196, w: 46, h: 40, radius: 40, label: 'Bodega', action: () => travelHub('bodega') },
     { x: 500, y: 200, w: 58, h: 34, radius: 40, label: 'Newsstand', action: () => {
       if (!state.flags.boughtPaper) {
         state.flags.boughtPaper = true;
