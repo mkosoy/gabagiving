@@ -4122,6 +4122,16 @@ function drawNyc() {
     px(ctx, 383, 365, 5, 3, '#05070c');
     px(ctx, 402, 365, 5, 3, '#05070c');
   }
+  // parked mail truck — Newman's route, keys in the ignition
+  if (!state.player.inCar) {
+    px(ctx, 640, 354, 34, 13, '#b8b4a8');
+    px(ctx, 642, 355, 30, 11, '#dcd8cc');
+    px(ctx, 642, 356, 12, 9, '#c8c4b8');
+    px(ctx, 655, 357, 8, 6, '#9fd4ec');
+    px(ctx, 644, 357, 4, 4, '#2848a0'); // eagle-ish blob
+    px(ctx, 643, 366, 5, 3, '#05070c');
+    px(ctx, 664, 366, 5, 3, '#05070c');
+  }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
     state.pigeons = [];
@@ -4295,6 +4305,23 @@ function nycInteractions() {
         { speaker: 'george', text: 'I’m not a cab! …I mean, technically NOW I am a cab. Times Square, I guess. Meter’s running!' }
       ] : [
         { speaker: 'tony', text: 'A yellow cab. Perfect. Nobody looks twice at a cab in Manhattan. That’s not theft, that’s camouflage.' }
+      ]);
+    } },
+    { x: 640, y: 358, w: 66, h: 36, radius: 44, label: 'Steal mail truck', hidden: () => !!state.player.inCar, action: () => {
+      state.player.inCar = true;
+      state.player.speed = 150;
+      state.player.carColor = '#dcd8cc';
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 2);
+      audio.sfx('door');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'FEDERAL OFFENSE!', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A USPS mail truck, keys in the ignition. Newman left it running to double-park for a gyro. George commits a federal crime for a slightly faster vehicle.' },
+        { speaker: 'george', text: 'It’s not stealing — I’m relocating government property! …Why does it smell like old tuna?' },
+        { speaker: 'newman', text: 'MY TRUCK! COSTANZAAAA! You can’t handle the ROUTE! There are five hundred undelivered L.L. Bean catalogs in there! FIVE! HUNDRED!' }
+      ] : [
+        { speaker: 'narrator', text: 'A mail truck. Tony considers the resale value of mail. Approximately zero. But it’s slow, armored, and absolutely nobody tailgates a mail truck.' },
+        { speaker: 'tony', text: 'Thing drives like a refrigerator. But a refrigerator nobody pulls in front of.' },
+        { speaker: 'newman', text: 'MAIL THEFT IS A FEDERAL CRIME, SOPRANO! I mean — I’m going to need a ride to work now. Don’t suppose you’re headed to the depot?' }
       ]);
     } },
     { x: 150, y: 330, w: 56, h: 40, radius: 42, label: 'Card hustler', action: () => {
