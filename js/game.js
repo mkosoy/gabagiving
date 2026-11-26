@@ -199,7 +199,7 @@ const names = {
   jerry: 'Jerry', george: 'George', kramer: 'Kramer', elaine: 'Elaine', plav: 'Plav',
   narrator: '', system: 'Objective', janice: 'Janice', guard: 'Roman Guard', steinbrenner: 'Steinbrenner', newman: 'Newman',
   womanA: 'Rose', womanB: 'Linda', womanC: 'Debbie', womanD: 'Marie', paulieSuit: 'Paulie',
-  bobby: 'Bobby', artie: 'Artie', irina: 'Irina', junior: 'Uncle Junior'
+  bobby: 'Bobby', artie: 'Artie', irina: 'Irina', junior: 'Uncle Junior', derek: 'Derek'
 };
 
 const state = {
@@ -273,7 +273,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekMission','derekCash','derekPaid','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -389,7 +389,8 @@ function menuEntries() {
       ['marineBiologist', 'Marine biologist', 'Monk’s payphone'],
       ['festivus', 'Aired grievances', 'Costanza house'],
       ['serenityNow', 'Serenity now', 'Costanza house'],
-      ['packageHeist', 'Package interception', 'the neighborhood']
+      ['packageHeist', 'Package interception', 'the neighborhood'],
+      ['derekPaid', 'Junior’s burrito bail', 'the gas station']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -1134,6 +1135,18 @@ function updateCop(dt) {
 
 function drawHubEventProps() {
   if (state.scene !== 'hub') return;
+  if (state.flags.derekMission && !state.flags.derekPaid) {
+    drawPerson(ctx, 972, 148, 'derek', 'down', state.frame * .5, {});
+    outlineText(ctx, 'DEREK', 980, 128, '#9fb8ec', 6, 'center');
+    if (Math.floor(state.time * 1.4) % 3 === 0) outlineText(ctx, '☎ …yes, he said BURN it down…', 980, 116, '#e8e2d0', 6, 'center');
+  }
+  // cash stash glints
+  if (state.flags.derekMission) {
+    const spots = [['cashStash1', 130, 168], ['cashStash2', 730, 268], ['cashStash3', 990, 228]];
+    for (const [k, sx, sy] of spots) {
+      if (!state.flags[k] && Math.sin(state.time * 4) > 0) outlineText(ctx, '✦', sx, sy, '#ffe78a', 8, 'center');
+    }
+  }
   if (state.iceCream) {
     const t = state.iceCream;
     px(ctx, t.x - 2, t.y - 2, 46, 20, 'rgba(0,0,0,.3)');
@@ -1466,7 +1479,7 @@ function drawEffects() {
 function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
-  const list = scene.interactions().filter((i) => !i.hidden);
+  const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   if (state.flags.freeRoam && state.scene !== 'hub') {
     list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => enterHub(false) });
   }
@@ -1935,7 +1948,18 @@ function wakeFromDream() {
   startDialog([
     { speaker: 'narrator', text: 'Tony jolts awake on the couch. The documentary credits roll. The robe is somehow tighter around the jaw.' },
     { speaker: 'tony', text: 'Groceries. Right. Carmela’s card. Focus.' }
-  ]);
+  ], () => {
+    ringPhone('derek', [
+      { speaker: 'derek', text: 'Tony — Derek. Don’t panic, but Uncle Junior called his waiter a fed and threatened to burn down the new Chipotle on Bloomfield. I’m heading there RIGHT now.' },
+      { speaker: 'tony', text: 'The guy’s ninety-something, what damage could he— you know what, don’t answer that.' },
+      { speaker: 'derek', text: 'I can smooth this over, but we’ll need some cash. Walking-around money. Figure a hundred fifty.' },
+      { speaker: 'tony', text: 'A hundred fifty. For a burrito incident. Fine — I know a few places money tends to fall outta people’s pockets. I’ll find you by the gas station.' },
+      { speaker: 'derek', text: 'Hurry, Tony. And Tony — this stays between us. Attorney-client, whatever.' }
+    ], () => {
+      state.flags.derekMission = true;
+      objective('Find $150 around the neighborhood for Derek');
+    });
+  });
 }
 
 // ---------- Driving ----------
@@ -2765,6 +2789,18 @@ function schemeCount() {
   return WORLD_FLAGS.filter((k) => k !== 'tribute' && state.flags[k]).length;
 }
 
+function grabStash(key) {
+  state.flags[key] = true;
+  state.flags.derekCash = (state.flags.derekCash || 0) + 50;
+  audio.sfx('cash');
+  const left = ['cashStash1','cashStash2','cashStash3'].filter((k) => !state.flags[k]).length;
+  startDialog([
+    { speaker: 'narrator', text: `+50 bucks for the Junior defense fund. ($${state.flags.derekCash}/150)` },
+    { speaker: 'tony', text: left ? 'Every little bit. Derek better appreciate this.' : 'That’s the hundred fifty. Time to pay the lawyer before Junior discovers guac.' }
+  ]);
+  if (!left) objective('Bring the cash to Derek at the gas station');
+}
+
 function travelHub(place) {
   // revisit surprises: the world remembers what you've been up to
   if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
@@ -2824,6 +2860,28 @@ function hubInteractions() {
     } },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
     { x: 856, y: 300, w: 64, h: 56, radius: 52, label: 'Costanza house', action: () => travelHub('costanza') },
+    { x: 100, y: 150, w: 60, h: 40, radius: 42, label: 'Loose envelope', hidden: () => !state.flags.derekMission || state.flags.cashStash1, action: () => grabStash('cashStash1') },
+    { x: 700, y: 250, w: 60, h: 44, radius: 42, label: 'Dropped wallet', hidden: () => !state.flags.derekMission || state.flags.cashStash2, action: () => grabStash('cashStash2') },
+    { x: 960, y: 210, w: 64, h: 44, radius: 42, label: 'Unattended tip jar', hidden: () => !state.flags.derekMission || state.flags.cashStash3, action: () => grabStash('cashStash3') },
+    { x: 950, y: 130, w: 70, h: 50, radius: 46, label: 'Derek (your lawyer)', hidden: () => !state.flags.derekMission || state.flags.derekPaid, action: () => {
+      const got = (state.flags.derekCash || 0) >= 150;
+      if (!got) {
+        startDialog([
+          { speaker: 'derek', text: `You’ve got $${state.flags.derekCash || 0}. I said a hundred fifty, Tony. Junior’s currently asking the Chipotle line cook if he wears a wire.` },
+          { speaker: 'tony', text: 'I’m workin’ on it. Cash doesn’t grow on trees — it grows in envelopes, tip jars, and the occasional dropped wallet.' }
+        ]);
+      } else {
+        state.flags.derekPaid = true;
+        state.flags.tribute = (state.flags.tribute || 0) + 75;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'Tony peels off the cash. Derek counts it twice, folds it into his jacket like it never existed.' },
+          { speaker: 'derek', text: 'And this is why you’re my favorite client, Tony. Quick, quiet, no questions. Now if you’ll excuse me, I have a burrito-based arson threat to defuse.' },
+          { speaker: 'tony', text: 'Tell Junior the feds don’t serve carnitas. He’ll lose interest.' },
+          { speaker: 'derek', text: '…That’s actually not bad. Hey — you didn’t get this money anywhere weird, right? Don’t answer that. Don’t EVER answer that.' }
+        ]);
+      }
+    } },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
@@ -4012,7 +4070,7 @@ function drawPlayer() {
 function drawInteractionMarkers() {
   const scene = scenes[state.scene];
   if (!scene || state.mode !== 'explore') return;
-  const list = scene.interactions().filter((i) => !i.hidden);
+  const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   for (const it of list) {
     const cx = it.x + it.w / 2;
     const cy = it.y - 8 + Math.sin(state.time * 5 + cx * .1) * 2;
@@ -4033,7 +4091,7 @@ function objectiveTarget() {
   if (!scene || state.mode !== 'explore') return null;
   // free roam has no single objective — the arrow would just be noise
   if (state.scene === 'hub') return null;
-  const list = scene.interactions().filter((i) => !i.hidden && !/leave|exit/i.test(i.label));
+  const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden) && !/leave|exit/i.test(i.label));
   const priority = list.filter((i) => /talk|meet|speak|order|enter|use|take|sit|answer|carve|answer|glow|drive|start|confront/i.test(i.label));
   return priority[0] || list[0] || null;
 }

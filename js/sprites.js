@@ -60,6 +60,7 @@ const illustratedSprites = {
   artie: loadSprite('./assets/sprites/artie.webp'),
   irina: loadSprite('./assets/sprites/irina.webp'),
   junior: loadSprite('./assets/sprites/junior.webp'),
+  derek: loadSprite('./assets/sprites/derek.webp'),
   janice: loadSprite('./assets/sprites/janice.webp'),
   plav: loadSprite('./assets/sprites/plav.webp'),
   romanGuard: loadSprite('./assets/sprites/romanGuard.webp'),
@@ -82,7 +83,7 @@ function canonicalSpriteKind(kind) { return spriteAliases[kind] || kind; }
 
 function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   const pose = options.pose || 'stand';
-  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46 };
+  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45 };
   let h = (heights[kind] || 43) * (options.scale ? options.scale / 1.18 : 1);
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
@@ -152,6 +153,7 @@ const palettes = {
   carmela: { skin: '#d69d73', hair: '#caa15b', shirt: '#7d3042', pants: '#2c2f42', shoes: '#17161c', accent: '#f0d47c' },
   meadow: { skin: '#d59a72', hair: '#3a241e', shirt: '#755aa8', pants: '#2d3852', shoes: '#17161c', accent: '#e8d5ff' },
   melfi: { skin: '#d8a47c', hair: '#b7b0a5', shirt: '#263447', pants: '#34313b', shoes: '#17161c', accent: '#d8d0bd' },
+  derek: { skin: '#e0ac82', hair: '#6e4a2e', shirt: '#233254', pants: '#1d2a48', shoes: '#5a3a22', accent: '#7ea8e8' },
   plav: { skin: '#d99b68', hair: '#151312', shirt: '#111722', pants: '#171c26', shoes: '#08090d', accent: '#8ffff2' },
   janice: { skin: '#cf9068', hair: '#5c251e', shirt: '#71305d', pants: '#3a2746', shoes: '#17161c', accent: '#f06eaa' },
   guard: { skin: '#c89166', hair: '#40302a', shirt: '#9a2e32', pants: '#5e5960', shoes: '#4b3224', accent: '#d5b45a' }
