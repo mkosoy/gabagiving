@@ -27,6 +27,7 @@ function loadArt(src) {
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
+  nyc: loadArt('./assets/bg-nyc.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -267,13 +268,14 @@ function saveProgress() {
       scene: state.scene,
       objective: state.objective,
       player: { x: state.player.x, y: state.player.y, dir: state.player.dir, kind: state.player.kind },
+      returnTo: state.returnTo || null,
       stats: state.stats,
       unlocked: state.unlocked || {}
     }));
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit'];
 function saveWorld() {
   try {
     const out = {};
@@ -428,6 +430,7 @@ function continueGame() {
   setScene(s.scene || 'house', s.player?.x ?? 190, s.player?.y ?? 124);
   state.player.dir = s.player?.dir || 'down';
   state.player.kind = s.player?.kind || 'tony';
+  state.returnTo = s.returnTo || null;
   objective(s.objective || 'Explore');
 }
 function speakerName(key) { return Object.prototype.hasOwnProperty.call(names, key) ? names[key] : (key || ''); }
@@ -632,7 +635,7 @@ function costanzaInteractions() {
       { speaker: 'tony', text: 'That… sounds like her. Sorry about the kreplach.' }
     ]);
   } },
-  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: () => travelHub('hub') }
+  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: leaveOutside }
   ];
 }
 
@@ -735,6 +738,18 @@ const scenes = {
     ],
     draw: drawHub,
     interactions: hubInteractions
+  },
+  nyc: {
+    w: 768, h: 416, label: 'Manhattan · Upper West Side', music: 'nyc',
+    colliders: [
+      r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
+      // building rows with gaps at doorways: Monk's ~125, soup ~435, Jerry's ~650
+      r(8,8,100,196), r(150,8,270,196), r(470,8,160,196), r(688,8,76,196),
+      // sidewalk furniture: newsstand and subway stairwell
+      r(500,200,58,34), r(4,200,26,52)
+    ],
+    draw: drawNyc,
+    interactions: nycInteractions
   },
   vesuvio: {
     w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'vesuvio',
@@ -907,6 +922,15 @@ const ambientSpecs = {
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
+  nyc: [
+    { kind: 'kramer', x: 300, y: 244, region: { x: 560, y: 236, w: 150, h: 36 }, speed: 44, npc: 'kramer' },
+    { kind: 'elaine', x: 460, y: 254, region: { x: 90, y: 238, w: 300, h: 36 }, speed: 36 },
+    { kind: 'womanA', x: 200, y: 250, region: { x: 60, y: 236, w: 640, h: 40 }, speed: 38 },
+    { kind: 'jerry', x: 500, y: 246, region: { x: 420, y: 236, w: 300, h: 36 }, speed: 30 },
+    { kind: 'womanD', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
+    { kind: 'christopher', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 28 },
+    { kind: 'womanC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
+  ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
     { kind: 'christopher', x: 500, y: 270, region: { x: 440, y: 250, w: 130, h: 80 }, speed: 34 },
@@ -1003,37 +1027,58 @@ function shoveNearest() {
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bd) { best = n; bd = d; }
   }
-  // a hostile brawler in range takes the hit instead
+  // determine what the punch connects with before touching the combo —
+  // a whiffed punch at empty air must not build one
   const bw = state.brawler;
-  if (bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34) {
+  const hitsBrawler = bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34;
+  if (!hitsBrawler && !best) return false;
+  // combo tracking: consecutive hits within 1.4s build a combo
+  const now = state.time;
+  if (!state.combo || now - (state.comboT || 0) > 1.4) state.combo = 0;
+  state.combo += 1;
+  state.comboT = now;
+  const combo = state.combo;
+  const comboMul = Math.min(3, 1 + (combo - 1) * .5);
+  // a hostile brawler in range takes the hit instead
+  if (hitsBrawler) {
     bw.hp -= 1;
     bw.hitT = .5;
-    bw.x += (bw.x - state.player.x) * .3;
-    bw.y += (bw.y - state.player.y) * .3;
+    bw.x += (bw.x - state.player.x) * .3 * comboMul;
+    bw.y += (bw.y - state.player.y) * .3 * comboMul;
     bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
     bw.barkT = 1.4;
-    spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? 'POW' : 'KNOCKOUT!', '#ffe78a');
+    const hitWord = combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
+    spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? hitWord : 'KNOCKOUT!', '#ffe78a');
+    if (combo >= 2) spawnEffect(bw.x + 8, bw.y - 24, `COMBO x${combo}`, '#ff9a3e');
     audio.sfx('smash');
-    if (bw.hp <= 0) spawnEffect(state.player.x + 8, state.player.y - 22, state.player.kind === 'george' ? 'GEORGE WINS?!' : 'TONY WINS', '#9be59b');
+    if (bw.hp <= 0) {
+      spawnEffect(state.player.x + 8, state.player.y - 22, state.player.kind === 'george' ? 'GEORGE WINS?!' : 'TONY WINS', '#9be59b');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+    }
     return true;
   }
   if (!best) return false;
   const ang = Math.atan2(best.y - p.y, best.x - p.x) || 0;
-  best.x += Math.cos(ang) * 26;
-  best.y += Math.sin(ang) * 26;
-  best.diveT = .5;
+  const knock = 26 * comboMul;
+  best.x += Math.cos(ang) * knock;
+  best.y += Math.sin(ang) * knock;
+  best.diveT = .5 + combo * .1;
   best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
   best.barkT = 1.6;
-  state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+  state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   if (p.kind === 'george' && Math.random() < .3) {
     spawnEffect(p.x + 8, p.y - 14, 'MY BACK!', '#ff8e8e');
     best.bark = 'did… did you just hurt YOURSELF?';
     audio.sfx('denied');
   }
-  spawnEffect(best.x + 8, best.y - 10, 'SHOVED', '#ff9a7a');
-  if (p.kind !== 'george' && Math.random() < .45) {
+  spawnEffect(best.x + 8, best.y - 10, combo >= 3 ? 'LAUNCHED' : combo === 2 ? 'SHOVED x2' : 'SHOVED', '#ff9a7a');
+  if (combo >= 2) spawnEffect(best.x + 8, best.y - 22, `COMBO x${combo}`, '#ff9a3e');
+  // combo finishers drop extra cash
+  const cashChance = p.kind === 'george' ? 0 : Math.min(.8, .45 + (combo - 1) * .2);
+  if (Math.random() < cashChance) {
     if (!state.cash) state.cash = [];
     state.cash.push({ x: best.x + 6, y: best.y + 14, t: 0 });
+    if (combo >= 3) state.cash.push({ x: best.x - 8, y: best.y + 18, t: 0 });
     best.bark = 'TAKE IT! JUST TAKE IT!';
   }
   audio.sfx('smash');
@@ -1093,7 +1138,7 @@ function drawAmbient() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || state.scene !== 'hub') { state.cop = null; return; }
+  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
   if (heat >= 3 && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
@@ -1105,19 +1150,37 @@ function updateCop(dt) {
   if (heat < 1.5) {
     spawnEffect(c.x, c.y, 'HEAT CLEARED', '#8ffff2');
     state.cop = null;
+    state.cop2 = null;
     return;
   }
-  c.flashT += dt;
+  // wanted escalation: a second unit joins at high heat
+  if (heat >= 3.5 && !state.cop2) {
+    state.cop2 = { x: state.scene === 'nyc' ? 740 : 1240, y: 380, flashT: 0, bustT: 0 };
+    spawnEffect(state.player.x + 8, state.player.y - 20, 'BACKUP CALLED!', '#8fb8ff');
+    audio.sfx('honk');
+  }
+  if (heat < 3 && state.cop2) state.cop2 = null;
   const p = state.player;
+  const speed = p.inCar ? 150 : 120;
+  for (const unit of [c, state.cop2].filter(Boolean)) {
+    unit.flashT += dt;
+    // second unit approaches from a flanking angle
+    const flank = unit === state.cop2 ? 60 : 0;
+    const tx = (p.x + 8) + flank, ty = (p.y + 8) - flank * .5;
+    const dx = tx - unit.x, dy = ty - unit.y;
+    const d = Math.hypot(dx, dy) || 1;
+    unit.x += dx / d * speed * dt;
+    unit.y += dy / d * speed * dt;
+  }
   const dx = (p.x + 8) - c.x, dy = (p.y + 8) - c.y;
   const d = Math.hypot(dx, dy) || 1;
-  const speed = p.inCar ? 150 : 120;
-  c.x += dx / d * speed * dt;
-  c.y += dy / d * speed * dt;
-  if (d < 30) {
+  // either unit close enough counts toward the bust
+  const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
+  if (Math.min(d, d2) < 30) {
     c.bustT += dt;
     if (c.bustT > .8) {
       state.cop = null;
+      state.cop2 = null;
       state.flags.heat = 0;
       p.inCar = false;
       p.speed = p.kind === 'george' ? 96 : 88;
@@ -1172,13 +1235,14 @@ function drawHubEventProps() {
 }
 
 function drawCop() {
-  const c = state.cop;
-  if (!c || state.scene !== 'hub') return;
-  drawCar(c.x, c.y, '#e8ecf2');
-  // flashing lightbar
-  const phase = Math.floor(c.flashT * 6) % 2;
-  px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
-  px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return;
+  for (const c of [state.cop, state.cop2].filter(Boolean)) {
+    drawCar(c.x, c.y, '#e8ecf2');
+    // flashing lightbar
+    const phase = Math.floor(c.flashT * 6) % 2;
+    px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
+    px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
+  }
 }
 
 function updateKramerCycle(dt) {
@@ -1277,8 +1341,110 @@ function drawBrawler() {
   if (b.barkT > 0 && b.bark) outlineText(ctx, b.bark, b.x + 8, b.y - 16, '#ffb1a1', 7, 'center');
 }
 
+function updateNycTaxis(dt) {
+  if (state.scene !== 'nyc') return;
+  if (!state.nycCars) {
+    state.nycCars = [
+      { x: 100, y: 292, dir: 1, speed: 66, brakeT: 0, honkT: 0 },
+      { x: 500, y: 292, dir: 1, speed: 54, brakeT: 0, honkT: 0 },
+      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 }
+    ];
+  }
+  const p = state.player;
+  for (const c of state.nycCars) {
+    if (c.honkT > 0) c.honkT -= dt;
+    if (c.brakeT > 0) c.brakeT -= dt;
+    const blocked = !p.inCar && Math.abs(p.y - (c.y + 8)) < 22 && (c.dir > 0 ? (c.x < p.x && p.x - c.x < 92) : (c.x > p.x && c.x - p.x < 92));
+    if (blocked) {
+      c.brakeT = Math.max(c.brakeT, .3);
+      c.stuckT = (c.stuckT || 0) + dt;
+      if (c.stuckT > 1.2 && c.honkT <= 0) {
+        c.honkT = 1.4;
+        c.stuckT = 0;
+        audio.sfx('honk');
+        spawnEffect(c.x + 15, c.y - 6, 'HONK!', '#ffe78a');
+      }
+    } else c.stuckT = 0;
+    if (c.brakeT > 0) {
+      c.x += c.dir * 8 * dt;
+    } else {
+      c.x += c.dir * c.speed * dt;
+    }
+    if (c.dir > 0 && c.x > 840) { c.x = -70; c.brakeT = 0; }
+    if (c.dir < 0 && c.x < -80) { c.x = 840; c.brakeT = 0; }
+  }
+}
+
 function updateHubEvents(dt) {
+  updateNycTaxis(dt);
   if (!state.flags.freeRoam || state.scene !== 'hub') return;
+  // persistent reactive traffic: cars brake and honk at pedestrians, crash into the player's car
+  if (!state.hubCars) {
+    state.hubCars = [
+      { x: 100, y: 246, dir: 1, speed: 54, color: '#31445e', honkT: 0, brakeT: 0 },
+      { x: 900, y: 268, dir: -1, speed: 66, color: '#7e2733', honkT: 0, brakeT: 0 }
+    ];
+  }
+  const p = state.player;
+  for (const c of state.hubCars) {
+    if (c.honkT > 0) c.honkT -= dt;
+    if (c.brakeT > 0) c.brakeT -= dt;
+    if (c.clipT > 0) c.clipT -= dt;
+    // is the player in the road ahead of this car?
+    const aheadX = c.x + c.dir * 40;
+    const playerInPath = Math.abs(p.y - c.y) < 18 && ((c.dir > 0 && p.x > c.x - 10 && p.x < aheadX + 55) || (c.dir < 0 && p.x < c.x + 34 && p.x > aheadX - 55));
+    let braking = false;
+    if (!p.inCar && playerInPath) {
+      braking = true;
+      if (c.honkT <= 0) {
+        c.honkT = 1.6 + Math.random();
+        audio.sfx('honk');
+        spawnEffect(c.x + 17, c.y - 12, 'HONK!', '#ffe78a');
+      }
+      // run-down at speed if the car isn't yet braking much
+      const pd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
+      if (pd < 20 && c.brakeT <= 0 && (c.clipT || 0) <= 0) {
+        c.clipT = 1.2;
+        p.inCar = false;
+        spawnEffect(p.x + 8, p.y - 14, 'CLIP!', '#ff6a6a');
+        // knockback must not shove the player through walls — step out as far as collision allows
+        let knock = 30;
+        while (knock > 0 && blockedAt(p.x + c.dir * knock, p.y)) knock -= 6;
+        if (knock > 0) p.x += c.dir * knock;
+        state.flags.hp = Math.max(1, (state.flags.hp || 3) - 1);
+        audio.sfx('crash');
+      }
+    }
+    // player driving into traffic: fender bender
+    const cd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 10) - (c.y + 7));
+    if (p.inCar) {
+      if (cd < 26 && c.crashT === undefined) {
+        c.crashT = 0;
+        c.brakeT = 2.5;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .75);
+        spawnEffect(c.x + 17, c.y - 10, 'CRUNCH!', '#ff9a7a');
+        audio.sfx('crash');
+        if (!state.cash) state.cash = [];
+        if (Math.random() < .5) state.cash.push({ x: c.x + 22, y: c.y + 16, t: 0 });
+        c.honkT = 2;
+        audio.sfx('honk');
+      }
+    }
+    if (c.crashT !== undefined) {
+      c.crashT += dt;
+      // cooldown only clears once the cars have actually separated,
+      // so one sustained contact can never count as two crashes
+      if (c.crashT > 2.5 && cd > 32) delete c.crashT;
+    }
+    if (!braking && c.brakeT <= 0) {
+      c.x += c.dir * c.speed * dt;
+      if (c.dir > 0 && c.x > 1400) { c.x = -60; c.y = 246; }
+      if (c.dir < 0 && c.x < -70) { c.x = 1400; c.y = 268; }
+    } else if (braking) {
+      // crawl slowly while someone stands in the road
+      c.x += c.dir * 9 * dt;
+    }
+  }
   if (state.iceCream) {
     state.iceCream.t += dt;
     state.iceCream.x += 52 * dt;
@@ -1480,8 +1646,11 @@ function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
-  if (state.flags.freeRoam && state.scene !== 'hub') {
-    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => enterHub(false) });
+  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
+    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
+      if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
+      else enterHub(false);
+    } });
   }
   const pc = { x: state.player.x + 8, y: state.player.y + 12 };
   let best = null;
@@ -1978,10 +2147,27 @@ function initDrive() {
     road: 0,
     spawn: .2,
     obstacles: [],
+    particles: [],
     shake: 0,
     boost: 0,
+    speed: .42,
     finished: false
   };
+}
+
+function spawnSparks(d, x, y, n = 10) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const v = 40 + Math.random() * 90;
+    d.particles.push({
+      x, y,
+      vx: Math.cos(a) * v,
+      vy: Math.sin(a) * v - 30,
+      life: .5 + Math.random() * .4,
+      t: 0,
+      color: Math.random() < .5 ? '#ffd76e' : Math.random() < .5 ? '#ff9a4a' : '#c8ccd4'
+    });
+  }
 }
 
 function updateDrive(dt) {
@@ -1989,61 +2175,97 @@ function updateDrive(dt) {
   const d = state.drive;
   if (!d || d.finished) return;
   const input = moveInput();
-  d.x = Math.max(205, Math.min(435, d.x + input.x * 190 * dt));
+  // acceleration physics: up = gas, down = brake, natural drift toward cruise speed
+  const cruise = .42;
+  if (input.y < 0) d.speed = Math.min(1, d.speed + .52 * dt);
+  else if (input.y > 0) d.speed = Math.max(.12, d.speed - 1.15 * dt);
+  else d.speed += (cruise - d.speed) * Math.min(1, .35 * dt);
+  // steering tightens slightly at speed
+  d.x = Math.max(180, Math.min(460, d.x + input.x * (140 + d.speed * 120) * dt));
   d.boost = Math.max(0, d.boost - dt);
-  const boostMul = d.boost > 0 ? 1.75 : 1;
-  d.road += dt * (185 + d.progress * .6) * boostMul;
-  d.progress += dt * 2.7 * boostMul;
+  const boostMul = d.boost > 0 ? 1.6 : 1;
+  const scroll = (110 + d.speed * 330) * boostMul;
+  d.road += dt * scroll;
+  d.progress += dt * 5.2 * d.speed * boostMul;
+  // exhaust particles when flooring it
+  if (input.y < 0 && Math.random() < dt * 14) {
+    d.particles.push({ x: d.x + (Math.random() - .5) * 10, y: d.y + 20, vx: (Math.random() - .5) * 12, vy: 40 + Math.random() * 30, life: .5, t: 0, color: 'rgba(120,120,120,.5)', smoke: true });
+  }
   d.spawn -= dt;
   if (d.spawn <= 0) {
-    d.spawn = Math.max(.45, .88 - d.progress * .004);
+    d.spawn = Math.max(.5, .95 - d.progress * .004);
     const typeRoll = Math.random();
-    const type = typeRoll < .14 ? 'money' : typeRoll < .42 ? 'gabagool' : typeRoll < .58 ? 'nycrew' : typeRoll < .78 ? 'janice' : 'paulie';
-    const lanes = [220, 275, 330, 385, 430];
+    const type = typeRoll < .13 ? 'money' : typeRoll < .34 ? 'gabagool' : typeRoll < .5 ? 'nycrew' : typeRoll < .64 ? 'traffic' : typeRoll < .78 ? 'nycar' : typeRoll < .9 ? 'janice' : 'paulie';
+    const lanes = [195, 250, 305, 360, 415, 455];
     d.obstacles.push({
       type,
       x: lanes[Math.floor(Math.random() * lanes.length)],
       y: -45,
-      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : type === 'nycrew' ? (Math.random() - .5) * 90 : 0,
+      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : type === 'nycrew' ? (Math.random() - .5) * 90 : type === 'nycar' ? (Math.random() - .5) * 40 : 0,
       hit: false,
       sprite: Math.random() < .5 ? 'silvio' : 'christopher',
-      wobble: Math.random() * 10
+      wobble: Math.random() * 10,
+      carColor: ['#4a5e78', '#6e5540', '#556b4f', '#7a4a55'][Math.floor(Math.random() * 4)],
+      speedMul: type === 'traffic' ? .45 + Math.random() * .2 : type === 'nycar' ? .7 : 1
     });
   }
   for (const o of d.obstacles) {
-    o.y += dt * (150 + d.progress * .8);
+    o.y += dt * scroll * (o.speedMul || 1);
     o.x += o.vx * dt;
     if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
-    if (o.x < 190 || o.x > 450) o.vx *= -1;
+    if (o.x < 178 || o.x > 462) o.vx *= -1;
     const ox = o.x - 13, oy = o.y - 12;
     const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
     if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 26, h: 24 })) {
       o.hit = true;
       if (o.type === 'money') {
         d.boost = 2.7;
-        d.progress = Math.min(100, d.progress + 4);
+        d.score += 100;
+        spawnEffect(o.x, o.y - 8, '+$100', '#9be59b');
         audio.sfx('pickup');
       } else if (o.type === 'nycrew') {
         d.score += 250;
-        d.progress = Math.min(100, d.progress + 2.5);
         d.boost = Math.max(d.boost, 1.1);
         o.spin = 1;
+        spawnSparks(d, o.x, o.y, 8);
         spawnEffect(o.x, o.y - 8, '+250 NY CREW', '#ffe78a');
         audio.sfx('smash');
         audio.voice('junior');
+      } else if (o.type === 'nycar' && d.speed > .62) {
+        // ram them at speed: spin them out
+        d.score += 400;
+        o.spin = 1.2;
+        d.speed = Math.max(.35, d.speed - .18);
+        d.shake = .3;
+        spawnSparks(d, o.x, o.y, 16);
+        spawnEffect(o.x, o.y - 8, 'RAMMED +$400', '#ffe78a');
+        audio.sfx('smash');
+        audio.voice('tony');
       } else {
+        // crash: lose speed hard
         d.health -= 1;
-        d.progress = Math.max(0, d.progress - 3);
+        d.speed = Math.max(.15, d.speed * .42);
         d.shake = .45;
+        spawnSparks(d, (d.x + o.x) / 2, d.y - 10, 14);
         state.stats.crashes += 1;
         audio.sfx(o.type === 'gabagool' ? 'splash' : 'crash');
+        if (o.type === 'traffic' || o.type === 'nycar') o.spin = .8;
         if (d.health <= 0) {
           d.health = 3;
           d.progress = Math.max(0, d.progress - 8);
+          d.speed = .2;
         }
       }
     }
   }
+  // particles
+  for (const p of d.particles) {
+    p.t += dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    if (!p.smoke) p.vy += 120 * dt;
+  }
+  d.particles = d.particles.filter((p) => p.t < p.life);
   d.obstacles = d.obstacles.filter((o) => o.y < 410);
   d.shake = Math.max(0, d.shake - dt);
   if (d.progress >= 100) {
@@ -2463,7 +2685,7 @@ function monksInteractions() {
         { speaker: 'tony', text: 'Coffee. Black. Like my soul after talking to my mother.' }
       ]);
     } },
-    { x: 570, y: 330, w: 60, h: 80, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 570, y: 330, w: 60, h: 80, radius: 42, label: 'Leave', action: leaveOutside }
   ];
   return list;
 }
@@ -2527,7 +2749,7 @@ function soupInteractions() {
       ] : [
         { speaker: 'tony', text: 'Nice bread. At my house, Carmela hides the good bread from me. Don’t ask.' }
       ]) },
-    { x: 400, y: 356, w: 110, h: 50, radius: 44, label: 'Leave', action: () => travelHub('hub') }
+    { x: 400, y: 356, w: 110, h: 50, radius: 44, label: 'Leave', action: leaveOutside }
   ];
 }
 
@@ -2615,7 +2837,7 @@ function yankeesInteractions() {
       ] : [
         { speaker: 'tony', text: 'Gold trophies in a case. Reminds me — I gotta collect something from a guy who collects things.' }
       ]) },
-    { x: 560, y: 350, w: 70, h: 60, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 560, y: 350, w: 70, h: 60, radius: 42, label: 'Leave', action: leaveOutside }
   ];
 }
 
@@ -2789,7 +3011,7 @@ function enterHub(first = false) {
   }
 }
 
-const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid'];
+const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid','latexExport','oilBladder'];
 
 function schemeCount() {
   return SCHEME_FLAGS.filter((k) => state.flags[k]).length;
@@ -2807,7 +3029,25 @@ function grabStash(key) {
   if (!left) objective('Bring the cash to Derek at the gas station');
 }
 
+function leaveOutside() {
+  const r = state.returnTo;
+  if (r && r.scene !== state.scene && scenes[r.scene]) {
+    setScene(r.scene, r.x, r.y);
+    state.mode = 'explore';
+  } else travelHub('hub');
+}
+
 function travelHub(place) {
+  // remember which outdoor region we came from so interior exits return correctly
+  if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
+    state.returnTo = null;
+    const bx = Math.max(20, state.player.x);
+    const by = state.player.y;
+    for (const [ox, oy] of [[0, 26], [0, -26], [26, 0], [-26, 0], [0, 44], [0, -44]]) {
+      const cx = bx + ox, cy = Math.max(20, Math.min(400, by + oy));
+      if (!blockedAt(cx, cy) && !blockedAt(cx, cy + 14)) { state.returnTo = { scene: state.scene, x: cx, y: cy }; break; }
+    }
+  }
   // revisit surprises: the world remembers what you've been up to
   if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
     state.flags.pendingSurprise = true;
@@ -2841,11 +3081,17 @@ function hubInteractions() {
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
-    { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
-    { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
-    { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
-    { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 1236, y: 210, w: 44, h: 90, radius: 52, label: 'NYC →', action: () => {
+      audio.sfx('honk');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George takes the tunnel. He gripes about the toll the entire way through.' },
+        { speaker: 'george', text: 'Eighteen dollars! For a hole in a river! I could SWIM for free!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony points the car east. Manhattan. More people to owe him money per square mile than anywhere on earth.' },
+        { speaker: 'tony', text: 'The city. Love it. Hate the parking.' }
+      ], () => { setScene('nyc', 40, 250); state.mode = 'explore'; objective('Manhattan — Seinfeld country'); });
+    } },
     { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
       if (!state.flags.packageHeist) {
         state.flags.packageHeist = true;
@@ -3061,18 +3307,187 @@ function drawHubEast() {
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
 }
 
+function drawNyc() {
+  if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
+    px(ctx, 0, 0, 768, 416, '#5a4a3a');
+  }
+  // persistent reactive taxis — they brake and honk at jaywalkers
+  if (!state.nycCars) updateNycTaxis(0);
+  for (const c of (state.nycCars || [])) {
+    const tx = c.x, cy = c.y;
+    px(ctx, tx - 2, cy - 2, 34, 15, 'rgba(0,0,0,.3)');
+    px(ctx, tx, cy, 30, 11, '#c9a015');
+    px(ctx, tx + 2, cy + 1, 26, 9, '#e8b822');
+    px(ctx, tx + 7, cy + 2, 14, 7, '#9fd4ec');
+    px(ctx, tx + 12, cy - 2, 6, 3, '#fff3b0');
+    px(ctx, tx + 3, cy + 10, 5, 3, '#05070c');
+    px(ctx, tx + 22, cy + 10, 5, 3, '#05070c');
+    if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
+    if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
+  }
+  // pigeon flock that scatters when the player plows through
+  if (!state.pigeons) {
+    state.pigeons = [];
+    for (let i = 0; i < 6; i++) state.pigeons.push({ hx: 260 + (i % 3) * 18, hy: 340 + Math.floor(i / 3) * 14, x: 260 + (i % 3) * 18, y: 340 + Math.floor(i / 3) * 14, fly: 0, seed: i * 1.7 });
+  }
+  for (const pg of state.pigeons) {
+    const dist = Math.hypot(state.player.x - pg.x, state.player.y - pg.y);
+    if (dist < 26 && pg.fly <= 0) { pg.fly = 1.4 + Math.random() * .5; pg.vx = (pg.x - state.player.x || 1) * 3; pg.vy = -60 - Math.random() * 40; if (Math.random() < .3) audio.sfx('thud'); }
+    if (pg.fly > 0) {
+      pg.fly -= 1 / 60;
+      pg.x += pg.vx / 60;
+      pg.y += pg.vy / 60;
+      pg.vy += 3;
+      if (pg.fly <= 0) { pg.hx = Math.max(60, Math.min(720, pg.x)); pg.hy = Math.max(300, Math.min(390, pg.y)); }
+    } else {
+      pg.x += (pg.hx - pg.x) * .02 + Math.sin(state.time * 2 + pg.seed) * .3;
+      pg.y += (pg.hy - pg.y) * .02;
+    }
+    const flap = Math.sin(state.time * 18 + pg.seed) > 0 ? -1 : 0;
+    px(ctx, pg.x - 3, pg.y - 2 + flap, 2, 2, '#8a8a92');
+    px(ctx, pg.x + 1, pg.y - 2 + flap, 2, 2, '#8a8a92');
+    px(ctx, pg.x - 1, pg.y, 3, 3, '#a8a8b0');
+    px(ctx, pg.x + 1, pg.y - 1, 1, 1, '#d8d8e0');
+  }
+  // steam curling from the manhole
+  const steamX = 420, steamY = 306;
+  for (let s = 0; s < 3; s++) {
+    const st = (state.time * 1.2 + s * .5) % 1.5;
+    ctx.globalAlpha = Math.max(0, .5 - st * .35);
+    ctx.fillStyle = '#d8d8d0';
+    ctx.beginPath();
+    ctx.arc(steamX + Math.sin(st * 4 + s) * 6, steamY - st * 30, 3 + st * 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  outlineText(ctx, 'MONK’S', 125, 218, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'SOUP', 435, 210, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'JERRY’S', 650, 210, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'SUBWAY', 18, 196, '#8ffff2', 6, 'center');
+  outlineText(ctx, '← NJ TURNPIKE', 6, 300, '#ffe78a', 7, 'left');
+}
+
+function nycInteractions() {
+  return [
+    { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
+    { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
+    { x: 624, y: 200, w: 52, h: 44, radius: 42, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
+    { x: 4, y: 200, w: 28, h: 52, radius: 40, label: 'Subway to Yankees', action: () => {
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'The 1 train wheezes uptown. Someone is performing magic tricks for no one.' }
+      ], () => travelHub('yankees'));
+    } },
+    { x: 500, y: 200, w: 58, h: 34, radius: 40, label: 'Newsstand', action: () => {
+      if (!state.flags.boughtPaper) {
+        state.flags.boughtPaper = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George buys a paper. Headline: LOCAL MAN’S CHARITY REVEALED AS INDEX CARD. He buys every copy.' },
+          { speaker: 'george', text: 'Damage control. Standard damage control.' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony buys a paper. He reads the horses, then the horoscope Carmela likes, then nothing else.' },
+          { speaker: 'tony', text: 'Two dollars for bad news. At least the bagels here are honest.' }
+        ]);
+        audio.sfx('pickup');
+      } else startDialog([{ speaker: 'narrator', text: 'Same headlines. Somehow worse the second time.' }]);
+    } },
+    { x: 600, y: 290, w: 90, h: 46, radius: 44, label: 'Payphone', hidden: () => !!state.flags.latexExport, action: () => {
+      if (state.player.kind === 'george') {
+        startDialog([
+          { speaker: 'narrator', text: 'A payphone rings. Nobody answers payphones. George answers the payphone.', action: () => audio.sfx('ring') },
+          { speaker: 'george', text: 'Vandelay Industries, import-export. Latex. Yes, we HAVE the latex. Tell the buyers the latex is en route!' },
+          { speaker: 'jerry', text: 'George, you are screaming into a payphone on 81st street about latex that does not exist.' },
+          { speaker: 'george', text: 'Perception IS inventory, Jerry! Word of this gets out, we move UNITS!' },
+          { speaker: 'narrator', text: 'A confused tourist hands George $40 to stop shouting. Vandelay Industries has its first revenue.' }
+        ], () => {
+          state.flags.latexExport = true;
+          state.flags.tribute = (state.flags.tribute || 0) + 40;
+          spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · +$40', '#ffe78a');
+          audio.sfx('success');
+          objective('Scheme complete: Vandelay latex export');
+        });
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'A payphone rings. Tony picks it up out of pure instinct. It’s a wrong number asking about latex.' },
+          { speaker: 'tony', text: 'Latex? Yeah, we got latex. Cash only, pick up at Satriale’s, tell NOBODY.' },
+          { speaker: 'narrator', text: 'There is no latex. But somebody is now driving to a pork store with $40. That’s business.' }
+        ], () => {
+          state.flags.latexExport = true;
+          state.flags.tribute = (state.flags.tribute || 0) + 40;
+          spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · +$40', '#ffe78a');
+          audio.sfx('success');
+          objective('Scheme complete: the latex that never existed');
+        });
+      }
+    } },
+    { x: 560, y: 236, w: 150, h: 36, radius: 40, label: 'Kramer', hidden: () => !!state.flags.oilBladder, action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'kramer', text: 'George! Perfect timing. Kramerica Industries is THIS close to cracking the oil bladder. Ships full of oil, George, floating on giant rubber bladders!' },
+        { speaker: 'george', text: 'And you need what, exactly?' },
+        { speaker: 'kramer', text: 'Venture capital. Sixty bucks. In return — I name a bladder after you. THE COSTANZA. Imagine it sailing into harbor!' },
+        { speaker: 'narrator', text: 'George hands over $60. Somewhere, a rubber bladder with his name on it does not exist.', action: () => audio.sfx('cash') }
+      ] : [
+        { speaker: 'kramer', text: 'Tone! Tony Soprano in the flesh! Kramerica Industries — ever hear of it? Oil bladders, my friend. The future of maritime petroleum transport!' },
+        { speaker: 'tony', text: 'The future of what now? …Alright, here’s sixty. But this is an INVESTMENT. Weekly points. Friday.' },
+        { speaker: 'kramer', text: 'Friday! Absolutely! Totally doable! …What’s today?', action: () => audio.sfx('cash') },
+        { speaker: 'narrator', text: 'Tony invests $60 in a man he just met. It is somehow still not his worst business decision this year.' }
+      ], () => {
+        state.flags.oilBladder = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 60);
+        spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · KRAMERICA', '#ffe78a');
+        audio.sfx('success');
+        objective('Scheme complete: Kramerica oil bladder');
+      });
+    } },
+    { x: 330, y: 330, w: 44, h: 30, radius: 42, label: 'Pretzel cart', action: () => {
+      if (!state.flags.atePretzel) {
+        state.flags.atePretzel = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 3);
+        startDialog([
+          { speaker: 'narrator', text: 'A hot pretzel, $3, mustard optional. The salt-to-dough ratio is the best deal in Manhattan.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'These pretzels are making me thirsty!' : 'Gabagool this ain’t. But it’s got salt. I respect salt.' }
+        ]);
+        audio.sfx('pickup');
+      } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 690, y: 250, w: 60, h: 40, radius: 42, label: 'Guy in the doorway', action: () => {
+      if (!state.flags.baniaBit) {
+        state.flags.baniaBit = true;
+        startDialog([
+          { speaker: 'narrator', text: 'A cheerful man in a very good suit blocks the stoop. It’s Bania. He’s been waiting out here for Jerry for six hours.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Oh no. Not the Ovaltine bit. Anything but the Ovaltine bit.' : 'The hell is Ovaltine? Is that a thing people know? I don’t know that thing.' },
+          { speaker: 'narrator', text: '"Why do they call it Ovaltine? The mug is round! They should call it ROUND-tine!" — you hear the whole bit. All of it. Twice.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That’s GOLD, Bania. Gold. …It’s horrible. It’s so horrible I’m angry.' : 'I don’t know why, but I feel like I owe you money after that. Here’s five bucks. Never do it again.' }
+        ], () => {
+          state.flags.tribute = (state.flags.tribute || 0) + 5;
+          audio.sfx('cash');
+          spawnEffect(state.player.x + 8, state.player.y - 8, '+$5 · YOU HEARD THE BIT', '#ffe78a');
+        });
+      } else startDialog([{ speaker: 'narrator', text: 'Bania waves warmly. He is doing the bit again for a new victim. You feel nothing. You have been immunized.' }]);
+    } },
+    { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'Back through the tunnel. The skyline shrinks in the mirror. Jersey spreads out like a forgiving buffet.' }
+      ], () => { setScene('hub', 1196, 250); state.mode = 'explore'; objective('North Caldwell — free roam'); });
+    } }
+  ];
+}
+
 function drawHub() {
   drawHubEast();
   if (drawSceneArt(sceneArt.hub, 640, 416)) {
-    // Traffic keeps the free-roam neighborhood alive.
-    for (let i = 0; i < 2; i++) {
-      const cx = ((state.time * (54 + i * 22) + i * 310) % 1400) - 60;
-      const cy = i ? 268 : 246;
-      // horizontal traffic: sideways-simplified but detailed enough to read as cars
-      const tx = i ? 1340 - cx : cx;
+    // Traffic keeps the free-roam neighborhood alive — persistent reactive cars when available
+    const cars = state.hubCars || [
+      { x: ((state.time * 54) % 1400) - 60, y: 246, dir: 1, color: '#31445e', brakeT: 0 },
+      { x: 1340 - (((state.time * 76 + 310) % 1400) - 60), y: 268, dir: -1, color: '#7e2733', brakeT: 0 }
+    ];
+    for (const c of cars) {
+      const tx = c.x, cy = c.y, i = c.dir < 0 ? 1 : 0;
       px(ctx, tx - 2, cy - 2, 38, 17, 'rgba(0,0,0,.3)');
       px(ctx, tx, cy, 34, 13, '#0d1017');
-      px(ctx, tx + 1, cy + 1, 32, 11, i ? '#7e2733' : '#31445e');
+      px(ctx, tx + 1, cy + 1, 32, 11, c.color || (i ? '#7e2733' : '#31445e'));
       px(ctx, tx + 8, cy + 2, 15, 9, '#9fd4ec');
       px(ctx, tx + 10, cy + 4, 11, 5, i ? '#8e3542' : '#3f5a78');
       px(ctx, tx + 3, cy - 2, 6, 3, '#05070c');
@@ -3080,6 +3495,9 @@ function drawHub() {
       px(ctx, tx + 3, cy + 12, 6, 3, '#05070c');
       px(ctx, tx + 25, cy + 12, 6, 3, '#05070c');
       px(ctx, tx + (i ? 1 : 30), cy + 4, 3, 4, '#fff3b0');
+      // brake lights while braking
+      if ((c.brakeT || 0) > 0) px(ctx, tx + (i ? 30 : 1), cy + 6, 3, 4, '#ff3b2e');
+      if ((c.honkT || 0) > .6) outlineText(ctx, '♪HONK', tx + 17, cy - 8, '#ffe78a', 6, 'center');
     }
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     ctx.fillStyle = `rgba(255,210,92,${.12 + pulse * .16})`;
@@ -4096,7 +4514,7 @@ function objectiveTarget() {
   const scene = scenes[state.scene];
   if (!scene || state.mode !== 'explore') return null;
   // free roam has no single objective — the arrow would just be noise
-  if (state.scene === 'hub') return null;
+  if (state.scene === 'hub' || state.scene === 'nyc') return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden) && !/leave|exit/i.test(i.label));
   const priority = list.filter((i) => /talk|meet|speak|order|enter|use|take|sit|answer|carve|answer|glow|drive|start|confront/i.test(i.label));
   return priority[0] || list[0] || null;
@@ -4447,8 +4865,16 @@ function drawDrive() {
   const shakeX = d.shake ? (Math.random() - .5) * 6 : 0;
   ctx.save();
   ctx.translate(shakeX, 0);
-  // autumn suburbs, parallax: far lawns scroll slow, near detail scrolls fast
+  // sky strip with distant NYC skyline scrolling very slowly
   px(ctx, 0, 0, W, H, '#7c8c58');
+  const skyOff = (d.road * .06) % 640;
+  for (let i = 0; i < 2; i++) {
+    const bx = i * 640 - skyOff;
+    // distant skyline silhouette in the upper-left horizon gap
+    ctx.fillStyle = 'rgba(60,70,95,.45)';
+    const towers = [[30, 26], [44, 40], [58, 30], [74, 48], [92, 22], [108, 34]];
+    for (const [tx, th] of towers) ctx.fillRect(bx + tx, 0, 10, th);
+  }
   for (let i = 0; i < 8; i++) {
     const y = ((i * 120 + d.road * .3) % 460) - 60;
     const left = i % 2 === 0;
@@ -4462,6 +4888,25 @@ function drawDrive() {
     px(ctx, left ? 96 : 491, y + 6, 26, 18, i % 3 ? '#c86d31' : '#d79531');
     px(ctx, left ? 100 : 495, y + 2, 18, 10, '#e0a33c');
   }
+  // billboards with Jersey flavor, alternating sides
+  const billboards = [
+    ['SATRIALE’S', 'PORK STORE · 2 MI', '#8f1f2e'],
+    ['MOLTISANTI', 'MOTORS · CERTIFIED', '#1f3a8f'],
+    ['GABAGOOL', 'EXIT 13 · FRESH', '#3d6b35'],
+    ['VESUVIO', 'FINE DINING', '#7a4a12']
+  ];
+  for (let i = 0; i < 4; i++) {
+    const y = ((i * 190 + d.road * .45) % 760) - 120;
+    if (y < -70 || y > H + 20) continue;
+    const left = i % 2 === 0;
+    const bx = left ? 52 : 508;
+    const [line1, line2, bg] = billboards[i % billboards.length];
+    px(ctx, bx + 18, y + 26, 6, 26, '#4a3a28');
+    px(ctx, bx, y, 64, 30, '#20180f');
+    px(ctx, bx + 2, y + 2, 60, 26, bg);
+    outlineText(ctx, line1, bx + 32, y + 6, '#fff', 6, 'center');
+    outlineText(ctx, line2, bx + 32, y + 17, '#ffd98a', 5, 'center');
+  }
   for (let i = 0; i < 10; i++) {
     const y = ((i * 70 + d.road * .62) % 440) - 50;
     // near fences + mailboxes whipping past
@@ -4473,12 +4918,19 @@ function drawDrive() {
       px(ctx, left ? 116 : 512, y + 8, 13, 8, '#8a2f2f');
     }
   }
-  // road with asphalt speckle
+  // road with asphalt speckle — 4 lanes
   px(ctx, 170, 0, 300, H, '#4c4f55');
   for (let i = 0; i < 26; i++) {
     const sy = ((i * 61 + d.road) % 400) - 20;
     px(ctx, 195 + (i * 97) % 250, sy, 3, 2, 'rgba(255,255,255,.06)');
     px(ctx, 210 + (i * 53) % 230, sy + 8, 2, 2, 'rgba(0,0,0,.15)');
+  }
+  // guardrails: metal band + posts
+  px(ctx, 172, 0, 4, H, '#9aa2ad');
+  px(ctx, 464, 0, 4, H, '#9aa2ad');
+  for (let y = ((d.road * .95) % 30) - 30; y < H; y += 30) {
+    px(ctx, 171, y, 6, 4, '#6e757f');
+    px(ctx, 463, y + 15, 6, 4, '#6e757f');
   }
   px(ctx, 182, 0, 8, H, '#d7d0bc');
   px(ctx, 450, 0, 8, H, '#d7d0bc');
@@ -4487,7 +4939,19 @@ function drawDrive() {
     px(ctx, 172, y, 8, 8, '#6f954f');
     px(ctx, 460, y + 13, 8, 8, '#6f954f');
   }
-  for (let y = ((d.road) % 52) - 52; y < H; y += 52) px(ctx, 316, y, 8, 28, '#e8d66c');
+  // 3 dashed lane lines for 4 lanes
+  for (const lx of [245, 320, 395]) {
+    for (let y = ((d.road) % 52) - 52; y < H; y += 52) px(ctx, lx - 3, y, 6, 28, '#e8d66c');
+  }
+  // speed-dependent road vibration streaks at high speed
+  if (d.speed > .75) {
+    ctx.fillStyle = `rgba(255,255,255,${(d.speed - .75) * .5})`;
+    for (let i = 0; i < 6; i++) {
+      const lx = 190 + ((i * 71 + 40) % 260);
+      const ly = ((i * 137 + d.road * 3.6) % 380) - 20;
+      ctx.fillRect(lx, ly, 2, 30);
+    }
+  }
   // target black sedan far ahead
   const targetY = 48 + Math.sin(state.time * 3) * 3;
   drawCar(320, targetY, '#111722', true);
@@ -4527,21 +4991,64 @@ function drawDrive() {
       drawPerson(ctx, o.x - 8, o.y - 14, o.sprite, o.vx > 0 ? 'right' : 'left', state.frame * 1.4);
       ctx.restore();
       if (!o.hit) outlineText(ctx, 'NY', o.x, o.y - 22, '#ff8e8e', 6, 'center');
+    } else if (o.type === 'traffic') {
+      ctx.save();
+      if (o.spin) {
+        ctx.translate(o.x, o.y);
+        ctx.rotate((1.2 - o.spin) * 7);
+        ctx.translate(-o.x, -o.y);
+      }
+      drawCar(o.x, o.y, o.carColor || '#4a5e78');
+      ctx.restore();
+    } else if (o.type === 'nycar') {
+      ctx.save();
+      if (o.spin) {
+        ctx.translate(o.x, o.y);
+        ctx.rotate((1.2 - o.spin) * 8);
+        ctx.translate(-o.x, -o.y);
+      }
+      drawCar(o.x, o.y, '#14181f');
+      // NY crew passengers visible in the rear window
+      px(ctx, o.x - 6, o.y + 6, 4, 4, '#e8b88a');
+      px(ctx, o.x + 2, o.y + 6, 4, 4, '#d8a878');
+      ctx.restore();
+      if (!o.hit) outlineText(ctx, 'NY CREW', o.x, o.y - 26, '#ff8e8e', 6, 'center');
     } else {
       drawCar(o.x, o.y, '#59624a');
       drawPerson(ctx, o.x - 7, o.y - 16, 'paulie', 'down', state.frame);
     }
   }
+  // particles: sparks and exhaust smoke
+  for (const p of d.particles) {
+    const a = Math.max(0, 1 - p.t / p.life);
+    ctx.globalAlpha = a;
+    if (p.smoke) {
+      const r = 3 + p.t * 14;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      px(ctx, p.x - 1, p.y - 1, 3, 3, p.color);
+    }
+    ctx.globalAlpha = 1;
+  }
   if (d.boost > 0) {
     for (let i = 0; i < 4; i++) px(ctx, d.x - 10 + i * 6, d.y + 22 + i * 5, 3, 12, i % 2 ? '#ffb13e' : '#f4e27a');
-    ctx.fillStyle = 'rgba(255,255,255,.16)';
-    for (let i = 0; i < 7; i++) {
-      const lx = 190 + ((i * 53 + d.road * 2.2) % 260);
-      const ly = ((i * 97 + d.road * 3.2) % 360) - 20;
-      ctx.fillRect(lx, ly, 2, 26);
-    }
   }
+  // player car: lean into steering, brake lights flare when slowing
+  const input = moveInput();
+  ctx.save();
+  ctx.translate(d.x, d.y);
+  ctx.rotate(input.x * .06 * (0.5 + d.speed));
+  ctx.translate(-d.x, -d.y);
   drawCar(d.x, d.y, d.boost > 0 ? '#b82835' : '#8f1f2e');
+  if (input.y > 0) {
+    ctx.fillStyle = 'rgba(255,60,50,.55)';
+    ctx.fillRect(d.x - 11, d.y + 15, 7, 6);
+    ctx.fillRect(d.x + 4, d.y + 15, 7, 6);
+  }
+  ctx.restore();
   ctx.restore();
   // HUD
   drawPanel(10, 10, 280, 44, '#141f3a', '#e5c36a');
@@ -4550,12 +5057,18 @@ function drawDrive() {
   px(ctx, 20, 38, Math.min(180, d.progress * 1.8), 7, '#e45445');
   outlineText(ctx, `♥ ${d.health}`, 216, 31, '#ff8e8e', 10);
   outlineText(ctx, `$${d.score || 0}`, 216, 19, '#9be59b', 9);
+  // speedometer
+  drawPanel(306, 10, 110, 30, '#141f3a', '#e5c36a');
+  const mph = Math.round(25 + d.speed * 85);
+  outlineText(ctx, `${mph} MPH`, 318, 16, d.speed > .75 ? '#ffe06e' : '#cfd8ea', 10);
+  px(ctx, 318, 33, 86, 4, '#30384d');
+  px(ctx, 318, 33, Math.round(d.speed * 86), 4, d.speed > .75 ? '#ffe06e' : '#69a2e2');
   if (d.boost > 0) {
-    px(ctx, 306, 18, 110, 14, '#173521');
-    px(ctx, 308, 20, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
-    outlineText(ctx, 'MONEY BOOST', 361, 21, '#102415', 7, 'center');
+    px(ctx, 306, 46, 110, 14, '#173521');
+    px(ctx, 308, 48, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
+    outlineText(ctx, 'MONEY BOOST', 361, 48, '#102415', 7, 'center');
   }
-  outlineText(ctx, 'Money = speed boost · run down NY crew for cash · dodge gabagool and family', 320, 340, '#fff', 8, 'center');
+  outlineText(ctx, '↑ gas · ↓ brake · ram NY crew cars at speed for cash · money = boost', 320, 340, '#fff', 8, 'center');
 }
 
 function drawTitle() {
@@ -4849,7 +5362,7 @@ function loop(now) {
 }
 
 if (new URLSearchParams(location.search).has('debug')) {
-  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction, blockedAt };
+  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction, blockedAt, initDrive };
 }
 
 resetGame();
