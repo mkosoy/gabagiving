@@ -277,12 +277,14 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone'];
 function saveWorld() {
   try {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
+    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step };
+    if (state.player.x !== undefined) { out.scene = state.scene; out.px = Math.round(state.player.x); out.py = Math.round(state.player.y); }
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
 }
@@ -291,6 +293,10 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (w.mission && MISSION_DEFS[w.mission.id] && !state.flags[w.mission.id + 'Done']) {
+      const def = MISSION_DEFS[w.mission.id];
+      state.mission = { id: w.mission.id, step: Math.min(w.mission.step, def.steps.length - 1), deadline: def.timeLimit ? state.time + def.timeLimit : null };
+    }
   } catch (e) { /* ignore */ }
 }
 
@@ -1074,7 +1080,7 @@ function shoveNearest() {
   if (hitsBrawler) {
     const brickHit = (state.flags.brick || 0) > 0;
     if (brickHit) state.flags.brick -= 1;
-    bw.hp -= brickHit ? 2 : 1;
+    bw.hp -= brickHit ? 2 : (state.player.kind === 'george' ? 1 : 1.5);
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
@@ -1098,6 +1104,13 @@ function shoveNearest() {
   best.diveT = .5 + combo * .1;
   best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
   best.barkT = 1.6;
+  // sometimes they don't dive — sometimes they square up. Jersey rules.
+  if (!state.brawler && Math.random() < .3) {
+    state.brawler = { x: best.x, y: best.y, hp: 3, state: 'prowl', t: 0, tx: best.x, ty: best.y, barkT: 1.6, bark: 'YOU WANT SOME?!', swingT: 0, hitT: 0 };
+    best.diveT = 4; // the victim "becomes" the brawler — keep the original floored out of sight meanwhile
+    spawnEffect(best.x, best.y - 22, 'IT’S A FIGHT!', '#ff9a3e');
+    audio.sfx('denied');
+  }
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   if (p.kind === 'george' && Math.random() < .3) {
     spawnEffect(p.x + 8, p.y - 14, 'MY BACK!', '#ff8e8e');
@@ -1203,7 +1216,8 @@ function updateCop(dt) {
   }
   if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
   const p = state.player;
-  const speed = p.inCar ? 150 : 120;
+  const maxHeat = (state.flags.heat || 0) >= 4.5;
+  const speed = (p.inCar ? 150 : 120) * (maxHeat ? 1.3 : 1);
   for (const unit of [c, state.cop2].filter(Boolean)) {
     unit.flashT += dt;
     // second unit approaches from a flanking angle
@@ -1223,7 +1237,7 @@ function updateCop(dt) {
   const evading = p.inCar && (p.carV || 0) > .45;
   if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
-    if (c.bustT > .8) {
+    if (c.bustT > (maxHeat ? .5 : .8)) {
       state.cop = null;
       state.cop2 = null;
       state.flags.heat = 0;
@@ -1600,6 +1614,15 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  turkeyTax: {
+    title: 'THE TURKEY TAX',
+    payout: 180, heat: 1,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 300, radius: 62, objective: 'Collect the Thanksgiving donation from Vesuvio', label: 'Collect from Artie' },
+      { scene: 'satriale', x: 262, y: 300, radius: 62, objective: 'Collect the donation from Satriale’s', label: 'Collect the envelope' },
+      { scene: 'club', x: 300, y: 150, radius: 55, objective: 'Bring the envelopes back to Silvio at the Bing', label: 'Deliver the take' }
+    ]
+  },
   pineFresh: {
     title: 'PINE FRESH',
     payout: 250, heat: 2,
@@ -1645,6 +1668,10 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      turkeyTax: [
+        { speaker: 'silvio', text: 'Moist but complete. The bird, she is paid for. You did good — keep the vig.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I collected protection money and everyone was SO POLITE. Is this what power feels like?!' : 'Happy Thanksgiving, Sil. Tell the bird I said so.' }
       ],
       pineFresh: [
         { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
@@ -1695,6 +1722,10 @@ function updateMission() {
           { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
         ],
+        turkeyTax: [
+          { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I feel terrible doing this. I also feel terrible NOT doing this. I feel terrible! That’s the constant!' : 'The veal WAS perfect. That’s why you’re still open, Artie.' }
+        ],
         pineFresh: [
           { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging a hole in a mafia forest with my HANDS for a postal worker! This is the low point! …It’s not the low point, is it. There’s lower!' : 'Soft ground. Good. Means nobody else dug here first. Means nobody else WILL.' }
@@ -1722,6 +1753,20 @@ function drawMissionHud() {
   // world-space beacon at the step target when in the right scene
   if (state.scene === st.scene) {
     const bx = st.x - state.camera.x, by = st.y - state.camera.y;
+    if (bx < -10 || bx > 650 || by < -10 || by > 426) {
+      // offscreen: edge arrow pointing the way, GTA-style
+      const cx2 = 320, cy2 = 208;
+      const ang = Math.atan2(by - cy2, bx - cx2);
+      const ex = cx2 + Math.cos(ang) * 268, ey = cy2 + Math.sin(ang) * 172;
+      const ax = Math.max(18, Math.min(622, ex)), ay = Math.max(46, Math.min(398, ey));
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(ang + Math.PI / 2);
+      ctx.globalAlpha = .75 + Math.sin(state.time * 5) * .25;
+      outlineText(ctx, '▲', 0, 0, '#ffe78a', 12, 'center');
+      ctx.restore();
+      return;
+    }
     const bob = Math.sin(state.time * 3) * 4;
     outlineText(ctx, '▼', bx, by - 26 + bob, '#ffe78a', 10, 'center');
     ctx.save();
@@ -1794,7 +1839,7 @@ function updateExplore(dt) {
   }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
-  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .03);
+  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
@@ -2730,7 +2775,15 @@ function clubInteractions() {
   const list = [];
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
-  if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
+  list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
+    if (!state.mission && !state.flags.turkeyTaxDone && state.flags.freeRoam) {
+      startMission('turkeyTax');
+      startDialog([
+        { speaker: 'silvio', text: 'Hey. Boss’s orders — the Thanksgiving envelopes don’t collect themselves. Vesuvio first, then Satriale’s. Bring ’em back moist. $180 for the legwork.' },
+        { speaker: 'system', text: 'Mission accepted: THE TURKEY TAX. Follow the objective banner.' }
+      ]);
+    } else clubTalk('silvio');
+  } });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
     list.push({ x: 430, y: 250, w: 90, h: 50, radius: 28, label: 'Arm-wrestle the bouncer', action: () => {
@@ -3529,16 +3582,25 @@ function hubInteractions() {
     } },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
+      // every steal is a different car — color, speed, and dignity vary
+      const fleet = [
+        { speed: 230, color: '#a02828', name: 'a CORVETTE', line: state.player.kind === 'george' ? 'A CORVETTE! Midlife crisis complete! I’ve never felt so alive and so doomed!' : 'Red Corvette. Subtle as a heart attack. Perfect.' },
+        { speed: 190, color: '#3d6b35', name: 'a sensible sedan', line: state.player.kind === 'george' ? 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' : 'Nice car. Means it’s my car now. That’s how that works.' },
+        { speed: 160, color: '#b8a888', name: 'a wood-paneled station wagon', line: state.player.kind === 'george' ? 'A station wagon. Wood paneling. This is exactly the car I deserve and I hate it!' : 'A wagon. Slow. But nobody — NOBODY — suspects the wagon.' },
+        { speed: 205, color: '#2848a0', name: 'an unmarked-looking cruiser', line: state.player.kind === 'george' ? 'Is this a cop car? It LOOKS like a cop car. If it’s a cop car I’m just — test driving it! For the city!' : 'Ex-cop car. Still got the spotlight. Heh.' }
+      ];
+      const car = fleet[Math.floor(Math.random() * fleet.length)];
       state.player.inCar = true;
-      state.player.speed = 190;
-      state.player.carColor = '#3d6b35';
+      state.player.speed = car.speed;
+      state.player.carColor = car.color;
+      state.player.carDamage = 0;
+      state.player.carV = 0;
       audio.sfx('door');
       audio.sfx('honk');
       spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
-      startDialog(state.player.kind === 'george' ? [
-        { speaker: 'george', text: 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' }
-      ] : [
-        { speaker: 'tony', text: 'Nice car. Means it’s my car now. That’s how that works.' }
+      startDialog([
+        { speaker: 'narrator', text: `It's ${car.name}. Keys in the ignition, because New Jersey.` },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: car.line }
       ]);
     } },
     { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
