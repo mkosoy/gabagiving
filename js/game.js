@@ -1138,7 +1138,7 @@ function drawAmbient() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || state.scene !== 'hub') { state.cop = null; return; }
+  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
   if (heat >= 3 && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
@@ -1155,7 +1155,7 @@ function updateCop(dt) {
   }
   // wanted escalation: a second unit joins at high heat
   if (heat >= 3.5 && !state.cop2) {
-    state.cop2 = { x: 1240, y: 380, flashT: 0, bustT: 0 };
+    state.cop2 = { x: state.scene === 'nyc' ? 740 : 1240, y: 380, flashT: 0, bustT: 0 };
     spawnEffect(state.player.x + 8, state.player.y - 20, 'BACKUP CALLED!', '#8fb8ff');
     audio.sfx('honk');
   }
