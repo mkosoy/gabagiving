@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1775,6 +1775,15 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. It never happened.', label: 'Finish the job' }
     ]
   },
+  kramericaBook: {
+    title: 'THE COFFEE TABLE BOOK',
+    payout: 280, heat: 1,
+    steps: [
+      { scene: 'yankees', x: 320, y: 300, radius: 62, objective: 'KRAMERICA: deliver the coffee-table book prototype to the Yankees office', label: 'Deliver the prototype' },
+      { scene: 'monks', x: 300, y: 250, radius: 60, objective: 'The book fell apart — salvage the legs at Monk’s', label: 'Salvage at Monk’s' },
+      { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer. Kramerica Industries endures.', label: 'Finish the job' }
+    ]
+  },
   bigMouth: {
     title: 'BIG MOUTH',
     payout: 250, heat: 0, tail: true,
@@ -1815,7 +1824,7 @@ const MISSION_DEFS = {
   }
 };
 const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'bigOne'];
-const KRAMER_CHAIN = ['muffinTops', 'bladderRun'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'kramericaBook'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -1871,6 +1880,10 @@ function advanceMission() {
       cannonball: [
         { speaker: 'newman', text: 'HA! IN YOUR FACE, FIREMAN LENNY! Er — well done. The $350, minus the standard courier tithe. Hee hee. The tithe is most of it.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove like a maniac through a tunnel for a BET?! People bet on me?! I’m a HORSE! …A fast horse. Fastest in the stable, actually.' : 'Fast driving, no questions, cash at the end. Best job all week.' }
+      ],
+      kramericaBook: [
+        { speaker: 'kramer', text: 'They laughed, buddy. LAUGHED. At a book about coffee tables that BECOMES a coffee table! Visionaries are never appreciated in their own time! Here — Kramerica Industries pays in full. Always. Usually!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I delivered a broken book and got PAID! This is the greatest company in the world! I want IN! I want stock! Is there stock?!' : 'Legs fell off a book. I don’t ask questions anymore. The money spends the same.' }
       ],
       pineRunner: [
         { speaker: 'narrator', text: 'The trees swallow the road behind you. Sirens fade into hypothetical. Whatever the heat was, the Pine Barrens is where heat goes to be nobody’s problem.' },
