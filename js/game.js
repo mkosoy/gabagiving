@@ -3898,6 +3898,15 @@ function yankeesInteractions() {
 function satrialeInteractions() {
   if (state.flags.freeRoam) {
     return [
+      { x: 262, y: 200, w: 60, h: 30, radius: 40, label: 'Order a sandwich', action: () => {
+        if (state.money < 12) { toast('The gabagool special is $12.'); return; }
+        state.money -= 12;
+        audio.sfx('pickup');
+        startDialog([
+          { speaker: 'narrator', text: 'Gabagool, provolone, hot peppers, on bread that was baked this morning by a man who has never once been late in thirty years. It is, objectively, one of the greatest sandwiches on the eastern seaboard.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Oh. OH. This is — I’m having a moment. A private moment. With a sandwich. Don’t look at me!' : 'See, this is the stuff they don’t put in the papers. The sandwiches. The family. The — hand me another napkin.' }
+        ]);
+      } },
       { x: 46, y: 320, w: 96, h: 44, label: 'Produce crate', action: () => startDialog([
         { speaker: 'tony', text: 'After what Junior did, this stuff should be registered as ammunition.' },
         { speaker: 'bobby', text: 'We keep the dangerous tomatoes in the back now.' }
