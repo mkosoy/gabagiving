@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught'];
 function saveWorld() {
   try {
     const out = {};
@@ -4137,6 +4137,22 @@ function hubInteractions() {
       if (state.cop2) state.cop2 = null;
       audio.sfx('cash');
       startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
+    { x: 210, y: 330, w: 30, h: 24, radius: 40, label: 'Mailbox', action: () => {
+      if ((state.mailboxCd || 0) > state.time) { toast('Empty. You already… checked. Yeah. Checked.'); return; }
+      state.mailboxCd = state.time + 30;
+      const take = 4 + Math.floor(Math.random() * 12);
+      state.money += take;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .4);
+      audio.sfx('pickup');
+      spawnEffect(state.player.x, state.player.y - 16, 'MAIL THEFT +$' + take, '#ffd0a0');
+      if (Math.random() < .25 && !state.flags.newmanCaught) {
+        state.flags.newmanCaught = true;
+        startDialog([
+          { speaker: 'newman', text: 'WHAT— you! I saw that! MY route! MY mail! That is a FEDERAL offense, committed by a rank AMATEUR! …Technique was decent though. A little hunched. Heh heh.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s a federal offense?! It’s MAIL! Who reads mail! I was BORROWING the mail!' : 'Relax, mailman. I was checking for anthrax. Community service. You’re welcome.' }
+        ]);
+      }
     } },
     { x: 380, y: 300, w: 34, h: 30, radius: 38, label: 'Quick change', action: () => {
       const toGeorge = state.player.kind !== 'george';
