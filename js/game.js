@@ -33,6 +33,7 @@ const sceneArt = {
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
+  melfi: loadArt('./assets/bg-melfi.webp'),
   chamber: loadArt('./assets/bg-chamber.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
@@ -271,7 +272,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -382,7 +383,8 @@ function menuEntries() {
       ['cheapInvites', 'Cheap invitations', 'Monk’s Café'],
       ['fedGeese', 'Feed the geese', 'Gabagool Park'],
       ['pawnedWatch', 'Fence goods at the pawn shop', 'east side'],
-      ['elaineDance', 'Elaine’s little kicks', 'Monk’s jukebox']
+      ['elaineDance', 'Elaine’s little kicks', 'Monk’s jukebox'],
+      ['therapyDone', 'Therapy session', 'Melfi’s office']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -645,6 +647,17 @@ const scenes = {
     ],
     draw: drawClub,
     interactions: clubInteractions
+  },
+  melfi: {
+    w: 640, h: 416, label: 'Dr. Melfi’s Office · By Appointment', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(24,8,260,120), r(300,8,200,110), r(540,8,92,140),
+      r(560,150,72,190), r(180,200,110,80), r(380,200,110,80),
+      r(18,200,80,120), r(300,240,120,60)
+    ],
+    draw: drawMelfiOffice,
+    interactions: melfiInteractions
   },
   njstreet: {
     w: 640, h: 416, label: 'New Jersey · Augustus Dream', music: 'house',
@@ -2625,6 +2638,7 @@ function travelHub(place) {
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
     soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
     yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
+    melfi: ['melfi', 320, 380, 'Dr. Melfi’s office. It smells like leather, tissues, and carefully withheld judgment.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -2647,6 +2661,7 @@ function hubInteractions() {
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
@@ -2730,6 +2745,49 @@ function hubInteractions() {
       ]);
     } }
   ];
+  return list;
+}
+
+function drawMelfiOffice() {
+  const img = sceneArt.melfi;
+  if (img && img.complete && img.naturalWidth) ctx.drawImage(img, 0, 0, 640, 416);
+  else px(ctx, 0, 0, 640, 416, '#4a3a2c');
+  // dr. melfi in her chair, sometimes jotting notes
+  const jot = Math.sin(state.time * .8) > .6;
+  drawPerson(ctx, 434, 236, 'melfi', 'left', state.frame * .5, { pose: 'sit' });
+  if (jot) outlineText(ctx, '✎', 420, 214, '#e8e2d0', 8, 'center');
+}
+
+function melfiInteractions() {
+  const list = [];
+  list.push({ x: 170, y: 200, w: 120, h: 90, radius: 40, label: 'Your chair', action: () => {
+    if (state.player.kind === 'george') {
+      startDialog([
+        { speaker: 'melfi', text: 'I’m sorry — you want ME to analyze YOU? I specialize in anxiety, not… whatever constellation this is.' },
+        { speaker: 'george', text: 'It’s all one session! Tony and I are practically the same patient. Ask anything. Lie about a firing? Check. Yell at children? Check.' },
+        { speaker: 'melfi', text: '…I’m going to need a bigger notebook.' }
+      ]);
+    } else if (!state.flags.therapyDone) {
+      state.flags.therapyDone = true;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 2);
+      spawnEffect(state.player.x, state.player.y - 16, 'INNER PEACE', '#bcd8ff');
+      startDialog([
+        { speaker: 'narrator', text: 'Tony sits. The chair knows things about him that the FBI never will.' },
+        { speaker: 'melfi', text: 'You mentioned stress. A neighborhood brawler. A stolen coupe. Several geese. Let’s unpack the geese first.' },
+        { speaker: 'tony', text: 'The geese know what they did. Anyway — I feel better already. This talkin’ thing works.' },
+        { speaker: 'melfi', text: 'That was fourteen seconds. The copay is still two hundred.' }
+      ]);
+    } else startDialog([{ speaker: 'melfi', text: 'Same time next week, Tony. And please stop shoving pedestrians — we talked about this.' }]);
+  } });
+  list.push({ x: 300, y: 8, w: 200, h: 110, radius: 40, label: 'Diplomas', action: () => startDialog([
+    { speaker: 'narrator', text: 'Degrees in psychiatry, psychoanalysis, and — framed identically, suspiciously — a certificate for a rye bread of the month club.' }
+  ]) });
+  list.push({ x: 560, y: 150, w: 72, h: 190, radius: 42, label: 'Chaise', action: () => {
+    if (state.player.kind === 'george') startDialog([
+      { speaker: 'george', text: 'A recliner you can nap on during a session you’re paying for? Finally — a healthcare model that works.' }
+    ]);
+    else startDialog([{ speaker: 'tony', text: 'I don’t lie down. Guys in my position lie down once, they don’t get up.' }]);
+  } });
   return list;
 }
 
@@ -4397,7 +4455,7 @@ function resetGame() {
 function startOpenWorld() {
   resetGame();
   state.flags.sandbox = true;
-  state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true };
+  state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true, yankees: true, melfi: true };
   state.flags.hasBat = true;
   state.flags.houseStep = 9;
   state.player.kind = 'tonyMax';
