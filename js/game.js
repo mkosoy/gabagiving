@@ -3284,6 +3284,30 @@ function drawNyc() {
       if (Math.random() < .02) audio.sfx('honk');
     }
   }
+  // pigeon flock that scatters when the player plows through
+  if (!state.pigeons) {
+    state.pigeons = [];
+    for (let i = 0; i < 6; i++) state.pigeons.push({ hx: 260 + (i % 3) * 18, hy: 340 + Math.floor(i / 3) * 14, x: 260 + (i % 3) * 18, y: 340 + Math.floor(i / 3) * 14, fly: 0, seed: i * 1.7 });
+  }
+  for (const pg of state.pigeons) {
+    const dist = Math.hypot(state.player.x - pg.x, state.player.y - pg.y);
+    if (dist < 26 && pg.fly <= 0) { pg.fly = 1.4 + Math.random() * .5; pg.vx = (pg.x - state.player.x || 1) * 3; pg.vy = -60 - Math.random() * 40; if (Math.random() < .3) audio.sfx('thud'); }
+    if (pg.fly > 0) {
+      pg.fly -= 1 / 60;
+      pg.x += pg.vx / 60;
+      pg.y += pg.vy / 60;
+      pg.vy += 3;
+      if (pg.fly <= 0) { pg.hx = Math.max(60, Math.min(720, pg.x)); pg.hy = Math.max(300, Math.min(390, pg.y)); }
+    } else {
+      pg.x += (pg.hx - pg.x) * .02 + Math.sin(state.time * 2 + pg.seed) * .3;
+      pg.y += (pg.hy - pg.y) * .02;
+    }
+    const flap = Math.sin(state.time * 18 + pg.seed) > 0 ? -1 : 0;
+    px(ctx, pg.x - 3, pg.y - 2 + flap, 2, 2, '#8a8a92');
+    px(ctx, pg.x + 1, pg.y - 2 + flap, 2, 2, '#8a8a92');
+    px(ctx, pg.x - 1, pg.y, 3, 3, '#a8a8b0');
+    px(ctx, pg.x + 1, pg.y - 1, 1, 1, '#d8d8e0');
+  }
   // steam curling from the manhole
   const steamX = 420, steamY = 306;
   for (let s = 0; s < 3; s++) {
@@ -3374,6 +3398,17 @@ function nycInteractions() {
         audio.sfx('success');
         objective('Scheme complete: Kramerica oil bladder');
       });
+    } },
+    { x: 330, y: 330, w: 44, h: 30, radius: 42, label: 'Pretzel cart', action: () => {
+      if (!state.flags.atePretzel) {
+        state.flags.atePretzel = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 3);
+        startDialog([
+          { speaker: 'narrator', text: 'A hot pretzel, $3, mustard optional. The salt-to-dough ratio is the best deal in Manhattan.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'These pretzels are making me thirsty!' : 'Gabagool this ain’t. But it’s got salt. I respect salt.' }
+        ]);
+        audio.sfx('pickup');
+      } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
     { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
       audio.sfx('honk');
