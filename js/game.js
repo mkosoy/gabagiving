@@ -4545,7 +4545,7 @@ function drawTitle() {
   px(ctx, 110, 153, 420, 3, '#6b3e24');
   outlineText(ctx, 'TONY SOPRANO', W / 2, 164, '#ffd34f', 25, 'center');
   outlineText(ctx, 'THANKSGIVING', W / 2, 196, '#fff4c8', 28, 'center');
-  outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
+  outlineText(ctx, 'An open-world holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
   const blink = Math.sin(state.time * 5) > 0;
   const hasSave = !!loadSave();
   // stylized menu buttons
