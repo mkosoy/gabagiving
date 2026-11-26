@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen'];
 function saveWorld() {
   try {
     const out = {};
@@ -1283,6 +1283,20 @@ function drawHubEventProps() {
   }
 }
 
+
+function drawRussian() {
+  const ru = state.russian;
+  if (state.scene !== 'pines' || !ru || !ru.active) return;
+  const fade = Math.min(1, ru.life);
+  ctx.globalAlpha = .35 + fade * .5;
+  px(ctx, ru.x - 4, ru.y - 10, 9, 12, '#2c2620');
+  px(ctx, ru.x - 3, ru.y - 14, 7, 5, '#4a4238');
+  px(ctx, ru.x - 2, ru.y - 9, 5, 3, '#c8b89a');
+  px(ctx, ru.x - 3, ru.y + 2, 3, 4, '#1c1814');
+  px(ctx, ru.x + 1, ru.y + 2, 3, 4, '#1c1814');
+  ctx.globalAlpha = 1;
+}
+
 function drawCop() {
   if (state.scene !== 'hub' && state.scene !== 'nyc') return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
@@ -1589,6 +1603,32 @@ function updateExplore(dt) {
         c.honkBack -= dt;
         if (!c.honking) { c.honking = true; audio.sfx('honk'); }
       } else c.honking = false;
+    }
+  }
+  // Pine Barrens: the Russian is out there. Rarely, a figure crosses the treeline.
+  if (state.scene === 'pines') {
+    if (!state.russian) state.russian = { t: 14 + Math.random() * 20, active: false };
+    const ru = state.russian;
+    if (!ru.active) {
+      ru.t -= dt;
+      if (ru.t <= 0) {
+        ru.active = true;
+        ru.x = Math.random() < .5 ? 60 : 700;
+        ru.dir = ru.x < 300 ? 1 : -1;
+        ru.y = 150 + Math.random() * 30;
+        ru.life = 2.6;
+        if (!state.flags.russianSeen) {
+          state.flags.russianSeen = true;
+          startDialog([
+            { speaker: 'narrator', text: 'A figure moves between the trees. Big. Fur hat. He is not running from anything. He is simply… enduring.' },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Did you see that?! That guy looked like he survived things! TERRIBLE things! I don’t want to know what things!' : 'Guy’s an interior decorator. That’s a joke. You had to be there. Paulie almost died making that joke.' }
+          ]);
+        } else spawnEffect(ru.x, ru.y - 16, '…he’s still out here…', '#b8c8e0');
+      }
+    } else {
+      ru.life -= dt;
+      ru.x += ru.dir * 34 * dt;
+      if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
     }
   }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
@@ -5519,6 +5559,7 @@ function drawWorld() {
   drawSchemeProps();
   drawCop();
   drawHubEventProps();
+  drawRussian();
   drawBrawler();
   drawCash();
   drawInteractionMarkers();
