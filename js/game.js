@@ -27,6 +27,7 @@ function loadArt(src) {
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
+  hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
@@ -2698,97 +2699,28 @@ function hubInteractions() {
 }
 
 function drawHubEast() {
-  // procedural east neighborhood: asphalt road, sidewalks, lawns, buildings
-  // ground: north grass, road band, south grass
-  px(ctx, 640, 8, 640, 190, '#3d5a34');
-  px(ctx, 640, 198, 640, 90, '#2b2f36');
-  px(ctx, 640, 288, 640, 128, '#42613a');
-  // sidewalks
-  px(ctx, 640, 190, 640, 10, '#8e8e86');
-  px(ctx, 640, 286, 640, 10, '#8e8e86');
-  // road dashes
-  for (let x = 650; x < 1280; x += 42) px(ctx, x, 240, 22, 3, '#d8c86a');
-  // grass texture speckle across the east side
-  for (let gx = 648; gx < 1272; gx += 17) {
-    const gy1 = 20 + ((gx * 7919) % 150);
-    px(ctx, gx, gy1, 3, 2, gx % 3 ? '#35512e' : '#466841');
-    const gy2 = 300 + ((gx * 4999) % 96);
-    px(ctx, gx + 7, gy2, 3, 2, gx % 3 ? '#3a5733' : '#4a6c42');
+  // illustrated east neighborhood backdrop (art spans scene x 640-1280)
+  const img = sceneArt.hubeast;
+  if (img && img.complete && img.naturalWidth) {
+    ctx.drawImage(img, 640, 8, 632, 400);
+  } else {
+    px(ctx, 640, 8, 640, 408, '#3d5a34');
   }
-  // north buildings: brick apartments, gas station, house row
-  px(ctx, 672, 18, 172, 108, '#6e3f30');
-  px(ctx, 680, 26, 156, 12, '#522c22');
-  for (let wx = 686; wx < 836; wx += 26) for (let wy = 46; wy < 116; wy += 26) {
-    px(ctx, wx, wy, 16, 18, '#c8e2ee');
-    px(ctx, wx, wy, 16, 3, '#e8f4fa');
-  }
-  outlineText(ctx, 'COSTANZA CT', 758, 40, '#ffd9a0', 7, 'center');
-  // brick texture lines
-  for (let by = 30; by < 122; by += 9) px(ctx, 674, by, 168, 1, 'rgba(0,0,0,.18)');
-  // stoop + door
-  px(ctx, 744, 92, 26, 34, '#3a221a');
-  px(ctx, 738, 118, 40, 8, '#8e8e86');
-  // oak tree between buildings
-  px(ctx, 872, 88, 8, 34, '#4a3826');
-  px(ctx, 856, 58, 40, 34, '#2e5230');
-  px(ctx, 862, 48, 28, 22, '#3a6a3c');
-  px(ctx, 884, 108, 60, 8, 'rgba(0,0,0,.22)');
-  // gas station
-  px(ctx, 920, 18, 162, 108, '#d8d2c4');
-  px(ctx, 920, 18, 162, 22, '#b3312c');
-  outlineText(ctx, 'MOLTISANTI MOTORS', 1001, 24, '#fff1d0', 7, 'center');
-  px(ctx, 940, 56, 30, 44, '#b3312c');
-  px(ctx, 984, 56, 30, 44, '#b3312c');
-  px(ctx, 946, 62, 18, 22, '#22303e');
-  px(ctx, 990, 62, 18, 22, '#22303e');
-  px(ctx, 1032, 60, 40, 30, '#9fd4ec');
-  // gas station canopy shadow + price sign
-  px(ctx, 928, 100, 150, 10, 'rgba(0,0,0,.25)');
-  px(ctx, 1082, 44, 22, 56, '#2b2f36');
-  px(ctx, 1084, 48, 18, 14, '#e8e0c8');
-  outlineText(ctx, '3.89', 1093, 52, '#b3312c', 5, 'center');
-  px(ctx, 1084, 66, 18, 14, '#e8e0c8');
-  outlineText(ctx, '4.19', 1093, 70, '#b3312c', 5, 'center');
-  // east end cap house
-  px(ctx, 1140, 18, 112, 108, '#7a5c38');
-  px(ctx, 1150, 34, 28, 24, '#c8e2ee');
-  px(ctx, 1196, 34, 28, 24, '#c8e2ee');
-  px(ctx, 1168, 74, 26, 52, '#4a2f1e');
-  outlineText(ctx, 'MELFI CT', 1196, 64, '#ffe1b0', 7, 'center');
-  // south side: park with pond + geese
-  px(ctx, 660, 300, 120, 8, '#6b5a40');
-  for (let tx = 660; tx < 850; tx += 30) {
-    px(ctx, tx, 330 + (tx % 60), 6, 22, '#4a3826');
-    px(ctx, tx - 8, 318 + (tx % 60), 22, 16, '#2e5230');
-  }
-  // pond
-  ctx.fillStyle = '#2e5a72';
-  ctx.beginPath();
-  ctx.ellipse(1060, 352, 74, 30, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#3e7290';
-  ctx.beginPath();
-  ctx.ellipse(1060, 348, 60, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // park geese (animated)
-  for (let i = 0; i < 4; i++) {
-    const gx = 990 + i * 34 + Math.sin(state.time * 1.2 + i * 2) * 8;
-    const gy = 322 + (i % 2) * 14;
+  // baked-art-aware overlay details
+  // geese animated around the pond
+  for (let i = 0; i < 3; i++) {
+    const gx = 1040 + i * 30 + Math.sin(state.time * 1.2 + i * 2) * 8;
+    const gy = 330 + (i % 2) * 12;
     px(ctx, gx, gy, 10, 4, '#f4f0dc');
     px(ctx, gx + 7, gy - 3, 3, 5, '#f4f0dc');
     px(ctx, gx + 10, gy - 2, 2, 1, '#e58d2a');
   }
-  outlineText(ctx, 'GABAGOOL PARK', 1060, 396, '#cfe8c8', 7, 'center');
-  // south-east shops block
-  px(ctx, 1160, 302, 96, 96, '#54406e');
-  px(ctx, 1168, 312, 80, 20, '#8a76a8');
-  outlineText(ctx, 'PAWN', 1208, 318, '#ffe28a', 8, 'center');
-  px(ctx, 1176, 344, 26, 40, '#2a1e38');
-  px(ctx, 1214, 344, 26, 30, '#c8e2ee');
+  outlineText(ctx, 'GABAGOOL PARK', 1100, 396, '#eaf4d8', 7, 'center');
+  outlineText(ctx, 'MOLTISANTI MOTORS', 1010, 60, '#ffe1b0', 7, 'center');
+  outlineText(ctx, 'COSTANZA CT', 745, 52, '#ffe1b0', 7, 'center');
   // parked stealable coupe at the gas station
-  drawCar(1058, 132, '#7e2733');
-  // west-side connector sign
-  outlineText(ctx, 'EAST SIDE →', 1268, 220, '#ffe78a', 7, 'right');
+  if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
+  outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
 }
 
 function drawHub() {
