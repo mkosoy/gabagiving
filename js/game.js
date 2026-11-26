@@ -50,11 +50,13 @@ function drawFramedPhoto(img, x, y, w, h) {
 const keys = Object.create(null);
 const pressed = new Set();
 const axis = { x: 0, y: 0 };
+let usingTouchControls = false;
 const interactCodes = ['KeyE', 'Space', 'Enter'];
 const cancelCodes = ['Escape', 'KeyQ'];
 
 window.addEventListener('keydown', (e) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+  usingTouchControls = false;
   audio.unlock();
   if (!e.repeat) pressed.add(e.code);
   keys[e.code] = true;
@@ -93,6 +95,7 @@ function setStick(clientX, clientY) {
   stickNub.style.transform = `translate(${dx * 31}px, ${dy * 31}px)`;
 }
 stickZone.addEventListener('pointerdown', (e) => {
+  usingTouchControls = true;
   stickPointer = e.pointerId;
   stickZone.setPointerCapture(e.pointerId);
   setStick(e.clientX, e.clientY);
@@ -113,6 +116,7 @@ function bindButton(id, code) {
   const el = document.getElementById(id);
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    usingTouchControls = true;
     audio.unlock();
     pressed.add(code);
     keys[code] = true;
@@ -183,6 +187,7 @@ const state = {
   bonus: null,
   produce: null,
   bonusReveal: false,
+  effects: [],
   dreamT: 0,
   stats: { started: 0, calls: 0, vials: 0, smashes: 0, crashes: 0 }
 };
@@ -286,7 +291,7 @@ function drawPrompt(inter) {
   const sx = inter.x + inter.w / 2 - state.camera.x;
   const sy = inter.y - 15 - state.camera.y;
   drawPanel(sx - 42, sy - 5, 84, 18, '#1b2a55', '#f4df8e');
-  outlineText(ctx, `A  ${inter.label}`, sx, sy + 1, '#fff1a6', 8, 'center');
+  outlineText(ctx, `${usingTouchControls ? 'A' : 'E'}  ${inter.label}`, sx, sy + 1, '#fff1a6', 8, 'center');
 }
 
 function drawPhoneIncoming() {
@@ -500,7 +505,23 @@ function updateExplore(dt) {
   const inter = nearestInteraction();
   if (inter && interactPressed()) {
     audio.sfx('confirm');
+    spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
+  }
+}
+
+function spawnEffect(x, y, text, color = '#ffe78a') {
+  state.effects.push({ x, y, text, color, t: 0, life: 1.15 });
+  if (state.effects.length > 12) state.effects.shift();
+}
+
+function drawEffects() {
+  for (const e of state.effects) {
+    const a = Math.max(0, 1 - e.t / e.life);
+    ctx.save();
+    ctx.globalAlpha = a;
+    outlineText(ctx, e.text, e.x, e.y - e.t * 18, e.color, 7, 'center');
+    ctx.restore();
   }
 }
 
@@ -2307,6 +2328,7 @@ function drawWorld() {
   scene.draw();
   drawInteractionMarkers();
   drawPlayer();
+  drawEffects();
   ctx.restore();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
@@ -2644,6 +2666,8 @@ function startGame() {
 
 function update(dt) {
   state.time += dt;
+  for (const e of state.effects) e.t += dt;
+  state.effects = state.effects.filter((e) => e.t < e.life);
   if (consume(['KeyM'])) {
     const on = audio.toggle();
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
