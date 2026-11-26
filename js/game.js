@@ -2797,7 +2797,7 @@ function hubInteractions() {
         { speaker: 'narrator', text: 'The pumps are old but the coffee inside is somehow older.' }
       ]);
     } },
-    { x: 1165, y: 340, w: 80, h: 50, radius: 44, label: 'Pawn shop', action: () => {
+    { x: 1158, y: 250, w: 80, h: 46, radius: 48, label: 'Pawn shop', action: () => {
       if ((state.flags.tribute || 0) >= 100 && !state.flags.pawnedWatch) {
         state.flags.pawnedWatch = true;
         state.flags.tribute += 150;
