@@ -1852,7 +1852,7 @@ function missionStep() {
   return MISSION_DEFS[state.mission.id].steps[state.mission.step];
 }
 
-function updateMission() {
+function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
   const m0 = state.mission;
@@ -2298,7 +2298,7 @@ function updateExplore(dt) {
   state.camera.x = Math.max(0, Math.min(scene.w - W, p.x - W / 2));
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
-  updateMission();
+  updateMission(dt);
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
