@@ -1349,7 +1349,7 @@ function drawRussian() {
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
-    drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
+    drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
     px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
@@ -1460,7 +1460,8 @@ function updateNycTaxis(dt) {
     state.nycCars = [
       { x: 100, y: 292, dir: 1, speed: 66, brakeT: 0, honkT: 0 },
       { x: 500, y: 292, dir: 1, speed: 54, brakeT: 0, honkT: 0 },
-      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 }
+      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 },
+      { x: 350, y: 322, dir: -1, speed: 40, brakeT: 0, honkT: 0, color: '#dcd8cc' }
     ];
   }
   const p = state.player;
