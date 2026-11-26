@@ -276,7 +276,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris'];
 function saveWorld() {
   try {
     const out = {};
@@ -3618,6 +3618,22 @@ function pinesInteractions() {
         spawnEffect(state.player.x + 8, state.player.y - 8, '+$40 · THE BARRENS PROVIDE', '#8ffff2');
         audio.sfx('cash');
       });
+    } },
+    { x: 250, y: 190, w: 200, h: 130, radius: 40, label: 'Paulie', hidden: () => !!state.flags.pinesTalkedPaulie, action: () => {
+      state.flags.pinesTalkedPaulie = true;
+      startDialog([
+        { speaker: 'paulie', text: 'What are YOU doing here? …Actually, don’t answer that. We’re both not here. That’s the beauty of the Barrens — nobody’s ever here.' },
+        { speaker: 'paulie', text: 'Christopher lost his shoes. Don’t ask. It’s a whole thing. We’re looking for the van. The van is… somewhere. Trees all look the same out here. THAT’S the problem with nature.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m just hiking! People hike! Hiking is a thing people do voluntarily!' : 'Paulie. You didn’t see me, I didn’t see you, the trees saw nothing. Standard arrangement.' }
+      ]);
+    } },
+    { x: 300, y: 220, w: 220, h: 120, radius: 40, label: 'Christopher', hidden: () => !!state.flags.pinesTalkedChris, action: () => {
+      state.flags.pinesTalkedChris = true;
+      startDialog([
+        { speaker: 'christopher', text: 'Yo. You didn’t happen to see a van? Or a shoe? Or a Russian? …Forget I asked. All three of those questions are rhetorical.' },
+        { speaker: 'christopher', text: 'It’s beautiful out here though, right? Very serene. I’m thinking of writing a screenplay about it. “A guy loses a shoe in the woods.” It writes itself!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That’s a terrible premise. No offense. Actually — what if the shoe is a metaphor?' : 'Stick to hurricanes, Christopher. And get your shoes. It’s November.' }
+      ]);
     } },
     { x: 560, y: 200, w: 90, h: 50, radius: 46, label: 'Rusty abandoned car', action: () => {
       if (!state.flags.pinesCarLooted) {
