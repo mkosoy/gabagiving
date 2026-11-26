@@ -4800,6 +4800,17 @@ function shoreInteractions() {
         { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
       ]);
     } },
+    { x: 250, y: 260, w: 44, h: 30, radius: 40, label: 'Borrow golf cart', action: () => {
+      if (state.player.inCar) return;
+      state.player.inCar = true;
+      state.player.speed = 110;
+      state.player.carColor = '#e8e4d8';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
+      audio.sfx('door');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
+      startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
+    } },
     { x: 640, y: 240, w: 44, h: 44, radius: 44, label: 'High striker', action: () => {
       if (state.money < 5) { toast('High striker is $5 a swing.'); return; }
       state.money -= 5;
@@ -5279,6 +5290,18 @@ function nycInteractions() {
         { speaker: 'elaine', text: 'You’re the big guy with the — yeah. Jerry says I shouldn’t talk to you. So obviously I’m talking to you.' },
         { speaker: 'tony', text: 'Smart. Tell Jerry he still owes me for the — actually, forget it. You didn’t hear anything. Nice boots.' }
       ]);
+    } },
+    { x: 150, y: 250, w: 46, h: 28, radius: 38, label: 'Borrow convertible', action: () => {
+      if (state.player.inCar) return;
+      state.player.inCar = true;
+      state.player.speed = 225;
+      state.player.carColor = '#c03838';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+      audio.sfx('door');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
+      startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
     { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
       startDialog(state.player.kind === 'george' ? [
