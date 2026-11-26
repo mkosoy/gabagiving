@@ -1005,7 +1005,11 @@ function updateAmbient(dt) {
       n.pause = .8 + Math.random() * 2.8;
       continue;
     }
-    const spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    let spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    if (typeof weatherRain === 'function' && weatherRain()) {
+      spd *= 1.6; // everyone hurries in the rain
+      if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
+    }
     n.x += (dx / d) * spd * dt;
     n.y += (dy / d) * spd * dt;
     n.moving = true;
