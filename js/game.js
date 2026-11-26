@@ -1039,6 +1039,13 @@ function updateAmbient(dt) {
       continue;
     }
     let spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    if (!n.barkT && Math.random() < dt * .008) {
+      const idle = state.scene === 'nyc'
+        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again']
+        : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!'];
+      n.bark = idle[Math.floor(Math.random() * idle.length)];
+      n.barkT = 1.8;
+    }
     if (typeof weatherRain === 'function' && weatherRain()) {
       spd *= 1.6; // everyone hurries in the rain
       if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
