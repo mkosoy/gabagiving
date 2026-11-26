@@ -610,6 +610,45 @@ function drawDialog() {
   }
 }
 
+function drawClaw() {
+  const cl = state.claw;
+  if (!cl) return;
+  ctx.fillStyle = 'rgba(8,6,12,.9)';
+  ctx.fillRect(170, 70, 300, 260);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(170, 70, 300, 260);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('CLAW MACHINE — $5', 320, 94);
+  const px0 = 200, pw = 240;
+  // prize pit
+  ctx.fillStyle = '#2a2030';
+  ctx.fillRect(px0, 240, pw, 60);
+  const prizeX = px0 + cl.prize * pw;
+  px(ctx, prizeX - 8, 264, 16, 14, '#c05a3a');
+  px(ctx, prizeX - 8, 264, 16, 4, '#8a2f23');
+  // rail + claw
+  px(ctx, px0, 120, pw, 4, '#555');
+  const cx = px0 + cl.x * pw;
+  if (cl.phase === 'aim') {
+    px(ctx, cx - 2, 110, 4, 120, '#999');
+    px(ctx, cx - 8, 226, 16, 10, '#d4a017');
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.fillText('←→ move · E drop · ' + Math.max(0, cl.t).toFixed(1) + 's', 320, 320);
+  } else {
+    const prog = 1 - cl.dropT / 1.3;
+    const clawY = 110 + prog * 130;
+    px(ctx, cx - 2, 110, 4, clawY - 104, '#999');
+    px(ctx, cx - 8, clawY, 16, 10, '#d4a017');
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.fillText('…', 320, 320);
+  }
+  ctx.textAlign = 'left';
+}
+
 function drawTrivia() {
   const tv = state.trivia;
   if (!tv) return;
@@ -5446,6 +5485,14 @@ function shoreInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
     } },
+    { x: 560, y: 160, w: 44, h: 40, radius: 42, label: 'Claw machine', action: () => {
+      if (state.mode === 'claw') return;
+      if (state.money < 5) { toast('The claw machine is $5.'); return; }
+      state.money -= 5;
+      state.mode = 'claw';
+      state.claw = { x: .5, prize: .15 + Math.random() * .7, t: 8, phase: 'aim', dropT: 0 };
+      audio.sfx('pickup');
+    } },
     { x: 640, y: 240, w: 44, h: 44, radius: 44, label: 'High striker', action: () => {
       if (state.money < 5) { toast('High striker is $5 a swing.'); return; }
       state.money -= 5;
@@ -7940,6 +7987,7 @@ function render() {
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
+  else if (state.mode === 'claw') drawClaw();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -8135,6 +8183,38 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'claw') {
+    const cl = state.claw;
+    if (!cl) { state.mode = 'explore'; return; }
+    const mi = moveInput();
+    if (cl.phase === 'aim') {
+      cl.t -= dt;
+      cl.x += (mi.x || (down(['ArrowLeft', 'KeyA']) ? -1 : down(['ArrowRight', 'KeyD']) ? 1 : 0)) * dt * .6;
+      cl.x = Math.max(.05, Math.min(.95, cl.x));
+      if (consume(['KeyE', 'Space']) || cl.t <= 0) {
+        cl.phase = 'drop';
+        cl.dropT = 1.3;
+        audio.sfx('spin');
+      }
+    } else {
+      cl.dropT -= dt;
+      if (cl.dropT <= 0) {
+        const dist = Math.abs(cl.x - cl.prize);
+        state.mode = 'explore';
+        state.claw = null;
+        if (dist < .07) {
+          const prize = Math.random();
+          const payout = prize < .1 ? 100 : prize < .4 ? 25 : 10;
+          state.money += payout;
+          audio.sfx('cash');
+          startDialog([{ speaker: 'narrator', text: `The claw descends, closes with actual conviction, and lifts — a prize! The machine releases it with visible reluctance. Inside the plush turkey: $${payout}, because this is Jersey and even the toys are mobbed up.` }]);
+        } else if (dist < .15) {
+          startDialog([{ speaker: 'narrator', text: 'The claw grazes the prize, wobbles it meaningfully, and lifts nothing. The prize settles back with a smugness that should be impossible in plush. The machine does not care. The machine has seen everything.' }]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The claw closes on empty air with the weak grip of a machine that was never intended to prize anything. Somewhere, a carnie laughs in advance.' }]);
+        }
       }
     }
   } else if (state.mode === 'trivia') {
