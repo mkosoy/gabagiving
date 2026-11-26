@@ -850,11 +850,64 @@ function drawAmbient() {
   }
 }
 
+function updateCop(dt) {
+  if (!state.flags.freeRoam || state.scene !== 'hub') { state.cop = null; return; }
+  const heat = state.flags.heat || 0;
+  if (heat >= 3.5 && !state.cop) {
+    state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
+    audio.sfx('honk');
+    spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
+  }
+  const c = state.cop;
+  if (!c) return;
+  if (heat < 1.5) {
+    spawnEffect(c.x, c.y, 'HEAT CLEARED', '#8ffff2');
+    state.cop = null;
+    return;
+  }
+  c.flashT += dt;
+  const p = state.player;
+  const dx = (p.x + 8) - c.x, dy = (p.y + 8) - c.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const speed = p.inCar ? 150 : 120;
+  c.x += dx / d * speed * dt;
+  c.y += dy / d * speed * dt;
+  if (d < 30) {
+    c.bustT += dt;
+    if (c.bustT > .8) {
+      state.cop = null;
+      state.flags.heat = 0;
+      p.inCar = false;
+      p.speed = p.kind === 'george' ? 96 : 88;
+      audio.sfx('denied');
+      startDialog(p.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A very unimpressed officer escorts George to the curb. The fine is twelve dollars and a lecture about civic responsibility.' },
+        { speaker: 'george', text: 'Twelve dollars! You know what the Human Fund would say about this? Nothing, because it doesn’t exist!' }
+      ] : [
+        { speaker: 'narrator', text: 'The officer takes one look at Tony, decides this is above his pay grade, and writes a parking ticket instead.' },
+        { speaker: 'tony', text: 'Smart kid. Here — for the policeman’s ball. Tell ‘em I said hi. Actually, don’t.' }
+      ]);
+    }
+  } else c.bustT = Math.max(0, c.bustT - dt);
+}
+
+function drawCop() {
+  const c = state.cop;
+  if (!c || state.scene !== 'hub') return;
+  drawCar(c.x, c.y, '#e8ecf2');
+  // flashing lightbar
+  const phase = Math.floor(c.flashT * 6) % 2;
+  px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
+  px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
+}
+
 function updateExplore(dt) {
   updatePhone(dt);
   if (state.phone) return;
   updateAmbient(dt);
   updateRyeHeist(dt);
+  updateCop(dt);
+  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
@@ -3190,6 +3243,7 @@ function drawWorld() {
   scene.draw();
   drawAmbient();
   drawSchemeProps();
+  drawCop();
   drawInteractionMarkers();
   drawPlayer();
   drawEffects();
