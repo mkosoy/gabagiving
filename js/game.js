@@ -1219,7 +1219,9 @@ function updateCop(dt) {
   const d = Math.hypot(dx, dy) || 1;
   // either unit close enough counts toward the bust
   const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
-  if (Math.min(d, d2) < 30) {
+  // GTA rules: they can't cuff a moving car — you have to stop or be on foot
+  const evading = p.inCar && (p.carV || 0) > .45;
+  if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
     if (c.bustT > .8) {
       state.cop = null;
@@ -1237,6 +1239,10 @@ function updateCop(dt) {
       ]);
     }
   } else c.bustT = Math.max(0, c.bustT - dt);
+  if (evading && Math.min(d, d2) < 130 && Math.random() < dt * .5) {
+    spawnEffect(c.x + 8, c.y - 14, 'PULL OVER!', '#9fc4ec');
+    audio.sfx('honk');
+  }
 }
 
 function drawHubEventProps() {
