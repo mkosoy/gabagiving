@@ -278,7 +278,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1212,7 +1212,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -1342,7 +1342,7 @@ function drawRussian() {
 }
 
 function drawCop() {
-  if (state.scene !== 'hub' && state.scene !== 'nyc') return;
+  if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
     drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
@@ -1685,6 +1685,16 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'RACE BACK to Newman — clock is running', label: 'Win the bet' }
     ]
   },
+  bigOne: {
+    title: 'THE BIG ONE',
+    payout: 500, heat: 2.5,
+    steps: [
+      { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'THE BIG ONE: collect the package from the bodega', label: 'Collect the package' },
+      { scene: 'satriale', x: 262, y: 300, radius: 62, objective: 'Move it through Satriale’s — Bobby signs for it', label: 'Move through Satriale’s' },
+      { scene: 'shore', x: 384, y: 260, radius: 80, objective: 'Final leg: the boardwalk drop. Nobody looks at anyone in the off-season.', label: 'Boardwalk drop' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. It never happened.', label: 'Finish the job' }
+    ]
+  },
   heatMagnet: {
     title: 'HEAT MAGNET',
     payout: 220, heat: 0, survive: 30,
@@ -1710,7 +1720,7 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh'];
+const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'bigOne'];
 const KRAMER_CHAIN = ['muffinTops', 'bladderRun'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
@@ -1767,6 +1777,10 @@ function advanceMission() {
       cannonball: [
         { speaker: 'newman', text: 'HA! IN YOUR FACE, FIREMAN LENNY! Er — well done. The $350, minus the standard courier tithe. Hee hee. The tithe is most of it.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove like a maniac through a tunnel for a BET?! People bet on me?! I’m a HORSE! …A fast horse. Fastest in the stable, actually.' : 'Fast driving, no questions, cash at the end. Best job all week.' }
+      ],
+      bigOne: [
+        { speaker: 'newman', text: 'It is done. IT IS DONE! The mail — er, the PARCELS — flow once more through the arteries of this great state! $500, minus administrative tribute. The administrative tribute is significant. It is most of it. HEE HEE HEE!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Four counties! I’m a courier kingpin! A low-level, poorly-paid courier kingpin, but the TITLE!' : 'Five hundred for a drive down the shore with stops. Easiest money since the cigarette boat. Don’t ask.' }
       ],
       bigSalad: [
         { speaker: 'newman', text: 'Yes. YES. Look at the SIZE of it. Big. You have done well. The mail provides. Well — YOU provided. Same thing, essentially.' },
@@ -1963,6 +1977,42 @@ function updateExplore(dt) {
       ru.x += ru.dir * 34 * dt;
       if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
     }
+  }
+  // gypsy cab mode: driving the stolen taxi in Manhattan attracts fares
+  if (state.scene === 'nyc' && state.player.inCar && state.player.carColor === '#e8b822') {
+    if (!state.fare) {
+      state.fareCd = (state.fareCd || 6) - dt;
+      if (state.fareCd <= 0) {
+        const spots = [[150, 280], [320, 300], [520, 280], [620, 300], [250, 340]];
+        const s = spots[Math.floor(Math.random() * spots.length)];
+        state.fare = { stage: 'pickup', x: s[0], y: s[1], t: 0 };
+      }
+    } else {
+      const f = state.fare;
+      if (f.stage === 'pickup') {
+        if (Math.hypot(f.x - state.player.x, f.y - state.player.y) < 46) {
+          const dests = [[700, 120, 'the park'], [80, 120, 'the west side'], [640, 300, 'the east end']];
+          const d = dests[Math.floor(Math.random() * dests.length)];
+          f.stage = 'dropoff'; f.x = d[0]; f.y = d[1]; f.name = d[2]; f.t = 0;
+          audio.sfx('door');
+          startDialog([
+            { speaker: 'narrator', text: `A fare climbs in. "${d[2].charAt(0).toUpperCase() + d[2].slice(1)}, and step on it." He does not notice anything unusual about this cab. They never do.` },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Step on it? I’m a careful driver! I have NEVER been in a high-speed — okay, twice. Twice I have been.' : 'Wherever you’re going, you’re going. Meter’s running. Actually it ain’t, but that’s between us.' }
+          ]);
+        }
+      } else if (Math.hypot(f.x - state.player.x, f.y - state.player.y) < 52) {
+        const pay = 35 + Math.floor(Math.random() * 45);
+        state.flags.tribute = (state.flags.tribute || 0) + pay;
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 12, `FARE PAID +$${pay}`, '#8ffff2');
+        state.fare = null;
+        state.fareCd = 10 + Math.random() * 14;
+        audio.sfx('door');
+      }
+    }
+  } else if (state.fare) {
+    state.fare = null;
+    state.fareCd = 8;
   }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
@@ -3754,6 +3804,7 @@ function hubInteractions() {
           bigSalad: { speaker: 'newman', text: 'Hungry work, the mail. Fetch me a salad from Monk’s. A BIG salad. Not the small. If it’s small, I will know. I ALWAYS know. $120.' },
           soupNaziRun: { speaker: 'newman', text: 'Soup. From the Soup Man. I am… no longer welcome there. A misunderstanding involving the bread line. You go. Follow the rules EXACTLY or there will be NO SOUP. $160.' },
           cannonball: { speaker: 'newman', text: 'A wager! I bet a VERY smug fireman $350 that nobody sane can reach the Pine Barrens and return before his shift whistle. You are nobody sane. GO! The clock is ALREADY judgemental!' },
+          bigOne: { speaker: 'newman', text: 'The big one. THE big one. Four stops, three counties, one bodega, a pork store, and a boardwalk. $500. This is the job they write ballads about, if ballads were written about parcels. Which they should be!' },
           heatMagnet: { speaker: 'newman', text: 'This one is simple. I may have told the police YOU are the mail thief. You’ll have some heat for a bit. Survive it, come back, $220. What — don’t look at me like that, it’s a COMPLIMENT. They believed me instantly!' },
           ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
           pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
@@ -4741,6 +4792,18 @@ function drawNyc() {
     px(ctx, 644, 357, 4, 4, '#2848a0'); // eagle-ish blob
     px(ctx, 643, 366, 5, 3, '#05070c');
     px(ctx, 664, 366, 5, 3, '#05070c');
+  }
+  // taxi fare markers
+  if (state.fare && state.scene === 'nyc') {
+    const f = state.fare;
+    const bob = Math.sin(state.time * 4) * 3;
+    if (f.stage === 'pickup') {
+      drawPerson(ctx, f.x - 10, f.y - 20, 'womanB', 'down', state.frame * .5, {});
+      outlineText(ctx, 'TAXI!', f.x, f.y - 34 + bob, '#ffe78a', 8, 'center');
+    } else {
+      outlineText(ctx, '▼', f.x, f.y - 20 + bob, '#8ffff2', 11, 'center');
+      outlineText(ctx, f.name.toUpperCase(), f.x, f.y - 34 + bob, '#8ffff2', 6, 'center');
+    }
   }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
