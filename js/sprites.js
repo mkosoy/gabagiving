@@ -68,138 +68,188 @@ const palettes = {
 export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, options = {}) {
   const p = palettes[kind] || palettes.tony;
   const maxxed = kind === 'tonyMax' || options.maxxed;
-  const wide = ((kind === 'tony' || kind === 'bobby' || kind === 'junior') && !maxxed) ? 2 : 0;
-  const tall = kind === 'kramer' || kind === 'augustus' ? 2 : 0;
-  const short = kind === 'george' ? -1 : 0;
-  const step = Math.sin(frame * 0.35) * 1.2;
-  skinShadow(ctx, x, y + tall, 17 + wide);
+  const pose = options.pose || 'stand';
+  const wide = ((kind === 'tony' || kind === 'bobby' || kind === 'junior') && !maxxed) ? 3 : (kind === 'george' ? 2 : 0);
+  const tall = kind === 'kramer' || kind === 'augustus' ? 3 : 0;
+  const short = kind === 'george' ? -2 : 0;
+  const idle = Math.sin(frame * .9 + x * .13) * .8;
+  const walk = Math.sin(frame * .55) * 1.6;
+  const sitting = pose === 'sit';
+  const lean = pose === 'lean' ? 2 : 0;
+  const bodyY = y + (sitting ? 5 : 0) + (pose === 'work' ? 1 : 0);
+  const cx = x + lean;
 
-  // legs
-  const legY = y + 13 + tall;
-  px(ctx, x + 4, legY + (dir !== 'up' ? step * .35 : 0), 3, 6 - short, p.pants);
-  px(ctx, x + 9 + wide, legY - (dir !== 'up' ? step * .35 : 0), 3, 6 - short, p.pants);
-  px(ctx, x + 3, legY + 5 - short, 5, 2, p.shoes);
-  px(ctx, x + 9 + wide, legY + 5 - short, 5, 2, p.shoes);
+  // Slightly oversized RPG sprites read better against the detailed illustrated rooms.
+  const spriteScale = options.scale || 1.18;
+  ctx.save();
+  ctx.translate(x + 10, y + 31);
+  ctx.scale(spriteScale, spriteScale);
+  ctx.translate(-(x + 10), -(y + 31));
 
-  // torso
-  px(ctx, x + 2 - wide * .5, y + 7 + tall * .5, 13 + wide, 9, p.shirt);
-  if (kind === 'augustus') {
-    px(ctx, x + 2, y + 8, 13, 3, '#fff2d6');
-    px(ctx, x + 10, y + 7, 4, 11, '#aa2634');
-  }
-  if (kind === 'jerry') px(ctx, x + 6, y + 8, 4, 7, '#efeee2');
-  if (kind === 'tony' || kind === 'tonyMax') px(ctx, x + 6, y + 7, 2, 8, p.accent);
+  // soft contact shadow
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 11, y + (sitting ? 25 : 31) + tall, sitting ? 13 : 10 + wide * .4, sitting ? 3 : 4, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // arms
-  const armColor = p.skin;
-  px(ctx, x, y + 8 + tall * .5 - step * .2, 3, 8, armColor);
-  px(ctx, x + 14 + wide, y + 8 + tall * .5 + step * .2, 3, 8, armColor);
-
-  // head
-  px(ctx, x + 3, y - 1 + short, 11 + wide, 9, p.skin);
-  // jaw / maxxing
-  if (maxxed) {
-    px(ctx, x + 4, y + 6, 10, 3, p.skin);
-    px(ctx, x + 4, y + 7, 10, 1, '#9f5f3f');
-    px(ctx, x + 3, y + 2, 12, 2, '#0e1520'); // sharp sunglasses
-    px(ctx, x + 7, y + 3, 3, 1, '#76dcff');
+  // legs / seated knees
+  const legY = y + 20 + tall + short;
+  if (sitting) {
+    px(ctx, cx + 2, legY - 1, 8, 4, p.pants);
+    px(ctx, cx + 11 + wide, legY - 1, 8, 4, p.pants);
+    px(ctx, cx + 1, legY + 3, 7, 2, p.shoes);
+    px(ctx, cx + 14 + wide, legY + 3, 7, 2, p.shoes);
   } else {
-    px(ctx, x + 4, y + 7, 9 + wide, 2, p.skin);
+    const step = pose === 'stand' ? walk * .35 : walk * .12;
+    px(ctx, cx + 5, legY + step, 4, 9 - short, p.pants);
+    px(ctx, cx + 11 + wide, legY - step, 4, 9 - short, p.pants);
+    px(ctx, cx + 4, legY + 7 - short, 6, 3, p.shoes);
+    px(ctx, cx + 11 + wide, legY + 7 - short, 6, 3, p.shoes);
   }
 
-  // hair / hats / laurel
+  // torso with outline and clothing shape
+  const torsoX = cx + 2 - wide * .5;
+  const torsoY = bodyY + 9 + tall * .4;
+  const torsoW = 18 + wide;
+  px(ctx, torsoX - 1, torsoY - 1, torsoW + 2, 14, '#171119');
+  px(ctx, torsoX, torsoY, torsoW, 13, p.shirt);
+  px(ctx, torsoX + 1, torsoY + 1, torsoW - 2, 3, 'rgba(255,255,255,.08)');
   if (kind === 'augustus') {
-    // Imperial laurel over an anachronistically perfect looksmaxxer haircut.
-    px(ctx, x + 2, y - 4, 14, 4, '#f1d37a');
-    px(ctx, x + 3, y - 5, 12, 2, '#3a251b');
-    px(ctx, x + 2, y - 2, 14, 2, '#d6b93e');
-    px(ctx, x + 3, y - 5, 3, 2, '#6aa84f');
-    px(ctx, x + 8, y - 6, 3, 2, '#6aa84f');
-    px(ctx, x + 13, y - 5, 3, 2, '#6aa84f');
-    px(ctx, x + 4, y + 6, 10, 3, p.skin); // marble-cut jaw
-    px(ctx, x + 4, y + 8, 10, 1, '#9d6042');
-  } else if (kind === 'kramer') {
-    px(ctx, x + 2, y - 4, 13, 4, p.hair);
-    px(ctx, x + 1, y - 2, 3, 4, p.hair);
-    px(ctx, x + 13, y - 3, 3, 5, p.hair);
-  } else if (kind === 'elaine') {
-    px(ctx, x + 1, y - 2, 15, 5, p.hair);
-    px(ctx, x + 2, y + 2, 2, 6, p.hair);
-    px(ctx, x + 13, y + 2, 2, 6, p.hair);
-  } else if (kind === 'george') {
-    // Balding crown with hair only at the sides/back.
-    px(ctx, x + 3, y - 1, 3, 3, p.hair);
-    px(ctx, x + 12, y - 1, 3, 3, p.hair);
-    px(ctx, x + 4, y + 1, 2, 3, p.hair);
-    px(ctx, x + 12, y + 1, 2, 3, p.hair);
-  } else if (kind === 'jerry') {
-    // Thick dark sitcom-comedian hair with a little height.
-    px(ctx, x + 2, y - 3, 13, 4, p.hair);
-    px(ctx, x + 4, y - 5, 8, 2, p.hair);
-  } else if (kind === 'silvio') {
-    // Tall sculpted pompadour.
-    px(ctx, x + 2, y - 5, 13, 4, p.hair);
-    px(ctx, x + 4, y - 7, 9, 3, '#1b1514');
-  } else if (kind === 'christopher') {
-    // Slicked hair plus a young wiseguy brim silhouette.
-    px(ctx, x + 2, y - 3, 14, 3, p.hair);
-    px(ctx, x + 1, y - 1, 16, 1, '#101010');
-  } else if (kind === 'janice') {
-    // Large burgundy hair, unmistakably Janice-adjacent without copying an actor.
-    px(ctx, x + 1, y - 4, 15, 6, p.hair);
-    px(ctx, x, y, 3, 8, p.hair);
-    px(ctx, x + 14, y, 3, 8, p.hair);
-  } else if (kind === 'meadow') {
-    px(ctx, x + 2, y - 2, 13, 4, p.hair);
-    px(ctx, x + 2, y + 1, 3, 8, p.hair);
-    px(ctx, x + 12, y + 1, 3, 8, p.hair);
-  } else if (kind === 'melfi' || kind === 'carmela') {
-    px(ctx, x + 2, y - 2, 13, 4, p.hair);
-    px(ctx, x + 2, y + 1, 2, 6, p.hair);
-    px(ctx, x + 13, y + 1, 2, 6, p.hair);
-  } else if (kind === 'paulie' || kind === 'paulieSuit') {
-    // Silver wings sweeping back from the temples.
-    px(ctx, x + 5, y - 2, 7, 2, p.hair);
-    px(ctx, x + 2, y - 1, 3, 4, '#eeeeE5');
-    px(ctx, x + 12, y - 1, 3, 4, '#eeeeE5');
-    if (kind === 'paulieSuit') px(ctx, x + 6, y + 7, 4, 7, '#f1e7c8');
-  } else {
-    px(ctx, x + 3, y - 2, 11 + wide, 3, p.hair);
-    if (dir !== 'up') px(ctx, x + 2, y, 2, 4, p.hair);
+    px(ctx, torsoX + 2, torsoY + 1, torsoW - 4, 4, '#fff1d1');
+    px(ctx, torsoX + torsoW - 6, torsoY, 5, 14, '#a91f31');
+    px(ctx, torsoX + 4, torsoY + 8, 4, 2, p.accent);
+  }
+  if (kind === 'jerry') {
+    px(ctx, torsoX + 6, torsoY + 1, 6, 11, '#efeee2');
+    px(ctx, torsoX + 8, torsoY + 2, 2, 8, '#2c4f7d');
+  }
+  if (kind === 'artie') {
+    px(ctx, torsoX + 3, torsoY + 1, torsoW - 6, 10, '#f1eadc');
+    px(ctx, torsoX + 8, torsoY + 2, 2, 9, '#b8ac98');
+  }
+  if (kind === 'tony' || kind === 'tonyMax') {
+    px(ctx, torsoX + 7, torsoY + 1, 3, 11, p.accent);
+    px(ctx, torsoX + 4, torsoY + 5, torsoW - 8, 1, '#d4aa45');
+  }
+  if (kind === 'paulieSuit') {
+    px(ctx, torsoX + 6, torsoY, 6, 12, '#f1e7c8');
+    px(ctx, torsoX + 8, torsoY + 2, 2, 7, '#25212b');
+  }
+  if (kind.startsWith('woman') || kind === 'elaine' || kind === 'irina' || kind === 'janice' || kind === 'carmela' || kind === 'meadow' || kind === 'melfi') {
+    px(ctx, torsoX + 4, torsoY + 2, torsoW - 8, 2, p.accent);
   }
 
-  // face details only when not facing away
+  // arms and pose-specific gestures
+  const armY = torsoY + 2;
+  const skin = p.skin;
+  if (pose === 'burst' || pose === 'perform') {
+    px(ctx, cx - 1, armY - 6 - idle, 4, 10, skin);
+    px(ctx, cx + 18 + wide, armY - 6 + idle, 4, 10, skin);
+    px(ctx, cx - 2, armY - 8 - idle, 5, 3, skin);
+    px(ctx, cx + 18 + wide, armY - 8 + idle, 5, 3, skin);
+  } else if (pose === 'phone') {
+    px(ctx, cx, armY + 1, 4, 9, skin);
+    px(ctx, cx + 15 + wide, armY - 1, 4, 7, skin);
+    px(ctx, cx + 15 + wide, armY - 3, 5, 4, '#111827');
+    px(ctx, cx + 16 + wide, armY - 2, 3, 2, '#67f5a0');
+  } else if (pose === 'angry' || pose === 'imperial') {
+    px(ctx, cx - 1, armY + Math.sin(frame) * 1, 4, 9, skin);
+    px(ctx, cx + 17 + wide, armY - 2, 5, 7, skin);
+  } else if (sitting) {
+    px(ctx, cx + 1, armY + 2, 4, 7, skin);
+    px(ctx, cx + 15 + wide, armY + 2, 4, 7, skin);
+  } else {
+    px(ctx, cx, armY - walk * .15, 4, 10, skin);
+    px(ctx, cx + 17 + wide, armY + walk * .15, 4, 10, skin);
+  }
+
+  // neck and outlined head
+  const headX = cx + 3 - wide * .25;
+  const headY = bodyY + short;
+  const headW = 15 + wide;
+  px(ctx, headX + 5, headY + 10, 6, 3, skin);
+  px(ctx, headX - 1, headY - 1, headW + 2, 14, '#171119');
+  px(ctx, headX, headY, headW, 13, skin);
+  px(ctx, headX + 1, headY + 1, headW - 2, 3, 'rgba(255,255,255,.10)');
+  px(ctx, headX + 1, headY + 9, headW - 2, 3, 'rgba(107,55,38,.20)');
+  // ears and nose
+  px(ctx, headX - 1, headY + 5, 2, 4, skin);
+  px(ctx, headX + headW - 1, headY + 5, 2, 4, skin);
   if (dir !== 'up') {
-    if (!maxxed) {
-      px(ctx, x + 5, y + 3, 2, 1, '#12151c');
-      px(ctx, x + 10 + wide, y + 3, 2, 1, '#12151c');
+    const noseShift = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
+    px(ctx, headX + 7 + wide / 2 + noseShift, headY + 6, 3, 2, '#a86143');
+  }
+
+  // hair, hats, glasses, and character silhouettes
+  if (kind === 'augustus') {
+    px(ctx, headX + 1, headY - 3, headW - 2, 4, '#3a251b');
+    px(ctx, headX, headY - 2, headW, 3, '#d6b93e');
+    for (let i = 0; i < 4; i++) px(ctx, headX + 2 + i * 4, headY - 4 - (i % 2), 3, 2, '#6aa84f');
+    px(ctx, headX + 3, headY + 10, headW - 6, 2, '#9d6042'); // marble jaw
+  } else if (kind === 'kramer') {
+    px(ctx, headX - 1, headY - 5, headW + 2, 6, p.hair);
+    px(ctx, headX - 3, headY - 1, 4, 8, p.hair);
+    px(ctx, headX + headW - 1, headY - 2, 4, 9, p.hair);
+    px(ctx, headX + 3, headY - 8, headW - 6, 4, '#2c1711');
+  } else if (kind === 'elaine' || kind === 'janice' || kind === 'meadow' || kind === 'melfi' || kind === 'carmela' || kind === 'irina' || kind.startsWith('woman')) {
+    px(ctx, headX - 1, headY - 3, headW + 2, 6, p.hair);
+    px(ctx, headX - 2, headY + 2, 4, 11, p.hair);
+    px(ctx, headX + headW - 2, headY + 2, 4, 11, p.hair);
+    if (kind === 'janice') px(ctx, headX - 3, headY - 1, headW + 6, 5, p.hair);
+  } else if (kind === 'george') {
+    px(ctx, headX + 1, headY + 1, 4, 5, p.hair);
+    px(ctx, headX + headW - 5, headY + 1, 4, 5, p.hair);
+    px(ctx, headX + 2, headY + 5, 5, 4, '#1c222c');
+    px(ctx, headX + headW - 7, headY + 5, 5, 4, '#1c222c');
+    px(ctx, headX + 6, headY + 6, headW - 12, 1, '#1c222c');
+  } else if (kind === 'paulie' || kind === 'paulieSuit') {
+    px(ctx, headX + 4, headY - 2, headW - 8, 3, p.hair);
+    px(ctx, headX, headY, 4, 8, '#eeeeE5');
+    px(ctx, headX + headW - 4, headY, 4, 8, '#eeeeE5');
+  } else if (kind === 'silvio') {
+    px(ctx, headX, headY - 5, headW, 5, p.hair);
+    px(ctx, headX + 3, headY - 8, headW - 6, 4, '#1b1514');
+  } else if (kind === 'jerry') {
+    px(ctx, headX, headY - 3, headW, 5, p.hair);
+    px(ctx, headX + 3, headY - 5, headW - 6, 3, p.hair);
+  } else if (kind === 'bobby') {
+    px(ctx, headX + 1, headY - 2, headW - 2, 4, p.hair);
+    px(ctx, headX + 3, headY + 9, headW - 6, 3, '#6b4b36'); // beard
+  } else {
+    px(ctx, headX + 1, headY - 2, headW - 2, 4, p.hair);
+    if (dir !== 'up') px(ctx, headX, headY + 1, 2, 5, p.hair);
+  }
+
+  // facial features
+  if (dir !== 'up') {
+    const eyeY = headY + 5;
+    if (maxxed) {
+      px(ctx, headX + 2, eyeY - 1, headW - 4, 3, '#0c1320');
+      px(ctx, headX + 5, eyeY, 4, 1, '#76dcff');
+      px(ctx, headX + 3, headY + 10, headW - 6, 2, '#8f5439');
+    } else {
+      const leftEye = dir === 'left' ? 2 : 4;
+      const rightEye = dir === 'right' ? headW - 6 : headW - 5;
+      px(ctx, headX + leftEye, eyeY, 2, 2, '#12151c');
+      if (dir !== 'left' && dir !== 'right') px(ctx, headX + rightEye, eyeY, 2, 2, '#12151c');
+      px(ctx, headX + 4, eyeY - 2, 3, 1, p.hair);
+      px(ctx, headX + headW - 7, eyeY - 2, 3, 1, p.hair);
+      px(ctx, headX + 6, headY + 10, Math.max(4, headW - 11), 1, '#70422f');
+    }
+    if (kind === 'aj') {
+      px(ctx, headX - 2, headY + 2, 3, 8, '#22252d');
+      px(ctx, headX + headW - 1, headY + 2, 3, 8, '#22252d');
+    }
+    if (kind === 'melfi') {
+      px(ctx, headX + 3, eyeY - 1, 5, 3, '#20242a');
+      px(ctx, headX + headW - 8, eyeY - 1, 5, 3, '#20242a');
     }
     if (kind === 'tony') {
-      px(ctx, x + 6, y + 5, 5, 1, '#70442f');
-      px(ctx, x + 5, y + 1, 7, 1, '#1c1715');
-    } else if (kind === 'george') {
-      px(ctx, x + 4, y + 2, 4, 3, '#20242a');
-      px(ctx, x + 10, y + 2, 4, 3, '#20242a');
-      px(ctx, x + 5, y + 3, 2, 1, '#a8d8e8');
-      px(ctx, x + 11, y + 3, 2, 1, '#a8d8e8');
-      px(ctx, x + 6, y + 6, 4, 1, '#6d3b2d');
-    } else if (kind === 'melfi') {
-      px(ctx, x + 4, y + 2, 4, 2, '#20242a');
-      px(ctx, x + 10, y + 2, 4, 2, '#20242a');
-      px(ctx, x + 6, y + 6, 4, 1, '#744233');
-    } else if (kind === 'aj') {
-      px(ctx, x + 5, y + 5, 5, 1, '#633b2e');
-      px(ctx, x + 2, y + 1, 3, 4, '#22252d'); // headphone
-    } else if (kind === 'jerry') {
-      px(ctx, x + 5, y + 5, 5, 1, '#6f3c2d');
-    } else if (kind === 'augustus') {
-      px(ctx, x + 4, y + 2, 4, 1, '#2a1b15');
-      px(ctx, x + 10, y + 2, 4, 1, '#2a1b15');
-      px(ctx, x + 5, y + 3, 2, 1, '#5bd7ff');
-      px(ctx, x + 11, y + 3, 2, 1, '#5bd7ff');
-      px(ctx, x + 6, y + 5, 5, 1, '#7a4935');
+      px(ctx, headX + 3, eyeY - 2, 5, 1, '#1c1715');
+      px(ctx, headX + headW - 8, eyeY - 2, 5, 1, '#1c1715');
     }
   }
+  ctx.restore();
 }
 
 export function drawPortrait(ctx, x, y, kind = 'tony') {
@@ -302,10 +352,13 @@ export function drawBat(ctx, x, y, angle = -0.5) {
   ctx.restore();
 }
 
-export function drawVial(ctx, x, y, t = 0) {
+export function drawVial(ctx, x, y, t = 0, kind = 'normal') {
   const bob = Math.sin(t * 5 + x) * 2;
-  px(ctx, x - 3, y - 7 + bob, 6, 10, 'rgba(120,220,255,.9)');
+  const glass = kind === 'gold' ? 'rgba(255,210,90,.95)' : kind === 'bad' ? 'rgba(160,110,190,.95)' : 'rgba(120,220,255,.9)';
+  const liquid = kind === 'gold' ? '#ffd849' : kind === 'bad' ? '#8c39bd' : '#52ff9a';
+  px(ctx, x - 3, y - 7 + bob, 6, 10, glass);
   px(ctx, x - 2, y - 9 + bob, 4, 3, '#e6eef7');
-  px(ctx, x - 2, y - 2 + bob, 4, 4, '#52ff9a');
+  px(ctx, x - 2, y - 2 + bob, 4, 4, liquid);
   px(ctx, x - 1, y - 6 + bob, 2, 2, '#ffffff');
+  if (kind !== 'normal') px(ctx, x - 6, y - 8 + bob, 12, 1, kind === 'gold' ? '#fff0a5' : '#e8a0ff');
 }

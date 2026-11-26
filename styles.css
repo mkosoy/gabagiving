@@ -102,12 +102,13 @@ html, body {
   background: rgba(154,64,42,.78) !important;
 }
 #btnB { background: rgba(53,91,150,.72) !important; }
-#btnR {
+#btnR, #btnF {
   width: 52px !important;
   height: 52px !important;
   font-size: 18px !important;
-  background: rgba(67,116,73,.72) !important;
 }
+#btnR { background: rgba(67,116,73,.72) !important; }
+#btnF { background: rgba(55,116,130,.72) !important; }
 @media (pointer: coarse), (max-width: 850px) {
   #touchControls { display: block; }
 }

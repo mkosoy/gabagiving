@@ -18,6 +18,34 @@ const W = canvas.width;
 const H = canvas.height;
 const audio = new AudioSys();
 
+function loadArt(src) {
+  const img = new Image();
+  img.src = src;
+  return img;
+}
+const sceneArt = {
+  house: loadArt('./assets/bg-house-v2.webp'),
+  hub: loadArt('./assets/bg-njhub.webp'),
+  apartment: loadArt('./assets/bg-apartment.webp'),
+  rome: loadArt('./assets/bg-rome.webp'),
+  club: loadArt('./assets/bg-club.webp'),
+  satriale: loadArt('./assets/bg-satriale.webp'),
+  cousinTony: loadArt('./assets/photo-cousin-tony.webp'),
+  tonyHorse: loadArt('./assets/photo-tony-horse.webp')
+};
+function drawSceneArt(img, w, h) {
+  if (!img.complete || !img.naturalWidth) return false;
+  ctx.drawImage(img, 0, 0, w, h);
+  return true;
+}
+function drawFramedPhoto(img, x, y, w, h) {
+  px(ctx, x - 2, y - 2, w + 4, h + 4, '#4b2b1d');
+  px(ctx, x, y, w, h, '#c49a55');
+  if (img.complete && img.naturalWidth) ctx.drawImage(img, x + 2, y + 2, w - 4, h - 4);
+  else px(ctx, x + 2, y + 2, w - 4, h - 4, '#9bc0d7');
+  px(ctx, x + 3, y + 3, Math.max(3, w * .18), 2, 'rgba(255,255,255,.45)');
+}
+
 const keys = Object.create(null);
 const pressed = new Set();
 const axis = { x: 0, y: 0 };
@@ -96,6 +124,7 @@ function bindButton(id, code) {
 bindButton('btnA', 'KeyE');
 bindButton('btnB', 'KeyB');
 bindButton('btnR', 'KeyR');
+bindButton('btnF', 'KeyF');
 
 document.getElementById('muteBtn').addEventListener('click', (e) => {
   audio.unlock();
@@ -123,7 +152,7 @@ const state = {
   time: 0,
   frame: 0,
   camera: { x: 0, y: 0 },
-  player: { x: 92, y: 108, dir: 'down', kind: 'tony', speed: 88 },
+  player: { x: 190, y: 124, dir: 'down', kind: 'tony', speed: 88 },
   flags: {
     houseStep: 0,
     tvChannel: 0,
@@ -139,7 +168,8 @@ const state = {
     clubTalked: {},
     clubReady: false,
     augustusAJ: false,
-    satStep: 0
+    satStep: 0,
+    freeRoam: false
   },
   objective: 'Press start',
   dialog: null,
@@ -327,9 +357,9 @@ const scenes = {
       r(252,8,16,66), r(252,136,16,46), r(352,8,16,58), r(352,126,16,56),
       r(8,174,262,16), r(330,174,302,16),
       r(352,190,16,76), r(352,322,16,86),
-      r(22,28,86,44), r(213,28,39,38), r(18,105,38,28),
-      r(402,26,120,42), r(560,22,48,42), r(408,122,70,28),
-      r(70,238,128,54), r(24,318,60,42), r(392,210,190,36), r(414,292,112,70)
+      r(62,45,110,126), r(200,20,62,55), r(18,70,54,58),
+      r(392,26,138,108), r(568,86,56,88), r(408,122,70,28),
+      r(55,280,175,100), r(24,318,42,42), r(392,210,190,36), r(414,292,160,96)
     ],
     draw: drawHouse,
     interactions: houseInteractions
@@ -383,6 +413,17 @@ const scenes = {
     ],
     draw: drawNjStreet,
     interactions: njInteractions
+  },
+  hub: {
+    w: 640, h: 416, label: 'North Caldwell · Free Roam', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,8,280,136), r(420,8,210,142),
+      r(18,248,150,130), r(448,232,184,158),
+      r(260,292,120,68), r(330,168,92,36)
+    ],
+    draw: drawHub,
+    interactions: hubInteractions
   },
   satriale: {
     w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
@@ -461,6 +502,9 @@ function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => !i.hidden);
+  if (state.flags.freeRoam && state.scene !== 'hub') {
+    list.push({ x: 292, y: 382, w: 96, h: 30, label: 'Neighborhood', action: () => enterHub(false) });
+  }
   const pc = { x: state.player.x + 8, y: state.player.y + 12 };
   let best = null;
   let bestD = Infinity;
@@ -486,7 +530,18 @@ function houseInteractions() {
   if (s === 3) list.push({ x: 474, y: 82, w: 38, h: 36, label: 'Talk to AJ', action: talkAJ });
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
   if (s === 5) list.push({ x: 78, y: 240, w: 112, h: 46, label: 'Sit on couch', action: sitCouch });
-  if (s === 6) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
+  if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
+  if (state.flags.freeRoam) {
+    list.push({ x: 108, y: 10, w: 58, h: 28, label: 'Geese update', action: () => startDialog([
+      { speaker: 'system', name: 'Geese', text: 'Honk. Hooonk. HONK.' },
+      { speaker: 'tony', text: 'You’re still here? What are you, part owners?' },
+      { speaker: 'narrator', text: 'One goose appears to be wearing a tiny laurel wreath. Nobody explains this.' }
+    ]) });
+    list.push({ x: 560, y: 22, w: 48, h: 42, label: 'Cousin photo', action: () => startDialog([
+      { speaker: 'tony', text: 'Every time I look at this guy I feel like I owe him money.' },
+      { speaker: 'aj', text: 'That’s what makes it art, Dad.' }
+    ]) });
+  }
   return list;
 }
 
@@ -626,6 +681,16 @@ function romeInteractions() {
   ];
   if (state.flags.romeStep === 0) list.push({ x: 642, y: 138, w: 52, h: 50, label: 'Meet Augustus', action: talkAugustus });
   if (state.flags.romeStep === 1) list.push({ x: 744, y: 150, w: 48, h: 34, label: 'Enter chamber', action: enterChamber });
+  if (state.flags.freeRoam) {
+    list.push({ x: 238, y: 210, w: 70, h: 70, label: 'Encore stream', action: () => startDialog([
+      { speaker: 'plav', name: 'Roman Plav', text: 'Back by popular demand! Today we rate marble busts by jawline.' },
+      { speaker: 'tony', text: 'Guy somehow has a residency across two millennia. I respect the grind.' }
+    ]) });
+    list.push({ x: 650, y: 138, w: 58, h: 52, label: 'Augustus encore', action: () => startDialog([
+      { speaker: 'augustus', text: 'Cousin Tony! Rome has installed a juice bar in your honor.' },
+      { speaker: 'tony', text: 'That’s actually the nicest thing anybody did for me all holiday.' }
+    ]) });
+  }
   return list;
 }
 
@@ -671,7 +736,12 @@ function startBoneIntro() {
 
 function startBoneGame() {
   state.mode = 'bone';
-  state.bone = { power: 8, dir: 1, hits: 0, flash: 0, message: 'Press A / Space in the gold zone' };
+  state.bone = { power: 8, dir: 1, hits: 0, combo: 0, flash: 0, message: 'Press A / Space in the gold zone' };
+}
+function boneZone(b) {
+  const width = Math.max(8, 20 - b.hits * 2);
+  const start = 24 + (b.hits % 3) * 12;
+  return { start, end: start + width, width };
 }
 
 function updateBone(dt) {
@@ -681,13 +751,18 @@ function updateBone(dt) {
   if (b.power < 0) { b.power = 0; b.dir = 1; }
   b.flash = Math.max(0, b.flash - dt);
   if (interactPressed()) {
-    if (b.power >= 28 && b.power <= 48) {
-      b.hits += 1;
+    const zone = boneZone(b);
+    if (b.power >= zone.start && b.power <= zone.end) {
+      const center = (zone.start + zone.end) / 2;
+      const perfect = Math.abs(b.power - center) < 2.5;
+      b.combo = perfect ? b.combo + 1 : 0;
+      b.hits += perfect && b.combo >= 2 ? 2 : 1;
       state.stats.smashes += 1;
-      b.flash = .3;
-      b.message = ['Hollow bones activated', 'Jawline forming', 'Cheekbones: imperial', 'Mewing intensity rising'][Math.min(3, b.hits - 1)] || 'Maxxing';
+      b.flash = perfect ? .48 : .3;
+      b.message = perfect ? `PERFECT microfracture x${b.combo + 1}` : ['Hollow bones activated', 'Jawline forming', 'Cheekbones: imperial', 'Mewing intensity rising'][Math.min(3, b.hits - 1)] || 'Maxxing';
       audio.sfx('smash');
     } else {
+      b.combo = 0;
       b.message = 'Too soft. Wait for gold.';
       audio.sfx('denied');
     }
@@ -711,7 +786,9 @@ function startPeptides() {
     vials: [],
     dizzy: 0,
     x: 320,
-    y: 220
+    y: 220,
+    boost: 0,
+    message: 'Catch glowing peptides'
   };
 }
 
@@ -722,15 +799,19 @@ function updatePeptides(dt) {
   g.spawn -= dt;
   if (g.spawn <= 0) {
     g.spawn = .75;
-    g.vials.push({ x: 80 + Math.random() * 480, y: 70 + Math.random() * 240, vx: (Math.random() - .5) * 45, vy: (Math.random() - .5) * 45 });
+    const roll = Math.random();
+    const kind = roll < .18 ? 'gold' : roll < .34 ? 'bad' : 'normal';
+    g.vials.push({ kind, x: 80 + Math.random() * 480, y: 70 + Math.random() * 240, vx: (Math.random() - .5) * (kind === 'gold' ? 90 : 45), vy: (Math.random() - .5) * (kind === 'gold' ? 90 : 45) });
   }
   const input = moveInput();
   const inversion = g.dizzy > .62 ? -1 : 1;
   const sway = Math.sin(g.time * 3) * .35 * g.dizzy;
   const ix = input.x * inversion + input.y * sway;
   const iy = input.y * inversion - input.x * sway;
-  g.x = Math.max(45, Math.min(595, g.x + ix * 125 * dt));
-  g.y = Math.max(65, Math.min(325, g.y + iy * 125 * dt));
+  g.boost = Math.max(0, g.boost - dt);
+  const moveSpeed = 125 * (g.boost > 0 ? 1.55 : 1);
+  g.x = Math.max(45, Math.min(595, g.x + ix * moveSpeed * dt));
+  g.y = Math.max(65, Math.min(325, g.y + iy * moveSpeed * dt));
   for (const v of g.vials) {
     v.x += v.vx * dt;
     v.y += v.vy * dt;
@@ -741,9 +822,20 @@ function updatePeptides(dt) {
     const v = g.vials[i];
     if (Math.hypot(v.x - g.x, v.y - g.y) < 17) {
       g.vials.splice(i, 1);
-      g.caught += 1;
-      state.stats.vials += 1;
-      audio.sfx('pickup');
+      if (v.kind === 'bad') {
+        g.caught = Math.max(0, g.caught - 1);
+        g.dizzy = 1;
+        g.message = 'CONTAMINATED! -1 peptide';
+        audio.sfx('crash');
+      } else {
+        g.caught += v.kind === 'gold' ? 2 : 1;
+        state.stats.vials += 1;
+        if (v.kind === 'gold') {
+          g.boost = 2.6;
+          g.message = 'GOLD PEPTIDE: speed boost, +2';
+        } else g.message = 'Peptide secured';
+        audio.sfx('pickup');
+      }
     }
   }
   if (g.caught >= 8) {
@@ -759,7 +851,7 @@ function updatePeptides(dt) {
 }
 
 function wakeFromDream() {
-  setScene('house', 125, 292);
+  setScene('house', 250, 306);
   state.flags.houseStep = 6;
   objective(houseObjective());
   startDialog([
@@ -779,6 +871,7 @@ function initDrive() {
     spawn: .2,
     obstacles: [],
     shake: 0,
+    boost: 0,
     finished: false
   };
 }
@@ -789,13 +882,15 @@ function updateDrive(dt) {
   if (!d || d.finished) return;
   const input = moveInput();
   d.x = Math.max(205, Math.min(435, d.x + input.x * 190 * dt));
-  d.road += dt * (185 + d.progress * .6);
-  d.progress += dt * 2.7;
+  d.boost = Math.max(0, d.boost - dt);
+  const boostMul = d.boost > 0 ? 1.75 : 1;
+  d.road += dt * (185 + d.progress * .6) * boostMul;
+  d.progress += dt * 2.7 * boostMul;
   d.spawn -= dt;
   if (d.spawn <= 0) {
     d.spawn = Math.max(.45, .88 - d.progress * .004);
     const typeRoll = Math.random();
-    const type = typeRoll < .42 ? 'gabagool' : typeRoll < .68 ? 'janice' : 'paulie';
+    const type = typeRoll < .12 ? 'money' : typeRoll < .48 ? 'gabagool' : typeRoll < .72 ? 'janice' : 'paulie';
     const lanes = [220, 275, 330, 385, 430];
     d.obstacles.push({
       type,
@@ -814,14 +909,20 @@ function updateDrive(dt) {
     const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
     if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 26, h: 24 })) {
       o.hit = true;
-      d.health -= 1;
-      d.progress = Math.max(0, d.progress - 3);
-      d.shake = .45;
-      state.stats.crashes += 1;
-      audio.sfx(o.type === 'gabagool' ? 'splash' : 'crash');
-      if (d.health <= 0) {
-        d.health = 3;
-        d.progress = Math.max(0, d.progress - 8);
+      if (o.type === 'money') {
+        d.boost = 2.7;
+        d.progress = Math.min(100, d.progress + 4);
+        audio.sfx('pickup');
+      } else {
+        d.health -= 1;
+        d.progress = Math.max(0, d.progress - 3);
+        d.shake = .45;
+        state.stats.crashes += 1;
+        audio.sfx(o.type === 'gabagool' ? 'splash' : 'crash');
+        if (d.health <= 0) {
+          d.health = 3;
+          d.progress = Math.max(0, d.progress - 8);
+        }
       }
     }
   }
@@ -856,6 +957,17 @@ function apartmentInteractions() {
   if (s === 1 && !state.flags.hasBat) list.push({ x: 275, y: 224, w: 34, h: 24, label: 'Pick up bat', action: pickBat });
   if (s === 2) list.push({ x: 340, y: 270, w: 38, h: 40, label: 'Confront George', action: confrontGeorge });
   if (s === 3) list.push({ x: 280, y: 312, w: 42, h: 34, label: 'Sit for dinner', action: sitDinner });
+  if (state.flags.freeRoam) {
+    list.push({ x: 48, y: 96, w: 96, h: 34, label: 'Cereal shelf', action: () => startDialog([
+      { speaker: 'jerry', text: 'You can tell a lot about a man by his cereal-to-company ratio.' },
+      { speaker: 'tony', text: 'I’m more of a pork store guy.' },
+      { speaker: 'george', text: 'That explains the fiscal structure of your pantry.' }
+    ]) });
+    list.push({ x: 538, y: 98, w: 50, h: 48, label: 'Bike', action: () => startDialog([
+      { speaker: 'tony', text: 'Who keeps a bike inside? Guy’s afraid of the outdoors?' },
+      { speaker: 'jerry', text: 'It’s decorative transportation.' }
+    ]) });
+  }
   return list;
 }
 
@@ -917,7 +1029,14 @@ function clubInteractions() {
   if (!talked.christopher) list.push({ x: 224, y: 154, w: 38, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 400, y: 154, w: 38, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
   if (!talked.silvio) list.push({ x: 312, y: 118, w: 38, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
-  if (state.flags.clubReady) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
+  if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
+  if (state.flags.freeRoam) {
+    list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => startDialog([
+      { speaker: 'paulie', text: 'I saved you a seat, Ton. Also somebody left four roses in the basement. Don’t ask.' },
+      { speaker: 'silvio', text: 'The camera is still down there. Hypothetically.' },
+      { speaker: 'tony', text: 'What am I, the Museum of Bad Decisions?' }
+    ]) });
+  }
   return list;
 }
 
@@ -1004,6 +1123,18 @@ function satrialeInteractions() {
   if (s === 1) return [{ x: 476, y: 140, w: 42, h: 42, label: 'Talk to Artie', action: talkSatArtie }];
   if (s === 2) return [{ x: 512, y: 304, w: 42, h: 44, label: 'Talk to Irina', action: talkSatIrina }];
   if (s === 3) return [{ x: 300, y: 132, w: 46, h: 44, label: 'Talk to Junior', action: talkSatJunior }];
+  if (state.flags.freeRoam) {
+    return [
+      { x: 46, y: 318, w: 110, h: 50, label: 'Produce crate', action: () => startDialog([
+        { speaker: 'tony', text: 'After what Junior did, this stuff should be registered as ammunition.' },
+        { speaker: 'bobby', text: 'We keep the dangerous tomatoes in the back now.' }
+      ]) },
+      { x: 244, y: 236, w: 152, h: 58, label: 'Meat table', action: () => startDialog([
+        { speaker: 'artie', text: 'Tony! I’m working on a Thanksgiving special: turkey-stuffed capicola.' },
+        { speaker: 'tony', text: 'That sounds illegal in at least three states.' }
+      ]) }
+    ];
+  }
   return [];
 }
 
@@ -1141,6 +1272,73 @@ function loseProduceGame() {
   }, { cinematic: 'romanWake' });
 }
 
+function enterHub(first = false) {
+  state.flags.freeRoam = true;
+  state.player.kind = 'tonyMax';
+  setScene('hub', 320, 214);
+  state.mode = 'explore';
+  objective('Free roam: choose a landmark');
+  if (first) {
+    startDialog([
+      { speaker: 'narrator', text: 'Thanksgiving is saved — but North Caldwell is now open. Old places have new surprises.' },
+      { speaker: 'tony', text: 'A little fresh air. Maybe I go bother some people recreationally.' }
+    ]);
+  }
+}
+
+function travelHub(place) {
+  const destinations = {
+    house: ['house', 250, 306, 'Back to the house. The geese have been busy.'],
+    satriale: ['satriale', 318, 354, 'Satriale’s smells like cured meat and unresolved grudges.'],
+    rome: ['rome', 430, 330, 'The marble arch hums with imperial nonsense.'],
+    club: ['club', 320, 330, 'The Bing is quiet again — suspiciously quiet.'],
+    apartment: ['apartment', 316, 370, 'The purple door is somehow still unlocked.']
+  };
+  const d = destinations[place];
+  if (!d) return;
+  setScene(d[0], d[1], d[2]);
+  state.mode = 'explore';
+  objective('Explore — return to the neighborhood when ready');
+  startDialog([{ speaker: 'narrator', text: d[3] }]);
+}
+
+function hubInteractions() {
+  return [
+    { x: 116, y: 128, w: 82, h: 46, label: 'Tony’s house', action: () => travelHub('house') },
+    { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
+    { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
+    { x: 500, y: 286, w: 108, h: 76, label: 'Bada Bing', action: () => travelHub('club') },
+    { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
+    { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
+      initDrive();
+      state.mode = 'drive';
+      objective('Catch the debtor — grab money boosts');
+    } }
+  ];
+}
+
+function drawHub() {
+  if (drawSceneArt(sceneArt.hub, 640, 416)) {
+    const pulse = (Math.sin(state.time * 4) + 1) / 2;
+    ctx.fillStyle = `rgba(255,210,92,${.12 + pulse * .16})`;
+    ctx.beginPath();
+    ctx.ellipse(92, 318, 44 + pulse * 8, 54 + pulse * 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    outlineText(ctx, 'ROME', 92, 360, '#ffe28a', 7, 'center');
+    // geese wandering near Tony's lawn
+    for (let i = 0; i < 3; i++) {
+      const gx = 72 + i * 24 + Math.sin(state.time * 1.4 + i) * 4;
+      const gy = 150 + (i % 2) * 10;
+      px(ctx, gx, gy, 10, 4, '#f4f0dc');
+      px(ctx, gx + 7, gy - 3, 3, 5, '#f4f0dc');
+      px(ctx, gx + 10, gy - 2, 2, 1, '#e58d2a');
+    }
+    outlineText(ctx, 'FREE ROAM', 320, 24, '#ffe78a', 10, 'center');
+    return;
+  }
+  drawNjStreet();
+}
+
 function drawNjStreet() {
   px(ctx, 0, 0, 640, 416, '#83a766');
   // autumn lawns and suburban houses
@@ -1174,6 +1372,15 @@ function drawNjStreet() {
 }
 
 function drawSatriale() {
+  if (drawSceneArt(sceneArt.satriale, 640, 416)) {
+    // AJ trails Augustus while the pork-store regulars work, lean, and react.
+    drawPerson(ctx, 350, 354, 'aj', 'up', state.frame, { pose: 'phone' });
+    drawPerson(ctx, 112, 150, 'bobby', 'down', state.frame, { pose: 'lean' });
+    drawPerson(ctx, 488, 148, 'artie', 'down', state.frame + 1, { pose: 'work' });
+    drawPerson(ctx, 524, 314, 'irina', 'left', state.frame + 2, { pose: 'lean' });
+    drawPerson(ctx, 316, 140, 'junior', 'down', state.frame + 3, { pose: 'angry' });
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#6c3d32');
   // checker floor
   for (let x = 0; x < 640; x += 20) for (let y = 96; y < 416; y += 20) px(ctx,x,y,20,20,(x/20+y/20)%2?'#7a4a3b':'#9b6a54');
@@ -1502,14 +1709,8 @@ function drawBonusIntro() {
     px(ctx, 0, 0, W, H, '#3d2434');
     px(ctx, 58, 28, 524, 216, '#59324a');
     px(ctx, 80, 46, 150, 110, '#2c1728');
-    // framed picture of Tony and his horse
-    px(ctx, 392, 44, 150, 92, '#7c512f');
-    px(ctx, 399, 51, 136, 78, '#9bc0d7');
-    px(ctx, 424, 90, 70, 22, '#5a3426');
-    px(ctx, 486, 78, 18, 15, '#5a3426');
-    px(ctx, 432, 109, 8, 16, '#3b241b');
-    px(ctx, 470, 109, 8, 16, '#3b241b');
-    drawPerson(ctx, 406, 78, 'tony', 'down', state.frame);
+    // framed photo-like parody picture of Tony and his horse
+    drawFramedPhoto(sceneArt.tonyHorse, 392, 44, 150, 92);
     outlineText(ctx, 'TONY & HORSE', 467, 140, '#f4d98c', 7, 'center');
     // women line-up
     const women = ['womanA','womanB','janice','womanC','womanD'];
@@ -1648,6 +1849,24 @@ function drawTV(x, y) {
 }
 
 function drawHouse() {
+  if (drawSceneArt(sceneArt.house, 640, 416)) {
+    // Interactive channels and characters sit over the illustrated room art.
+    drawTV(214, 30);
+    // Plav's stream glows inside AJ's monitor.
+    px(ctx, 414, 31, 66, 26, '#101820');
+    px(ctx, 418, 35, 58, 18, '#1d4d67');
+    // Tiny streamer face clipped visually to the monitor.
+    px(ctx, 438, 37, 16, 14, '#d99b68');
+    px(ctx, 436, 34, 20, 5, '#151312');
+    px(ctx, 441, 42, 3, 2, '#111');
+    px(ctx, 449, 42, 3, 2, '#111');
+    px(ctx, 443, 48, 7, 2, '#6f3c2d');
+    px(ctx, 486, 34, 20, 10, '#78ff9b');
+    drawFramedPhoto(sceneArt.cousinTony, 560, 22, 48, 42);
+    // AJ leans into the desk instead of standing in empty space.
+    drawPerson(ctx, 486, 86, 'aj', 'left', state.frame, { pose: 'lean' });
+    return;
+  }
   // floor zones
   gridFloor(8, 8, 244, 166, '#7a5139', '#684430');
   gridFloor(268, 8, 84, 366, '#6d4934', '#5d3c2c');
@@ -1751,6 +1970,17 @@ function drawColumn(x, y) {
 }
 
 function drawRome() {
+  if (drawSceneArt(sceneArt.rome, 800, 440)) {
+    // Living “empty-square” stream performance and imperial court over the illustrated forum.
+    drawPerson(ctx, 266, 228, 'plav', 'down', state.frame, { pose: 'perform' });
+    drawPerson(ctx, 212, 284, 'guard', 'up', state.frame, { pose: 'watch' });
+    drawPerson(ctx, 238, 296, 'meadow', 'up', state.frame + 2, { pose: 'watch' });
+    drawPerson(ctx, 296, 296, 'carmela', 'up', state.frame + 3, { pose: 'watch' });
+    drawPerson(ctx, 326, 284, 'aj', 'up', state.frame + 4, { pose: 'watch' });
+    drawPerson(ctx, 660, 150, 'augustus', 'down', state.frame, { pose: 'imperial' });
+    drawPerson(ctx, 724, 154, 'guard', 'down', state.frame, { pose: 'guard' });
+    return;
+  }
   // sky/warm backdrop and street
   px(ctx, 0, 0, 800, 440, '#d1b98d');
   px(ctx, 0, 250, 800, 190, '#a99169');
@@ -1816,6 +2046,28 @@ function drawChamber() {
 }
 
 function drawApartment() {
+  if (drawSceneArt(sceneArt.apartment, 640, 416)) {
+    if (!state.flags.hasBat) drawBat(ctx, 288, 230, -0.7);
+    // The apartment group is staged in poses instead of a standing line-up.
+    drawPerson(ctx, 108, 226, 'jerry', 'right', state.frame, { pose: 'sit' });
+    if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350, 282, 'george', 'up', state.frame, { pose: 'sit' });
+    if (state.flags.kramerIn) drawPerson(ctx, 500, 116, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
+    if (state.flags.elaineIn) drawPerson(ctx, 146, 230, 'elaine', 'left', state.frame + 1, { pose: 'sit' });
+    // Recognizable apartment details: cereal shelf, Superman figurine, and the bike by the entry.
+    for (let i = 0; i < 5; i++) {
+      px(ctx, 52 + i * 16, 106, 11, 17, ['#d94b35','#f0c84d','#4d88c9','#65a848','#c65ca2'][i]);
+      px(ctx, 54 + i * 16, 109, 7, 3, '#fff2c8');
+    }
+    px(ctx, 174, 82, 5, 10, '#2457a8');
+    px(ctx, 174, 78, 5, 5, '#d8a077');
+    px(ctx, 171, 84, 11, 3, '#c73432');
+    // bicycle silhouette near the purple door
+    ctx.strokeStyle = '#263b4d'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(548, 126, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(574, 126, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(548,126); ctx.lineTo(560,108); ctx.lineTo(574,126); ctx.lineTo(558,126); ctx.lineTo(548,126); ctx.moveTo(560,108); ctx.lineTo(566,100); ctx.stroke();
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#c5ad86');
   // wood floor
   for (let y = 0; y < 416; y += 12) px(ctx, 0, y, 640, 6, y % 24 ? '#b98a5d' : '#ad8054');
@@ -1863,6 +2115,14 @@ function drawApartment() {
 }
 
 function drawClub() {
+  if (drawSceneArt(sceneArt.club, 640, 416)) {
+    drawTurkey(ctx, 320, 204, 1.6, true);
+    // Crew members sit around the private table with individual idle motion.
+    drawPerson(ctx, 250, 156, 'christopher', 'down', state.frame, { pose: 'sit' });
+    drawPerson(ctx, 390, 156, 'paulie', 'down', state.frame + 1, { pose: 'sit' });
+    drawPerson(ctx, 320, 126, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#160e1e');
   // neon floor
   for (let x = 0; x < 640; x += 32) for (let y = 0; y < 416; y += 24) px(ctx, x, y, 28, 20, (x + y) % 64 ? '#24152d' : '#2d1936');
@@ -1977,9 +2237,12 @@ function drawBone() {
   outlineText(ctx, b.message, 320, 292, '#fff', 9, 'center');
   // power meter
   drawPanel(150, 312, 340, 30, '#101a30', '#e8d493');
-  px(ctx, 250, 321, 62, 12, '#d9a93f');
+  const zone = boneZone(b);
+  const zx = 162 + (zone.start / 100) * 316;
+  px(ctx, zx, 321, Math.max(10, zone.width / 100 * 316), 12, '#d9a93f');
+  px(ctx, zx + Math.max(10, zone.width / 100 * 316) / 2 - 2, 320, 4, 14, '#fff2a6');
   px(ctx, 162 + (b.power / 100) * 316, 316, 5, 22, '#ffffff');
-  outlineText(ctx, `Hits ${b.hits}/6`, 44, 322, '#ffe78a', 9);
+  outlineText(ctx, `Hits ${Math.min(6, b.hits)}/6  Combo ${b.combo}`, 44, 322, '#ffe78a', 9);
 }
 
 function drawPeptides() {
@@ -1991,7 +2254,7 @@ function drawPeptides() {
   ctx.translate(wobbleX, wobbleY);
   for (let x = 20; x < 620; x += 28) for (let y = 40; y < 340; y += 24) px(ctx, x, y, 24, 20, (x + y) % 56 ? '#22304a' : '#1c293f');
   px(ctx, 34, 54, 572, 282, 'rgba(28,40,64,.5)');
-  for (const v of g.vials) drawVial(ctx, v.x, v.y, g.time);
+  for (const v of g.vials) drawVial(ctx, v.x, v.y, g.time, v.kind);
   drawPerson(ctx, g.x - 8, g.y - 12, state.player.kind, 'down', state.frame);
   ctx.restore();
   // dizzy overlay
@@ -2006,7 +2269,7 @@ function drawPeptides() {
   }
   drawPanel(10, 10, 260, 34, '#162441', '#7de7ff');
   outlineText(ctx, `PEPTIDES ${g.caught}/8`, 20, 20, '#8ffff2', 10);
-  outlineText(ctx, g.dizzy > .62 ? 'DIZZY: CONTROLS REVERSED' : 'Catch the glowing vials', 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
+  outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
 function drawCar(x, y, color = '#8f1f2e', target = false) {
@@ -2048,7 +2311,16 @@ function drawDrive() {
   outlineText(ctx, 'DEBTOR', 320, 24, '#ffe06e', 7, 'center');
   // obstacles
   for (const o of d.obstacles) {
-    if (o.type === 'gabagool') {
+    if (o.hit && o.type === 'money') continue;
+    if (o.type === 'money') {
+      const bob = Math.sin(state.time * 8 + o.wobble) * 2;
+      px(ctx, o.x - 12, o.y - 8 + bob, 24, 15, '#d8c28a');
+      px(ctx, o.x - 10, o.y - 6 + bob, 20, 11, '#f0dfaa');
+      px(ctx, o.x - 8, o.y - 4 + bob, 7, 6, '#4c9a58');
+      px(ctx, o.x + 2, o.y - 4 + bob, 7, 6, '#4c9a58');
+      px(ctx, o.x - 1, o.y - 8 + bob, 2, 15, '#8a6a3c');
+      outlineText(ctx, '$', o.x, o.y - 5 + bob, '#174d2b', 8, 'center');
+    } else if (o.type === 'gabagool') {
       px(ctx, o.x - 13, o.y - 9, 26, 18, '#9a4f2b');
       px(ctx, o.x - 8, o.y - 12, 16, 6, '#d88949');
       px(ctx, o.x - 4, o.y - 2, 4, 3, '#f0d19a');
@@ -2059,7 +2331,10 @@ function drawDrive() {
       drawPerson(ctx, o.x - 7, o.y - 16, 'paulie', 'down', state.frame);
     }
   }
-  drawCar(d.x, d.y, '#8f1f2e');
+  if (d.boost > 0) {
+    for (let i = 0; i < 4; i++) px(ctx, d.x - 10 + i * 6, d.y + 22 + i * 5, 3, 12, i % 2 ? '#ffb13e' : '#f4e27a');
+  }
+  drawCar(d.x, d.y, d.boost > 0 ? '#b82835' : '#8f1f2e');
   ctx.restore();
   // HUD
   drawPanel(10, 10, 280, 44, '#141f3a', '#e5c36a');
@@ -2067,7 +2342,12 @@ function drawDrive() {
   px(ctx, 20, 38, 180, 7, '#30384d');
   px(ctx, 20, 38, Math.min(180, d.progress * 1.8), 7, '#e45445');
   outlineText(ctx, `♥ ${d.health}`, 216, 31, '#ff8e8e', 10);
-  outlineText(ctx, 'Dodge gabagool, Janice, and Paulie', 320, 340, '#fff', 8, 'center');
+  if (d.boost > 0) {
+    px(ctx, 306, 18, 110, 14, '#173521');
+    px(ctx, 308, 20, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
+    outlineText(ctx, 'MONEY BOOST', 361, 21, '#102415', 7, 'center');
+  }
+  outlineText(ctx, 'Grab money envelopes for speed · dodge gabagool, Janice, and Paulie', 320, 340, '#fff', 8, 'center');
 }
 
 function drawTitle() {
@@ -2117,7 +2397,8 @@ function drawEnding() {
   outlineText(ctx, 'THE END', 320, 258, '#ff8ebc', 13, 'center');
   outlineText(ctx, 'BONUS LEVELS UNLOCKED', 320, 284, '#ff8ebc', 10, 'center');
   outlineText(ctx, 'A/E: Paulie on The Bachelor   ·   B: Augustus in New Jersey', 320, 302, '#ffe78a', 8, 'center');
-  if (Math.sin(state.time * 5) > 0) outlineText(ctx, 'Press a bonus key · R replays the story', 320, 322, '#8ffff2', 9, 'center');
+  outlineText(ctx, 'F: FREE ROAM North Caldwell', 320, 316, '#8ffff2', 9, 'center');
+  if (Math.sin(state.time * 5) > 0) outlineText(ctx, 'R replays the story', 320, 334, '#aeb8d8', 8, 'center');
 }
 
 function drawAtmosphere() {
@@ -2156,11 +2437,11 @@ function render() {
 function resetGame() {
   state.mode = 'title';
   state.scene = 'house';
-  state.player = { x: 92, y: 108, dir: 'down', kind: 'tony', speed: 88 };
+  state.player = { x: 190, y: 124, dir: 'down', kind: 'tony', speed: 88 };
   state.flags = {
     houseStep: 0, tvChannel: 0, hasCard: false, sawGeese: false, ajDone: false, mirrorDone: false,
     romeStep: 0, boneDone: false, hasBat: false, aptStep: 0, kramerIn: false, elaineIn: false,
-    clubTalked: {}, clubReady: false, augustusAJ: false, satStep: 0
+    clubTalked: {}, clubReady: false, augustusAJ: false, satStep: 0, freeRoam: false
   };
   state.stats = { started: performance.now(), calls: 0, vials: 0, smashes: 0, crashes: 0 };
   state.objective = 'Press start';
@@ -2173,7 +2454,7 @@ function resetGame() {
 }
 
 function startGame() {
-  setScene('house', 92, 108);
+  setScene('house', 190, 124);
   state.mode = 'explore';
   objective(houseObjective());
   startDialog([
@@ -2221,6 +2502,7 @@ function update(dt) {
   } else if (state.mode === 'ending') {
     if (interactPressed()) startBonusIntro();
     else if (consume(['KeyB'])) startAugustusBonus();
+    else if (consume(['KeyF'])) enterHub(true);
     else if (consume(['KeyR'])) resetGame();
   }
   pressed.clear();
