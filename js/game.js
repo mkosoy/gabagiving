@@ -294,6 +294,11 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (w.scene && scenes[w.scene] && typeof w.px === 'number' && state.flags.freeRoam) {
+      state.scene = w.scene;
+      state.player.x = w.px;
+      state.player.y = w.py;
+    }
     if (w.mission && MISSION_DEFS[w.mission.id] && !state.flags[w.mission.id + 'Done']) {
       const def = MISSION_DEFS[w.mission.id];
       state.mission = { id: w.mission.id, step: Math.min(w.mission.step, def.steps.length - 1), deadline: def.timeLimit ? state.time + def.timeLimit : null };
