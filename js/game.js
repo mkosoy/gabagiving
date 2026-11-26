@@ -970,6 +970,11 @@ function shoveNearest() {
   best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
   best.barkT = 1.6;
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+  if (p.kind === 'george' && Math.random() < .3) {
+    spawnEffect(p.x + 8, p.y - 14, 'MY BACK!', '#ff8e8e');
+    best.bark = 'did… did you just hurt YOURSELF?';
+    audio.sfx('denied');
+  }
   spawnEffect(best.x + 8, best.y - 10, 'SHOVED', '#ff9a7a');
   if (p.kind !== 'george' && Math.random() < .45) {
     if (!state.cash) state.cash = [];
@@ -2718,7 +2723,7 @@ function hubInteractions() {
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
-    { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
+    { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
