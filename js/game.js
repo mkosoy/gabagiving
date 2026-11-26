@@ -1122,19 +1122,37 @@ function updateCop(dt) {
   if (heat < 1.5) {
     spawnEffect(c.x, c.y, 'HEAT CLEARED', '#8ffff2');
     state.cop = null;
+    state.cop2 = null;
     return;
   }
-  c.flashT += dt;
+  // wanted escalation: a second unit joins at high heat
+  if (heat >= 3.5 && !state.cop2) {
+    state.cop2 = { x: 1240, y: 380, flashT: 0, bustT: 0 };
+    spawnEffect(state.player.x + 8, state.player.y - 20, 'BACKUP CALLED!', '#8fb8ff');
+    audio.sfx('honk');
+  }
+  if (heat < 3 && state.cop2) state.cop2 = null;
   const p = state.player;
+  const speed = p.inCar ? 150 : 120;
+  for (const unit of [c, state.cop2].filter(Boolean)) {
+    unit.flashT += dt;
+    // second unit approaches from a flanking angle
+    const flank = unit === state.cop2 ? 60 : 0;
+    const tx = (p.x + 8) + flank, ty = (p.y + 8) - flank * .5;
+    const dx = tx - unit.x, dy = ty - unit.y;
+    const d = Math.hypot(dx, dy) || 1;
+    unit.x += dx / d * speed * dt;
+    unit.y += dy / d * speed * dt;
+  }
   const dx = (p.x + 8) - c.x, dy = (p.y + 8) - c.y;
   const d = Math.hypot(dx, dy) || 1;
-  const speed = p.inCar ? 150 : 120;
-  c.x += dx / d * speed * dt;
-  c.y += dy / d * speed * dt;
-  if (d < 30) {
+  // either unit close enough counts toward the bust
+  const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
+  if (Math.min(d, d2) < 30) {
     c.bustT += dt;
     if (c.bustT > .8) {
       state.cop = null;
+      state.cop2 = null;
       state.flags.heat = 0;
       p.inCar = false;
       p.speed = p.kind === 'george' ? 96 : 88;
@@ -1189,13 +1207,14 @@ function drawHubEventProps() {
 }
 
 function drawCop() {
-  const c = state.cop;
-  if (!c || state.scene !== 'hub') return;
-  drawCar(c.x, c.y, '#e8ecf2');
-  // flashing lightbar
-  const phase = Math.floor(c.flashT * 6) % 2;
-  px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
-  px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
+  if (state.scene !== 'hub') return;
+  for (const c of [state.cop, state.cop2].filter(Boolean)) {
+    drawCar(c.x, c.y, '#e8ecf2');
+    // flashing lightbar
+    const phase = Math.floor(c.flashT * 6) % 2;
+    px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
+    px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
+  }
 }
 
 function updateKramerCycle(dt) {
