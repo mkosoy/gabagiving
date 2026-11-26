@@ -896,7 +896,6 @@ function updateAmbient(dt) {
       audio.voice(n.kind);
     }
   }
-  state.flags.heat = Math.max(0, (state.flags.heat || 0) - dt * .08);
 }
 
 function shoveNearest() {
@@ -1178,7 +1177,7 @@ function updateExplore(dt) {
   updateCash(dt);
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
-  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
+  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .03);
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
