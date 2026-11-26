@@ -192,7 +192,7 @@ const names = {
   tony: 'Tony', aj: 'AJ', carmela: 'Carmela', meadow: 'Meadow', melfi: 'Dr. Melfi',
   augustus: 'Augustus', christopher: 'Christopher', paulie: 'Paulie', silvio: 'Silvio',
   jerry: 'Jerry', george: 'George', kramer: 'Kramer', elaine: 'Elaine', plav: 'Plav',
-  narrator: '', system: 'Objective', janice: 'Janice', guard: 'Roman Guard', steinbrenner: 'Steinbrenner',
+  narrator: '', system: 'Objective', janice: 'Janice', guard: 'Roman Guard', steinbrenner: 'Steinbrenner', newman: 'Newman',
   womanA: 'Rose', womanB: 'Linda', womanC: 'Debbie', womanD: 'Marie', paulieSuit: 'Paulie',
   bobby: 'Bobby', artie: 'Artie', irina: 'Irina', junior: 'Uncle Junior'
 };
@@ -778,6 +778,7 @@ const ambientSpecs = {
   yankees: [
     { kind: 'womanB', x: 480, y: 200, region: { x: 430, y: 160, w: 100, h: 160 }, speed: 24 }
   ]
+  // Newman is handled as a dedicated nemesis NPC in the hub, not a generic ambient walker
 };
 
 function ambientFor(sceneName) {
@@ -917,12 +918,38 @@ function drawCop() {
   px(ctx, c.x + 1, c.y - 4, 6, 3, phase ? '#222288' : '#4488ff');
 }
 
+function updateKramerCycle(dt) {
+  if (!state.flags.freeRoam || state.scene !== 'apartment') return;
+  if (!state.kramerCycle) state.kramerCycle = { t: 8, phase: 'gone', x: 596, y: 130, dir: 'left' };
+  const kc = state.kramerCycle;
+  kc.t -= dt;
+  if (kc.phase === 'gone' && kc.t <= 0) {
+    kc.phase = 'enter'; kc.x = 596; kc.y = 130; kc.dir = 'left'; kc.t = 2;
+    audio.voice('kramer');
+  } else if (kc.phase === 'enter') {
+    kc.x -= 190 * dt; kc.y += 20 * dt;
+    if (kc.t <= 0 || kc.x < 400) { kc.phase = 'raid'; kc.t = 2.6; kc.dir = 'up'; }
+  } else if (kc.phase === 'raid') {
+    kc.x += (296 - kc.x) * dt * 3; kc.y += (150 - kc.y) * dt * 3;
+    if (kc.t <= 0) {
+      kc.phase = 'leave'; kc.dir = 'right';
+      const lines = ['Jerry! I’m taking the juice!', 'These pretzels… I’m out!', 'You got mustard? Never mind, I got mustard.'];
+      spawnEffect(kc.x + 8, kc.y - 14, lines[Math.floor(Math.random() * lines.length)], '#fff1a6');
+      audio.voice('kramer');
+    }
+  } else if (kc.phase === 'leave') {
+    kc.x += 200 * dt; kc.y -= 10 * dt;
+    if (kc.x > 610) { kc.phase = 'gone'; kc.t = 14 + Math.random() * 10; }
+  }
+}
+
 function updateExplore(dt) {
   updatePhone(dt);
   if (state.phone) return;
   updateAmbient(dt);
   updateRyeHeist(dt);
   updateCop(dt);
+  updateKramerCycle(dt);
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
   const input = moveInput();
   const p = state.player;
@@ -2269,7 +2296,7 @@ function travelHub(place) {
 }
 
 function hubInteractions() {
-  return [
+  const list = [
     { x: 116, y: 128, w: 82, h: 46, label: 'Tony’s house', action: () => travelHub('house') },
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
@@ -2296,8 +2323,21 @@ function hubInteractions() {
       initDrive();
       state.mode = 'drive';
       objective('Catch the debtor — grab money boosts');
+    } },
+    { x: 530, y: 200, w: 60, h: 56, radius: 44, label: 'Newman', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'newman', text: 'Heh heh heh… Georgie boy. Out for a little walk? Careful — the mail never sleeps.' },
+        { speaker: 'george', text: 'Newman! I know you’re the one writing COSTANZA on my packages! It stops TODAY!' },
+        { speaker: 'newman', text: 'Oh, it never stops, George. Neither rain nor sleet nor your tiny little outrage.' }
+      ]);
+      else startDialog([
+        { speaker: 'newman', text: 'A fellow patriot of the mail? I think not. I smell… garbage business. Hee hee.' },
+        { speaker: 'tony', text: 'Waste management. And keep smiling like that — see what happens to your mail route.' },
+        { speaker: 'newman', text: 'Noted. Filed. Catalogued. The mail remembers everything.' }
+      ]);
     } }
   ];
+  return list;
 }
 
 function drawHub() {
@@ -2348,6 +2388,10 @@ function drawHub() {
       ctx.ellipse(444, 322, 30 + cp * 4, 30 + cp * 4, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+    // Newman loiters near the mailbox, plotting postal crimes
+    const nl = Math.sin(state.time * 1.1) * 3;
+    drawPerson(ctx, 556 + nl, 226, 'bobby', 'left', state.frame * .8);
+    outlineText(ctx, 'Newman', 556, 210, '#cfe0ff', 6, 'center');
     outlineText(ctx, 'FREE ROAM', 320, 24, '#ffe78a', 10, 'center');
     return;
   }
@@ -3184,6 +3228,10 @@ function drawApartment() {
     drawPerson(ctx, g.x, g.y, 'george', g.dir || 'down', state.frame * 1.3, { pose: g.pose || 'stand' });
     if (state.flags.kramerIn) drawPerson(ctx, 490 + Math.sin(state.time * 5) * 2, 118, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
     if (state.flags.elaineIn) drawPerson(ctx, 466 + Math.sin(state.time * 1.1) * 2, 158, 'elaine', 'left', state.frame + 1, { pose: 'stand' });
+    if (state.flags.freeRoam && state.kramerCycle) {
+      const kc = state.kramerCycle;
+      if (kc.phase !== 'gone') drawPerson(ctx, kc.x, kc.y, 'kramer', kc.dir, state.frame * 2.2, { pose: kc.phase === 'enter' ? 'burst' : 'stand' });
+    }
     return;
   }
   px(ctx, 0, 0, 640, 416, '#c5ad86');
