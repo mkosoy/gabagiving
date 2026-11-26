@@ -294,6 +294,11 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (w.scene && scenes[w.scene] && typeof w.px === 'number' && state.flags.freeRoam) {
+      state.scene = w.scene;
+      state.player.x = w.px;
+      state.player.y = w.py;
+    }
     if (w.mission && MISSION_DEFS[w.mission.id] && !state.flags[w.mission.id + 'Done']) {
       const def = MISSION_DEFS[w.mission.id];
       state.mission = { id: w.mission.id, step: Math.min(w.mission.step, def.steps.length - 1), deadline: def.timeLimit ? state.time + def.timeLimit : null };
@@ -1344,7 +1349,7 @@ function drawRussian() {
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
-    drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
+    drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
     px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
@@ -1455,7 +1460,8 @@ function updateNycTaxis(dt) {
     state.nycCars = [
       { x: 100, y: 292, dir: 1, speed: 66, brakeT: 0, honkT: 0 },
       { x: 500, y: 292, dir: 1, speed: 54, brakeT: 0, honkT: 0 },
-      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 }
+      { x: 700, y: 322, dir: -1, speed: 74, brakeT: 0, honkT: 0 },
+      { x: 350, y: 322, dir: -1, speed: 40, brakeT: 0, honkT: 0, color: '#dcd8cc' }
     ];
   }
   const p = state.player;
@@ -4108,6 +4114,34 @@ function updateSlots(dt) {
   }
 }
 
+function drawStrength() {
+  const st = state.strength;
+  if (!st) return;
+  ctx.fillStyle = 'rgba(8,6,12,.88)';
+  ctx.fillRect(180, 60, 280, 240);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(180, 60, 280, 240);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('HIGH STRIKER', 320, 84);
+  const v = st.swinging ? st.t : st.power;
+  const barH = 150, bx = 296, by = 100, bw = 48;
+  ctx.fillStyle = '#202028';
+  ctx.fillRect(bx, by, bw, barH);
+  const grad = ctx.createLinearGradient(0, by + barH, 0, by);
+  grad.addColorStop(0, '#2f7a2f');
+  grad.addColorStop(.7, '#d4a017');
+  grad.addColorStop(1, '#c01818');
+  ctx.fillStyle = grad;
+  ctx.fillRect(bx, by + barH * (1 - v), bw, barH * v);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '10px monospace';
+  if (st.swinging) ctx.fillText('press E at the peak!', 320, 276);
+  else ctx.fillText({ bell: 'DING DING DING! +$50', big: 'SO CLOSE! +$15', ok: 'halfway — $5 back', weak: 'pathetic. honestly.' }[st.result], 320, 276);
+  ctx.textAlign = 'left';
+}
+
 function drawSlots() {
   const s = state.slots;
   px(ctx, 0, 0, 640, 416, '#16101e');
@@ -4467,6 +4501,13 @@ function shoreInteractions() {
         { speaker: 'narrator', text: 'The machine whirs. Zoltar’s eyes light up. His painted mustache has seen a thousand boardwalk summers and judged every one of them.' },
         { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
       ]);
+    } },
+    { x: 640, y: 240, w: 44, h: 44, radius: 44, label: 'High striker', action: () => {
+      if (state.money < 5) { toast('High striker is $5 a swing.'); return; }
+      state.money -= 5;
+      state.mode = 'strength';
+      state.strength = { t: 0, dir: 1, swinging: true, resultT: 0, result: null, power: 0 };
+      audio.sfx('pickup');
     } },
     { x: 520, y: 200, w: 100, h: 60, radius: 46, label: 'Feed the gulls', action: () => {
       audio.sfx('turkey');
@@ -4931,6 +4972,24 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 200, y: 236, w: 40, h: 34, radius: 40, label: 'Elaine', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'elaine', text: 'George! Did you know a man in a tracksuit punched a goose near my office? Everyone is talking about it. Everyone!' },
+        { speaker: 'george', text: 'A goose?! I don’t know anything about — okay ONE goose. But he started it! They all start it! It’s their whole thing!' }
+      ] : [
+        { speaker: 'elaine', text: 'You’re the big guy with the — yeah. Jerry says I shouldn’t talk to you. So obviously I’m talking to you.' },
+        { speaker: 'tony', text: 'Smart. Tell Jerry he still owes me for the — actually, forget it. You didn’t hear anything. Nice boots.' }
+      ]);
+    } },
+    { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'jerry', text: 'George. Please tell me you’re not doing crimes with the mailman again. The last time, my super got a subpoena. A SUBPOENA, George!' },
+        { speaker: 'george', text: 'That was ONE time! And technically it was Newman’s scheme! I was a passenger! A very well-compensated passenger!' }
+      ] : [
+        { speaker: 'jerry', text: 'You know, you look exactly like every guy my mother warns me about. All at once. It’s honestly impressive.' },
+        { speaker: 'tony', text: 'You’re the comedian. I seen you on the TV. You’re funnier than my brother-in-law, which — low bar, but respect.' }
+      ]);
     } },
     { x: 300, y: 232, w: 40, h: 36, radius: 44, label: 'Kramer', action: () => {
       if (!state.mission && nextKramerMission()) {
@@ -6884,6 +6943,7 @@ function render() {
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
+  else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
@@ -7018,6 +7078,38 @@ function update(dt) {
     updateTransit(dt);
   } else if (state.mode === 'blackjack') {
     updateBlackjack(dt);
+  } else if (state.mode === 'strength') {
+    const st = state.strength;
+    const dt2 = dt;
+    if (st.swinging) {
+      st.t += dt2 * 2.4 * st.dir;
+      if (st.t >= 1) { st.t = 1; st.dir = -1; }
+      if (st.t <= 0) { st.t = 0; st.dir = 1; }
+      if (consume(['KeyE', 'Space'])) {
+        st.swinging = false;
+        st.power = st.t;
+        st.resultT = 1.6;
+        const pw = st.power;
+        st.result = pw >= .95 ? 'bell' : pw >= .7 ? 'big' : pw >= .4 ? 'ok' : 'weak';
+        if (pw >= .95) { state.money += 50; audio.sfx('cash'); }
+        else if (pw >= .7) { state.money += 15; audio.sfx('pickup'); }
+        else if (pw >= .4) { state.money += 5; audio.sfx('pickup'); }
+        else audio.sfx('whiff');
+      }
+    } else {
+      st.resultT -= dt2;
+      if (st.resultT <= 0 || consume(['KeyE', 'Space'])) {
+        state.mode = 'explore';
+        const lines = {
+          bell: state.player.kind === 'tony' ? 'DING DING DING! The carnie goes pale. "$50, pal. Please don’t come back."' : 'DING! GEORGE RINGS THE BELL! He will mention this at every meal for a decade. $50!',
+          big: 'A solid crack — the puck stops just short. The carnie flips you $15. "Again?"',
+          ok: 'Halfway up. You get your $5 back. The carnie respects the honesty of the attempt.',
+          weak: 'The puck barely leaves the pad. Somewhere, a seagull laughs. They are learning.'
+        };
+        startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
+        state.strength = null;
+      }
+    }
   } else if (state.mode === 'slots') {
     updateSlots(dt);
   } else if (state.mode === 'goosechase') {
