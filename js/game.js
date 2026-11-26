@@ -2487,7 +2487,7 @@ function clubInteractions() {
   if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
-    list.push({ x: 430, y: 250, w: 90, h: 50, radius: 46, label: 'Arm-wrestle the bouncer', action: () => {
+    list.push({ x: 430, y: 250, w: 90, h: 50, radius: 28, label: 'Arm-wrestle the bouncer', action: () => {
       if ((state.flags.tribute || 0) < 25) {
         startDialog([{ speaker: 'narrator', text: 'Slippery Pete cracks knuckles the size of ham hocks. Twenty-five dollar entry, champ. You are short.' }]);
         return;
@@ -2500,7 +2500,7 @@ function clubInteractions() {
         { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
       ], () => { state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 25); initArmWrestle(); });
     } });
-    list.push({ x: 520, y: 250, w: 80, h: 50, radius: 46, label: 'Blackjack table', action: () => {
+    list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
       if ((state.flags.tribute || 0) < 50) {
         startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
         return;
@@ -3251,7 +3251,7 @@ function hubInteractions() {
         { speaker: 'narrator', text: 'The pumps are old but the coffee inside is somehow older.' }
       ]);
     } },
-    { x: 1158, y: 250, w: 80, h: 46, radius: 48, label: 'Pawn shop', action: () => {
+    { x: 1158, y: 250, w: 80, h: 46, radius: 30, label: 'Pawn shop', action: () => {
       if ((state.flags.tribute || 0) >= 100 && !state.flags.pawnedWatch) {
         state.flags.pawnedWatch = true;
         state.flags.tribute += 150;
