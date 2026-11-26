@@ -1348,6 +1348,17 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawRoadblock() {
+  const rb = state.roadblock;
+  if (!rb || rb.scene !== state.scene) return;
+  drawCar(rb.x - 24, rb.y, '#e8ecf2', false, Math.PI / 2);
+  drawCar(rb.x + 24, rb.y, '#e8ecf2', false, -Math.PI / 2);
+  const phase = Math.floor(rb.flareT * 5) % 2;
+  px(ctx, rb.x - 30, rb.y - 6, 6, 3, phase ? '#ff4444' : '#4488ff');
+  px(ctx, rb.x + 22, rb.y - 6, 6, 3, phase ? '#4488ff' : '#ff4444');
+  px(ctx, rb.x - 8, rb.y + 8, 16, 3, '#ff8c1a');
+}
+
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
@@ -2012,6 +2023,39 @@ function updateExplore(dt) {
       }
       if (ru.life <= 0) { ru.active = false; ru.hunter = false; ru.t = 26 + Math.random() * 30; }
     }
+  }
+  // roadblocks at maximum heat — the whole township knows your car
+  if ((state.flags.heat || 0) >= 4.5 && ['hub', 'nyc'].includes(state.scene) && state.player.inCar) {
+    if (!state.roadblock) {
+      const rx = state.scene === 'hub' ? 340 : 300;
+      const ry = state.scene === 'hub' ? 296 : 296;
+      state.roadblock = { x: rx, y: ry, hp: 2, scene: state.scene, flareT: 0 };
+    }
+    const rb = state.roadblock;
+    if (rb.scene !== state.scene) state.roadblock = null;
+    else {
+      rb.flareT += dt;
+      const p = state.player;
+      if (Math.abs(p.x - rb.x) < 46 && Math.abs(p.y - rb.y) < 22 && !rb.hit) {
+        rb.hit = true;
+        const speed = Math.abs(p.carV || 0);
+        if (speed > 1.2) {
+          rb.hp = 0;
+          p.carDamage = (p.carDamage || 0) + 30;
+          p.carV *= -.25;
+          spawnEffect(p.x, p.y - 30, 'THROUGH THE ROADBLOCK!', '#ffd23e');
+          audio.sfx('crash');
+        } else {
+          p.carV = 0;
+          spawnEffect(p.x, p.y - 30, 'STOPPED — they’re coming!', '#ff6a6a');
+          state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+          audio.sfx('thud');
+        }
+      }
+      if (rb.hp <= 0 || Math.abs(p.x - rb.x) > 500) state.roadblock = null;
+    }
+  } else if (state.roadblock && ((state.flags.heat || 0) < 4.5 || !state.player.inCar)) {
+    state.roadblock = null;
   }
   // gypsy cab mode: driving the stolen taxi in Manhattan attracts fares
   if (state.scene === 'nyc' && state.player.inCar && state.player.carColor === '#e8b822') {
@@ -6401,6 +6445,7 @@ function drawWorld() {
   drawAmbient();
   drawSchemeProps();
   drawCop();
+  drawRoadblock();
   drawHubEventProps();
   drawRussian();
   drawBrawler();
