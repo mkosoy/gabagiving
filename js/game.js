@@ -30,6 +30,7 @@ const sceneArt = {
   nyc: loadArt('./assets/bg-nyc.webp'),
   pines: loadArt('./assets/bg-pines.webp'),
   bodega: loadArt('./assets/bg-bodega.webp'),
+  shore: loadArt('./assets/bg-shore.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -772,6 +773,16 @@ const scenes = {
     draw: drawBodega,
     interactions: bodegaInteractions
   },
+  shore: {
+    w: 768, h: 416, label: 'Jersey Shore · Off Season', music: 'dream',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      // ocean/beach blocked bottom, shop row blocked top with door gaps
+      r(8,330,752,86), r(8,8,240,110), r(520,8,240,110), r(8,118,60,120), r(700,118,60,120)
+    ],
+    draw: drawShore,
+    interactions: shoreInteractions
+  },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
     colliders: [
@@ -954,6 +965,10 @@ const ambientSpecs = {
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
+  ],
+  shore: [
+    { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
+    { kind: 'bobby', x: 500, y: 260, region: { x: 120, y: 150, w: 500, h: 160 }, speed: 20 }
   ],
   nyc: [
     { kind: 'kramer', x: 300, y: 244, region: { x: 560, y: 236, w: 150, h: 36 }, speed: 44, npc: 'kramer' },
@@ -1269,6 +1284,12 @@ function updateCop(dt) {
 }
 
 function drawHubEventProps() {
+  // Newman loiters by the park fence awaiting couriers
+  if (state.flags.freeRoam) {
+    drawPerson(ctx, 552, 206, 'newman', 'down', state.frame * .5, {});
+    if (typeof nextMission === 'function' && nextMission() && !state.mission && Math.sin(state.time * 3) > 0) outlineText(ctx, '!', 560, 192, '#ffe78a', 10, 'center');
+  }
+
   if (state.scene !== 'hub') return;
   if (state.flags.derekMission && !state.flags.derekPaid) {
     drawPerson(ctx, 972, 148, 'derek', 'down', state.frame * .5, {});
@@ -1357,10 +1378,11 @@ function updateKramerCycle(dt) {
 }
 
 function updateBrawler(dt) {
-  if (state.scene !== 'hub' || !state.flags.freeRoam) { state.brawler = null; return; }
+  if ((state.scene !== 'hub' && state.scene !== 'nyc') || !state.flags.freeRoam) { state.brawler = null; return; }
   const p = state.player;
   if (!state.brawler && Math.random() < dt * .02) {
-    state.brawler = { x: 680 + Math.random() * 540, y: 140 + Math.random() * 50, hp: 3, state: 'prowl', t: 0, tx: 700, ty: 240, barkT: 0, swingT: 0, hitT: 0 };
+    const inNyc = state.scene === 'nyc';
+    state.brawler = { x: inNyc ? 200 + Math.random() * 400 : 680 + Math.random() * 540, y: inNyc ? 250 + Math.random() * 90 : 140 + Math.random() * 50, hp: 3, state: 'prowl', t: 0, tx: inNyc ? 380 : 700, ty: inNyc ? 280 : 240, barkT: 0, swingT: 0, hitT: 0 };
   }
   const b = state.brawler;
   if (!b) return;
@@ -2904,6 +2926,15 @@ function clubInteractions() {
         { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
       ], () => { state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 25); initArmWrestle(); });
     } });
+    list.push({ x: 600, y: 250, w: 40, h: 50, radius: 26, label: 'Slot machine', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The Bing’s one slot machine. Silvio won it in a card game. The previous owner won it in a worse card game. It has never paid out since 1987, allegedly.' },
+        { speaker: 'george', text: 'Slots! The thinking man’s no-skill game! Twenty bucks a pull — I have a system: I pull exactly until I’m out of money!' }
+      ] : [
+        { speaker: 'narrator', text: 'The back-corner slot. It eats coins, dreams, and Christopher’s paychecks, in that order.' },
+        { speaker: 'tony', text: 'One machine, no witnesses, infinite hope. The perfect Italian dessert.' }
+      ], () => initSlots());
+    } });
     list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
       if ((state.flags.tribute || 0) < 50) {
         startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
@@ -3942,6 +3973,123 @@ function drawGooseChase() {
   }
 }
 
+// ---------- Slots: the Bing's back-corner machine ----------
+const SLOT_SYMBOLS = [
+  { glyph: '7', color: '#ffdf4a', weight: 1 },
+  { glyph: '$', color: '#8ffff2', weight: 2 },
+  { glyph: 'B', color: '#ff8a7a', weight: 3 }, // bell-adjacent
+  { glyph: 'C', color: '#ff9ad4', weight: 4 }, // cherry-adjacent
+  { glyph: 'L', color: '#b8e86a', weight: 5 }  // lemon-adjacent
+];
+function slotSymbol() {
+  const total = SLOT_SYMBOLS.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  for (const s of SLOT_SYMBOLS) { r -= s.weight; if (r <= 0) return s.glyph; }
+  return 'L';
+}
+
+function initSlots() {
+  state.slots = { reels: ['7', '7', '7'], spinning: false, spinT: 0, result: null, resultT: 0, pulls: 0 };
+  state.mode = 'slots';
+  audio.sfx('pickup');
+}
+
+function updateSlots(dt) {
+  const s = state.slots;
+  if (!s) { state.mode = 'explore'; return; }
+  if (s.spinning) {
+    s.spinT -= dt;
+    // reels cycle fast while spinning
+    if (Math.floor(state.time * 14) !== s.lastTick) {
+      s.lastTick = Math.floor(state.time * 14);
+      s.reels = [slotSymbol(), slotSymbol(), slotSymbol()];
+      audio.sfx('card');
+    }
+    if (s.spinT <= 0) {
+      s.spinning = false;
+      s.reels = [slotSymbol(), slotSymbol(), slotSymbol()];
+      const [a, b, c] = s.reels;
+      let win = 0, msg = '';
+      if (a === '7' && b === '7' && c === '7') { win = 500; msg = 'JACKPOT! TRIPLE SEVENS! +$500'; }
+      else if (a === b && b === c) { win = 100; msg = 'THREE OF A KIND! +$100'; }
+      else if (a === b || b === c || a === c) { win = 30; msg = 'PAIR! +$30'; }
+      if (win) {
+        state.flags.tribute = (state.flags.tribute || 0) + win;
+        audio.sfx('cash');
+        audio.sfx('success');
+      } else {
+        audio.sfx('denied');
+        msg = 'nothing. the machine blinks, unbothered.';
+      }
+      s.result = { win, msg };
+      s.resultT = 2.6;
+    }
+    return;
+  }
+  if (s.result) {
+    s.resultT -= dt;
+    if (s.resultT <= 0) {
+      s.result = null;
+      // exit after the hand if broke or done after several pulls — player can leave anytime with movement
+      if ((state.flags.tribute || 0) < 20) {
+        state.mode = 'explore';
+        startDialog([{ speaker: 'narrator', text: 'The machine senses your empty pockets and loses interest in you completely.' }]);
+        return;
+      }
+    }
+    return;
+  }
+  if (consume(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) || consume(['KeyW'])) {
+    state.mode = 'explore';
+    return;
+  }
+  if (interactPressed()) {
+    if ((state.flags.tribute || 0) < 20) {
+      audio.sfx('denied');
+      startDialog([{ speaker: 'narrator', text: 'Twenty a pull. You have less than twenty. The machine judges you silently, which is its only move.' }]);
+      return;
+    }
+    state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 20);
+    s.spinning = true;
+    s.spinT = 1.6 + Math.random() * .8;
+    s.pulls += 1;
+    audio.sfx('pickup');
+  }
+}
+
+function drawSlots() {
+  const s = state.slots;
+  px(ctx, 0, 0, 640, 416, '#16101e');
+  outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
+  // machine body
+  px(ctx, 170, 90, 300, 210, '#3a2a4a');
+  px(ctx, 178, 98, 284, 130, '#241a30');
+  px(ctx, 178, 96, 284, 4, '#c8a040');
+  // reels
+  for (let i = 0; i < 3; i++) {
+    const rx = 208 + i * 92;
+    px(ctx, rx, 118, 64, 84, s && s.spinning ? '#f4efdc' : '#fffbe8');
+    px(ctx, rx + 3, 121, 58, 78, '#e8e0c8');
+    const glyph = s ? s.reels[i] : '7';
+    const sym = SLOT_SYMBOLS.find((x) => x.glyph === glyph) || SLOT_SYMBOLS[0];
+    outlineText(ctx, glyph, rx + 32, 140, sym.color, 34, 'center');
+  }
+  // lever
+  px(ctx, 478, 120, 12, 90, '#6a5a7a');
+  px(ctx, 472, 108, 24, 18, s && s.spinning ? '#ff8a7a' : '#c02828');
+  // paytable
+  outlineText(ctx, '777 = $500 · 3-of-kind = $100 · pair = $30', 320, 246, '#9d8fc9', 8, 'center');
+  outlineText(ctx, `cash: $${state.flags.tribute || 0} · $20/pull`, 320, 266, '#ffe78a', 9, 'center');
+  if (s && s.result) {
+    outlineText(ctx, s.result.msg, 320, 316, s.result.win ? '#8ffff2' : '#ff8a7a', 12, 'center');
+  } else if (s && s.spinning) {
+    outlineText(ctx, 'spinning…', 320, 316, '#9d8fc9', 10, 'center');
+  } else {
+    outlineText(ctx, 'E = PULL · move to walk away', 320, 316, '#ffe78a', 9, 'center');
+  }
+  px(ctx, 170, 236, 300, 4, '#c8a040');
+}
+
 function initBlackjack() {
   const deck = () => Math.min(10, 1 + Math.floor(Math.random() * 13));
   const card = () => { const v = deck(); return v === 1 ? 11 : v; };
@@ -4197,6 +4345,89 @@ function bodegaInteractions() {
   ];
 }
 
+function drawShore() {
+  if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
+  // rolling wave animation along the blocked beach edge
+  for (let i = 0; i < 8; i++) {
+    const wx = 30 + i * 95 + Math.sin(state.time * 1.2 + i) * 14;
+    const wy = 330 + Math.sin(state.time * 1.7 + i * 2) * 6;
+    ctx.save();
+    ctx.globalAlpha = .35 + Math.sin(state.time * 2 + i) * .2;
+    px(ctx, wx, wy, 42, 3, '#cfe8f4');
+    ctx.restore();
+  }
+  // seagulls
+  for (let i = 0; i < 4; i++) {
+    const gx = (state.time * (14 + i * 5) + i * 190) % 820 - 30;
+    const gy = 60 + i * 24 + Math.sin(state.time * 2 + i * 3) * 10;
+    px(ctx, gx, gy, 5, 2, '#e8e8e0');
+    if (Math.floor(state.time * 6 + i) % 2) px(ctx, gx - 2, gy - 1, 3, 1, '#e8e8e0');
+    else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
+  }
+  outlineText(ctx, '← north', 24, 200, '#ffe78a', 7, 'left');
+}
+
+function shoreInteractions() {
+  return [
+    { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
+    { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
+      if ((state.flags.tribute || 0) < 5) {
+        startDialog([{ speaker: 'narrator', text: 'Taffy is five bucks a bag. You have lint and regret. The shopkeep has seen worse — it’s the off-season, everyone has lint and regret.' }]);
+        return;
+      }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A bag of saltwater taffy. George eats eleven pieces in ninety seconds and immediately requires a sit-down.' },
+        { speaker: 'george', text: 'The trick is you don’t chew. Chewing is how they get you. You let it dissolve like a memory!' }
+      ] : [
+        { speaker: 'narrator', text: 'Taffy. Tony regards it with suspicion, eats one piece, then buys three more bags for the ride home.' },
+        { speaker: 'tony', text: 'What. It’s for the kids. Some of it. Look — the molasses one’s mine, that’s non-negotiable.' }
+      ]);
+    } },
+    { x: 330, y: 240, w: 120, h: 60, radius: 48, label: 'Watch the ocean', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George stares at the Atlantic. Somewhere out there: Portugal. He will never go. He thinks about this for a long time.' },
+        { speaker: 'george', text: 'You know what the ocean is? A reminder. Everything is huge and I am very, very small. I need a taffy.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony watches the water. Melfi would call this processing. Tony calls it looking at water. Both are true.' },
+        { speaker: 'tony', text: 'My old man never took us down the shore. First time I saw the ocean I was nineteen, on a… work trip. Funny what you remember.' }
+      ]);
+    } },
+    { x: 100, y: 130, w: 90, h: 80, radius: 48, label: 'Zoltar fortune machine', action: () => {
+      if ((state.flags.tribute || 0) < 1) {
+        startDialog([{ speaker: 'narrator', text: 'Zoltar requires one dollar. Even mechanical prophets have overhead.' }]);
+        return;
+      }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 1);
+      audio.sfx('pickup');
+      const fortunes = state.player.kind === 'george' ? [
+        'Zoltar sees… a man who argues about chairs. Greatness? No. But persistent. VERY persistent.',
+        'Zoltar sees a big salad in your future. It is not for you. It is never for you.',
+        'The spirits say: you will die in a small apartment, but with excellent posture.',
+        'Zoltar sees you saying "it’s not a lie if YOU believe it" at a deposition. The spirits are concerned.'
+      ] : [
+        'Zoltar sees… a big man with a heavy heart. Also duck food. The spirits are very specific today.',
+        'The spirits say: your enemies fear you, your family needs you, and your backyard needs a ducks-only policy.',
+        'Zoltar sees two paths: therapy or the other thing. The machine recommends the therapy. It is only a dollar for this wisdom.',
+        'A great fortune approaches — along with several small federal investigations. Zoltar suggests taffy.'
+      ];
+      startDialog([
+        { speaker: 'narrator', text: 'The machine whirs. Zoltar’s eyes light up. His painted mustache has seen a thousand boardwalk summers and judged every one of them.' },
+        { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
+      ]);
+    } },
+    { x: 520, y: 200, w: 100, h: 60, radius: 46, label: 'Feed the gulls', action: () => {
+      audio.sfx('turkey');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+      startDialog([
+        { speaker: 'narrator', text: 'You throw one taffy crumb. Eleven thousand seagulls arrive as a single organism. A sign nearby says DO NOT FEED THE GULLS in very large letters.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'THEY’RE ORGANIZED! THEY HAVE A STRUCTURE! The big one is clearly management!' : 'Even the birds down here got a crew. Look at the little one — he’s the earner. The fat one? Union rep.' }
+      ]);
+    } }
+  ];
+}
+
 function drawPines() {
   if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
   // drifting mist
@@ -4220,6 +4451,7 @@ function drawPines() {
 
 function pinesInteractions() {
   return [
+    { x: 730, y: 200, w: 36, h: 100, radius: 46, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
       audio.sfx('honk');
       startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
@@ -4488,6 +4720,9 @@ function drawNyc() {
     if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
     if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
   }
+  // Kramer holding court at his mission spot
+  drawPerson(ctx, 310, 238, 'kramer', 'down', state.frame * .5, {});
+  if (nextKramerMission() && !state.mission && Math.sin(state.time * 3) > 0) outlineText(ctx, '!', 320, 224, '#ffe78a', 10, 'center');
   // parked stealable taxi
   if (!state.player.inCar) {
     px(ctx, 380, 356, 30, 11, '#c9a015');
@@ -6585,6 +6820,7 @@ function render() {
   else if (state.mode === 'armwrestle') drawArmWrestle();
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
+  else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
@@ -6719,6 +6955,8 @@ function update(dt) {
     updateTransit(dt);
   } else if (state.mode === 'blackjack') {
     updateBlackjack(dt);
+  } else if (state.mode === 'slots') {
+    updateSlots(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
