@@ -32,6 +32,7 @@ const sceneArt = {
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
+  chamber: loadArt('./assets/bg-chamber.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
@@ -3196,6 +3197,17 @@ function drawRome() {
 }
 
 function drawChamber() {
+  if (drawSceneArt(sceneArt.chamber, 640, 416)) {
+    // torchlight shimmer
+    for (const [fx, fy] of [[60, 60], [560, 60]]) {
+      const fl = Math.sin(state.time * 9 + fx) * 2;
+      ctx.fillStyle = `rgba(255,160,60,${.16 + Math.sin(state.time * 5 + fx) * .06})`;
+      ctx.beginPath();
+      ctx.ellipse(fx, fy + 20, 30 + fl * 2, 44 + fl * 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#b9aa8c');
   for (let x = 12; x < 628; x += 28) for (let y = 12; y < 404; y += 24) px(ctx, x, y, 22, 18, (x + y) % 56 ? '#c7b99a' : '#b4a488');
   px(ctx, 84, 52, 92, 28, '#d7caa9');
