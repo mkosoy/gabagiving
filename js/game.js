@@ -1071,7 +1071,7 @@ function updateBrawler(dt) {
   if (state.scene !== 'hub' || !state.flags.freeRoam) { state.brawler = null; return; }
   const p = state.player;
   if (!state.brawler && Math.random() < dt * .02) {
-    state.brawler = { x: 900 + Math.random() * 300, y: 200 + Math.random() * 120, hp: 3, state: 'prowl', t: 0, tx: 700, ty: 240, barkT: 0, swingT: 0, hitT: 0 };
+    state.brawler = { x: 680 + Math.random() * 540, y: 140 + Math.random() * 50, hp: 3, state: 'prowl', t: 0, tx: 700, ty: 240, barkT: 0, swingT: 0, hitT: 0 };
   }
   const b = state.brawler;
   if (!b) return;
@@ -1177,6 +1177,15 @@ function updateHubEvents(dt) {
 }
 
 function updateExplore(dt) {
+  if (state.flags.pendingSurprise && !state.dialog && !state.phone) {
+    state.flags.pendingSurprise = false;
+    state.flags.surpriseShown = true;
+    startDialog([
+      { speaker: 'jerry', text: 'Five schemes. FIVE. I counted. The cane, the invitations, the éclair — Newman told me about the rye, by the way. NEWMAN knew before I did.' },
+      { speaker: 'george', text: 'It’s not a scheme if it WORKS, Jerry. Then it’s just… initiative.' },
+      { speaker: 'kramer', text: 'I want in on the next one. Whatever it is. I’m in. Don’t even tell me.' }
+    ]);
+  }
   if (state.interactCooldown > 0) state.interactCooldown -= dt;
   updatePhone(dt);
   if (state.phone) return;
@@ -2586,12 +2595,7 @@ function schemeCount() {
 function travelHub(place) {
   // revisit surprises: the world remembers what you've been up to
   if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
-    state.flags.surpriseShown = true;
-    setTimeout(() => startDialog([
-      { speaker: 'jerry', text: 'Five schemes. FIVE. I counted. The cane, the invitations, the éclair — Newman told me about the rye, by the way. NEWMAN knew before I did.' },
-      { speaker: 'george', text: 'It’s not a scheme if it WORKS, Jerry. Then it’s just… initiative.' },
-      { speaker: 'kramer', text: 'I want in on the next one. Whatever it is. I’m in. Don’t even tell me.' }
-    ]), 600);
+    state.flags.pendingSurprise = true;
   }
   const destinations = {
     house: ['house', 250, 306, 'Back to the house. The geese have been busy.'],
@@ -2666,7 +2670,7 @@ function hubInteractions() {
         { speaker: 'tony', text: 'Christopher’s cousin leaves the keys in every car. He’s either stupid or very generous. Either way — mine now.' }
       ]);
     } },
-    { x: 1020, y: 330, w: 90, h: 50, radius: 62, label: 'Gabagool Park', action: () => {
+    { x: 990, y: 250, w: 100, h: 40, radius: 58, label: 'Gabagool Park', action: () => {
       if (!state.flags.fedGeese) {
         state.flags.fedGeese = true;
         spawnEffect(state.player.x, state.player.y - 16, 'HONK HONK', '#fff1a6');
