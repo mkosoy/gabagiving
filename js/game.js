@@ -5346,6 +5346,37 @@ function drawMenu() {
 }
 
 function drawAtmosphere() {
+  // day/night cycle for the outdoor open world — 4-minute days, warm dusk, blue night
+  if ((state.scene === 'hub' || state.scene === 'nyc') && (state.mode === 'explore' || state.mode === 'monte')) {
+    const dayT = (state.time % 240) / 240;
+    // daylight 0-.5, dusk .5-.65, night .65-.9, dawn .9-1
+    let dark = 0, warm = 0;
+    if (dayT < .5) dark = 0;
+    else if (dayT < .65) { const k = (dayT - .5) / .15; dark = k * .34; warm = Math.sin(k * Math.PI) * .5; }
+    else if (dayT < .9) dark = .34;
+    else dark = .34 * (1 - (dayT - .9) / .1);
+    if (warm > 0) {
+      ctx.fillStyle = `rgba(255,120,40,${warm * .16})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (dark > 0) {
+      ctx.fillStyle = `rgba(8,12,48,${dark})`;
+      ctx.fillRect(0, 0, W, H);
+      // streetlamps and windows glow at night
+      if (dark > .2) {
+        const sceneW = scenes[state.scene]?.w || 1280;
+        for (let wx = 100; wx < sceneW; wx += 220) {
+          const lx = wx - (state.camera?.x || 0);
+          if (lx < -50 || lx > W + 50) continue;
+          const g = ctx.createRadialGradient(lx, 210, 4, lx, 210, 46);
+          g.addColorStop(0, 'rgba(255,220,120,.24)');
+          g.addColorStop(1, 'rgba(255,220,120,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(lx - 46, 164, 92, 92);
+        }
+      }
+    }
+  }
   // Subtle scanlines and vignette sell the retro handheld look without hurting readability.
   ctx.fillStyle = 'rgba(0,0,0,.055)';
   for (let y = 1; y < H; y += 4) ctx.fillRect(0, y, W, 1);
