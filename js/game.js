@@ -612,7 +612,7 @@ function drawDialog() {
 
 function drawHelp() {
   if (!state.help) return;
-  drawPanel(150, 64, 340, 168, '#121a35', '#e8e2c8');
+  drawPanel(150, 64, 340, 182, '#121a35', '#e8e2c8');
   outlineText(ctx, 'CONTROLS', 320, 78, '#ffd34f', 12, 'center');
   outlineText(ctx, 'Move: WASD / Arrow keys / touch stick', 174, 104, '#fff', 9);
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
@@ -620,7 +620,9 @@ function drawHelp() {
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
   outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
   outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 186, '#fff', 9);
-  outlineText(ctx, 'Click ? again to close', 320, 202, '#ffe78a', 8, 'center');
+  const st = state.stats;
+  outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 200, '#8fb8ff', 8, 'center');
+  outlineText(ctx, 'Click ? again to close', 320, 216, '#ffe78a', 8, 'center');
 }
 
 // ---------- Scene data ----------
@@ -1156,6 +1158,7 @@ function shoveNearest() {
     spawnEffect(best.x, best.y - 22, 'IT’S A FIGHT!', '#ff9a3e');
     audio.sfx('denied');
   }
+  state.stats.punches = (state.stats.punches || 0) + 1;
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   // witnesses: other pedestrians nearby see it and somebody always knows a cop
   const witnesses = ambientFor(state.scene).filter(w => w !== best && Math.hypot(w.x - best.x, w.y - best.y) < 130).length;
@@ -1847,7 +1850,7 @@ function advanceMission() {
   if (m.step >= def.steps.length) {
     // mission complete
     state.mission = null;
-    state.flags[m.id + 'Done'] = true;
+    state.flags[m.id + 'Done'] = true; state.stats.missions = (state.stats.missions || 0) + 1;;
     state.flags.tribute = (state.flags.tribute || 0) + def.payout;
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
     audio.sfx('cash');
@@ -4184,6 +4187,7 @@ function hubInteractions() {
       state.player.carV = 0;
       audio.sfx('door');
       audio.sfx('honk');
+      state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
       spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
       startDialog([
         { speaker: 'narrator', text: `It's ${car.name}. Keys in the ignition, because New Jersey.` },
