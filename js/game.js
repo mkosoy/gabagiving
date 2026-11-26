@@ -2804,7 +2804,7 @@ function hubInteractions() {
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
-    { x: 330, y: 306, w: 70, h: 50, radius: 44, label: 'Misdelivered package', action: () => {
+    { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
       if (!state.flags.packageHeist) {
         state.flags.packageHeist = true;
         state.flags.tribute = (state.flags.tribute || 0) + 30;
