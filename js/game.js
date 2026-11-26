@@ -273,7 +273,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -388,7 +388,8 @@ function menuEntries() {
       ['therapyDone', 'Therapy session', 'Melfi’s office'],
       ['marineBiologist', 'Marine biologist', 'Monk’s payphone'],
       ['festivus', 'Aired grievances', 'Costanza house'],
-      ['serenityNow', 'Serenity now', 'Costanza house']
+      ['serenityNow', 'Serenity now', 'Costanza house'],
+      ['packageHeist', 'Package interception', 'the neighborhood']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -902,7 +903,8 @@ const ambientSpecs = {
     { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 },
     { kind: 'womanC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
-    { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 }
+    { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
+    { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
@@ -1072,6 +1074,13 @@ function drawAmbient() {
   for (const n of list) {
     const frame = n.moving ? state.frame * 1.6 : state.frame * .5;
     drawPerson(ctx, n.x, n.y, n.kind, n.dir, frame, n.diveT > 0 ? { pose: 'lean' } : {});
+    if (n.npc === 'newman') {
+      // mailbag and cap
+      px(ctx, n.x + 3, n.y + 9, 9, 6, '#4a5f8a');
+      px(ctx, n.x + 3, n.y + 9, 9, 2, '#33415e');
+      px(ctx, n.x + 2, n.y - 3, 11, 3, '#4a5f8a');
+      outlineText(ctx, 'NEWMAN', n.x + 8, n.y - 8, '#9fb8ec', 6, 'center');
+    }
     if (n.barkT > 0 && n.bark) {
       ctx.save();
       ctx.globalAlpha = Math.min(1, n.barkT);
@@ -1301,6 +1310,17 @@ function updateHubEvents(dt) {
     spawnEffect(300 + Math.random() * 200, 252, 'BACKFIRE!', '#ffb13e');
     audio.sfx('crash');
     for (const n of npcs) { n.pause = 1.2; }
+  } else if (roll < .88) {
+    // newman taunts
+    const nm = npcs.find((x) => x.npc === 'newman');
+    if (nm) {
+      const taunts = state.player.kind === 'george'
+        ? ['Hellooo, Costanza.', 'Your mail is… delayed. Forever.', 'I know about the rye, George.']
+        : ['You’re the one they call Tony? Hm. I control the MAIL, you know.', 'Beautiful stamps you people steal— er, use.'];
+      nm.bark = taunts[Math.floor(Math.random() * taunts.length)];
+      nm.barkT = 2.6;
+      nm.pause = 1.4;
+    }
   } else {
     // neighborhood gossip
     const n = npcs[Math.floor(Math.random() * npcs.length)];
@@ -2784,6 +2804,24 @@ function hubInteractions() {
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 330, y: 306, w: 70, h: 50, radius: 44, label: 'Misdelivered package', action: () => {
+      if (!state.flags.packageHeist) {
+        state.flags.packageHeist = true;
+        state.flags.tribute = (state.flags.tribute || 0) + 30;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+        audio.sfx('cash');
+        const nm = (ambientFor('hub') || []).find((x) => x.npc === 'newman');
+        if (nm) { nm.bark = 'MY PACKAGE! THAT’S FEDERAL PROPERTY!'; nm.barkT = 3; }
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George swipes a misdelivered package off the stoop. Inside: cassette tapes of wind sounds. $30 of pure profit, somehow.' },
+          { speaker: 'george', text: 'It was misdelivered! Legally that’s a gray area! A very comfortable gray area!' },
+          { speaker: 'jerry', text: 'You just robbed a federal mail carrier of whale noises, George. Congratulations. NEWMAN’S going to hear about this. From himself.' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony palms the package. Wind-sound cassettes. The fencing guys pay $30 for anything in a box, don’t ask.' },
+          { speaker: 'tony', text: 'Federal property my ass. It was sittin’ there. That’s not theft, that’s yard sales with extra steps.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'No more packages today. Newman counts them twice now.' }]);
+    } },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
     { x: 856, y: 300, w: 64, h: 56, radius: 52, label: 'Costanza house', action: () => travelHub('costanza') },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
