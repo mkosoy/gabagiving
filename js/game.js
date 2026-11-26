@@ -2628,6 +2628,20 @@ function hubInteractions() {
         { speaker: 'tony', text: 'Bring tribute over a hundred bucks and maybe we talk business. Otherwise it’s just VCRs and regret in there.' }
       ]);
     } },
+    { x: 1036, y: 120, w: 60, h: 40, radius: 40, label: 'Steal coupe', action: () => {
+      if (state.player.inCar) return;
+      state.player.inCar = true;
+      state.player.speed = 200;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
+      audio.sfx('door');
+      audio.sfx('honk');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'GRAND THEFT AUTO', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'Grand theft auto. GRAND. THEFT. I’m in a gang now. I have a gang nickname. They call me… Slippin’ Jimmy. No wait, that’s taken.' }
+      ] : [
+        { speaker: 'tony', text: 'Christopher’s cousin leaves the keys in every car. He’s either stupid or very generous. Either way — mine now.' }
+      ]);
+    } },
     { x: 1020, y: 330, w: 90, h: 50, radius: 44, label: 'Gabagool Park', action: () => {
       if (!state.flags.fedGeese) {
         state.flags.fedGeese = true;
@@ -2761,6 +2775,8 @@ function drawHubEast() {
   outlineText(ctx, 'PAWN', 1208, 318, '#ffe28a', 8, 'center');
   px(ctx, 1176, 344, 26, 40, '#2a1e38');
   px(ctx, 1214, 344, 26, 30, '#c8e2ee');
+  // parked stealable coupe at the gas station
+  drawCar(1058, 132, '#7e2733');
   // west-side connector sign
   outlineText(ctx, 'EAST SIDE →', 1268, 220, '#ffe78a', 7, 'right');
 }
