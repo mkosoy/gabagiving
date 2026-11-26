@@ -1371,6 +1371,17 @@ function drawLeaves() {
   }
 }
 
+function drawSnatcher() {
+  const sn = state.snatcher;
+  if (!sn || state.scene !== 'nyc') return;
+  const bob = Math.sin(state.time * 18) * 2;
+  px(ctx, sn.x - 3, sn.y - 12 + bob * .3, 7, 10, '#303030');
+  px(ctx, sn.x - 2, sn.y - 16 + bob * .3, 5, 5, '#d8b090');
+  px(ctx, sn.x + 3, sn.y - 10, 6, 4, '#a02828');
+  px(ctx, sn.x - 3, sn.y - 2, 3, 5, '#282828');
+  px(ctx, sn.x + 1, sn.y - 2, 3, 5, '#282828');
+}
+
 function drawRoadblock() {
   const rb = state.roadblock;
   if (!rb || rb.scene !== state.scene) return;
@@ -2135,6 +2146,33 @@ function updateExplore(dt) {
         ru.x += ru.dir * 34 * dt;
       }
       if (ru.life <= 0) { ru.active = false; ru.hunter = false; ru.t = 26 + Math.random() * 30; }
+    }
+  }
+  // street event: a purse snatcher bolts through Manhattan — clip him for a reward
+  if (state.scene === 'nyc' && !state.snatcher && Math.random() < dt * .04) {
+    state.snatcher = { x: Math.random() < .5 ? -10 : 650, y: 200 + Math.random() * 120, dir: 0, t: 9 };
+    state.snatcher.dir = state.snatcher.x < 300 ? 1 : -1;
+    spawnEffect(320, 150, 'STOP HIM! HE TOOK MY PURSE!', '#ffd0b0');
+    audio.sfx('denied');
+  }
+  if (state.snatcher && state.scene === 'nyc') {
+    const sn = state.snatcher;
+    sn.t -= dt;
+    sn.x += sn.dir * 130 * dt;
+    if (sn.t <= 0 || sn.x < -30 || sn.x > 670) {
+      state.snatcher = null;
+    } else {
+      // player punch catches him — reuse brawler hit detection: close + punch pressed is handled in shove; here: contact knockdown if player sprints into him
+      const p0 = state.player;
+      if (Math.hypot(sn.x - p0.x, sn.y - p0.y) < 18 && !sn.caught) {
+        sn.caught = true;
+        const reward = 30 + Math.floor(Math.random() * 25);
+        state.money += reward;
+        audio.sfx('cash');
+        spawnEffect(sn.x, sn.y - 20, 'SNATCHER DOWN! +$' + reward, '#9be59b');
+        startDialog([{ speaker: 'narrator', text: `You clip the snatcher mid-stride. He eats pavement, the purse goes flying, and a very relieved tourist presses $${reward} into your hand before you can explain that this was not kindness, exactly.` }]);
+        state.snatcher = null;
+      }
     }
   }
   // roadblocks at maximum heat — the whole township knows your car
@@ -6625,6 +6663,7 @@ function drawWorld() {
   drawCop();
   drawRoadblock();
   drawLeaves();
+  drawSnatcher();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
