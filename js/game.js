@@ -2451,6 +2451,19 @@ function clubInteractions() {
         { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
       ], () => { state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 25); initArmWrestle(); });
     } });
+    list.push({ x: 520, y: 250, w: 80, h: 50, radius: 46, label: 'Blackjack table', action: () => {
+      if ((state.flags.tribute || 0) < 50) {
+        startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A blackjack table in the back room. George has a SYSTEM. The system is: never hit on twelve. Or always hit on twelve. He’s written it down wrong.' },
+        { speaker: 'george', text: 'Fifty dollars. But statistically, over time, the player edge with my system is… I’m going to lose this fifty dollars.' }
+      ] : [
+        { speaker: 'narrator', text: 'The back room blackjack table. Tony’s game. Tony’s room. Tony’s everything, technically, through a shell company.' },
+        { speaker: 'tony', text: 'Deal. And remember — I know where the cards LIVE.' }
+      ], () => initBlackjack());
+    } });
     list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Gentlemen. Art Vandelay. Importer-exporter. I’m looking for investors.' },
@@ -3340,6 +3353,115 @@ function drawHubEast() {
   // parked stealable coupe at the gas station
   if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
+}
+
+function initBlackjack() {
+  const deck = () => Math.min(10, 1 + Math.floor(Math.random() * 13));
+  const card = () => { const v = deck(); return v === 1 ? 11 : v; };
+  state.blackjack = {
+    player: [card(), card()], dealer: [card(), card()],
+    phase: 'player', result: null, t: 0, bet: 50
+  };
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 50);
+  state.mode = 'blackjack';
+  audio.sfx('pickup');
+}
+
+function bjTotal(hand) {
+  let t = hand.reduce((a, b) => a + b, 0);
+  let aces = hand.filter((v) => v === 11).length;
+  while (t > 21 && aces > 0) { t -= 10; aces -= 1; }
+  return t;
+}
+
+function bjCard() { const v = Math.min(10, 1 + Math.floor(Math.random() * 13)); return v === 1 ? 11 : v; }
+
+function updateBlackjack(dt) {
+  const bj = state.blackjack;
+  if (!bj) { state.mode = 'explore'; return; }
+  bj.t += dt;
+  if (bj.phase === 'player') {
+    const hint = bjTotal(bj.player) >= 17 ? 'stand?' : 'hit?';
+    if (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed()) {
+      bj.player.push(bjCard());
+      audio.sfx('pickup');
+      if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
+    } else if (consume(['ArrowRight', 'KeyD', 'KeyS'])) {
+      bj.phase = 'dealer';
+      bj.t = 0;
+    }
+  } else if (bj.phase === 'dealer') {
+    if (bj.t > .7) {
+      bj.t = 0;
+      if (bjTotal(bj.dealer) < 17) { bj.dealer.push(bjCard()); audio.sfx('pickup'); }
+      else {
+        const pt = bjTotal(bj.player), dt2 = bjTotal(bj.dealer);
+        bj.result = dt2 > 21 || pt > dt2 ? 'win' : pt === dt2 ? 'push' : 'lose';
+        bj.phase = 'done';
+        audio.sfx(bj.result === 'win' ? 'success' : bj.result === 'push' ? 'pickup' : 'denied');
+      }
+    }
+  } else if (bj.phase === 'done' && bj.t > 1.8) {
+    const r = bj.result;
+    state.mode = 'explore';
+    state.blackjack = null;
+    if (r === 'win') {
+      state.flags.tribute = (state.flags.tribute || 0) + 100;
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$100 · BLACKJACK PAYS', '#8ffff2');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'George wins! He immediately asks the dealer about the surrender rule, the insurance rule, and whether tips are mandatory.' : 'Tony wins. The dealer slides the chips over. He has been instructed, at length, to be very fast about it.' }
+      ]);
+    } else if (r === 'push') {
+      state.flags.tribute = (state.flags.tribute || 0) + 50;
+      startDialog([{ speaker: 'narrator', text: 'Push. Nobody wins. Somehow the least satisfying outcome in all of gambling.' }]);
+    } else {
+      startDialog([
+        { speaker: 'narrator', text: r === 'bust' ? 'Bust. The dealer collects without looking up, the way they do.' : 'Dealer wins. The felt absorbs your fifty dollars like it was never there.' }
+      ]);
+    }
+  }
+}
+
+function bjDrawHand(hand, x, y, hideFirst) {
+  for (let i = 0; i < hand.length; i++) {
+    const cx = x + i * 34;
+    const hidden = hideFirst && i === 0;
+    px(ctx, cx - 14, y - 20, 28, 40, hidden ? '#2a4a8f' : '#f4efdc');
+    px(ctx, cx - 11, y - 17, 22, 34, hidden ? '#3a5a9f' : '#fffbe8');
+    if (!hidden) {
+      const v = hand[i];
+      outlineText(ctx, v === 11 ? 'A' : String(v), cx, y + 5, v === 11 ? '#c02828' : '#222', 12, 'center');
+    }
+  }
+}
+
+function drawBlackjack() {
+  px(ctx, 0, 0, 640, 416, '#0d2818');
+  outlineText(ctx, 'BLACKJACK · THE BING BACK ROOM', 320, 46, '#ffe78a', 11, 'center');
+  const bj = state.blackjack;
+  if (!bj) return;
+  // felt table
+  ctx.fillStyle = '#1a4a2e';
+  ctx.beginPath();
+  ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#c8a040';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  const hideDealer = bj.phase === 'player';
+  bjDrawHand(bj.dealer, 290, 150, hideDealer);
+  outlineText(ctx, 'DEALER' + (hideDealer ? '' : ` · ${bjTotal(bj.dealer)}`), 320, 112, '#fffbe8', 8, 'center');
+  bjDrawHand(bj.player, 290, 300, false);
+  outlineText(ctx, `YOU · ${bjTotal(bj.player)}`, 320, 344, '#fffbe8', 8, 'center');
+  if (bj.phase === 'player') {
+    outlineText(ctx, 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
+  } else if (bj.phase === 'done') {
+    const msg = { win: 'YOU WIN! +$100', bust: 'BUST — HOUSE TAKES IT', lose: 'DEALER WINS', push: 'PUSH — BET RETURNED' }[bj.result];
+    outlineText(ctx, msg, 320, 386, bj.result === 'win' ? '#8ffff2' : bj.result === 'push' ? '#ffe78a' : '#ff8a7a', 10, 'center');
+  } else {
+    outlineText(ctx, 'dealer plays…', 320, 386, '#9d8fc9', 8, 'center');
+  }
 }
 
 function startTransit(destScene, x, y, flavor) {
@@ -5639,6 +5761,7 @@ function render() {
   else if (state.mode === 'monte') drawMonte();
   else if (state.mode === 'armwrestle') drawArmWrestle();
   else if (state.mode === 'transit') drawTransit();
+  else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -5770,6 +5893,8 @@ function update(dt) {
     updateArmWrestle(dt);
   } else if (state.mode === 'transit') {
     updateTransit(dt);
+  } else if (state.mode === 'blackjack') {
+    updateBlackjack(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
