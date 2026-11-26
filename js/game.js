@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9'];
 function saveWorld() {
   try {
     const out = {};
@@ -1410,6 +1410,19 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawPackages() {
+  if (!state.pkgSpots) return;
+  for (let pi = 0; pi < state.pkgSpots.length; pi++) {
+    const spot = state.pkgSpots[pi];
+    if (spot.scene !== state.scene || state.flags['pkg' + pi]) continue;
+    const bob = Math.sin(state.time * 2.4 + pi) * 2;
+    const sx = spot.x - state.camera.x, sy = spot.y - state.camera.y + bob;
+    px(ctx, sx - 5, sy - 4, 10, 8, '#8a2f23');
+    px(ctx, sx - 5, sy - 4, 10, 2, '#c05a3a');
+    if (Math.floor(state.time * 2) % 2) px(ctx, sx - 1, sy - 8, 2, 2, '#ffd23e');
+  }
+}
+
 function drawLeaves() {
   if (!['hub', 'njstreet', 'pines', 'shore'].includes(state.scene)) return;
   if (!state.leaves) {
@@ -2329,6 +2342,34 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // hidden gabagool packages — find all ten
+  if (!state.pkgSpots) {
+    state.pkgSpots = [
+      { scene: 'hub', x: 116, y: 320 }, { scene: 'hub', x: 1120, y: 130 },
+      { scene: 'nyc', x: 60, y: 350 }, { scene: 'nyc', x: 700, y: 340 },
+      { scene: 'pines', x: 120, y: 320 }, { scene: 'pines', x: 660, y: 150 },
+      { scene: 'shore', x: 150, y: 300 }, { scene: 'shore', x: 600, y: 160 },
+      { scene: 'ac', x: 80, y: 260 }, { scene: 'ac', x: 690, y: 260 }
+    ];
+  }
+  for (let pi = 0; pi < state.pkgSpots.length; pi++) {
+    const spot = state.pkgSpots[pi];
+    if (spot.scene !== state.scene || state.flags['pkg' + pi]) continue;
+    if (Math.hypot(spot.x - state.player.x, spot.y - state.player.y) < 20) {
+      state.flags['pkg' + pi] = true;
+      const found = state.pkgSpots.filter((s2, i2) => state.flags['pkg' + i2]).length;
+      state.money += 25;
+      audio.sfx('cash');
+      spawnEffect(spot.x, spot.y - 16, 'GABAGOOL! +$25 — ' + found + '/10', '#ffd23e');
+      if (found >= 10) {
+        state.money += 250;
+        startDialog([
+          { speaker: 'narrator', text: 'ALL TEN. The complete tri-state gabagool sweep. Somewhere, a cured meat sommelier sheds a single proud tear. $250 completion bonus — the meat provides.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I found them ALL! Every meat! I am a MEAT EXPLORER!' : 'Ten for ten. That’s a lotta gabagool. Don’t tell the doctor.' }
+        ]);
+      }
+    }
+  }
   // typed cheat codes — GTA heritage
   if (state.mode === 'explore') {
     for (const k of pressed) {
@@ -6967,6 +7008,7 @@ function drawWorld() {
   drawRoadblock();
   drawLeaves();
   drawSnatcher();
+  drawPackages();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
