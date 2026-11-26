@@ -32,7 +32,8 @@ const sceneArt = {
   satriale: loadArt('./assets/bg-satriale.webp'),
   plavStream: loadArt('./assets/plav-stream.webp'),
   cousinTony: loadArt('./assets/photo-cousin-tony.webp'),
-  tonyHorse: loadArt('./assets/photo-tony-horse.webp')
+  tonyHorse: loadArt('./assets/photo-tony-horse.webp'),
+  tonyHead: loadArt('./assets/sprites/tony-head.webp')
 };
 function drawSceneArt(img, w, h) {
   if (!img.complete || !img.naturalWidth) return false;
@@ -1357,6 +1358,7 @@ function loseProduceGame() {
 
 function enterHub(first = false) {
   state.flags.freeRoam = true;
+  if (state.player.kind !== 'george') state.player.kind = 'tonyMax';
   state.player.speed = state.player.kind === 'george' ? 96 : 88;
   setScene('hub', 320, 214);
   state.mode = 'explore';
@@ -2449,23 +2451,28 @@ function drawBone() {
   px(ctx, 104, 54, 120, 190, 'rgba(255,255,255,.2)');
   const striking = b.flash > 0;
   drawPerson(ctx, 235, 120, state.player.kind, 'right', striking ? state.frame * 3 : state.frame, { pose: striking ? 'perform' : 'angry' });
+  // Animated arms physically reach toward the mirror; alternating fists sell the strikes.
+  const pump = Math.sin(state.time * (striking ? 18 : 5));
+  const reach = striking ? 1 : .55 + pump * .12;
+  const fistX = 296 + reach * 62;
+  const fistY = 143 + pump * 8;
+  px(ctx, 288, 146, fistX - 288, 6, '#c8875f');
+  px(ctx, fistX, fistY, 13, 13, '#d89a70');
+  px(ctx, fistX + 2, fistY + 3, 9, 3, '#efb287');
   if (striking) {
-    // visible strike: fist streaks and impact burst connect Tony's action to the reflection
-    px(ctx, 294, 143, 44, 5, '#c8875f');
-    px(ctx, 330, 139, 12, 12, '#d89a70');
     for (let i = 0; i < 5; i++) {
       const a = i * 1.25 + state.time;
-      px(ctx, 348 + Math.cos(a) * 13, 145 + Math.sin(a) * 13, 7, 2, '#fff0a6');
+      px(ctx, 360 + Math.cos(a) * 13, 145 + Math.sin(a) * 13, 7, 2, '#fff0a6');
     }
-    outlineText(ctx, 'CRACK', 328, 118, '#ffe78a', 10);
+    outlineText(ctx, 'CRACK', 334, 118, '#ffe78a', 10);
   }
-  // giant reflection face
-  px(ctx, 376, 76, 104, 118, '#c8875f');
-  px(ctx, 382, 82, 92, 24, '#2a211e');
-  px(ctx, 392, 126, 18, 8, '#111');
-  px(ctx, 444, 126, 18, 8, '#111');
-  px(ctx, 404, 164, 48, 8, '#70422f');
-  px(ctx, 384, 186, 88, 10, '#9b5f42');
+  // Tony's real illustrated reflection, scaled up inside the mirror.
+  if (sceneArt.tonyHead.complete && sceneArt.tonyHead.naturalWidth) {
+    ctx.drawImage(sceneArt.tonyHead, 362, 72, 132, 114);
+  } else {
+    px(ctx, 376, 76, 104, 118, '#c8875f');
+    px(ctx, 382, 82, 92, 24, '#2a211e');
+  }
   ctx.strokeStyle = 'rgba(255,246,190,.72)';
   ctx.lineWidth = 1;
   for (let i = 0; i < Math.min(6, b.hits); i++) {
