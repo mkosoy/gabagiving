@@ -28,6 +28,7 @@ const sceneArt = {
   hub: loadArt('./assets/bg-njhub.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
+  monks: loadArt('./assets/bg-monks.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
@@ -603,6 +604,18 @@ const scenes = {
     draw: drawVesuvio,
     interactions: vesuvioInteractions
   },
+  monks: {
+    w: 640, h: 416, label: 'Monk’s Café · Manhattan', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,30,580,68),
+      r(120,150,96,70), r(420,150,96,70),
+      r(120,290,96,70), r(420,290,96,70),
+      r(268,200,104,88)
+    ],
+    draw: drawMonks,
+    interactions: monksInteractions
+  },
   satriale: {
     w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
     colliders: [
@@ -708,6 +721,11 @@ const ambientSpecs = {
   ],
   satriale: [
     { kind: 'womanC', x: 300, y: 330, region: { x: 220, y: 300, w: 180, h: 70 }, speed: 30 }
+  ],
+  monks: [
+    { kind: 'womanA', x: 320, y: 380, region: { x: 120, y: 372, w: 380, h: 28 }, speed: 34 },
+    { kind: 'womanB', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
+    { kind: 'bobby', x: 60, y: 240, region: { x: 30, y: 130, w: 60, h: 220 }, speed: 20 }
   ]
 };
 
@@ -812,7 +830,7 @@ function updateExplore(dt) {
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
   }
   // leaving a borrowed car takes priority over other interactions
-  if (p.inCar && interactPressed() && !nearestInteraction()) {
+  if (p.inCar && interactPressed()) {
     p.inCar = false;
     p.speed = p.kind === 'george' ? 96 : 88;
     audio.sfx('door');
@@ -1227,6 +1245,7 @@ function updatePeptides(dt) {
   if (g.caught >= 8) {
     state.player.kind = 'tonyMax';
     setScene('rome', 650, 205);
+    state.mode = 'explore';
     startDialog([
       { speaker: 'augustus', text: 'Okay. Time to go, Ton. You look great.' },
       { speaker: 'narrator', text: 'Tony’s reflection now has the confidence of a marble statue and the haircut of a man who owns three juice blenders.' },
@@ -1238,6 +1257,7 @@ function updatePeptides(dt) {
 
 function wakeFromDream() {
   setScene('house', 250, 306);
+  state.mode = 'explore';
   state.flags.houseStep = 6;
   objective(houseObjective());
   startDialog([
@@ -1349,6 +1369,7 @@ function enterApartment() {
   state.player.dir = 'down';
   state.npcs.jerryApt = { x: 266, y: 212, dir: 'right', pose: 'sit' };
   state.npcs.georgeApt = { x: 42, y: 122, dir: 'down', pose: 'stand' };
+  state.mode = 'explore';
   objective('Follow the debtor inside');
   startDialog([
     { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 300, 176, 150, () => moveActor(state.player, 146, 246, 150, () => moveActor(state.player, 296, 372, 150))); } },
@@ -1541,6 +1562,7 @@ function startAugustusBonus() {
   state.flags.augustusAJ = false;
   state.flags.satStep = 0;
   setScene('njstreet', 170, 276);
+  state.mode = 'explore';
   objective('Bonus: find AJ in New Jersey');
   startDialog([
     { speaker: 'narrator', text: 'BONUS LEVEL — After too much imperial looksmaxxing, Augustus falls asleep in Rome and wakes up in suburban New Jersey.' },
@@ -1619,6 +1641,64 @@ function vesuvioInteractions() {
       { speaker: 'tony', text: 'Real fire. Real crust. This place beats that pie joint across town.' },
       { speaker: 'artie', text: 'Careful. I almost cried hearing that.' }
     ]) }
+  ];
+  return list;
+}
+
+function drawMonks() {
+  if (drawSceneArt(sceneArt.monks, 640, 416)) {
+    // the gang occupies the center booth; Kramer slides in and out
+    const boothY = 236 + Math.sin(state.time * 1.6) * 1;
+    drawPerson(ctx, 254, boothY, 'jerry', 'right', state.frame, { pose: 'sit' });
+    drawPerson(ctx, 386, boothY, state.player.kind === 'george' ? 'elaine' : 'george', 'left', state.frame + 1, { pose: 'sit' });
+    if (state.player.kind === 'george') drawPerson(ctx, 254, boothY + 34, 'elaine', 'right', state.frame, { pose: 'sit' });
+    // Kramer bursts through the door on a loop
+    const kcycle = (state.time % 14);
+    if (kcycle < 5) {
+      const kt = kcycle < 2.2 ? kcycle / 2.2 : Math.max(0, 1 - (kcycle - 2.2) / 2.8);
+      const kx = 596 - kt * 130;
+      const ky = 388 - kt * 130;
+      drawPerson(ctx, kx, ky, 'kramer', 'left', state.frame * 2.2);
+    }
+    // waitress with coffee pot
+    const wob = Math.sin(state.time * .8);
+    drawPerson(ctx, 320 + wob * 170, 82, 'womanC', wob > 0 ? 'right' : 'left', state.frame * 1.8);
+    // pie carousel glint
+    const glint = (Math.sin(state.time * 2.4) + 1) / 2;
+    px(ctx, 210, 44, 26, 3, `rgba(255,240,180,${.25 + glint * .5})`);
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#3f6a66');
+  outlineText(ctx, 'MONK’S CAFÉ', 320, 200, '#ffe5a0', 16, 'center');
+}
+
+function monksInteractions() {
+  const list = [
+    { x: 288, y: 200, w: 120, h: 100, radius: 44, label: 'The booth', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'Jerry. Big Salad. I bought it for Elaine once and she never thanked me properly. The thanks ratio was all wrong.' },
+        { speaker: 'jerry', text: 'You handed her a salad, George. It wasn’t a kidney.' },
+        { speaker: 'elaine', text: 'It had big lettuce, Jerry. Big lettuce.' },
+        { speaker: 'george', text: 'Finally! Someone acknowledges the lettuce!' }
+      ]);
+      else startDialog([
+        { speaker: 'jerry', text: 'Tony Soprano in Monk’s. What’s a Jersey guy doing in a Manhattan coffee shop?' },
+        { speaker: 'tony', text: 'Heard the coffee’s good. Also your friend owes me a Yankee favor.' },
+        { speaker: 'george', text: 'One favor! I mentioned Steinbrenner one time!' },
+        { speaker: 'tony', text: 'That’s how it starts, Georgie boy. One favor.' }
+      ]);
+    } },
+    { x: 240, y: 30, w: 160, h: 60, radius: 40, label: 'Order coffee', action: () => {
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      spawnEffect(state.player.x, state.player.y - 16, 'COFFEE +calm', '#d8b878');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'Decaf. No — regular. No — decaf in a regular cup. I need people to think I’m reckless.' }
+      ] : [
+        { speaker: 'tony', text: 'Coffee. Black. Like my soul after talking to my mother.' }
+      ]);
+    } },
+    { x: 570, y: 330, w: 60, h: 80, radius: 42, label: 'Leave', action: () => travelHub('hub') }
   ];
   return list;
 }
@@ -1800,7 +1880,9 @@ function travelHub(place) {
     rome: ['rome', 430, 330, 'The marble arch hums with imperial nonsense.'],
     club: ['club', 320, 330, 'The Bing is quiet again — suspiciously quiet.'],
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
-    vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.']
+    vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
+    monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
+    hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
   if (!d) return;
@@ -1818,6 +1900,7 @@ function hubInteractions() {
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
+    { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
@@ -3345,8 +3428,8 @@ function update(dt) {
     if (state.dreamT > 5.4) {
       setScene('rome', 72, 350);
       state.flags.romeStep = 0;
-      objective('Walk through Rome and meet Augustus');
       state.mode = 'explore';
+      objective('Walk through Rome and meet Augustus');
       startDialog([
         { speaker: 'narrator', text: 'Tony lands in a marble court. The air smells of laurel, incense, and aggressively optimized skin care.' }
       ]);
