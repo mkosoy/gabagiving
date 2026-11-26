@@ -3557,16 +3557,20 @@ function updateBlackjack(dt) {
   if (bj.phase === 'player') {
     const hint = bjTotal(bj.player) >= 17 ? 'stand?' : 'hit?';
     const inp = moveInput();
-    if (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed() || (inp.x < -.5 && !bj.stickHit)) {
-      bj.stickHit = true;
+    // dominant-axis only, and the stick must return to neutral between gestures
+    const hitDir = inp.x < -.6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3;
+    const standDir = (inp.x > .6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3) || (inp.y > .6 && inp.y > Math.abs(inp.x) * 1.3);
+    if (!bj.stickLock && (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed() || hitDir)) {
+      bj.stickLock = true;
       bj.player.push(bjCard());
       audio.sfx('pickup');
       if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
-    } else if (consume(['ArrowRight', 'KeyD', 'KeyS']) || inp.x > .5 || inp.y > .5) {
+    } else if (!bj.stickLock && (consume(['ArrowRight', 'KeyD', 'KeyS']) || standDir)) {
+      bj.stickLock = true;
       bj.phase = 'dealer';
       bj.t = 0;
     }
-    if (inp.x > -.3) bj.stickHit = false;
+    if (!hitDir && !standDir) bj.stickLock = false;
   } else if (bj.phase === 'dealer') {
     if (bj.t > .7) {
       bj.t = 0;
