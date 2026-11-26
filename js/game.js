@@ -1357,10 +1357,11 @@ function updateKramerCycle(dt) {
 }
 
 function updateBrawler(dt) {
-  if (state.scene !== 'hub' || !state.flags.freeRoam) { state.brawler = null; return; }
+  if ((state.scene !== 'hub' && state.scene !== 'nyc') || !state.flags.freeRoam) { state.brawler = null; return; }
   const p = state.player;
   if (!state.brawler && Math.random() < dt * .02) {
-    state.brawler = { x: 680 + Math.random() * 540, y: 140 + Math.random() * 50, hp: 3, state: 'prowl', t: 0, tx: 700, ty: 240, barkT: 0, swingT: 0, hitT: 0 };
+    const inNyc = state.scene === 'nyc';
+    state.brawler = { x: inNyc ? 200 + Math.random() * 400 : 680 + Math.random() * 540, y: inNyc ? 250 + Math.random() * 90 : 140 + Math.random() * 50, hp: 3, state: 'prowl', t: 0, tx: inNyc ? 380 : 700, ty: inNyc ? 280 : 240, barkT: 0, swingT: 0, hitT: 0 };
   }
   const b = state.brawler;
   if (!b) return;
