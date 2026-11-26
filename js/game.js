@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','pineFreshDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1578,12 +1578,33 @@ function updateHubEvents(dt) {
 const MISSION_DEFS = {
   packageJob: {
     title: 'THE PACKAGE JOB',
+    payout: 200, heat: 1,
     steps: [
       { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'Deliver the package to the bodega clerk in Manhattan', label: 'Hand off the package' },
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman in North Caldwell', label: 'Report the delivery' }
     ]
+  },
+  catalogCaper: {
+    title: 'THE CATALOG CAPER',
+    payout: 150, heat: .5,
+    steps: [
+      { scene: 'yankees', x: 320, y: 300, radius: 58, objective: 'Drop the catalogs at the Yankees office', label: 'Drop the catalogs' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman in North Caldwell', label: 'Report the delivery' }
+    ]
+  },
+  pineFresh: {
+    title: 'PINE FRESH',
+    payout: 250, heat: 2,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'Leave the box in the Pine Barrens clearing. Don’t look.', label: 'Leave the box' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. Act natural.', label: 'Report the burial' }
+    ]
   }
 };
+const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'pineFresh'];
+function nextMission() {
+  return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
+}
 
 function startMission(id) {
   state.mission = { id, step: 0 };
@@ -1598,19 +1619,30 @@ function advanceMission() {
   if (m.step >= def.steps.length) {
     // mission complete
     state.mission = null;
-    state.flags.packageJobDone = true;
-    state.flags.tribute = (state.flags.tribute || 0) + 200;
-    state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+    state.flags[m.id + 'Done'] = true;
+    state.flags.tribute = (state.flags.tribute || 0) + def.payout;
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
     audio.sfx('cash');
     audio.sfx('success');
-    startDialog(state.player.kind === 'george' ? [
-      { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
-      { speaker: 'george', text: 'What was IN that package?!' },
-      { speaker: 'newman', text: 'Vanity press cassettes. Pirate whale songs. The whales never see a dime, George. And now… neither do you. Not legally!' }
-    ] : [
-      { speaker: 'narrator', text: 'Tony reports the delivery. $200 for an hour of driving. Honest work, dishonest cargo.' },
-      { speaker: 'tony', text: 'You never ask what’s in the box. That’s rule one. Rule two is you take the cash and forget the box.' }
-    ]);
+    const endings = {
+      packageJob: state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
+        { speaker: 'george', text: 'What was IN that package?!' },
+        { speaker: 'newman', text: 'Vanity press cassettes. Pirate whale songs. The whales never see a dime, George. And now… neither do you. Not legally!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony reports the delivery. $200 for an hour of driving. Honest work, dishonest cargo.' },
+        { speaker: 'tony', text: 'You never ask what’s in the box. That’s rule one. Rule two is you take the cash and forget the box.' }
+      ],
+      catalogCaper: [
+        { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      pineFresh: [
+        { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I buried a BOX for a MAILMAN in a HAUNTED FOREST and a large Russian watched me do it! I need to sit down. Forever!' : 'Pine Barrens. Always the Pine Barrens. Tell Paulie the spot’s taken.' }
+      ]
+    };
+    startDialog(endings[m.id] || [{ speaker: 'system', text: 'Mission complete.' }]);
   } else {
     audio.sfx('confirm');
     const st = def.steps[m.step];
@@ -1632,11 +1664,21 @@ function updateMission() {
     state.interactCooldown = .8;
     spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
     if (state.mission.step === 0) {
-      // handoff flavor before advancing
-      startDialog([
-        { speaker: 'narrator', text: 'The clerk takes the package without looking at it, slides it under the counter, and resumes being deeply interested in a lottery magazine. Professional.' },
-        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why do I feel like I just committed three crimes? It was a BODEGA drop. People do bodega drops!' : 'Smooth. In and out. The way she goes.' }
-      ], () => advanceMission());
+      const dropLines = {
+        packageJob: [
+          { speaker: 'narrator', text: 'The clerk takes the package without looking at it, slides it under the counter, and resumes being deeply interested in a lottery magazine. Professional.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why do I feel like I just committed three crimes? It was a BODEGA drop. People do bodega drops!' : 'Smooth. In and out. The way she goes.' }
+        ],
+        catalogCaper: [
+          { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
+        ],
+        pineFresh: [
+          { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging a hole in a mafia forest with my HANDS for a postal worker! This is the low point! …It’s not the low point, is it. There’s lower!' : 'Soft ground. Good. Means nobody else dug here first. Means nobody else WILL.' }
+        ]
+      };
+      startDialog(dropLines[state.mission.id] || [], () => advanceMission());
     } else advanceMission();
   }
 }
@@ -3479,12 +3521,17 @@ function hubInteractions() {
       objective('Catch the debtor — grab money boosts');
     } },
     { x: 530, y: 200, w: 60, h: 56, radius: 44, label: 'Newman', action: () => {
-      if (!state.mission && !state.flags.packageJobDone) {
-        startMission('packageJob');
+      if (!state.mission && nextMission()) {
+        const mid = nextMission();
+        startMission(mid);
+        const offers = {
+          packageJob: { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
+          catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
+          pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
+        };
         startDialog([
-          { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
-          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why no questions? What’s in it?! …You know what, I don’t want to know. I want the $200.' : 'No questions means it ain’t wind cassettes. Fine. For $200, it’s wind cassettes.' },
-          { speaker: 'system', text: 'Mission accepted: THE PACKAGE JOB. Follow the objective banner.' }
+          offers[mid],
+          { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
         ]);
       }
       else if (state.player.kind === 'george') startDialog([
