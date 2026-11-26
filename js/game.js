@@ -1550,6 +1550,7 @@ function updateExplore(dt) {
   // leaving a borrowed car takes priority over other interactions
   if (p.inCar && interactPressed()) {
     p.inCar = false;
+    p.carColor = null;
     p.speed = p.kind === 'george' ? 96 : 88;
     audio.sfx('door');
     spawnEffect(p.x + 8, p.y - 8, 'ON FOOT', '#8ffff2');
@@ -3165,6 +3166,7 @@ function hubInteractions() {
       if (state.player.inCar) return;
       state.player.inCar = true;
       state.player.speed = 200;
+      state.player.carColor = '#31445e';
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
       audio.sfx('door');
       audio.sfx('honk');
@@ -3190,6 +3192,7 @@ function hubInteractions() {
       if (state.player.inCar) return;
       state.player.inCar = true;
       state.player.speed = 190;
+      state.player.carColor = '#3d6b35';
       audio.sfx('door');
       audio.sfx('honk');
       spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
@@ -3436,6 +3439,15 @@ function drawNyc() {
     if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
     if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
   }
+  // parked stealable taxi
+  if (!state.player.inCar) {
+    px(ctx, 380, 356, 30, 11, '#c9a015');
+    px(ctx, 382, 357, 26, 9, '#e8b822');
+    px(ctx, 387, 358, 14, 7, '#9fd4ec');
+    px(ctx, 392, 354, 6, 3, '#fff3b0');
+    px(ctx, 383, 365, 5, 3, '#05070c');
+    px(ctx, 402, 365, 5, 3, '#05070c');
+  }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
     state.pigeons = [];
@@ -3561,6 +3573,21 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 380, y: 356, w: 66, h: 36, radius: 44, label: 'Steal taxi', hidden: () => !!state.player.inCar, action: () => {
+      state.player.inCar = true;
+      state.player.speed = 210;
+      state.player.carColor = '#e8b822';
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
+      audio.sfx('door');
+      audio.sfx('honk');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'GRAND THEFT TAXI', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George steals a cab. Within forty seconds, three tourists climb in the back before he can object.' },
+        { speaker: 'george', text: 'I’m not a cab! …I mean, technically NOW I am a cab. Times Square, I guess. Meter’s running!' }
+      ] : [
+        { speaker: 'tony', text: 'A yellow cab. Perfect. Nobody looks twice at a cab in Manhattan. That’s not theft, that’s camouflage.' }
+      ]);
     } },
     { x: 150, y: 330, w: 56, h: 40, radius: 42, label: 'Card hustler', action: () => {
       if ((state.flags.tribute || 0) < 50) {
@@ -4608,7 +4635,7 @@ function drawClub() {
 function drawPlayer() {
   const kind = state.player.kind;
   if (state.player.inCar) {
-    drawCar(state.player.x - 12, state.player.y + 2, '#8f1f2e');
+    drawCar(state.player.x - 12, state.player.y + 2, state.player.carColor || '#8f1f2e');
     return;
   }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
