@@ -1170,6 +1170,7 @@ function startPeptides() {
     x: 320,
     y: 220,
     boost: 0,
+    flashT: 0,
     message: 'Catch glowing peptides'
   };
 }
@@ -1177,6 +1178,7 @@ function startPeptides() {
 function updatePeptides(dt) {
   const g = state.pep;
   g.time += dt;
+  g.flashT = Math.max(0, (g.flashT || 0) - dt);
   g.dizzy = (Math.sin(g.time * 1.1) + 1) / 2;
   g.spawn -= dt;
   if (g.spawn <= 0) {
@@ -1212,6 +1214,8 @@ function updatePeptides(dt) {
       } else {
         g.caught += v.kind === 'gold' ? 2 : 1;
         state.stats.vials += 1;
+        g.flashT = 1.2;
+        spawnEffect(g.x, g.y - 18, v.kind === 'gold' ? 'IN THE BLOOD!' : '+peptide', v.kind === 'gold' ? '#ffe78a' : '#8ffff2');
         if (v.kind === 'gold') {
           g.boost = 2.6;
           g.message = 'GOLD PEPTIDE: speed boost, +2';
@@ -2925,12 +2929,41 @@ function drawBone() {
     }
     outlineText(ctx, 'CRACK', 334, 118, '#ffe78a', 10);
   }
-  // Tony's real illustrated reflection, scaled up inside the mirror.
+  // Tony's real illustrated reflection, scaled up inside the mirror — and visibly deforming per hit.
   if (sceneArt.tonyHead.complete && sceneArt.tonyHead.naturalWidth) {
+    ctx.save();
+    if (b.hits >= 4) {
+      // jaw visibly knocked sideways: shear the reflection
+      ctx.transform(1, 0, -.08 * Math.min(2, b.hits - 3), 1, 30, 0);
+    }
     ctx.drawImage(sceneArt.tonyHead, 362, 72, 132, 114);
+    ctx.restore();
   } else {
     px(ctx, 376, 76, 104, 118, '#c8875f');
     px(ctx, 382, 82, 92, 24, '#2a211e');
+  }
+  // progressive damage overlays: swelling, black eye, bandage, circling stars
+  if (b.hits >= 2) {
+    px(ctx, 388, 96, 26, 18, 'rgba(200,60,50,.45)');
+    px(ctx, 452, 118, 22, 16, 'rgba(200,60,50,.4)');
+  }
+  if (b.hits >= 3) {
+    ctx.fillStyle = 'rgba(40,20,40,.65)';
+    ctx.beginPath();
+    ctx.ellipse(408, 102, 12, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (b.hits >= 5) {
+    px(ctx, 376, 84, 40, 12, '#e8e2d0');
+    px(ctx, 376, 88, 40, 3, '#c94f42');
+    for (let i = 0; i < 4; i++) {
+      const a = state.time * 3 + i * 1.6;
+      outlineText(ctx, '✦', 428 + Math.cos(a) * 52, 84 + Math.sin(a) * 22, '#ffe78a', 9, 'center');
+    }
+  }
+  if (b.hits >= 6) {
+    px(ctx, 424, 132, 44, 22, 'rgba(230,225,205,.85)');
+    outlineText(ctx, 'JAW!', 446, 137, '#a03a2c', 8, 'center');
   }
   ctx.strokeStyle = 'rgba(255,246,190,.72)';
   ctx.lineWidth = 1;
@@ -2966,6 +2999,21 @@ function drawPeptides() {
   px(ctx, 34, 54, 572, 282, 'rgba(28,40,64,.5)');
   drawPerson(ctx, g.x - 8, g.y - 12, state.player.kind, 'down', state.frame);
   for (const v of g.vials) drawVial(ctx, v.x, v.y, g.time, v.kind);
+  // bloodstream vessels pulse through the scene as peptides enter his system
+  const vessels = Math.min(6, g.caught);
+  for (let i = 0; i < vessels; i++) {
+    const pulse = (Math.sin(g.time * 6 - i * .8) + 1) / 2;
+    ctx.strokeStyle = `rgba(220,40,50,${.12 + pulse * .3})`;
+    ctx.lineWidth = 1.5 + pulse;
+    ctx.beginPath();
+    ctx.moveTo(30 + i * 100, 340);
+    ctx.bezierCurveTo(70 + i * 96, 240 - i * 12, 10 + i * 108, 160 + i * 8, 60 + i * 94, 60);
+    ctx.stroke();
+  }
+  if (g.flashT > 0) {
+    ctx.fillStyle = `rgba(255,80,90,${g.flashT * .12})`;
+    ctx.fillRect(0, 0, W, H);
+  }
   ctx.restore();
   // dizzy overlay
   if (g.dizzy > .45) {
