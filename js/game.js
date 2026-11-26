@@ -3820,6 +3820,11 @@ function hubInteractions() {
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
         ]);
       }
+      else if (state.flags.bigOneDone) startDialog([
+        { speaker: 'newman', text: 'The legend returns! They speak of you in sorting facilities across the tri-state area. In hushed tones. Mostly because of the noise ordinances.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it all, Newman! Every last parcel! What now?! What’s left for a man like me?!' : 'Yeah yeah. The mail’s safe. Go back to your route, mailman. And Newman — the freezer box? We never spoke about it. Capisce?' },
+        { speaker: 'newman', text: 'What’s left? Only the eternal mail, my friend. It is endless. It is forever. And on that day of days, when the last letter is delivered — I shall be there. HEE HEE HEE.' }
+      ]);
       else if (state.player.kind === 'george') startDialog([
         { speaker: 'newman', text: 'Heh heh heh… Georgie boy. Out for a little walk? Careful — the mail never sleeps.' },
         { speaker: 'george', text: 'Newman! I know you’re the one writing COSTANZA on my packages! It stops TODAY!' },
