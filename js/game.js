@@ -1778,7 +1778,7 @@ function soupInteractions() {
       ] : [
         { speaker: 'tony', text: 'Nice bread. At my house, Carmela hides the good bread from me. Don’t ask.' }
       ]) },
-    { x: 300, y: 370, w: 100, h: 44, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 220, y: 362, w: 90, h: 44, radius: 42, label: 'Leave', action: () => travelHub('hub') }
   ];
 }
 
@@ -1961,7 +1961,7 @@ function travelHub(place) {
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
-    soup: ['soup', 320, 380, 'The soup stand. The rules are the rules.'],
+    soup: ['soup', 250, 380, 'The soup stand. The rules are the rules.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
