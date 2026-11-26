@@ -3628,20 +3628,46 @@ function drawDrive() {
   const shakeX = d.shake ? (Math.random() - .5) * 6 : 0;
   ctx.save();
   ctx.translate(shakeX, 0);
-  // autumn suburbs
+  // autumn suburbs, parallax: far lawns scroll slow, near detail scrolls fast
   px(ctx, 0, 0, W, H, '#7c8c58');
-  for (let i = 0; i < 12; i++) {
-    const y = ((i * 90 + d.road * .45) % 430) - 60;
+  for (let i = 0; i < 8; i++) {
+    const y = ((i * 120 + d.road * .3) % 460) - 60;
     const left = i % 2 === 0;
-    px(ctx, left ? 40 : 535, y, 54, 34, '#8d5b3d');
-    px(ctx, left ? 48 : 543, y + 8, 38, 22, '#d6bf91');
-    px(ctx, left ? 25 : 510, y + 30, 22, 18, '#c86d31');
-    px(ctx, left ? 100 : 480, y + 26, 18, 18, '#d79531');
+    // distant houses
+    px(ctx, left ? 20 : 560, y, 60, 40, '#8d5b3d');
+    px(ctx, left ? 16 : 556, y - 8, 68, 12, '#5c342c');
+    px(ctx, left ? 28 : 570, y + 12, 14, 14, '#e8d6ad');
+    px(ctx, left ? 52 : 596, y + 12, 14, 14, '#e8d6ad');
+    // autumn trees
+    px(ctx, left ? 105 : 500, y + 20, 8, 16, '#5c4030');
+    px(ctx, left ? 96 : 491, y + 6, 26, 18, i % 3 ? '#c86d31' : '#d79531');
+    px(ctx, left ? 100 : 495, y + 2, 18, 10, '#e0a33c');
   }
-  // road
+  for (let i = 0; i < 10; i++) {
+    const y = ((i * 70 + d.road * .62) % 440) - 50;
+    // near fences + mailboxes whipping past
+    const left = i % 2 === 0;
+    for (let f = 0; f < 4; f++) px(ctx, (left ? 130 : 480) + f * 8, y, 3, 10, '#e8e0c8');
+    px(ctx, left ? 128 : 478, y + 3, 34, 3, '#e8e0c8');
+    if (i % 3 === 0) {
+      px(ctx, left ? 120 : 516, y + 12, 5, 10, '#4a3226');
+      px(ctx, left ? 116 : 512, y + 8, 13, 8, '#8a2f2f');
+    }
+  }
+  // road with asphalt speckle
   px(ctx, 170, 0, 300, H, '#4c4f55');
+  for (let i = 0; i < 26; i++) {
+    const sy = ((i * 61 + d.road) % 400) - 20;
+    px(ctx, 195 + (i * 97) % 250, sy, 3, 2, 'rgba(255,255,255,.06)');
+    px(ctx, 210 + (i * 53) % 230, sy + 8, 2, 2, 'rgba(0,0,0,.15)');
+  }
   px(ctx, 182, 0, 8, H, '#d7d0bc');
   px(ctx, 450, 0, 8, H, '#d7d0bc');
+  // curb grass fringe
+  for (let y = ((d.road * .9) % 26) - 26; y < H; y += 26) {
+    px(ctx, 172, y, 8, 8, '#6f954f');
+    px(ctx, 460, y + 13, 8, 8, '#6f954f');
+  }
   for (let y = ((d.road) % 52) - 52; y < H; y += 52) px(ctx, 316, y, 8, 28, '#e8d66c');
   // target black sedan far ahead
   const targetY = 48 + Math.sin(state.time * 3) * 3;
@@ -3652,16 +3678,24 @@ function drawDrive() {
     if (o.hit && o.type === 'money') continue;
     if (o.type === 'money') {
       const bob = Math.sin(state.time * 8 + o.wobble) * 2;
-      px(ctx, o.x - 12, o.y - 8 + bob, 24, 15, '#d8c28a');
-      px(ctx, o.x - 10, o.y - 6 + bob, 20, 11, '#f0dfaa');
-      px(ctx, o.x - 8, o.y - 4 + bob, 7, 6, '#4c9a58');
-      px(ctx, o.x + 2, o.y - 4 + bob, 7, 6, '#4c9a58');
-      px(ctx, o.x - 1, o.y - 8 + bob, 2, 15, '#8a6a3c');
-      outlineText(ctx, '$', o.x, o.y - 5 + bob, '#174d2b', 8, 'center');
+      // fat cash envelope: manila with green bills fanning out and a rubber band
+      px(ctx, o.x - 13, o.y - 8 + bob, 26, 16, '#c8a869');
+      px(ctx, o.x - 11, o.y - 6 + bob, 22, 12, '#e2c88f');
+      for (let b = 0; b < 3; b++) {
+        px(ctx, o.x - 8 + b * 7, o.y - 10 + bob - b, 6, 8, '#4c9a58');
+        px(ctx, o.x - 7 + b * 7, o.y - 9 + bob - b, 4, 3, '#6cc47a');
+      }
+      px(ctx, o.x - 2, o.y - 8 + bob, 4, 16, '#8a3f34');
+      outlineText(ctx, '$', o.x + 1, o.y - 4 + bob, '#174d2b', 8, 'center');
     } else if (o.type === 'gabagool') {
-      px(ctx, o.x - 13, o.y - 9, 26, 18, '#9a4f2b');
-      px(ctx, o.x - 8, o.y - 12, 16, 6, '#d88949');
-      px(ctx, o.x - 4, o.y - 2, 4, 3, '#f0d19a');
+      // proper capicola roll: dark cured crust, fatty veins, netting
+      px(ctx, o.x - 13, o.y - 9, 26, 18, '#7c3a20');
+      px(ctx, o.x - 11, o.y - 7, 22, 14, '#9a4f2b');
+      px(ctx, o.x - 9, o.y - 5, 5, 4, '#e8c9a0');
+      px(ctx, o.x + 2, o.y - 2, 6, 4, '#e8c9a0');
+      px(ctx, o.x - 5, o.y + 2, 4, 3, '#d8b088');
+      for (let n = 0; n < 3; n++) px(ctx, o.x - 13, o.y - 6 + n * 6, 26, 1, 'rgba(240,220,190,.5)');
+      px(ctx, o.x - 8, o.y - 12, 16, 5, '#b85e33');
     } else if (o.type === 'janice') {
       drawPerson(ctx, o.x - 8, o.y - 14, 'janice', o.vx > 0 ? 'right' : 'left', state.frame);
     } else if (o.type === 'nycrew') {
