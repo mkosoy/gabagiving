@@ -178,7 +178,8 @@ const state = {
     clubReady: false,
     augustusAJ: false,
     satStep: 0,
-    freeRoam: false
+    freeRoam: false,
+    humanFund: false
   },
   objective: 'Press start',
   dialog: null,
@@ -1014,6 +1015,7 @@ function apartmentInteractions() {
   if (s === 2) list.push({ x: 340, y: 270, w: 38, h: 40, label: 'Confront George', action: confrontGeorge });
   if (s === 3) list.push({ x: 280, y: 312, w: 42, h: 34, label: 'Sit for dinner', action: sitDinner });
   if (state.flags.freeRoam) {
+    if (state.player.kind === 'george' && !state.flags.humanFund) list.push({ x: 232, y: 306, w: 164, h: 52, label: 'Human Fund', action: humanFundScheme });
     list.push({ x: 48, y: 96, w: 96, h: 34, label: 'Cereal shelf', action: () => startDialog([
       { speaker: 'jerry', text: 'You can tell a lot about a man by his cereal-to-company ratio.' },
       { speaker: 'tony', text: 'I’m more of a pork store guy.' },
@@ -1025,6 +1027,31 @@ function apartmentInteractions() {
     ]) });
   }
   return list;
+}
+
+function humanFundScheme() {
+  state.playerPose = 'perform';
+  state.player.x = 154;
+  state.player.y = 220;
+  state.player.dir = 'left';
+  spawnEffect(126, 206, 'FLYER', '#8ffff2');
+  audio.sfx('pickup');
+  startDialog([
+    { speaker: 'george', text: 'Jerry, before you say anything — the Human Fund. Money for people.' },
+    { speaker: 'jerry', text: 'George, this is a blank index card with a turkey drawn on it.' },
+    { speaker: 'george', text: 'It is a prototype of generosity. The branding is very fluid.' },
+    { speaker: 'elaine', text: 'You are charging people for a fake charity in my pie kitchen?' },
+    { speaker: 'george', text: 'Not charging. Cultivating donors. There is a difference, legally speaking. Probably.' },
+    { speaker: 'narrator', text: 'George physically presses the “donation card” into Jerry’s hand. Jerry immediately hands it back.' , action: () => { spawnEffect(122, 198, 'NOPE', '#ff8f8f'); audio.sfx('denied'); } },
+    { speaker: 'jerry', text: 'Congratulations. You invented a charity with negative donations.' },
+    { speaker: 'george', text: 'Negative donations are still donations, Jerry.' }
+  ], () => {
+    state.playerPose = null;
+    state.flags.humanFund = true;
+    objective('Scheme complete: Human Fund prototype');
+    spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1', '#ffe78a');
+    audio.sfx('success');
+  });
 }
 
 function pickBat() {
