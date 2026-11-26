@@ -246,6 +246,7 @@ function objective(text) { state.objective = text; saveProgress(); }
 
 function saveProgress() {
   if (state.mode === 'title' || !state.flags) return;
+  if (state.flags.sandbox) return;
   if (['bone', 'peptides', 'drive', 'bonus', 'produce', 'dream', 'ending'].includes(state.mode)) return;
   try {
     localStorage.setItem('gabagiving-save-v1', JSON.stringify({
@@ -283,7 +284,7 @@ function chapterPreset(key) {
   const base = { houseStep: 9, tvChannel: 3, hasCard: true, sawGeese: true, ajDone: true, mirrorDone: true, freeRoam: false };
   if (key === 'rome') Object.assign(state.flags, base, { romeStep: 0, boneDone: false });
   if (key === 'chamber') Object.assign(state.flags, base, { romeStep: 1, boneDone: false });
-  if (key === 'drive') Object.assign(state.flags, base, { romeStep: 4, boneDone: true });
+  if (key === 'drive') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: false, aptStep: 0 });
   if (key === 'apartment') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: false, aptStep: 0, kramerIn: false, elaineIn: false });
   if (key === 'club') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: true, aptStep: 4, kramerIn: true, elaineIn: true, clubTalked: {}, clubReady: false });
 }
@@ -311,9 +312,9 @@ function menuEntries() {
       act: () => {
         closeMenu();
         state.flags.freeRoam = false;
-        const order = ['club', 'apartment', 'drive', 'chamber', 'rome'];
-        const key = order.find((k) => state.unlocked && state.unlocked[k]) || 'house';
-        jumpChapter(key);
+        state.flags.sandbox = false;
+        if (loadSave()) continueGame();
+        else { resetGame(); startGame(); }
       }, open: true
     });
   }
@@ -357,6 +358,7 @@ function continueGame() {
   const s = loadSave();
   if (!s) { startGame(); return; }
   state.flags = Object.assign(state.flags, s.flags || {});
+  state.flags.sandbox = false;
   state.unlocked = s.unlocked || { house: true };
   state.stats = Object.assign(state.stats, s.stats || {});
   state.mode = 'explore';
@@ -637,9 +639,10 @@ const scenes = {
     w: 640, h: 416, label: 'The Soup Stand · Manhattan', music: 'club',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(8,20,180,330),
-      r(520,20,112,300),
-      r(300,340,200,68)
+      r(8,50,240,150),
+      r(268,70,96,230),
+      r(520,20,112,270),
+      r(40,300,200,100)
     ],
     draw: drawSoup,
     interactions: soupInteractions
@@ -756,8 +759,8 @@ const ambientSpecs = {
     { kind: 'bobby', x: 60, y: 240, region: { x: 30, y: 130, w: 60, h: 220 }, speed: 20 }
   ],
   soup: [
-    { kind: 'womanD', x: 400, y: 100, region: { x: 300, y: 60, w: 180, h: 240 }, speed: 22 },
-    { kind: 'christopher', x: 380, y: 260, region: { x: 300, y: 60, w: 180, h: 240 }, speed: 26 }
+    { kind: 'womanD', x: 430, y: 100, region: { x: 390, y: 40, w: 100, h: 240 }, speed: 22 },
+    { kind: 'christopher', x: 300, y: 330, region: { x: 260, y: 310, w: 240, h: 60 }, speed: 26 }
   ]
 };
 
@@ -1738,18 +1741,18 @@ function monksInteractions() {
 function drawSoup() {
   if (drawSceneArt(sceneArt.soup, 640, 416)) {
     // the Soup Man glares from behind the counter
-    drawPerson(ctx, 150, 110 + Math.sin(state.time * .9) * 34, 'artie', 'right', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 180 + Math.sin(state.time * .5) * 18, 120, 'artie', 'right', state.frame, { pose: 'stand' });
     // steam rises off the pots
     for (let i = 0; i < 3; i++) {
       const sy = (state.time * 26 + i * 40) % 70;
-      const sx = 60 + i * 42;
+      const sx = 60 + i * 52;
       ctx.fillStyle = `rgba(255,255,255,${.3 - sy * .004})`;
       ctx.beginPath();
       ctx.ellipse(sx + Math.sin(state.time * 2 + i) * 4, 60 - sy * .5, 5 + sy * .08, 8, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     // impatient line shuffles
-    drawPerson(ctx, 330, 96, 'womanA', 'left', state.frame + 1, { pose: 'stand' });
+    drawPerson(ctx, 410, 96, 'womanA', 'left', state.frame + 1, { pose: 'stand' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#5a6a72');
@@ -1758,7 +1761,7 @@ function drawSoup() {
 
 function soupInteractions() {
   return [
-    { x: 200, y: 80, w: 60, h: 80, radius: 40, label: 'Order soup', action: () => {
+    { x: 370, y: 110, w: 60, h: 80, radius: 42, label: 'Order soup', action: () => {
       if (state.player.kind === 'george' && !state.flags.soupLesson) {
         state.flags.soupLesson = true;
         audio.sfx('denied');
@@ -1788,13 +1791,13 @@ function soupInteractions() {
         ]);
       }
     } },
-    { x: 430, y: 60, w: 80, h: 60, radius: 40, label: 'Bread shelf', action: () => startDialog(
+    { x: 460, y: 90, w: 60, h: 120, radius: 42, label: 'Bread shelf', action: () => startDialog(
       state.player.kind === 'george' ? [
         { speaker: 'george', text: 'If you take the bread before you pay, is it stealing or is it pre-ownership? Asking for me.' }
       ] : [
         { speaker: 'tony', text: 'Nice bread. At my house, Carmela hides the good bread from me. Don’t ask.' }
       ]) },
-    { x: 220, y: 362, w: 90, h: 44, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 400, y: 356, w: 110, h: 50, radius: 44, label: 'Leave', action: () => travelHub('hub') }
   ];
 }
 
@@ -1977,7 +1980,7 @@ function travelHub(place) {
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
-    soup: ['soup', 250, 380, 'The soup stand. The rules are the rules.'],
+    soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -3506,6 +3509,7 @@ function resetGame() {
 
 function startOpenWorld() {
   resetGame();
+  state.flags.sandbox = true;
   state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true };
   state.flags.hasBat = true;
   state.flags.houseStep = 9;
