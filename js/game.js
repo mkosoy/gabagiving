@@ -2015,6 +2015,18 @@ function updateMission(dt) {
           { speaker: 'narrator', text: 'The bladder deflates into the frozen earth with a noise like a dying accordion. Somewhere, a fish lawyer weeps.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s fine! It’s biodegradable! …Is oil biodegradable? IS IT?!' : 'What spills in the Barrens stays in the Barrens.' }
         ],
+        kramericaBook: [
+          { speaker: 'narrator', text: 'The prototype is placed on the desk with reverence. It is a coffee-table book about coffee tables, with little folding legs, so that it becomes a coffee table. It immediately collapses. The legs were decorative. They were ALWAYS decorative.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The legs are LOAD-BEARING in spirit! That’s what matters! Tell Kramer the concept is SOUND!' : 'A book that’s a table. I seen worse business ideas become nicknames. Salvage what you can.' }
+        ],
+        bigOne: [
+          { speaker: 'narrator', text: 'The package changes hands in the cold fluorescent light of the bodega. Nobody looks at anybody. The clerk slides a scratch ticket across the counter like a tip. It wins nothing. It was never going to.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'First leg done! I’m a courier! A courier of MYSTERY!' : 'One down. Smooth. Next stop, the pork store.' }
+        ],
+        pineRunner: [
+          { speaker: 'narrator', text: 'You don’t stop moving. The trees get denser, the road gets worse, and the heat — the heat just gives up. There are no witnesses in the Pine Barrens. There are barely even trees that admit to anything.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I MADE it! The forest doesn’t even want me! NOTHING wants me! That’s camouflage!' : 'Like I said. Treeline. End of interest.' }
+        ],
         bigSalad: [
           { speaker: 'narrator', text: 'One big salad, boxed. It is, undeniably, big. The waitress knows better than to ask who it’s for.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why am I the salad guy? When did I become the salad guy?!' : 'Big salad. Heavy, too. Must be the croutons. Dense croutons.' }
