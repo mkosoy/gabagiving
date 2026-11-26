@@ -189,6 +189,11 @@ export class AudioSys {
     } else if (name === 'smash') {
       this.noise(.12, .08, 0, 450);
       this.tone(90, .11, 'sawtooth', .07, 0, -35);
+    } else if (name === 'skid') {
+      const nowT = this.ctx.currentTime;
+      for (let i = 0; i < 14; i++) {
+        this.tone(900 - i * 45 + Math.random() * 120, .03, 'sawtooth', .018);
+      }
     } else if (name === 'crash') {
       this.noise(.28, .12, 0, 700);
       this.tone(70, .22, 'sawtooth', .09, 0, -28);
