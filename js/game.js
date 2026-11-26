@@ -30,6 +30,7 @@ const sceneArt = {
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
+  plavStream: loadArt('./assets/plav-stream.webp'),
   cousinTony: loadArt('./assets/photo-cousin-tony.webp'),
   tonyHorse: loadArt('./assets/photo-tony-horse.webp')
 };
@@ -358,7 +359,7 @@ const scenes = {
       r(8,174,262,16), r(330,174,302,16),
       r(352,190,16,76), r(352,322,16,86),
       r(62,45,110,100), r(200,20,62,55), r(18,70,54,58),
-      r(392,26,138,108), r(568,86,56,88), r(408,122,70,28),
+      r(392,26,138,76), r(568,86,56,88), r(408,122,70,28),
       r(55,280,175,100), r(24,318,42,42), r(392,210,190,36), r(414,292,160,96)
     ],
     draw: drawHouse,
@@ -532,7 +533,7 @@ function houseInteractions() {
   if (s === 0) list.push({ x: 214, y: 30, w: 38, h: 34, label: 'Flip TV', action: tvSequence });
   if (s === 1) list.push({ x: 20, y: 105, w: 34, h: 28, radius: 56, label: 'Read card', action: readCard });
   if (s === 2) list.push({ x: 108, y: 10, w: 58, h: 28, label: 'Look outside', action: lookWindow });
-  if (s === 3) list.push({ x: 474, y: 82, w: 38, h: 36, label: 'Talk to AJ', action: talkAJ });
+  if (s === 3) list.push({ x: 474, y: 82, w: 38, h: 36, radius: 48, label: 'Talk to AJ', action: talkAJ });
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
   if (s === 5) list.push({ x: 78, y: 240, w: 112, h: 46, label: 'Sit on couch', action: sitCouch });
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
@@ -1911,22 +1912,39 @@ function drawHouse() {
       px(ctx, 41, 104, 4, 4, '#b23b32');
     }
     // Fireplace flame flicker in the den.
+    // Layered stepped flame with glow and rising embers.
+    ctx.fillStyle = 'rgba(255,102,31,.22)';
+    ctx.beginPath();
+    ctx.ellipse(34, 294, 28 + Math.sin(state.time * 5) * 3, 30, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (let row = 0; row < 15; row++) {
+      const yy = 306 - row * 2;
+      const taper = 1 - row / 15;
+      const wobble = Math.sin(state.time * 8 + row * .9) * 3;
+      const width = 31 * taper + Math.sin(state.time * 11 + row) * 2;
+      px(ctx, 34 - width / 2 + wobble * taper, yy, width, 2, row % 3 ? '#e85424' : '#ff8c2e');
+      if (row < 10) {
+        const inner = width * .48;
+        px(ctx, 34 - inner / 2 + wobble * taper * .7, yy, inner, 2, row % 2 ? '#ffd857' : '#fff09a');
+      }
+    }
     for (let i = 0; i < 5; i++) {
-      const fx = 18 + i * 7;
-      const fh = 10 + Math.sin(state.time * 9 + i * 1.7) * 4;
-      px(ctx, fx, 306 - fh, 5, fh, i % 2 ? '#ffb13e' : '#e34d27');
-      px(ctx, fx + 1, 306 - fh * .62, 3, fh * .55, '#ffe27a');
+      const ey = 298 - ((state.time * 18 + i * 13) % 32);
+      const ex = 22 + i * 6 + Math.sin(state.time * 4 + i) * 3;
+      px(ctx, ex, ey, 2, 2, i % 2 ? '#ffcf65' : '#f06b2c');
     }
     px(ctx, 12, 306, 44, 5, '#2b1710');
     // Plav's stream glows inside AJ's monitor.
     px(ctx, 414, 31, 66, 26, '#101820');
-    px(ctx, 418, 35, 58, 18, '#1d4d67');
-    // Tiny streamer face clipped visually to the monitor.
-    px(ctx, 438, 37, 16, 14, '#d99b68');
-    px(ctx, 436, 34, 20, 5, '#151312');
-    px(ctx, 441, 42, 3, 2, '#111');
-    px(ctx, 449, 42, 3, 2, '#111');
-    px(ctx, 443, 48, 7, 2, '#6f3c2d');
+    if (sceneArt.plavStream.complete && sceneArt.plavStream.naturalWidth) {
+      ctx.drawImage(sceneArt.plavStream, 418, 35, 58, 18);
+      const scan = 35 + ((state.time * 9) % 18);
+      px(ctx, 418, scan, 58, 1, 'rgba(255,255,255,.16)');
+      if (Math.sin(state.time * 5) > 0) px(ctx, 419, 36, 5, 3, '#f04b4b');
+    } else {
+      px(ctx, 418, 35, 58, 18, '#1d4d67');
+      px(ctx, 438, 37, 16, 14, '#d99b68');
+    }
     px(ctx, 486, 34, 20, 10, '#78ff9b');
     drawFramedPhoto(sceneArt.cousinTony, 560, 22, 48, 42);
     // AJ shifts in his chair and leans into the desk instead of standing frozen.
@@ -2310,7 +2328,18 @@ function drawBone() {
   px(ctx, 72, 24, 496, 258, '#684226');
   px(ctx, 86, 38, 468, 230, '#8cc9df');
   px(ctx, 104, 54, 120, 190, 'rgba(255,255,255,.2)');
-  drawPerson(ctx, 235, 120, state.player.kind, 'down', state.frame);
+  const striking = b.flash > 0;
+  drawPerson(ctx, 235, 120, state.player.kind, 'right', striking ? state.frame * 3 : state.frame, { pose: striking ? 'perform' : 'angry' });
+  if (striking) {
+    // visible strike: fist streaks and impact burst connect Tony's action to the reflection
+    px(ctx, 294, 143, 44, 5, '#c8875f');
+    px(ctx, 330, 139, 12, 12, '#d89a70');
+    for (let i = 0; i < 5; i++) {
+      const a = i * 1.25 + state.time;
+      px(ctx, 348 + Math.cos(a) * 13, 145 + Math.sin(a) * 13, 7, 2, '#fff0a6');
+    }
+    outlineText(ctx, 'CRACK', 328, 118, '#ffe78a', 10);
+  }
   // giant reflection face
   px(ctx, 376, 76, 104, 118, '#c8875f');
   px(ctx, 382, 82, 92, 24, '#2a211e');
@@ -2318,6 +2347,16 @@ function drawBone() {
   px(ctx, 444, 126, 18, 8, '#111');
   px(ctx, 404, 164, 48, 8, '#70422f');
   px(ctx, 384, 186, 88, 10, '#9b5f42');
+  ctx.strokeStyle = 'rgba(255,246,190,.72)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < Math.min(6, b.hits); i++) {
+    const sx = 398 + i * 13;
+    ctx.beginPath();
+    ctx.moveTo(sx, 104 + (i % 2) * 18);
+    ctx.lineTo(sx - 7, 126 + i * 5);
+    ctx.lineTo(sx + 4, 144 + (i % 3) * 8);
+    ctx.stroke();
+  }
   if (b.flash) px(ctx, 370, 70, 116, 130, 'rgba(255,235,120,.28)');
   outlineText(ctx, 'BONE SMASHING', 320, 24, '#ffd978', 14, 'center');
   outlineText(ctx, b.message, 320, 292, '#fff', 9, 'center');
