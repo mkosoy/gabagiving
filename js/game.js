@@ -1073,6 +1073,11 @@ function updateExplore(dt) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
     else p.dir = input.y > 0 ? 'down' : 'up';
     const sp = p.speed * dt;
+    p.stepAcc = (p.stepAcc || 0) + sp;
+    if (p.stepAcc > (p.inCar ? 99999 : 26)) {
+      p.stepAcc = 0;
+      audio.step(p.kind);
+    }
     const nx = p.x + input.x * sp;
     if (!blockedAt(nx, p.y)) p.x = nx;
     const ny = p.y + input.y * sp;
