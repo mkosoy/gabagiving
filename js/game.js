@@ -3799,6 +3799,38 @@ function objectiveTarget() {
   return priority[0] || list[0] || null;
 }
 
+function drawMinimap() {
+  if (!state.flags.freeRoam || state.scene !== 'hub' || state.mode !== 'explore') return;
+  const mx = 8, my = H - 46, mw = 110, mh = 34;
+  const sx = mw / 1280, sy = mh / 416;
+  ctx.save();
+  ctx.globalAlpha = .88;
+  drawPanel(mx, my, mw, mh, '#0d1424', '#4a5a78');
+  ctx.restore();
+  // road band
+  px(ctx, mx + 2, my + 198 * sy, mw - 4, 90 * sy, '#3a3f48');
+  // landmark dots
+  const marks = [
+    [157, 150, '#ffd34f'], [525, 150, '#ff9a7a'], [90, 315, '#c09aff'], [554, 395, '#ff6a8a'],
+    [320, 325, '#9fd4ec'], [218, 276, '#ffb98a'], [80, 150, '#e8e2d0'], [283, 138, '#e8e2d0'], [609, 162, '#8fb8ff'],
+    [1010, 100, '#ff8a8a'], [1100, 350, '#9be59b']
+  ];
+  for (const [lx, ly, c] of marks) px(ctx, mx + lx * sx - 1, my + ly * sy - 1, 2, 2, c);
+  // brawler/cop threat blips
+  if (state.cop) px(ctx, mx + state.cop.x * sx - 1, my + state.cop.y * sy - 1, 3, 3, state.time % .5 < .25 ? '#4a8aff' : '#ff4a4a');
+  if (state.brawler && state.brawler.hp > 0) px(ctx, mx + state.brawler.x * sx - 1, my + state.brawler.y * sy - 1, 2, 2, '#ff4a4a');
+  // player arrow
+  const ppx = mx + state.player.x * sx, ppy = my + state.player.y * sy;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(ppx, ppy - 3);
+  ctx.lineTo(ppx - 2.4, ppy + 2.4);
+  ctx.lineTo(ppx + 2.4, ppy + 2.4);
+  ctx.closePath();
+  ctx.fill();
+  outlineText(ctx, 'N', mx + mw - 7, my + 3, '#8f9ab8', 5, 'center');
+}
+
 function drawObjectiveArrow() {
   const t = objectiveTarget();
   if (!t || state.mode !== 'explore') return;
@@ -3850,6 +3882,7 @@ function drawWorld() {
   drawEffects();
   ctx.restore();
   drawObjectiveArrow();
+  drawMinimap();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
   outlineText(ctx, scene.label, 16, 50, '#ddd5bd', 7);
