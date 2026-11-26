@@ -1982,7 +1982,8 @@ function updateExplore(dt) {
         } else spawnEffect(ru.x, ru.y - 16, '…he’s still out here…', '#b8c8e0');
       }
     } else {
-      ru.life -= dt;
+      const hunting = isNight() && !ru.mugged && !state.player.inCar;
+      if (!hunting) ru.life -= dt;
       if (isNight() && !ru.mugged) {
         // night in the Barrens: he hunts
         ru.hunter = true;
