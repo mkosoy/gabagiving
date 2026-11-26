@@ -3420,6 +3420,21 @@ function nycInteractions() {
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
+    { x: 690, y: 250, w: 60, h: 40, radius: 42, label: 'Guy in the doorway', action: () => {
+      if (!state.flags.baniaBit) {
+        state.flags.baniaBit = true;
+        startDialog([
+          { speaker: 'narrator', text: 'A cheerful man in a very good suit blocks the stoop. It’s Bania. He’s been waiting out here for Jerry for six hours.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Oh no. Not the Ovaltine bit. Anything but the Ovaltine bit.' : 'The hell is Ovaltine? Is that a thing people know? I don’t know that thing.' },
+          { speaker: 'narrator', text: '"Why do they call it Ovaltine? The mug is round! They should call it ROUND-tine!" — you hear the whole bit. All of it. Twice.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That’s GOLD, Bania. Gold. …It’s horrible. It’s so horrible I’m angry.' : 'I don’t know why, but I feel like I owe you money after that. Here’s five bucks. Never do it again.' }
+        ], () => {
+          state.flags.tribute = (state.flags.tribute || 0) + 5;
+          audio.sfx('cash');
+          spawnEffect(state.player.x + 8, state.player.y - 8, '+$5 · YOU HEARD THE BIT', '#ffe78a');
+        });
+      } else startDialog([{ speaker: 'narrator', text: 'Bania waves warmly. He is doing the bit again for a new victim. You feel nothing. You have been immunized.' }]);
+    } },
     { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
       audio.sfx('honk');
       startDialog([
