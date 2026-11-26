@@ -2754,8 +2754,10 @@ function drawMelfiOffice() {
   else px(ctx, 0, 0, 640, 416, '#4a3a2c');
   // dr. melfi in her chair, sometimes jotting notes
   const jot = Math.sin(state.time * .8) > .6;
-  drawPerson(ctx, 434, 236, 'melfi', 'left', state.frame * .5, { pose: 'sit' });
-  if (jot) outlineText(ctx, '✎', 420, 214, '#e8e2d0', 8, 'center');
+  // dr. melfi stands by her chair, jotting notes between patients
+  const sway = Math.sin(state.time * .7) * 3;
+  drawPerson(ctx, 470 + sway, 244, 'melfi', 'left', state.frame * .5, {});
+  if (jot) outlineText(ctx, '✎ hmm…', 478 + sway, 218, '#e8e2d0', 7, 'center');
 }
 
 function melfiInteractions() {
