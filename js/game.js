@@ -2000,7 +2000,7 @@ function updateExplore(dt) {
             const take = Math.min(20, state.money);
             state.money -= take;
             audio.sfx('thud');
-            shakeScreen(6);
+
             startDialog([
               { speaker: 'narrator', text: 'The fur hat fills your vision. A hand the size of a Christmas ham takes ' + (take ? '$' + take : 'nothing — you are broke, which he seems to respect') + '. He says one word: "Interior… decorator." Then the trees take him back.' },
               { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He TOOK my money and COMPLIMENTED his own murderer aesthetic! I’m cold and I’m poor and I’m in a FOREST!' : '…Paulie’s never hearing about this. NEVER. Guy hits like a tranquilized bear. I’m not even mad — that’s respect.' }
