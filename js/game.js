@@ -34,6 +34,7 @@ const sceneArt = {
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
+  costanza: loadArt('./assets/bg-costanza.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
@@ -3841,6 +3842,15 @@ function hubInteractions() {
 }
 
 function drawCostanza() {
+  if (drawSceneArt(sceneArt.costanza, 640, 416)) {
+    // Frank's chair creaks; the TV murmurs baseball.
+    if (!state.dialog) {
+      const f = Math.sin(state.time * 9) * 1.5;
+      px(ctx, 118, 118 + f * .3, 10, 6, '#8ecbff');
+    }
+    return;
+  }
+
   const img = sceneArt.costanza;
   if (img.complete && img.naturalWidth) ctx.drawImage(img, 8, 8, 624, 400);
   const frankX = 150, estX = 520;
