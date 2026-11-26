@@ -1003,37 +1003,54 @@ function shoveNearest() {
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bd) { best = n; bd = d; }
   }
+  // combo tracking: consecutive hits within 1.4s build a combo
+  const now = state.time;
+  if (!state.combo || now - (state.comboT || 0) > 1.4) state.combo = 0;
+  state.combo += 1;
+  state.comboT = now;
+  const combo = state.combo;
+  const comboMul = Math.min(3, 1 + (combo - 1) * .5);
   // a hostile brawler in range takes the hit instead
   const bw = state.brawler;
   if (bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34) {
     bw.hp -= 1;
     bw.hitT = .5;
-    bw.x += (bw.x - state.player.x) * .3;
-    bw.y += (bw.y - state.player.y) * .3;
+    bw.x += (bw.x - state.player.x) * .3 * comboMul;
+    bw.y += (bw.y - state.player.y) * .3 * comboMul;
     bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
     bw.barkT = 1.4;
-    spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? 'POW' : 'KNOCKOUT!', '#ffe78a');
+    const hitWord = combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
+    spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? hitWord : 'KNOCKOUT!', '#ffe78a');
+    if (combo >= 2) spawnEffect(bw.x + 8, bw.y - 24, `COMBO x${combo}`, '#ff9a3e');
     audio.sfx('smash');
-    if (bw.hp <= 0) spawnEffect(state.player.x + 8, state.player.y - 22, state.player.kind === 'george' ? 'GEORGE WINS?!' : 'TONY WINS', '#9be59b');
+    if (bw.hp <= 0) {
+      spawnEffect(state.player.x + 8, state.player.y - 22, state.player.kind === 'george' ? 'GEORGE WINS?!' : 'TONY WINS', '#9be59b');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+    }
     return true;
   }
   if (!best) return false;
   const ang = Math.atan2(best.y - p.y, best.x - p.x) || 0;
-  best.x += Math.cos(ang) * 26;
-  best.y += Math.sin(ang) * 26;
-  best.diveT = .5;
+  const knock = 26 * comboMul;
+  best.x += Math.cos(ang) * knock;
+  best.y += Math.sin(ang) * knock;
+  best.diveT = .5 + combo * .1;
   best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
   best.barkT = 1.6;
-  state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+  state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   if (p.kind === 'george' && Math.random() < .3) {
     spawnEffect(p.x + 8, p.y - 14, 'MY BACK!', '#ff8e8e');
     best.bark = 'did… did you just hurt YOURSELF?';
     audio.sfx('denied');
   }
-  spawnEffect(best.x + 8, best.y - 10, 'SHOVED', '#ff9a7a');
-  if (p.kind !== 'george' && Math.random() < .45) {
+  spawnEffect(best.x + 8, best.y - 10, combo >= 3 ? 'LAUNCHED' : combo === 2 ? 'SHOVED x2' : 'SHOVED', '#ff9a7a');
+  if (combo >= 2) spawnEffect(best.x + 8, best.y - 22, `COMBO x${combo}`, '#ff9a3e');
+  // combo finishers drop extra cash
+  const cashChance = p.kind === 'george' ? 0 : Math.min(.8, .45 + (combo - 1) * .2);
+  if (Math.random() < cashChance) {
     if (!state.cash) state.cash = [];
     state.cash.push({ x: best.x + 6, y: best.y + 14, t: 0 });
+    if (combo >= 3) state.cash.push({ x: best.x - 8, y: best.y + 18, t: 0 });
     best.bark = 'TAKE IT! JUST TAKE IT!';
   }
   audio.sfx('smash');
