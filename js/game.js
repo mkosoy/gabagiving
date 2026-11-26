@@ -807,6 +807,12 @@ function updateAmbient(dt) {
       n.tx = fx; n.ty = fy; n.pause = 0;
     }
     if (pd < 22) continue; // don't overlap the player
+    // notice the player: pause and face them like a real neighbor
+    if (pd < 62 && (state.flags.heat || 0) < 3) {
+      n.dir = Math.abs(p.x - n.x) > Math.abs(p.y - n.y) ? (p.x > n.x ? 'right' : 'left') : (p.y > n.y ? 'down' : 'up');
+      n.moving = false;
+      continue;
+    }
     if (n.pause > 0) { n.pause -= dt; continue; }
     const dx = n.tx - n.x;
     const dy = n.ty - n.y;
