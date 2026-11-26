@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive'];
 function saveWorld() {
   try {
     const out = {};
@@ -1510,6 +1510,24 @@ function drawIceCream() {
   drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawKite() {
+  if (!['shore', 'ac'].includes(state.scene) || isNight()) return;
+  const t = state.time;
+  const kx = 350 + Math.sin(t * .4) * 90 + Math.sin(t * 1.1) * 20;
+  const ky = 100 + Math.cos(t * .7) * 22;
+  const hx = 350 - state.camera.x, hy = 290 - state.camera.y;
+  // string
+  ctx.strokeStyle = 'rgba(240,240,240,.5)';
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(kx - state.camera.x, ky - state.camera.y);
+  ctx.stroke();
+  px(ctx, kx - state.camera.x - 4, ky - state.camera.y - 3, 9, 6, '#ff6a8a');
+  px(ctx, kx - state.camera.x - 4, ky - state.camera.y - 3, 4, 6, '#ffd23e');
+  // the kid holding it
+  if (!state.kiteKid) state.kiteKid = true;
 }
 
 function drawFireworks() {
@@ -3523,6 +3541,16 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
+    audio.sfx('pickup');
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'narrator', text: 'George hits the dance floor with the confidence of a man who has never once been filmed dancing. The little kicks! The thumbs! Somewhere, Elaine feels a disturbance, as if a million happy feet cried out at once.' },
+      { speaker: 'george', text: 'This is it! This is the move! …Why is everyone looking at me? LOOK AWAY!' }
+    ] : [
+      { speaker: 'narrator', text: 'Tony Soprano does not dance. Tony stands on the dance floor moving with the gravity of a glacier that has decided, tonight only, to slightly groove. The floor clears around him out of respect. Or fear. Same thing.' },
+      { speaker: 'tony', text: 'What? A guy can’t enjoy music? It’s Thanksgiving. Even the Bing has a heart.' }
+    ]);
+  } });
   list.push({ x: 240, y: 380, w: 60, h: 28, radius: 40, label: 'Buy a round', action: () => {
     if (state.money < 100) { toast('A round for the house is $100.'); return; }
     state.money -= 100;
@@ -5343,6 +5371,14 @@ function acInteractions() {
       ]);
     } },
     { x: 620, y: 230, w: 50, h: 44, radius: 44, label: 'The fountain', action: () => {
+      if (!state.flags.fountainDive) {
+        state.flags.fountainDive = true;
+        state.money += 23;
+        audio.sfx('cash');
+        spawnEffect(384, 180, '+$23 in wishes', '#ffd23e');
+      } else {
+        toast('The fountain is coinless. You took the wishes. All of them.');
+      }
       audio.sfx('pickup');
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'Coins glitter at the bottom of the fountain. Hundreds of wishes, layered like sediment. George counts them with his eyes. Somebody’s wish is about a knish.' },
@@ -7335,6 +7371,7 @@ function drawWorld() {
   drawSnatcher();
   drawPackages();
   drawFireworks();
+  drawKite();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
