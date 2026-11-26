@@ -863,11 +863,16 @@ function updateAmbient(dt) {
     if (n.diveT > 0) { n.diveT -= dt; continue; }
     const pd = Math.hypot(n.x - p.x, n.y - p.y);
     // heat 3+: pedestrians edge away from the player
-    if ((state.flags.heat || 0) >= 3 && pd < 70) {
+    if ((state.flags.heat || 0) >= 3 && pd < 90) {
       const ang = Math.atan2(n.y - p.y, n.x - p.x);
-      const fx = Math.max(n.region.x, Math.min(n.region.x + n.region.w, n.x + Math.cos(ang) * 30));
-      const fy = Math.max(n.region.y, Math.min(n.region.y + n.region.h, n.y + Math.sin(ang) * 30));
-      n.tx = fx; n.ty = fy; n.pause = 0;
+      n.tx = n.x + Math.cos(ang) * 120;
+      n.ty = n.y + Math.sin(ang) * 120;
+      n.pause = 0;
+      if (!n.fleeing) { n.fleeing = true; n.bark = ['HELP!', 'IT’S HIM!', 'RUN!'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
+    } else if (n.fleeing && pd > 130) {
+      n.fleeing = false;
+      n.tx = n.region.x + Math.random() * n.region.w;
+      n.ty = n.region.y + Math.random() * n.region.h;
     }
     if (pd < 22) continue; // don't overlap the player
     // notice the player: pause and face them like a real neighbor
@@ -886,8 +891,9 @@ function updateAmbient(dt) {
       n.pause = .8 + Math.random() * 2.8;
       continue;
     }
-    n.x += (dx / d) * n.speed * dt;
-    n.y += (dy / d) * n.speed * dt;
+    const spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    n.x += (dx / d) * spd * dt;
+    n.y += (dy / d) * spd * dt;
     n.moving = true;
     n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
     // random ambient mutters
