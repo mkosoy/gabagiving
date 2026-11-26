@@ -2407,6 +2407,12 @@ function updateExplore(dt) {
     audio.voice(p.kind === 'george' ? 'george' : 'tony');
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
   }
+  if (state.flags.freeRoam && p.inCar && consume(['Space']) && (p.carV || 0) > .3) {
+    p.carV = Math.max(0, p.carV - .45);
+    audio.sfx('skid');
+    spawnEffect(p.x, p.y + 10, 'screeee', '#cccccc');
+    state.interactCooldown = Math.max(state.interactCooldown || 0, .4);
+  }
   // GTA staples: horn and radio in a borrowed car
   if (state.flags.freeRoam && p.inCar && (consume(['KeyH']) || consume(['KeyF']))) {
     audio.sfx('honk');
