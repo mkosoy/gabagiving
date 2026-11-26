@@ -257,6 +257,7 @@ function saveProgress() {
   if (state.flags.sandbox) return;
   if (['bone', 'peptides', 'drive', 'bonus', 'produce', 'dream', 'ending'].includes(state.mode)) return;
   try {
+    saveWorld();
     localStorage.setItem('gabagiving-save-v1', JSON.stringify({
       flags: state.flags,
       scene: state.scene,
@@ -266,6 +267,21 @@ function saveProgress() {
       unlocked: state.unlocked || {}
     }));
   } catch (e) { /* storage unavailable */ }
+}
+
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','tribute'];
+function saveWorld() {
+  try {
+    const out = {};
+    for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
+    localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
+  } catch (e) { /* storage unavailable */ }
+}
+function loadWorld() {
+  try {
+    const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
+    for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
+  } catch (e) { /* ignore */ }
 }
 
 function loadSave() {
@@ -384,6 +400,7 @@ function menuEntries() {
 }
 
 function continueGame() {
+  loadWorld();
   const s = loadSave();
   if (!s) { startGame(); return; }
   state.flags = Object.assign(state.flags, s.flags || {});
@@ -1075,6 +1092,8 @@ function updateExplore(dt) {
   updateKramerCycle(dt);
   updateHubEvents(dt);
   updateCash(dt);
+  state.worldSaveT = (state.worldSaveT || 0) + dt;
+  if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
   const input = moveInput();
   const p = state.player;
@@ -4178,6 +4197,7 @@ function render() {
 }
 
 function resetGame() {
+  loadWorld();
   state.mode = 'title';
   state.scene = 'house';
   state.player = { x: 190, y: 124, dir: 'down', kind: 'tony', speed: 88 };
