@@ -2687,7 +2687,7 @@ function enterHub(first = false) {
 }
 
 function schemeCount() {
-  return ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance'].filter((k) => state.flags[k]).length;
+  return WORLD_FLAGS.filter((k) => k !== 'tribute' && state.flags[k]).length;
 }
 
 function travelHub(place) {
