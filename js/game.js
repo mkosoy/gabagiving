@@ -661,7 +661,7 @@ const scenes = {
     interactions: hubInteractions
   },
   vesuvio: {
-    w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'club',
+    w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'vesuvio',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(0,80,205,135), r(430,20,150,160),
@@ -673,7 +673,7 @@ const scenes = {
     interactions: vesuvioInteractions
   },
   monks: {
-    w: 640, h: 416, label: 'Monk’s Café · Manhattan', music: 'club',
+    w: 640, h: 416, label: 'Monk’s Café · Manhattan', music: 'monks',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(30,30,580,68),
@@ -685,7 +685,7 @@ const scenes = {
     interactions: monksInteractions
   },
   soup: {
-    w: 640, h: 416, label: 'The Soup Stand · Manhattan', music: 'club',
+    w: 640, h: 416, label: 'The Soup Stand · Manhattan', music: 'soup',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(8,50,240,150),
@@ -697,7 +697,7 @@ const scenes = {
     interactions: soupInteractions
   },
   yankees: {
-    w: 640, h: 416, label: 'Yankee Stadium · Front Office', music: 'club',
+    w: 640, h: 416, label: 'Yankee Stadium · Front Office', music: 'yankees',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(230,40,200,100),
@@ -709,7 +709,7 @@ const scenes = {
     interactions: yankeesInteractions
   },
   satriale: {
-    w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
+    w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'satriale',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(28,34,584,62), r(74,130,104,40), r(456,130,104,40),
