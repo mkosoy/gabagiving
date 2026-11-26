@@ -1577,6 +1577,14 @@ function updateExplore(dt) {
   updateHubEvents(dt);
   updateBrawler(dt);
   updateCash(dt);
+  if (state.scene === 'nyc') {
+    for (const c of (state.nycCars || [])) {
+      if (c.honkBack > 0) {
+        c.honkBack -= dt;
+        if (!c.honking) { c.honking = true; audio.sfx('honk'); }
+      } else c.honking = false;
+    }
+  }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .03);
@@ -1590,11 +1598,41 @@ function updateExplore(dt) {
     audio.voice(p.kind === 'george' ? 'george' : 'tony');
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
   }
+  // GTA staples: horn and radio in a borrowed car
+  if (state.flags.freeRoam && p.inCar && consume(['KeyH'])) {
+    audio.sfx('honk');
+    for (const n of ambientFor(state.scene)) {
+      const d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (d < 90) {
+        n.diveT = Math.max(n.diveT || 0, .6);
+        n.bark = ['WATCH IT!', 'I’M WALKIN HERE!', 'THE NERVE!', 'LEARN TO DRIVE!'][Math.floor(Math.random() * 4)];
+        n.barkT = 1.4;
+      }
+    }
+    if (state.scene === 'nyc') {
+      for (const c of (state.nycCars || [])) {
+        if (Math.hypot(c.x - p.x, (c.y || 0) - p.y) < 200 && Math.random() < .6) {
+          c.honkBack = .5 + Math.random();
+        }
+      }
+    }
+    spawnEffect(p.x + 8, p.y - 10, 'HONK!', '#ffe78a');
+  }
+  if (state.flags.freeRoam && p.inCar && consume(['KeyR'])) {
+    const stations = ['drive', 'nyc', 'club', 'rome', 'dream'];
+    state.carRadio = ((state.carRadio ?? -1) + 1) % stations.length;
+    audio.setMusic(stations[state.carRadio]);
+    const names = ['WBPM 88.1 — the drive mix', 'WNYC — traffic & smooth', 'WBING — club classics', 'WROME — amore hour', 'WPINE — late night static'];
+    spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
+  }
   // leaving a borrowed car takes priority over other interactions
   if (p.inCar && interactPressed()) {
     p.inCar = false;
     p.carColor = null;
     p.speed = p.kind === 'george' ? 96 : 88;
+    state.carRadio = undefined;
+    const sc = scenes[state.scene];
+    if (sc) audio.setMusic(sc.music);
     audio.sfx('door');
     spawnEffect(p.x + 8, p.y - 8, 'ON FOOT', '#8ffff2');
     return;
