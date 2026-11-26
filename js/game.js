@@ -854,9 +854,43 @@ function shoveNearest() {
   best.barkT = 1.6;
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
   spawnEffect(best.x + 8, best.y - 10, 'SHOVED', '#ff9a7a');
+  if (p.kind !== 'george' && Math.random() < .45) {
+    if (!state.cash) state.cash = [];
+    state.cash.push({ x: best.x + 6, y: best.y + 14, t: 0 });
+    best.bark = 'TAKE IT! JUST TAKE IT!';
+  }
   audio.sfx('smash');
   audio.voice(best.kind);
   return true;
+}
+
+function updateCash(dt) {
+  if (!state.cash || !state.cash.length) return;
+  const p = state.player;
+  for (const c of state.cash) c.t += dt;
+  for (let i = state.cash.length - 1; i >= 0; i--) {
+    const c = state.cash[i];
+    if (c.t > 20 || Math.hypot(c.x - p.x - 8, c.y - p.y - 10) < 18) {
+      if (c.t <= 20) {
+        state.stats.vials = state.stats.vials; // no-op guard
+        spawnEffect(p.x + 8, p.y - 12, '+$50 TRIBUTE', '#9be59b');
+        audio.sfx('pickup');
+        state.flags.tribute = (state.flags.tribute || 0) + 50;
+      }
+      state.cash.splice(i, 1);
+    }
+  }
+}
+
+function drawCash() {
+  if (!state.cash) return;
+  for (const c of state.cash) {
+    const bob = Math.sin(state.time * 4 + c.x) * 2;
+    px(ctx, c.x - 7, c.y - 4 + bob, 14, 9, '#e2c88f');
+    px(ctx, c.x - 5, c.y - 6 + bob, 5, 6, '#4c9a58');
+    px(ctx, c.x + 1, c.y - 6 + bob, 5, 6, '#4c9a58');
+    outlineText(ctx, '$', c.x + 1, c.y - 3 + bob, '#174d2b', 6, 'center');
+  }
 }
 
 function drawAmbient() {
@@ -996,6 +1030,7 @@ function updateExplore(dt) {
   updateCop(dt);
   updateKramerCycle(dt);
   updateHubEvents(dt);
+  updateCash(dt);
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
   const input = moveInput();
   const p = state.player;
@@ -3467,6 +3502,7 @@ function drawWorld() {
   drawAmbient();
   drawSchemeProps();
   drawCop();
+  drawCash();
   drawInteractionMarkers();
   drawPlayer();
   drawEffects();
@@ -3478,6 +3514,10 @@ function drawWorld() {
   if (state.flags.freeRoam) {
     drawPanel(W - 104, 42, 96, 25, '#182448', '#8ffff2');
     outlineText(ctx, state.player.kind === 'george' ? 'GEORGE' : 'TONY', W - 56, 50, '#8ffff2', 8, 'center');
+    if (state.flags.tribute) {
+      drawPanel(W - 104, 70, 96, 18, '#14261a', '#9be59b');
+      outlineText(ctx, `$${state.flags.tribute}`, W - 56, 75, '#9be59b', 7, 'center');
+    }
     if ((state.flags.heat || 0) > 0.3) {
       drawPanel(W - 172, H - 50, 164, 20, '#33141a', '#ff7a5e');
       outlineText(ctx, `HEAT ${'!'.repeat(Math.max(1, Math.round(state.flags.heat)))}`, W - 162, H - 44, '#ff9a7a', 7);
