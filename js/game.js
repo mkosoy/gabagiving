@@ -1773,7 +1773,7 @@ function updatePeptides(dt) {
       }
     }
   }
-  if (g.caught >= 8) {
+  if (g.caught >= 6) {
     state.player.kind = 'tonyMax';
     setScene('rome', 650, 205);
     state.mode = 'explore';
