@@ -35,6 +35,7 @@ const sceneArt = {
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   costanza: loadArt('./assets/bg-costanza.webp'),
+  njstreet: loadArt('./assets/bg-njstreet.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
@@ -5212,6 +5213,8 @@ function drawHub() {
 }
 
 function drawNjStreet() {
+  if (drawSceneArt(sceneArt.njstreet, 640, 416)) return;
+
   px(ctx, 0, 0, 640, 416, '#83a766');
   // autumn lawns and suburban houses
   px(ctx, 0, 232, 640, 30, '#8a8d86');
