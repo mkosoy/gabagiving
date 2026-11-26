@@ -3665,7 +3665,7 @@ function drawMonks() {
 
 function monksInteractions() {
   const list = [
-    { x: 180, y: 160, w: 60, h: 40, radius: 40, label: 'Trivia night', action: () => {
+    { x: 270, y: 220, w: 60, h: 40, radius: 42, label: 'Trivia night', action: () => {
       if (state.mode === 'trivia') return;
       if (state.money < 10) { toast('Trivia entry is $10.'); return; }
       state.money -= 10;
