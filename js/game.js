@@ -1424,7 +1424,7 @@ function drawPackages() {
 }
 
 function drawLeaves() {
-  if (!['hub', 'njstreet', 'pines', 'shore'].includes(state.scene)) return;
+  if (!['hub', 'njstreet', 'pines', 'shore', 'ac'].includes(state.scene)) return;
   if (!state.leaves) {
     state.leaves = [];
     for (let i = 0; i < 14; i++) state.leaves.push({ x: Math.random() * 640, y: Math.random() * 416, ph: Math.random() * 6.28, sp: 14 + Math.random() * 18, hue: Math.random() });
@@ -1434,8 +1434,13 @@ function drawLeaves() {
     const lx = (lf.x + Math.sin(state.time * 1.2 + lf.ph) * 22) - cam.x;
     const ly = ((lf.y + state.time * lf.sp) % 430) - cam.y;
     if (lx < -10 || lx > 650 || ly < -10 || ly > 426) continue;
-    ctx.fillStyle = lf.hue < .33 ? '#c8822a' : lf.hue < .66 ? '#a84e22' : '#d4a838';
-    ctx.fillRect(lx, ly, 3, 2);
+    if (state.scene === 'pines') {
+      ctx.fillStyle = 'rgba(232,240,252,.85)';
+      ctx.fillRect(lx, ly, 2, 2);
+    } else {
+      ctx.fillStyle = lf.hue < .33 ? '#c8822a' : lf.hue < .66 ? '#a84e22' : '#d4a838';
+      ctx.fillRect(lx, ly, 3, 2);
+    }
   }
 }
 
