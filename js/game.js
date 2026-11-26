@@ -347,6 +347,23 @@ function menuEntries() {
   for (const [, label, act, open] of games) {
     entries.push({ label, hint: open ? 'minigame' : 'locked', locked: !open, act, open: !!open });
   }
+  if (state.flags.freeRoam || u.hub) {
+    const schemes = [
+      ['humanFund', 'Human Fund prototype', 'Jerry’s apartment'],
+      ['marbleRye', 'Marble Rye Heist', 'the house'],
+      ['trashEclair', 'Trash Éclair', 'Monk’s Café'],
+      ['deskNap', 'Under-desk nap nook', 'Yankees office'],
+      ['soupLesson', 'Soup discipline', 'the soup stand']
+    ];
+    for (const [flag, label, where] of schemes) {
+      const done = !!state.flags[flag];
+      entries.push({
+        label: `${done ? '✓' : '○'} Scheme — ${label}`,
+        hint: done ? 'complete' : `incomplete — ${where}`,
+        act: () => closeMenu(), open: true
+      });
+    }
+  }
   entries.push({
     label: 'Free Roam — North Caldwell', hint: u.hub || state.flags.freeRoam ? 'open world' : 'unlocks after the finale',
     locked: !(u.hub || state.flags.freeRoam), open: !!(u.hub || state.flags.freeRoam),
