@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero'];
 function saveWorld() {
   try {
     const out = {};
@@ -608,6 +608,45 @@ function drawDialog() {
     px(ctx, ax + 2, ay + 4, 6, 4, '#fff1a6');
     px(ctx, ax + 4, ay + 8, 2, 3, '#fff1a6');
   }
+}
+
+function drawClaw() {
+  const cl = state.claw;
+  if (!cl) return;
+  ctx.fillStyle = 'rgba(8,6,12,.9)';
+  ctx.fillRect(170, 70, 300, 260);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(170, 70, 300, 260);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('CLAW MACHINE — $5', 320, 94);
+  const px0 = 200, pw = 240;
+  // prize pit
+  ctx.fillStyle = '#2a2030';
+  ctx.fillRect(px0, 240, pw, 60);
+  const prizeX = px0 + cl.prize * pw;
+  px(ctx, prizeX - 8, 264, 16, 14, '#c05a3a');
+  px(ctx, prizeX - 8, 264, 16, 4, '#8a2f23');
+  // rail + claw
+  px(ctx, px0, 120, pw, 4, '#555');
+  const cx = px0 + cl.x * pw;
+  if (cl.phase === 'aim') {
+    px(ctx, cx - 2, 110, 4, 120, '#999');
+    px(ctx, cx - 8, 226, 16, 10, '#d4a017');
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.fillText('←→ move · E drop · ' + Math.max(0, cl.t).toFixed(1) + 's', 320, 320);
+  } else {
+    const prog = 1 - cl.dropT / 1.3;
+    const clawY = 110 + prog * 130;
+    px(ctx, cx - 2, 110, 4, clawY - 104, '#999');
+    px(ctx, cx - 8, clawY, 16, 10, '#d4a017');
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.fillText('…', 320, 320);
+  }
+  ctx.textAlign = 'left';
 }
 
 function drawTrivia() {
@@ -1184,7 +1223,17 @@ function shoveNearest() {
   // a whiffed punch at empty air must not build one
   const bw = state.brawler;
   const hitsBrawler = bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34;
-  if (!hitsBrawler && !best) return false;
+  if (!hitsBrawler && !best) {
+    // swinging at empty air near the turkey is a mistake the turkey remembers
+    const tk = state.turkey;
+    if (tk && state.scene === 'hub' && Math.hypot(tk.x - p.x, tk.y - p.y) < 36 && !tk.enraged) {
+      tk.enraged = 8;
+      audio.sfx('turkey');
+      spawnEffect(tk.x, tk.y - 16, 'GOBBLE GOBBLE GOBBLE', '#ff5040');
+      startDialog([{ speaker: 'narrator', text: 'You swing at the turkey. The turkey does not forgive. The turkey has never forgiven anything. RUN.' }]);
+    }
+    return false;
+  }
   // combo tracking: consecutive hits within 1.4s build a combo
   const now = state.time;
   if (!state.combo || now - (state.comboT || 0) > 1.4) state.combo = 0;
@@ -1441,6 +1490,18 @@ function drawRussian() {
   px(ctx, ru.x - 3, ru.y + 2, 3, 4, '#1c1814');
   px(ctx, ru.x + 1, ru.y + 2, 3, 4, '#1c1814');
   ctx.globalAlpha = 1;
+}
+
+function drawWildTurkey() {
+  const tk = state.turkey;
+  if (!tk || state.scene !== 'hub') return;
+  const bob = Math.sin(state.time * 6) * 1;
+  px(ctx, tk.x - 4 - state.camera.x, tk.y - 8 + bob - state.camera.y, 9, 8, '#5a3a20');
+  px(ctx, tk.x - 6 - state.camera.x, tk.y - 12 + bob - state.camera.y, 12, 5, '#7a5230');
+  px(ctx, tk.x + 3 - state.camera.x, tk.y - 13 + bob - state.camera.y, 3, 4, '#c03838');
+  px(ctx, tk.x + 4 - state.camera.x, tk.y - 10 + bob - state.camera.y, 2, 2, '#ffd23e');
+  px(ctx, tk.x - 2 - state.camera.x, tk.y + bob - state.camera.y, 2, 3, '#8a6a30');
+  px(ctx, tk.x + 1 - state.camera.x, tk.y + bob - state.camera.y, 2, 3, '#8a6a30');
 }
 
 function drawIceCream() {
@@ -2411,6 +2472,42 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // the wild turkey of North Caldwell — unbothered, unhurried, unarmed
+  if (state.scene === 'hub') {
+    if (!state.turkey) state.turkey = { x: 600, y: 300, wx: 600, wy: 300, t: 0 };
+    const tk = state.turkey;
+    tk.t -= dt;
+    if (tk.t <= 0) {
+      tk.t = 2 + Math.random() * 3;
+      tk.wx = Math.max(200, Math.min(1100, tk.x + (Math.random() - .5) * 220));
+      tk.wy = Math.max(230, Math.min(360, tk.y + (Math.random() - .5) * 120));
+    }
+    const dx = tk.wx - tk.x, dy = tk.wy - tk.y;
+    const dd = Math.hypot(dx, dy);
+    if (dd > 4) { tk.x += (dx / dd) * 22 * dt; tk.y += (dy / dd) * 22 * dt; }
+    if (tk.enraged) {
+      tk.enraged -= dt;
+      const dxp = state.player.x - tk.x, dyp = state.player.y - tk.y;
+      const dp = Math.hypot(dxp, dyp) || 1;
+      if (!state.player.inCar) {
+        tk.x += (dxp / dp) * 62 * dt;
+        tk.y += (dyp / dp) * 62 * dt;
+        if (dp < 14) {
+          spawnEffect(state.player.x, state.player.y - 18, 'PECKED!', '#ff8e8e');
+          audio.sfx('turkey');
+          tk.enraged = 0;
+          state.money = Math.max(0, state.money - 3);
+          startDialog([{ speaker: 'narrator', text: 'The turkey exacts its price: three dollars, in the sense that you drop three dollars while fleeing. North Caldwell belongs to the turkey now. It always did.' }]);
+        }
+      }
+    }
+    // gobble at the player if close
+    const pd = Math.hypot(tk.x - state.player.x, tk.y - state.player.y);
+    if (pd < 60 && Math.random() < dt * .3) {
+      audio.sfx('turkey');
+      spawnEffect(tk.x, tk.y - 14, ['GOBBLE', 'gobble gobble', 'GLUB'][Math.floor(Math.random() * 3)], '#d4a838');
+    }
+  }
   // ice cream truck — drifts through the neighborhood by day, forever out of reach
   if (state.scene === 'hub' && !isNight()) {
     if (!state.iceCream) state.iceCream = { x: -80, y: 300, t: 20 + Math.random() * 30 };
@@ -5257,7 +5354,18 @@ function acInteractions() {
     } },
     { x: 420, y: 150, w: 70, h: 40, radius: 44, label: 'Loan shark', action: () => {
       if (state.flags.acLoan) {
-        startDialog([{ speaker: 'narrator', text: 'The shark smiles with entirely too many teeth. “Payment Friday. Or don’t. I own a very persuasive pipe wrench either way.”' }]);
+        if (state.money >= 250) {
+          state.money -= 250;
+          state.flags.acLoan = false;
+          state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+          audio.sfx('cash');
+          startDialog([
+            { speaker: 'narrator', text: 'You count out $250. The shark makes it disappear with the efficiency of a man who has never once needed a receipt. “Pleasure. Tell your friends. Don’t tell your friends.” The wrench stays hypothetical.' },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Paid in full! My kneecaps are MINE again! I’m never borrowing again! …Unless the rates improve!' : 'Clean. That’s how you do business. No paper, no problems, no reminders.' }
+          ]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The shark smiles with entirely too many teeth. “Payment Friday — $250. Or don’t. I own a very persuasive pipe wrench either way.” You need the cash first. Somehow. Anyhow.' }]);
+        }
         return;
       }
       state.flags.acLoan = true;
@@ -5345,6 +5453,27 @@ function shoreInteractions() {
         { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
       ]);
     } },
+    { x: 450, y: 280, w: 40, h: 30, radius: 42, label: 'The beached whale crowd', action: () => {
+      if (state.player.kind === 'george') {
+        if (!state.flags.whaleHero) {
+          state.flags.whaleHero = true;
+          state.money += 45;
+          audio.sfx('cash');
+          startDialog([
+            { speaker: 'narrator', text: 'A crowd gathers around driftwood that could — at a certain angle, in fog — be a small whale. Someone shouts IS ANYONE HERE A MARINE BIOLOGIST? George’s hand rises before his brain can stop it.' },
+            { speaker: 'george', text: 'I — yes! Yes I am! A marine biologist! The sea was angry that day, my friends — like an old man trying to send back soup at a deli!' },
+            { speaker: 'narrator', text: 'George waves his arms at the driftwood until the crowd loses interest and disperses. A woman presses $45 into his hand “for the whales.” The whales are fine. The whales were never in danger. There are no whales.' }
+          ]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The crowd is gone. The driftwood remains, silent, unmoved, whale-adjacent. George salutes it anyway.' }]);
+        }
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'A small crowd argues about whether driftwood is a beached whale. It is not. Tony knows because he once asked a guy who knows about these things. The guy owed him money.' },
+          { speaker: 'tony', text: 'It’s a LOG. It’s a log, people. Go home. It’s the off-season, even the whales know that.' }
+        ]);
+      }
+    } },
     { x: 250, y: 260, w: 44, h: 30, radius: 40, label: 'Borrow golf cart', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
@@ -5355,6 +5484,14 @@ function shoreInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
+    } },
+    { x: 560, y: 160, w: 44, h: 40, radius: 42, label: 'Claw machine', action: () => {
+      if (state.mode === 'claw') return;
+      if (state.money < 5) { toast('The claw machine is $5.'); return; }
+      state.money -= 5;
+      state.mode = 'claw';
+      state.claw = { x: .5, prize: .15 + Math.random() * .7, t: 8, phase: 'aim', dropT: 0 };
+      audio.sfx('pickup');
     } },
     { x: 640, y: 240, w: 44, h: 44, radius: 44, label: 'High striker', action: () => {
       if (state.money < 5) { toast('High striker is $5 a swing.'); return; }
@@ -5862,6 +5999,19 @@ function nycInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
+    } },
+    { x: 60, y: 240, w: 40, h: 34, radius: 42, label: 'Saxophone guy', action: () => {
+      if (state.money < 1) { toast('You haven’t even a dollar for the arts.'); return; }
+      state.money -= 1;
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .2);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'You drop a dollar in the case. The saxophonist — a man who has played this exact spot since 1986 — nods once and launches into something smooth enough to make the pigeons sway.' },
+        { speaker: 'george', text: 'This is the good stuff! The REAL New York! I’m a patron of the arts now — tell people! Actually don’t, it cost a dollar!' }
+      ] : [
+        { speaker: 'narrator', text: 'You drop a dollar in the case. The saxophonist nods with the gravity of a made man accepting tribute, and the tunnel fills with something golden.' },
+        { speaker: 'tony', text: 'Guy’s been here longer than most families I know. That’s consistency. That’s respect.' }
+      ]);
     } },
     { x: 430, y: 250, w: 50, h: 34, radius: 40, label: 'Feed the pigeons', action: () => {
       if ((state.pigeonCd || 0) > state.time) { toast('The pigeons are full. They are judging you anyway. It’s their way.'); return; }
@@ -7186,6 +7336,7 @@ function drawWorld() {
   drawPackages();
   drawFireworks();
   drawIceCream();
+  drawWildTurkey();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
@@ -7849,6 +8000,7 @@ function render() {
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
+  else if (state.mode === 'claw') drawClaw();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -8044,6 +8196,38 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'claw') {
+    const cl = state.claw;
+    if (!cl) { state.mode = 'explore'; return; }
+    const mi = moveInput();
+    if (cl.phase === 'aim') {
+      cl.t -= dt;
+      cl.x += (mi.x || (down(['ArrowLeft', 'KeyA']) ? -1 : down(['ArrowRight', 'KeyD']) ? 1 : 0)) * dt * .6;
+      cl.x = Math.max(.05, Math.min(.95, cl.x));
+      if (consume(['KeyE', 'Space']) || cl.t <= 0) {
+        cl.phase = 'drop';
+        cl.dropT = 1.3;
+        audio.sfx('spin');
+      }
+    } else {
+      cl.dropT -= dt;
+      if (cl.dropT <= 0) {
+        const dist = Math.abs(cl.x - cl.prize);
+        state.mode = 'explore';
+        state.claw = null;
+        if (dist < .07) {
+          const prize = Math.random();
+          const payout = prize < .1 ? 100 : prize < .4 ? 25 : 10;
+          state.money += payout;
+          audio.sfx('cash');
+          startDialog([{ speaker: 'narrator', text: `The claw descends, closes with actual conviction, and lifts — a prize! The machine releases it with visible reluctance. Inside the plush turkey: $${payout}, because this is Jersey and even the toys are mobbed up.` }]);
+        } else if (dist < .15) {
+          startDialog([{ speaker: 'narrator', text: 'The claw grazes the prize, wobbles it meaningfully, and lifts nothing. The prize settles back with a smugness that should be impossible in plush. The machine does not care. The machine has seen everything.' }]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The claw closes on empty air with the weak grip of a machine that was never intended to prize anything. Somewhere, a carnie laughs in advance.' }]);
+        }
       }
     }
   } else if (state.mode === 'trivia') {
