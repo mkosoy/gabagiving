@@ -406,6 +406,7 @@ function continueGame() {
   const s = loadSave();
   if (!s) { startGame(); return; }
   state.flags = Object.assign(state.flags, s.flags || {});
+  delete state.flags.pendingSurprise; // transient trigger — never survives a reload
   loadWorld(); // world autosave is newer than any checkpoint — it wins
   state.flags.sandbox = false;
   state.unlocked = s.unlocked || { house: true };
