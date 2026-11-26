@@ -73,7 +73,10 @@ canvas.addEventListener('pointerdown', (e) => {
   if (state.mode === 'title') {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
-    if (loadSave() && vx >= W / 2) pressed.add('KeyC');
+    const vy = (e.clientY - rect.top) / rect.height * H;
+    if (vy >= 290 && vy <= 318 && vx >= 190 && vx <= 450) pressed.add('KeyO');
+    else if (loadSave() && vy >= 256 && vy <= 282 && vx >= 340) pressed.add('KeyC');
+    else if (loadSave() && vx >= W / 2) pressed.add('KeyC');
     else pressed.add('KeyE');
   } else if (state.mode === 'dialogue') pressed.add('KeyE');
   if (state.mode === 'ending') {
@@ -302,6 +305,18 @@ function jumpChapter(key) {
 function menuEntries() {
   const u = state.unlocked || {};
   const entries = [{ label: 'Resume game', hint: 'back to where you were', act: () => closeMenu(), open: true }];
+  if (state.flags.freeRoam) {
+    entries.push({
+      label: 'Story mode — continue story', hint: 'jump back into the plot at your furthest chapter',
+      act: () => {
+        closeMenu();
+        state.flags.freeRoam = false;
+        const order = ['club', 'apartment', 'drive', 'chamber', 'rome'];
+        const key = order.find((k) => state.unlocked && state.unlocked[k]) || 'house';
+        jumpChapter(key);
+      }, open: true
+    });
+  }
   const chapters = [
     ['house', 'Ch.1 — Tony’s House'],
     ['rome', 'Ch.2 — Rome & Augustus'],
@@ -1723,7 +1738,7 @@ function monksInteractions() {
 function drawSoup() {
   if (drawSceneArt(sceneArt.soup, 640, 416)) {
     // the Soup Man glares from behind the counter
-    drawPerson(ctx, 100, 120 + Math.sin(state.time * .9) * 30, 'artie', 'right', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 150, 110 + Math.sin(state.time * .9) * 34, 'artie', 'right', state.frame, { pose: 'stand' });
     // steam rises off the pots
     for (let i = 0; i < 3; i++) {
       const sy = (state.time * 26 + i * 40) % 70;
@@ -3368,15 +3383,23 @@ function drawTitle() {
   outlineText(ctx, 'TONY SOPRANO', W / 2, 164, '#ffd34f', 25, 'center');
   outlineText(ctx, 'THANKSGIVING', W / 2, 196, '#fff4c8', 28, 'center');
   outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
-  drawPanel(188, 258, 264, 58, 'rgba(12,18,42,.78)', '#6f89c9');
   const blink = Math.sin(state.time * 5) > 0;
   const hasSave = !!loadSave();
-  if (blink) outlineText(ctx, hasSave ? 'TAP LEFT: NEW STORY' : `PRESS ${(usingTouchControls || navigator.maxTouchPoints > 0) ? 'A / TAP' : 'E / SPACE'} TO START`, W / 2, 272, '#8ffff2', 11, 'center');
+  // stylized menu buttons
+  const bw = hasSave ? 172 : 220;
+  const bx1 = hasSave ? 128 : 210;
+  drawPanel(bx1, 256, bw, 26, '#12324a', '#8ffff2');
+  outlineText(ctx, hasSave ? 'NEW STORY  (E)' : 'START STORY  (E)', bx1 + bw / 2, 264, '#8ffff2', 9, 'center');
   if (hasSave) {
-    if (blink) outlineText(ctx, `TAP RIGHT / C: CONTINUE`, W / 2, 286, '#ffe78a', 10, 'center');
-  } else {
-    outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 294, '#aeb8d8', 8, 'center');
+    drawPanel(340, 256, 172, 26, '#3a2c10', '#ffe78a');
+    outlineText(ctx, 'CONTINUE  (C)', 340 + 86, 264, '#ffe78a', 9, 'center');
   }
+  const owPulse = (Math.sin(state.time * 3) + 1) / 2;
+  drawPanel(190, 290, 260, 28, '#2c1440', '#c993ff');
+  px(ctx, 194, 294, 252, 3, `rgba(201,147,255,${.3 + owPulse * .5})`);
+  outlineText(ctx, '★ OPEN WORLD  (O) ★', 320, 298, '#e3c2ff', 10, 'center');
+  outlineText(ctx, 'roam NJ + NY freely · all locations unlocked', 320, 322, '#9d8fc9', 7, 'center');
+  if (!hasSave) outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 334, '#aeb8d8', 7, 'center');
   outlineText(ctx, 'Unofficial parody fan game · original art and synthesized voices', W / 2, 342, '#777fa5', 7, 'center');
 }
 
@@ -3481,6 +3504,23 @@ function resetGame() {
   audio.setMusic('title');
 }
 
+function startOpenWorld() {
+  resetGame();
+  state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true };
+  state.flags.hasBat = true;
+  state.flags.houseStep = 9;
+  state.player.kind = 'tonyMax';
+  startGame.__skipIntro = true;
+  setScene('hub', 320, 240);
+  state.mode = 'explore';
+  state.flags.freeRoam = true;
+  objective('Open world — explore, scheme, or pick a story chapter from MENU');
+  startDialog([
+    { speaker: 'narrator', text: 'OPEN WORLD — the whole neighborhood is yours. Every door is open, every scheme is available.' },
+    { speaker: 'tony', text: 'No errands, no schedule. Just me, the wind, and whatever trouble I feel like causin’.' }
+  ]);
+}
+
 function startGame() {
   setScene('house', 190, 124);
   state.mode = 'explore';
@@ -3524,7 +3564,8 @@ function update(dt) {
   }
 
   if (state.mode === 'title') {
-    if (consume(['KeyC']) && loadSave()) continueGame();
+    if (consume(['KeyO'])) startOpenWorld();
+    else if (consume(['KeyC']) && loadSave()) continueGame();
     else if (interactPressed()) startGame();
   } else if (state.mode === 'dialogue') {
     updateDialog(dt);
