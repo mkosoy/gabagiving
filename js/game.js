@@ -6000,6 +6000,19 @@ function nycInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
+    { x: 60, y: 240, w: 40, h: 34, radius: 42, label: 'Saxophone guy', action: () => {
+      if (state.money < 1) { toast('You haven’t even a dollar for the arts.'); return; }
+      state.money -= 1;
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .2);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'You drop a dollar in the case. The saxophonist — a man who has played this exact spot since 1986 — nods once and launches into something smooth enough to make the pigeons sway.' },
+        { speaker: 'george', text: 'This is the good stuff! The REAL New York! I’m a patron of the arts now — tell people! Actually don’t, it cost a dollar!' }
+      ] : [
+        { speaker: 'narrator', text: 'You drop a dollar in the case. The saxophonist nods with the gravity of a made man accepting tribute, and the tunnel fills with something golden.' },
+        { speaker: 'tony', text: 'Guy’s been here longer than most families I know. That’s consistency. That’s respect.' }
+      ]);
+    } },
     { x: 430, y: 250, w: 50, h: 34, radius: 40, label: 'Feed the pigeons', action: () => {
       if ((state.pigeonCd || 0) > state.time) { toast('The pigeons are full. They are judging you anyway. It’s their way.'); return; }
       state.pigeonCd = state.time + 30;
