@@ -32,6 +32,8 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
+window.addEventListener('pointerup', () => audio.unlock(), { passive: true });
+window.addEventListener('touchend', () => audio.unlock(), { passive: true });
 
 function consume(codes) {
   for (const c of codes) {
@@ -92,15 +94,18 @@ function bindButton(id, code) {
   el.addEventListener('pointerleave', up);
 }
 bindButton('btnA', 'KeyE');
-bindButton('btnB', 'KeyQ');
+bindButton('btnB', 'KeyB');
+bindButton('btnR', 'KeyR');
 
-document.getElementById('muteBtn').addEventListener('click', () => {
+document.getElementById('muteBtn').addEventListener('click', (e) => {
   audio.unlock();
   const on = audio.toggle();
   document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
+  e.currentTarget.blur();
 });
-document.getElementById('helpBtn').addEventListener('click', () => {
+document.getElementById('helpBtn').addEventListener('click', (e) => {
   state.help = !state.help;
+  e.currentTarget.blur();
 });
 
 const names = {
@@ -676,7 +681,7 @@ function updateBone(dt) {
   if (b.power < 0) { b.power = 0; b.dir = 1; }
   b.flash = Math.max(0, b.flash - dt);
   if (interactPressed()) {
-    if (b.power >= 62 && b.power <= 83) {
+    if (b.power >= 28 && b.power <= 48) {
       b.hits += 1;
       state.stats.smashes += 1;
       b.flash = .3;
@@ -1088,9 +1093,9 @@ function updateProduce(dt) {
     const type = ['tomato', 'pepper', 'lettuce', 'onion'][Math.floor(Math.random() * 4)];
     g.items.push({
       type,
-      x: 75 + Math.random() * 490,
+      x: 34 + Math.random() * 572,
       y: 88,
-      vx: (Math.random() - .5) * (35 + difficulty * 10),
+      vx: (Math.random() < .5 ? -1 : 1) * (35 + Math.random() * (75 + difficulty * 14)),
       vy: 95 + difficulty * 18 + Math.random() * 40,
       spin: Math.random() * 8
     });
@@ -1342,7 +1347,7 @@ function findNextTile(sx, sy, tx, ty) {
 }
 
 function initBonus() {
-  const turkeyTiles = [[2,1],[29,1],[2,16],[29,16],[8,8],[23,8],[8,11],[23,11]].map(([x,y]) => nearestOpen(x,y));
+  const turkeyTiles = [[2,2],[29,2],[2,16],[29,16],[8,8],[23,8],[8,11],[23,11]].map(([x,y]) => nearestOpen(x,y));
   const petals = [];
   for (let ty = 1; ty < BONUS_H - 1; ty++) for (let tx = 1; tx < BONUS_W - 1; tx++) {
     if (openTile(tx, ty) && (tx + ty) % 2 === 0 && !(tx > 13 && tx < 19 && ty > 14)) petals.push({ x: tx * BONUS_T + 10, y: ty * BONUS_T + 10, taken: false });
@@ -2215,7 +2220,7 @@ function update(dt) {
     updateProduce(dt);
   } else if (state.mode === 'ending') {
     if (interactPressed()) startBonusIntro();
-    else if (consume(['KeyQ'])) startAugustusBonus();
+    else if (consume(['KeyB'])) startAugustusBonus();
     else if (consume(['KeyR'])) resetGame();
   }
   pressed.clear();
