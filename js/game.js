@@ -34,6 +34,8 @@ const sceneArt = {
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
+  costanza: loadArt('./assets/bg-costanza.webp'),
+  njstreet: loadArt('./assets/bg-njstreet.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
@@ -1346,6 +1348,17 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawRoadblock() {
+  const rb = state.roadblock;
+  if (!rb || rb.scene !== state.scene) return;
+  drawCar(rb.x - 24, rb.y, '#e8ecf2', false, Math.PI / 2);
+  drawCar(rb.x + 24, rb.y, '#e8ecf2', false, -Math.PI / 2);
+  const phase = Math.floor(rb.flareT * 5) % 2;
+  px(ctx, rb.x - 30, rb.y - 6, 6, 3, phase ? '#ff4444' : '#4488ff');
+  px(ctx, rb.x + 22, rb.y - 6, 6, 3, phase ? '#4488ff' : '#ff4444');
+  px(ctx, rb.x - 8, rb.y + 8, 16, 3, '#ff8c1a');
+}
+
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
@@ -1961,6 +1974,7 @@ function updateExplore(dt) {
   // Pine Barrens: the Russian is out there. Rarely, a figure crosses the treeline.
   if (state.scene === 'pines') {
     if (!state.russian) state.russian = { t: 14 + Math.random() * 20, active: false };
+    if (!isNight() && state.russian) state.russian.mugged = false;
     const ru = state.russian;
     if (!ru.active) {
       ru.t -= dt;
@@ -1979,10 +1993,69 @@ function updateExplore(dt) {
         } else spawnEffect(ru.x, ru.y - 16, '…he’s still out here…', '#b8c8e0');
       }
     } else {
-      ru.life -= dt;
-      ru.x += ru.dir * 34 * dt;
-      if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
+      const hunting = isNight() && !ru.mugged && !state.player.inCar;
+      if (!hunting) ru.life -= dt;
+      if (isNight() && !ru.mugged) {
+        // night in the Barrens: he hunts
+        ru.hunter = true;
+        const dx = state.player.x - ru.x;
+        const dy = state.player.y - ru.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (!state.player.inCar) {
+          ru.x += (dx / d) * 46 * dt;
+          ru.y += (dy / d) * 46 * dt;
+          if (d < 16) {
+            ru.mugged = true;
+            ru.active = false;
+            ru.t = 40 + Math.random() * 30;
+            const take = Math.min(20, state.money);
+            state.money -= take;
+            audio.sfx('thud');
+
+            startDialog([
+              { speaker: 'narrator', text: 'The fur hat fills your vision. A hand the size of a Christmas ham takes ' + (take ? '$' + take : 'nothing — you are broke, which he seems to respect') + '. He says one word: "Interior… decorator." Then the trees take him back.' },
+              { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He TOOK my money and COMPLIMENTED his own murderer aesthetic! I’m cold and I’m poor and I’m in a FOREST!' : '…Paulie’s never hearing about this. NEVER. Guy hits like a tranquilized bear. I’m not even mad — that’s respect.' }
+            ]);
+          }
+        }
+      } else {
+        ru.x += ru.dir * 34 * dt;
+      }
+      if (ru.life <= 0) { ru.active = false; ru.hunter = false; ru.t = 26 + Math.random() * 30; }
     }
+  }
+  // roadblocks at maximum heat — the whole township knows your car
+  if ((state.flags.heat || 0) >= 4.5 && ['hub', 'nyc'].includes(state.scene) && state.player.inCar) {
+    if (!state.roadblock) {
+      const rx = state.scene === 'hub' ? 340 : 300;
+      const ry = state.scene === 'hub' ? 296 : 296;
+      state.roadblock = { x: rx, y: ry, hp: 2, scene: state.scene, flareT: 0 };
+    }
+    const rb = state.roadblock;
+    if (rb.scene !== state.scene) state.roadblock = null;
+    else {
+      rb.flareT += dt;
+      const p = state.player;
+      if (Math.abs(p.x - rb.x) < 46 && Math.abs(p.y - rb.y) < 22 && !rb.hit) {
+        rb.hit = true;
+        const speed = Math.abs(p.carV || 0);
+        if (speed > 1.2) {
+          rb.hp = 0;
+          p.carDamage = (p.carDamage || 0) + 30;
+          p.carV *= -.25;
+          spawnEffect(p.x, p.y - 30, 'THROUGH THE ROADBLOCK!', '#ffd23e');
+          audio.sfx('crash');
+        } else {
+          p.carV = 0;
+          spawnEffect(p.x, p.y - 30, 'STOPPED — they’re coming!', '#ff6a6a');
+          state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+          audio.sfx('thud');
+        }
+      }
+      if (rb.hp <= 0 || Math.abs(p.x - rb.x) > 500) state.roadblock = null;
+    }
+  } else if (state.roadblock && ((state.flags.heat || 0) < 4.5 || !state.player.inCar)) {
+    state.roadblock = null;
   }
   // gypsy cab mode: driving the stolen taxi in Manhattan attracts fares
   if (state.scene === 'nyc' && state.player.inCar && state.player.carColor === '#e8b822') {
@@ -2956,6 +3029,13 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 320, y: 330, w: 60, h: 30, radius: 42, label: 'Dice game', action: () => {
+    if (state.mode === 'craps') return;
+    if (state.money < 25) { toast('The dice game is $25 minimum.'); return; }
+    state.mode = 'craps';
+    state.craps = { bet: 25, phase: 'choose', pick: null, t: 0 };
+    audio.sfx('pickup');
+  } });
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
@@ -3664,6 +3744,32 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
+    { x: 420, y: 340, w: 60, h: 34, radius: 44, label: 'Pay’n’Spray', action: () => {
+      if (!state.player.inCar) { toast('Drive a car in first. The garage only does cars.'); return; }
+      if ((state.flags.heat || 0) <= 0 && !state.player.carDamage) { toast('Car’s clean. Nothing to spray.'); return; }
+      if (state.money < 50) { toast('Respray is $50. Cash. No invoices, obviously.'); return; }
+      state.money -= 50;
+      state.flags.heat = 0;
+      state.player.carDamage = 0;
+      const colors = ['#3d6b35', '#6b3d3d', '#3d3d6b', '#6b6b3d', '#444'];
+      state.player.carColor = colors[Math.floor(Math.random() * colors.length)];
+      if (state.cop) state.cop = null;
+      if (state.cop2) state.cop2 = null;
+      audio.sfx('cash');
+      startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
+    { x: 380, y: 300, w: 34, h: 30, radius: 38, label: 'Quick change', action: () => {
+      const toGeorge = state.player.kind !== 'george';
+      state.player.kind = toGeorge ? 'george' : 'tony';
+      audio.sfx('pickup');
+      startDialog(toGeorge ? [
+        { speaker: 'narrator', text: 'A quick change behind the hedges — a terrible wig, a worse attitude. You are now GEORGE COSTANZA: faster on foot, but the heat never quite leaves you.' },
+        { speaker: 'george', text: 'I’m out there, Jerry — and I’m LOVING every minute of it!' }
+      ] : [
+        { speaker: 'narrator', text: 'The tracksuit goes back on. You are now TONY SOPRANO: hits harder, commands respect, scares waterfowl.' },
+        { speaker: 'tony', text: 'Ah, that’s better. Room to breathe. Room for everything.' }
+      ]);
+    } },
     { x: 116, y: 128, w: 82, h: 46, label: 'Tony’s house', action: () => travelHub('house') },
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
@@ -3820,6 +3926,11 @@ function hubInteractions() {
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
         ]);
       }
+      else if (state.flags.bigOneDone) startDialog([
+        { speaker: 'newman', text: 'The legend returns! They speak of you in sorting facilities across the tri-state area. In hushed tones. Mostly because of the noise ordinances.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it all, Newman! Every last parcel! What now?! What’s left for a man like me?!' : 'Yeah yeah. The mail’s safe. Go back to your route, mailman. And Newman — the freezer box? We never spoke about it. Capisce?' },
+        { speaker: 'newman', text: 'What’s left? Only the eternal mail, my friend. It is endless. It is forever. And on that day of days, when the last letter is delivered — I shall be there. HEE HEE HEE.' }
+      ]);
       else if (state.player.kind === 'george') startDialog([
         { speaker: 'newman', text: 'Heh heh heh… Georgie boy. Out for a little walk? Careful — the mail never sleeps.' },
         { speaker: 'george', text: 'Newman! I know you’re the one writing COSTANZA on my packages! It stops TODAY!' },
@@ -3836,6 +3947,15 @@ function hubInteractions() {
 }
 
 function drawCostanza() {
+  if (drawSceneArt(sceneArt.costanza, 640, 416)) {
+    // Frank's chair creaks; the TV murmurs baseball.
+    if (!state.dialog) {
+      const f = Math.sin(state.time * 9) * 1.5;
+      px(ctx, 118, 118 + f * .3, 10, 6, '#8ecbff');
+    }
+    return;
+  }
+
   const img = sceneArt.costanza;
   if (img.complete && img.naturalWidth) ctx.drawImage(img, 8, 8, 624, 400);
   const frankX = 150, estX = 520;
@@ -4139,6 +4259,45 @@ function drawStrength() {
   ctx.font = '10px monospace';
   if (st.swinging) ctx.fillText('press E at the peak!', 320, 276);
   else ctx.fillText({ bell: 'DING DING DING! +$50', big: 'SO CLOSE! +$15', ok: 'halfway — $5 back', weak: 'pathetic. honestly.' }[st.result], 320, 276);
+  ctx.textAlign = 'left';
+}
+
+function drawCraps() {
+  const c = state.craps;
+  if (!c) return;
+  ctx.fillStyle = 'rgba(8,6,12,.9)';
+  ctx.fillRect(190, 80, 260, 200);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(190, 80, 260, 200);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BACK ROOM DICE — $25', 320, 104);
+  ctx.font = '11px monospace';
+  if (c.phase === 'choose') {
+    ctx.fillText('pick a side, then E to roll', 320, 132);
+    ctx.fillStyle = c.pick === 'under' ? '#ffd23e' : '#f5efdc';
+    ctx.fillText('◀ UNDER 8  (A / 1)', 320, 160);
+    ctx.fillStyle = c.pick === 'over' ? '#ffd23e' : '#f5efdc';
+    ctx.fillText('OVER 7  (D / 2) ▶', 320, 182);
+    ctx.fillStyle = '#888';
+    ctx.fillText('7 always loses. Q to walk away.', 320, 214);
+  } else {
+    const shake = c.phase === 'roll' ? Math.sin(state.time * 40) * 4 : 0;
+    ctx.font = 'bold 30px monospace';
+    ctx.fillText(c.phase === 'roll' ? '…' : String(c.d1), 290 + shake, 160);
+    ctx.fillText(c.phase === 'roll' ? '…' : String(c.d2), 350 - shake, 160);
+    ctx.font = '11px monospace';
+    if (c.phase === 'done') {
+      ctx.fillStyle = c.win ? '#7ad47a' : '#d47a7a';
+      ctx.fillText(c.seven ? 'SEVEN — house eats it' : c.win ? `TOTAL ${c.d1 + c.d2} — YOU WIN $${c.bet * 2}` : `TOTAL ${c.d1 + c.d2} — house wins`, 320, 200);
+      ctx.fillStyle = '#888';
+      ctx.fillText('E to continue', 320, 226);
+    } else {
+      ctx.fillStyle = '#888';
+      ctx.fillText('rolling…', 320, 200);
+    }
+  }
   ctx.textAlign = 'left';
 }
 
@@ -5197,6 +5356,8 @@ function drawHub() {
 }
 
 function drawNjStreet() {
+  if (drawSceneArt(sceneArt.njstreet, 640, 416)) return;
+
   px(ctx, 0, 0, 640, 416, '#83a766');
   // autumn lawns and suburban houses
   px(ctx, 0, 232, 640, 30, '#8a8d86');
@@ -6284,6 +6445,7 @@ function drawWorld() {
   drawAmbient();
   drawSchemeProps();
   drawCop();
+  drawRoadblock();
   drawHubEventProps();
   drawRussian();
   drawBrawler();
@@ -6943,6 +7105,8 @@ function render() {
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
+  else if (state.mode === 'craps') drawCraps();
+  else if (state.mode === 'help') drawHelp();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7038,6 +7202,16 @@ function update(dt) {
     pressed.clear();
     return;
   }
+  if (state.mode === 'explore' && !state.player.inCar && consume(['KeyH'])) {
+    state.mode = 'help';
+    pressed.clear();
+    return;
+  }
+  if (state.mode === 'help') {
+    if (consume(['KeyH', 'KeyE', 'Escape', 'Space'])) state.mode = 'explore';
+    pressed.clear();
+    return;
+  }
   if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     resetGame();
     pressed.clear();
@@ -7108,6 +7282,43 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'craps') {
+    const c = state.craps;
+    if (c.phase === 'choose') {
+      const mi = moveInput();
+      if (consume(['ArrowLeft', 'KeyA']) || consume(['Digit1']) || (mi.x < -.5)) c.pick = 'under';
+      if (consume(['ArrowRight', 'KeyD']) || consume(['Digit2']) || (mi.x > .5)) c.pick = 'over';
+      if (consume(['Escape', 'KeyQ'])) { state.mode = 'explore'; state.craps = null; return; }
+      if (c.pick && consume(['KeyE', 'Space'])) {
+        state.money -= c.bet;
+        c.phase = 'roll';
+        c.t = 0;
+        c.d1 = 1 + Math.floor(Math.random() * 6);
+        c.d2 = 1 + Math.floor(Math.random() * 6);
+        audio.sfx('spin');
+      }
+    } else if (c.phase === 'roll') {
+      c.t += dt;
+      if (c.t > 1.2) {
+        c.phase = 'done';
+        const total = c.d1 + c.d2;
+        const over = total >= 8;
+        c.win = (c.pick === 'over') === over && total !== 7;
+        c.seven = total === 7;
+        if (c.win) { state.money += c.bet * 2; audio.sfx('cash'); }
+        else audio.sfx('thud');
+        c.resultT = 1.4;
+      }
+    } else if (c.phase === 'done') {
+      c.resultT -= dt;
+      if (c.resultT <= 0 || consume(['KeyE', 'Space'])) {
+        const total = c.d1 + c.d2;
+        state.mode = 'explore';
+        const tone = c.seven ? 'Seven. The house always eats sevens. Paulie nods like he invented math.' : c.win ? `The dice come up ${total}. “Winner,” the dealer mutters, sliding you $${c.bet * 2}. Silvio applauds once. Once.` : `The dice come up ${total}. Wrong side. The dealer’s face does not move. It never moves.`;
+        startDialog([{ speaker: 'narrator', text: tone }]);
+        state.craps = null;
       }
     }
   } else if (state.mode === 'slots') {
