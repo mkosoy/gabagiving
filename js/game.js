@@ -456,12 +456,16 @@ function updateDialog(dt) {
   const after = Math.floor(d.chars);
   if (after > before && after % 3 === 0) audio.voice(line.speaker);
 
-  if (interactPressed()) {
+  if (!down(interactCodes)) d.holdT = 0;
+  else if (d.chars >= line.text.length) d.holdT = (d.holdT || 0) + dt;
+  const holdSkip = down(interactCodes) && (d.holdT || 0) > .45;
+  if (interactPressed() || holdSkip) {
     if (d.chars < line.text.length) {
       d.chars = line.text.length;
     } else {
       d.i += 1;
       d.chars = 0;
+      d.holdT = 0;
       audio.sfx('confirm');
       if (d.i >= d.lines.length) finishDialog();
     }
@@ -755,8 +759,20 @@ function updateMovers(dt) {
       continue;
     }
     const step = Math.min(d, m.speed * dt);
-    a.x += (dx / d) * step;
-    a.y += (dy / d) * step;
+    const nx = a.x + (dx / d) * step;
+    const ny = a.y + (dy / d) * step;
+    let progressed = false;
+    if (!blockedAt(nx, a.y)) { a.x = nx; progressed = true; }
+    if (!blockedAt(a.x, ny)) { a.y = ny; progressed = true; }
+    if (!progressed) {
+      m.stuck = (m.stuck || 0) + dt;
+      if (m.stuck > 1.1) {
+        a.x = m.x; a.y = m.y;
+        m.done = true;
+        if (m.onDone) m.onDone();
+        continue;
+      }
+    } else m.stuck = 0;
     a.moving = true;
     a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
     state.frame += dt * 2.5;
@@ -4284,7 +4300,7 @@ function drawMenu() {
     outlineText(ctx, it.locked ? 'locked' : it.hint, 494, y + 1, it.locked ? '#5a6076' : '#8f9ab8', 6, 'right');
   });
   if (scroll > 0) outlineText(ctx, '▲ more', 320, 84, '#8f9ab8', 7, 'center');
-  if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 348, '#8f9ab8', 7, 'center');
+  if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
 function drawAtmosphere() {
