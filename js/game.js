@@ -1031,8 +1031,8 @@ function apartmentInteractions() {
 
 function humanFundScheme() {
   state.playerPose = 'perform';
-  state.player.x = 154;
-  state.player.y = 220;
+  state.player.x = 188;
+  state.player.y = 202;
   state.player.dir = 'left';
   spawnEffect(126, 206, 'FLYER', '#8ffff2');
   audio.sfx('pickup');
@@ -1357,7 +1357,7 @@ function loseProduceGame() {
 
 function enterHub(first = false) {
   state.flags.freeRoam = true;
-  state.player.kind = 'tonyMax';
+  state.player.speed = state.player.kind === 'george' ? 96 : 88;
   setScene('hub', 320, 214);
   state.mode = 'explore';
   objective('Free roam: choose a landmark');
