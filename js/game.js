@@ -3445,7 +3445,7 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
-    { x: 480, y: 300, w: 80, h: 40, radius: 46, label: 'The Feast', action: () => {
+    { x: 280, y: 330, w: 80, h: 40, radius: 46, label: 'The Feast', action: () => {
       if (!state.flags.bigOneDone || !state.flags.kramericaBookDone || !state.flags.pineRunnerDone) {
         toast('Something’s being prepared here. Finish the crews’ work first — Newman, Kramer, Silvio.');
         return;
