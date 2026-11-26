@@ -87,12 +87,13 @@ function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
   if (sitting) {
-    h *= .86;
-    w *= .94;
+    // keep near-full scale but sink into the seat so the figure reads as sitting, not perching
+    h *= .97;
+    w *= 1;
   }
   if (kind === 'kramer' && pose !== 'burst') w *= .72; // crop visual emphasis toward Kramer when not using the door-burst pose
   const bob = pose === 'stand' || pose === 'watch' ? Math.sin(frame * .55) * 1.2 : Math.sin(frame * .35) * .45;
-  const bottom = y + 31 + (sitting ? 4 : 0);
+  const bottom = y + 31 + (sitting ? 10 : 0);
   const cx = x + 10;
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,.30)';
