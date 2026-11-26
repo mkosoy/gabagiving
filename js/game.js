@@ -7217,8 +7217,9 @@ function update(dt) {
   } else if (state.mode === 'craps') {
     const c = state.craps;
     if (c.phase === 'choose') {
-      if (consume(['ArrowLeft', 'KeyA']) || consume(['Digit1'])) c.pick = 'under';
-      if (consume(['ArrowRight', 'KeyD']) || consume(['Digit2'])) c.pick = 'over';
+      const mi = moveInput();
+      if (consume(['ArrowLeft', 'KeyA']) || consume(['Digit1']) || (mi.x < -.5)) c.pick = 'under';
+      if (consume(['ArrowRight', 'KeyD']) || consume(['Digit2']) || (mi.x > .5)) c.pick = 'over';
       if (consume(['Escape', 'KeyQ'])) { state.mode = 'explore'; state.craps = null; return; }
       if (c.pick && consume(['KeyE', 'Space'])) {
         state.money -= c.bet;
