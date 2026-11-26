@@ -353,7 +353,9 @@ function menuEntries() {
       ['marbleRye', 'Marble Rye Heist', 'the house'],
       ['trashEclair', 'Trash Éclair', 'Monk’s Café'],
       ['deskNap', 'Under-desk nap nook', 'Yankees office'],
-      ['soupLesson', 'Soup discipline', 'the soup stand']
+      ['soupLesson', 'Soup discipline', 'the soup stand'],
+      ['fakeDisability', 'Fake disability', 'Yankees office'],
+      ['cheapInvites', 'Cheap invitations', 'Monk’s Café']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -2050,6 +2052,19 @@ function monksInteractions() {
         { speaker: 'george', text: 'FINALLY! Science vindicates me!' }
       ]);
     } },
+    { x: 560, y: 130, w: 70, h: 60, radius: 40, label: 'Stationery box', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'tony', text: 'Wedding invitations printed on paper so thin you can read ‘em through a closed envelope. Who cheap out on invitations?' }]);
+      } else if (!state.flags.cheapInvites) {
+        state.flags.cheapInvites = true;
+        spawnEffect(state.player.x, state.player.y - 16, 'TOO CHEAP', '#ff8e8e');
+        startDialog([
+          { speaker: 'narrator', text: 'The invitations are indeed cheap. The glue is older than some of the guests. One envelope appears to be already sealed shut forever.' },
+          { speaker: 'george', text: 'They’re priced to move, Jerry! Susan won’t even notice. What’s the worst that could happen with envelope glue?' },
+          { speaker: 'jerry', text: 'George, historically speaking, you do NOT want to answer that question.' }
+        ]);
+      } else startDialog([{ speaker: 'george', text: 'I’m buying the next box one tier up. Lesson learned. No further questions.' }]);
+    } },
     { x: 240, y: 30, w: 160, h: 60, radius: 40, label: 'Order coffee', action: () => {
       audio.sfx('pickup');
       state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
@@ -2191,6 +2206,20 @@ function yankeesInteractions() {
         state.flags.deskNap = false;
         startDialog([{ speaker: 'george', text: 'Rested. Recharged. Ready to do approximately nothing for the rest of the day.' }]);
       }
+    } },
+    { x: 420, y: 300, w: 100, h: 80, radius: 44, label: 'Supply closet', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'tony', text: 'A cane, a neck brace, and a pair of crutches. Either somebody here is fragile, or somebody here is George.' }]);
+      } else if (!state.flags.fakeDisability) {
+        state.flags.fakeDisability = true;
+        state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+        spawnEffect(state.player.x, state.player.y - 16, 'SYMPATHY +10', '#bcd8ff');
+        startDialog([
+          { speaker: 'narrator', text: 'George equips the cane. He immediately walks 30% slower and sighs 90% louder.' },
+          { speaker: 'george', text: 'With this cane, I am unemployable AND unfireable. Checkmate, Steinbrenner.' },
+          { speaker: 'steinbrenner', text: 'Costanza! You’re limping! Take the week off! Paid! That’s the kind of organization I run!' }
+        ]);
+      } else startDialog([{ speaker: 'george', text: 'The cane stays in the closet. Sympathy is a finite resource. You don’t waste it on a Tuesday.' }]);
     } },
     { x: 545, y: 100, w: 80, h: 120, radius: 42, label: 'Trophies', action: () => startDialog(
       state.player.kind === 'george' ? [
