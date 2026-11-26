@@ -40,7 +40,8 @@ const sceneArt = {
   plavStream: loadArt('./assets/plav-stream.webp'),
   cousinTony: loadArt('./assets/photo-cousin-tony.webp'),
   tonyHorse: loadArt('./assets/photo-tony-horse.webp'),
-  tonyHead: loadArt('./assets/sprites/tony-head.webp')
+  tonyHead: loadArt('./assets/sprites/tony-head.webp'),
+  boneroom: loadArt('./assets/bg-boneroom.webp')
 };
 function drawSceneArt(img, w, h) {
   if (!img.complete || !img.naturalWidth) return false;
@@ -3894,27 +3895,26 @@ function drawDream() {
 
 function drawBone() {
   const b = state.bone;
-  px(ctx, 0, 0, W, H, '#21182b');
-  // mirror background
-  px(ctx, 72, 24, 496, 258, '#684226');
-  px(ctx, 86, 38, 468, 230, '#8cc9df');
-  px(ctx, 104, 54, 120, 190, 'rgba(255,255,255,.2)');
+  // illustrated grimy gym-bathroom backdrop
+  const art = sceneArt.boneroom;
+  if (art && art.complete && art.naturalWidth) ctx.drawImage(art, 0, 0, W, H);
+  else px(ctx, 0, 0, W, H, '#21182b');
   const striking = b.flash > 0;
-  drawPerson(ctx, 235, 120, state.player.kind, 'right', striking ? state.frame * 3 : state.frame, { pose: striking ? 'perform' : 'angry' });
+  drawPerson(ctx, 168, 196, state.player.kind, 'right', striking ? state.frame * 3 : state.frame, { pose: striking ? 'perform' : 'angry' });
   // Animated arms physically reach toward the mirror; alternating fists sell the strikes.
   const pump = Math.sin(state.time * (striking ? 18 : 5));
   const reach = striking ? 1 : .55 + pump * .12;
-  const fistX = 296 + reach * 62;
-  const fistY = 143 + pump * 8;
-  px(ctx, 288, 146, fistX - 288, 6, '#c8875f');
+  const fistX = 236 + reach * 62;
+  const fistY = 158 + pump * 8;
+  px(ctx, 228, 160, fistX - 228, 6, '#c8875f');
   px(ctx, fistX, fistY, 13, 13, '#d89a70');
   px(ctx, fistX + 2, fistY + 3, 9, 3, '#efb287');
   if (striking) {
     for (let i = 0; i < 5; i++) {
       const a = i * 1.25 + state.time;
-      px(ctx, 360 + Math.cos(a) * 13, 145 + Math.sin(a) * 13, 7, 2, '#fff0a6');
+      px(ctx, 316 + Math.cos(a) * 13, 130 + Math.sin(a) * 13, 7, 2, '#fff0a6');
     }
-    outlineText(ctx, 'CRACK', 334, 118, '#ffe78a', 10);
+    outlineText(ctx, 'CRACK', 296, 106, '#ffe78a', 10);
   }
   // Tony's real illustrated reflection, scaled up inside the mirror — and visibly deforming per hit.
   if (sceneArt.tonyHead.complete && sceneArt.tonyHead.naturalWidth) {
@@ -3923,46 +3923,46 @@ function drawBone() {
       // jaw visibly knocked sideways: shear the reflection
       ctx.transform(1, 0, -.08 * Math.min(2, b.hits - 3), 1, 30, 0);
     }
-    ctx.drawImage(sceneArt.tonyHead, 362, 72, 132, 114);
+    ctx.drawImage(sceneArt.tonyHead, 306, 52, 126, 104);
     ctx.restore();
   } else {
-    px(ctx, 376, 76, 104, 118, '#c8875f');
-    px(ctx, 382, 82, 92, 24, '#2a211e');
+    px(ctx, 316, 56, 100, 104, '#c8875f');
+    px(ctx, 322, 62, 88, 22, '#2a211e');
   }
   // progressive damage overlays: swelling, black eye, bandage, circling stars
   if (b.hits >= 2) {
-    px(ctx, 388, 96, 26, 18, 'rgba(200,60,50,.45)');
-    px(ctx, 452, 118, 22, 16, 'rgba(200,60,50,.4)');
+    px(ctx, 330, 76, 24, 16, 'rgba(200,60,50,.45)');
+    px(ctx, 392, 96, 20, 14, 'rgba(200,60,50,.4)');
   }
   if (b.hits >= 3) {
     ctx.fillStyle = 'rgba(40,20,40,.65)';
     ctx.beginPath();
-    ctx.ellipse(408, 102, 12, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(348, 82, 11, 7, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   if (b.hits >= 5) {
-    px(ctx, 376, 84, 40, 12, '#e8e2d0');
-    px(ctx, 376, 88, 40, 3, '#c94f42');
+    px(ctx, 318, 64, 38, 11, '#e8e2d0');
+    px(ctx, 318, 68, 38, 3, '#c94f42');
     for (let i = 0; i < 4; i++) {
       const a = state.time * 3 + i * 1.6;
-      outlineText(ctx, '✦', 428 + Math.cos(a) * 52, 84 + Math.sin(a) * 22, '#ffe78a', 9, 'center');
+      outlineText(ctx, '✦', 368 + Math.cos(a) * 50, 66 + Math.sin(a) * 20, '#ffe78a', 9, 'center');
     }
   }
   if (b.hits >= 6) {
-    px(ctx, 424, 132, 44, 22, 'rgba(230,225,205,.85)');
-    outlineText(ctx, 'JAW!', 446, 137, '#a03a2c', 8, 'center');
+    px(ctx, 364, 112, 42, 20, 'rgba(230,225,205,.85)');
+    outlineText(ctx, 'JAW!', 385, 117, '#a03a2c', 8, 'center');
   }
   ctx.strokeStyle = 'rgba(255,246,190,.72)';
   ctx.lineWidth = 1;
   for (let i = 0; i < Math.min(6, b.hits); i++) {
-    const sx = 398 + i * 13;
+    const sx = 338 + i * 12;
     ctx.beginPath();
-    ctx.moveTo(sx, 104 + (i % 2) * 18);
-    ctx.lineTo(sx - 7, 126 + i * 5);
-    ctx.lineTo(sx + 4, 144 + (i % 3) * 8);
+    ctx.moveTo(sx, 84 + (i % 2) * 16);
+    ctx.lineTo(sx - 7, 104 + i * 5);
+    ctx.lineTo(sx + 4, 122 + (i % 3) * 7);
     ctx.stroke();
   }
-  if (b.flash) px(ctx, 370, 70, 116, 130, 'rgba(255,235,120,.28)');
+  if (b.flash) px(ctx, 300, 44, 130, 120, 'rgba(255,235,120,.28)');
   outlineText(ctx, 'BONE SMASHING', 320, 24, '#ffd978', 14, 'center');
   outlineText(ctx, b.message, 320, 292, '#fff', 9, 'center');
   // power meter
