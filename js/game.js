@@ -1063,6 +1063,32 @@ function updateCop(dt) {
   } else c.bustT = Math.max(0, c.bustT - dt);
 }
 
+function drawHubEventProps() {
+  if (state.scene !== 'hub') return;
+  if (state.iceCream) {
+    const t = state.iceCream;
+    px(ctx, t.x - 2, t.y - 2, 46, 20, 'rgba(0,0,0,.3)');
+    px(ctx, t.x, t.y, 42, 16, '#f4f0e8');
+    px(ctx, t.x, t.y, 42, 5, '#e88fb1');
+    px(ctx, t.x + 30, t.y + 4, 10, 8, '#9fd4ec');
+    px(ctx, t.x + 4, t.y - 4, 10, 4, '#e88fb1');
+    outlineText(ctx, 'ICE', t.x + 12, t.y + 7, '#b3312c', 5, 'center');
+    px(ctx, t.x + 6, t.y + 15, 7, 4, '#05070c');
+    px(ctx, t.x + 30, t.y + 15, 7, 4, '#05070c');
+    // music notes
+    if (Math.floor(state.time * 2) % 2) outlineText(ctx, '♪', t.x + 48, t.y - 4, '#fff1a6', 7, 'center');
+  }
+  if (state.dogWalker) {
+    const d = state.dogWalker;
+    drawPerson(ctx, d.x, d.y, 'womanC', 'left', state.frame * 1.6, {});
+    const bob = Math.sin(state.time * 6) * 1.5;
+    px(ctx, d.x - 16, d.y + 8 + bob, 12, 6, '#8a6a42');
+    px(ctx, d.x - 20, d.y + 6 + bob, 5, 5, '#8a6a42');
+    px(ctx, d.x - 6, d.y + 8 + bob, 3, 1, '#c9a06a');
+    px(ctx, d.x - 8, d.y + 4, 8, 1, '#888');
+  }
+}
+
 function drawCop() {
   const c = state.cop;
   if (!c || state.scene !== 'hub') return;
@@ -1171,12 +1197,31 @@ function drawBrawler() {
 
 function updateHubEvents(dt) {
   if (!state.flags.freeRoam || state.scene !== 'hub') return;
+  if (state.iceCream) {
+    state.iceCream.t += dt;
+    state.iceCream.x += 52 * dt;
+    if (state.iceCream.x > 1400) state.iceCream = null;
+  }
+  if (state.dogWalker) {
+    state.dogWalker.t += dt;
+    state.dogWalker.x -= 38 * dt;
+    if (state.dogWalker.x < -60) state.dogWalker = null;
+  }
   state.hubEventT = (state.hubEventT ?? 6) - dt;
   if (state.hubEventT > 0) return;
   state.hubEventT = 9 + Math.random() * 12;
   const npcs = ambientFor('hub');
   const roll = Math.random();
-  if (roll < .3 && npcs.length >= 2) {
+  if (roll < .12) {
+    // ice cream truck rolls through playing its jingle; pedestrians drift toward it
+    state.iceCream = { x: -80, y: 232, t: 0 };
+    audio.sfx('turkey');
+    const n = npcs[Math.floor(Math.random() * npcs.length)];
+    if (n) { n.bark = 'ICE CREAM!'; n.barkT = 1.8; }
+  } else if (roll < .24) {
+    // dog walker crosses the neighborhood
+    state.dogWalker = { x: 1290, y: 286, t: 0 };
+  } else if (roll < .3 && npcs.length >= 2) {
     // two pedestrians argue about nothing
     const [a, b] = [npcs[0], npcs[npcs.length - 1]];
     a.bark = 'I’M WALKIN’ HERE!'; a.barkT = 2.2;
@@ -3935,6 +3980,7 @@ function drawWorld() {
   drawAmbient();
   drawSchemeProps();
   drawCop();
+  drawHubEventProps();
   drawBrawler();
   drawCash();
   drawInteractionMarkers();
