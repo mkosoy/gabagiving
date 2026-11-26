@@ -3033,6 +3033,48 @@ function drawInteractionMarkers() {
   }
 }
 
+function objectiveTarget() {
+  const scene = scenes[state.scene];
+  if (!scene || state.mode !== 'explore') return null;
+  const list = scene.interactions().filter((i) => !i.hidden && !/leave|exit/i.test(i.label));
+  return list[0] || null;
+}
+
+function drawObjectiveArrow() {
+  const t = objectiveTarget();
+  if (!t || state.mode !== 'explore') return;
+  const tx = t.x + t.w / 2 - state.camera.x;
+  const ty = t.y + t.h / 2 - state.camera.y;
+  const pxp = state.player.x + 8 - state.camera.x;
+  const pyp = state.player.y + 12 - state.camera.y;
+  const dist = Math.hypot(tx - pxp, ty - pyp);
+  if (dist < 70) return; // close enough that the prompt shows instead
+  // clamp to screen edges with margin
+  const cx = W / 2, cy = H / 2;
+  let dx = tx - pxp, dy = ty - pyp;
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len; dy /= len;
+  // place arrow at fixed radius around player, clamped on screen
+  let ax = pxp + dx * 44, ay = pyp + dy * 44;
+  ax = Math.max(24, Math.min(W - 24, ax));
+  ay = Math.max(64, Math.min(H - 30, ay));
+  const ang = Math.atan2(dy, dx);
+  const pulse = (Math.sin(state.time * 5) + 1) / 2;
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.rotate(ang);
+  ctx.fillStyle = `rgba(255,216,92,${.7 + pulse * .3})`;
+  ctx.beginPath();
+  ctx.moveTo(10 + pulse * 3, 0);
+  ctx.lineTo(-6, -7);
+  ctx.lineTo(-2, 0);
+  ctx.lineTo(-6, 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  outlineText(ctx, `${Math.round(dist / 10) * 10}m`, ax, ay + 12, '#ffe78a', 6, 'center');
+}
+
 function drawWorld() {
   const scene = scenes[state.scene];
   if (!scene) return;
@@ -3044,6 +3086,7 @@ function drawWorld() {
   drawPlayer();
   drawEffects();
   ctx.restore();
+  drawObjectiveArrow();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
   outlineText(ctx, scene.label, 16, 50, '#ddd5bd', 7);
