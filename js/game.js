@@ -7061,6 +7061,7 @@ function render() {
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'craps') drawCraps();
+  else if (state.mode === 'help') drawHelp();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7153,6 +7154,16 @@ function update(dt) {
       if (it && it.open) { audio.sfx('success'); it.act(); }
       else audio.sfx('denied');
     }
+    pressed.clear();
+    return;
+  }
+  if (state.mode === 'explore' && !state.player.inCar && consume(['KeyH'])) {
+    state.mode = 'help';
+    pressed.clear();
+    return;
+  }
+  if (state.mode === 'help') {
+    if (consume(['KeyH', 'KeyE', 'Escape', 'Space'])) state.mode = 'explore';
     pressed.clear();
     return;
   }
