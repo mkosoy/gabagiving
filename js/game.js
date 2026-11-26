@@ -2259,6 +2259,33 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // typed cheat codes — GTA heritage
+  if (state.mode === 'explore') {
+    for (const k of pressed) {
+      if (/^Key[A-Z]$/.test(k)) {
+        state.cheatBuf = ((state.cheatBuf || '') + k[3]).slice(-12);
+        if (state.cheatBuf.endsWith('GABAGOOL')) {
+          state.money += 500;
+          state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+          audio.sfx('cash');
+          spawnEffect(state.player.x, state.player.y - 20, '+$500 — THE CURED MEATS PROVIDE', '#ffd23e');
+          state.cheatBuf = '';
+        } else if (state.cheatBuf.endsWith('SERENITY')) {
+          state.flags.heat = 0;
+          if (state.cop) state.cop = null;
+          if (state.cop2) state.cop2 = null;
+          audio.sfx('success');
+          spawnEffect(state.player.x, state.player.y - 20, 'SERENITY NOW — heat cleared', '#8ffff2');
+          state.cheatBuf = '';
+        } else if (state.cheatBuf.endsWith('FEAST')) {
+          state.money += 50;
+          audio.sfx('pickup');
+          spawnEffect(state.player.x, state.player.y - 20, '+$50 — leftovers money', '#ffe78a');
+          state.cheatBuf = '';
+        }
+      }
+    }
+  }
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
   if (state.flags.freeRoam && !p.inCar && consume(['KeyF'])) shoveNearest();
   if (state.flags.freeRoam && consume(['KeyB']) && !p.inCar) {
