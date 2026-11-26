@@ -5560,7 +5560,28 @@ function drawMenu() {
   if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
+function weatherRain() {
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return 0;
+  // rain for ~90s out of every 360s, offset so it doesn't sync with night
+  const wt = state.time % 360;
+  return wt > 240 && wt < 330 ? 1 : 0;
+}
+
 function drawAtmosphere() {
+  // rain — slanted streaks + ground darkening, before everything else atmospheric
+  if (weatherRain() && (state.mode === 'explore' || state.mode === 'transit')) {
+    ctx.fillStyle = 'rgba(40,50,80,.14)';
+    ctx.fillRect(0, 0, W, H);
+    const seed = Math.floor(state.time * 24);
+    for (let i = 0; i < 46; i++) {
+      const rx = ((seed * 37 + i * 89) % 700) - 30;
+      const ry = ((seed * 53 + i * 61) % 440) - 20;
+      ctx.fillStyle = `rgba(170,190,230,${.25 + (i % 3) * .1})`;
+      ctx.fillRect(rx, ry, 1, 7);
+      ctx.fillRect(rx - 1, ry + 7, 1, 3);
+    }
+    if (Math.random() < .02) audio.noise(.06, .008, 0, 2600); // patter
+  }
   // day/night cycle for the outdoor open world — 4-minute days, warm dusk, blue night
   if ((state.scene === 'hub' || state.scene === 'nyc') && (state.mode === 'explore' || state.mode === 'monte')) {
     const dayT = (state.time % 240) / 240;
