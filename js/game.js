@@ -3565,7 +3565,7 @@ function updateBlackjack(dt) {
       bj.player.push(bjCard());
       audio.sfx('pickup');
       if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
-    } else if (!bj.stickLock && (consume(['ArrowRight', 'KeyD', 'KeyS']) || standDir)) {
+    } else if (!bj.stickLock && (consume(['ArrowRight', 'ArrowDown', 'KeyD', 'KeyS']) || standDir)) {
       bj.stickLock = true;
       bj.phase = 'dealer';
       bj.t = 0;
