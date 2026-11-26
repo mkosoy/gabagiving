@@ -1104,6 +1104,13 @@ function shoveNearest() {
   best.diveT = .5 + combo * .1;
   best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
   best.barkT = 1.6;
+  // sometimes they don't dive — sometimes they square up. Jersey rules.
+  if (!state.brawler && Math.random() < .3) {
+    state.brawler = { x: best.x, y: best.y, hp: 3, state: 'prowl', t: 0, tx: best.x, ty: best.y, barkT: 1.6, bark: 'YOU WANT SOME?!', swingT: 0, hitT: 0 };
+    best.diveT = 4; // the victim "becomes" the brawler — keep the original floored out of sight meanwhile
+    spawnEffect(best.x, best.y - 22, 'IT’S A FIGHT!', '#ff9a3e');
+    audio.sfx('denied');
+  }
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   if (p.kind === 'george' && Math.random() < .3) {
     spawnEffect(p.x + 8, p.y - 14, 'MY BACK!', '#ff8e8e');
