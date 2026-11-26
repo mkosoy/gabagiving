@@ -1964,6 +1964,42 @@ function updateExplore(dt) {
       if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
     }
   }
+  // gypsy cab mode: driving the stolen taxi in Manhattan attracts fares
+  if (state.scene === 'nyc' && state.player.inCar && state.player.carColor === '#e8b822') {
+    if (!state.fare) {
+      state.fareCd = (state.fareCd || 6) - dt;
+      if (state.fareCd <= 0) {
+        const spots = [[150, 280], [320, 300], [520, 280], [620, 300], [250, 340]];
+        const s = spots[Math.floor(Math.random() * spots.length)];
+        state.fare = { stage: 'pickup', x: s[0], y: s[1], t: 0 };
+      }
+    } else {
+      const f = state.fare;
+      if (f.stage === 'pickup') {
+        if (Math.hypot(f.x - state.player.x, f.y - state.player.y) < 46) {
+          const dests = [[700, 120, 'the park'], [80, 120, 'the west side'], [640, 300, 'the east end']];
+          const d = dests[Math.floor(Math.random() * dests.length)];
+          f.stage = 'dropoff'; f.x = d[0]; f.y = d[1]; f.name = d[2]; f.t = 0;
+          audio.sfx('door');
+          startDialog([
+            { speaker: 'narrator', text: `A fare climbs in. "${d[2].charAt(0).toUpperCase() + d[2].slice(1)}, and step on it." He does not notice anything unusual about this cab. They never do.` },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Step on it? I’m a careful driver! I have NEVER been in a high-speed — okay, twice. Twice I have been.' : 'Wherever you’re going, you’re going. Meter’s running. Actually it ain’t, but that’s between us.' }
+          ]);
+        }
+      } else if (Math.hypot(f.x - state.player.x, f.y - state.player.y) < 52) {
+        const pay = 35 + Math.floor(Math.random() * 45);
+        state.flags.tribute = (state.flags.tribute || 0) + pay;
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 12, `FARE PAID +$${pay}`, '#8ffff2');
+        state.fare = null;
+        state.fareCd = 10 + Math.random() * 14;
+        audio.sfx('door');
+      }
+    }
+  } else if (state.fare) {
+    state.fare = null;
+    state.fareCd = 8;
+  }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
@@ -4741,6 +4777,18 @@ function drawNyc() {
     px(ctx, 644, 357, 4, 4, '#2848a0'); // eagle-ish blob
     px(ctx, 643, 366, 5, 3, '#05070c');
     px(ctx, 664, 366, 5, 3, '#05070c');
+  }
+  // taxi fare markers
+  if (state.fare && state.scene === 'nyc') {
+    const f = state.fare;
+    const bob = Math.sin(state.time * 4) * 3;
+    if (f.stage === 'pickup') {
+      drawPerson(ctx, f.x - 10, f.y - 20, 'womanB', 'down', state.frame * .5, {});
+      outlineText(ctx, 'TAXI!', f.x, f.y - 34 + bob, '#ffe78a', 8, 'center');
+    } else {
+      outlineText(ctx, '▼', f.x, f.y - 20 + bob, '#8ffff2', 11, 'center');
+      outlineText(ctx, f.name.toUpperCase(), f.x, f.y - 34 + bob, '#8ffff2', 6, 'center');
+    }
   }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
