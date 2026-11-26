@@ -3307,6 +3307,117 @@ function drawHubEast() {
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
 }
 
+function initMonte() {
+  state.monte = {
+    phase: 'show', t: 0,
+    queen: Math.floor(Math.random() * 3),
+    pos: [0, 1, 2], // card index -> slot
+    sel: 1, swaps: 0, swapT: 0, reveal: -1,
+    won: false
+  };
+  state.mode = 'monte';
+  audio.sfx('pickup');
+}
+
+function monteCardX(slot) { return 200 + slot * 120; }
+
+function updateMonte(dt) {
+  const m = state.monte;
+  if (!m) { state.mode = 'explore'; return; }
+  m.t += dt;
+  if (m.phase === 'show' && m.t > 1.6) {
+    m.phase = 'shuffle';
+    m.t = 0;
+    m.swapT = 0;
+  } else if (m.phase === 'shuffle') {
+    m.swapT += dt;
+    if (m.swapT > .32) {
+      m.swapT = 0;
+      m.swaps += 1;
+      const a = Math.floor(Math.random() * 3);
+      let b = Math.floor(Math.random() * 3);
+      if (b === a) b = (a + 1) % 3;
+      const ia = m.pos.indexOf(a), ib = m.pos.indexOf(b);
+      m.pos[ia] = b; m.pos[ib] = a;
+      audio.sfx('pickup');
+    }
+    if (m.swaps >= 7) { m.phase = 'pick'; m.t = 0; }
+  } else if (m.phase === 'pick') {
+    if (consume(['ArrowLeft', 'KeyA'])) { m.sel = Math.max(0, m.sel - 1); audio.sfx('pickup'); }
+    if (consume(['ArrowRight', 'KeyD'])) { m.sel = Math.min(2, m.sel + 1); audio.sfx('pickup'); }
+    if (interactPressed()) {
+      m.reveal = m.sel;
+      m.won = m.pos[m.queen] === m.sel;
+      m.phase = 'reveal';
+      m.t = 0;
+      audio.sfx(m.won ? 'success' : 'denied');
+    }
+  } else if (m.phase === 'reveal' && m.t > 2) {
+    const won = m.won;
+    state.mode = 'explore';
+    state.monte = null;
+    if (won) {
+      state.flags.tribute = (state.flags.tribute || 0) + 100;
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$100 · WINNER!', '#8ffff2');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George finds the queen! The hustler pays out with the dead-eyed smile of a man reconsidering his career.', action: () => audio.sfx('cash') },
+        { speaker: 'george', text: 'I BEAT THE STREET! I am OF the street! I could do this for a living!' },
+        { speaker: 'narrator', text: 'He could not do this for a living. The first win is always free. That’s how they get you.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony’s eyes never left the queen. The hustler hands over the hundred with respect.', action: () => audio.sfx('cash') },
+        { speaker: 'tony', text: 'I ran card games before you were a gleam in some degenerate’s eye. Double or nothing? …Nah. I’m here for the soup.' }
+      ]);
+    } else {
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 50);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Wrong card. The hustler pockets George’s fifty before the disappointment even lands.' },
+        { speaker: 'george', text: 'IT SWITCHED! I SAW it switch! This is rigged! There’s a plant! There’s ALWAYS a plant!' }
+      ] : [
+        { speaker: 'narrator', text: 'Wrong card. Tony watches his fifty disappear into a front pocket.' },
+        { speaker: 'tony', text: 'Cute. It’s a good scam. I know because I invented it in 1979 and they stole it from ME.' }
+      ]);
+    }
+  }
+}
+
+function drawMonte() {
+  px(ctx, 0, 0, 640, 416, '#1c1710');
+  px(ctx, 0, 200, 640, 216, '#2c2419');
+  outlineText(ctx, 'THREE-CARD MONTE', 320, 60, '#ffe78a', 12, 'center');
+  const m = state.monte;
+  if (!m) return;
+  drawPerson(ctx, 320, 130, 'christopher', 'down', state.frame * .3, {});
+  px(ctx, 150, 210, 340, 90, '#6b4f2a');
+  px(ctx, 150, 210, 340, 8, '#8a6a3a');
+  for (let card = 0; card < 3; card++) {
+    const slot = m.pos[card];
+    let cx = monteCardX(slot);
+    if (m.phase === 'shuffle') cx += Math.sin(m.swapT * 20 + card) * 3;
+    const cy = 235;
+    const isQueen = card === m.queen;
+    const faceUp = (m.phase === 'show' && isQueen) || (m.phase === 'reveal' && m.reveal === card) || (m.phase === 'reveal' && m.t > 1 && isQueen);
+    px(ctx, cx - 28, cy - 38, 56, 76, faceUp ? '#f4efdc' : '#2a4a8f');
+    px(ctx, cx - 24, cy - 34, 48, 68, faceUp ? '#fffbe8' : '#3a5a9f');
+    if (faceUp && isQueen) {
+      outlineText(ctx, 'Q', cx, cy + 8, '#c02828', 26, 'center');
+    } else if (faceUp) {
+      outlineText(ctx, 'J', cx, cy + 8, '#333', 26, 'center');
+    } else {
+      px(ctx, cx - 16, cy - 26, 32, 52, '#24407e');
+    }
+    if (m.phase === 'pick' && m.sel === slot) {
+      const pulse = .5 + Math.sin(state.time * 8) * .3;
+      ctx.strokeStyle = `rgba(255,231,138,${pulse})`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cx - 32, cy - 42, 64, 84);
+    }
+  }
+  if (m.phase === 'show') outlineText(ctx, 'Follow the QUEEN…', 320, 350, '#fffbe8', 9, 'center');
+  if (m.phase === 'shuffle') outlineText(ctx, 'Eyes on the cards…', 320, 350, '#fffbe8', 9, 'center');
+  if (m.phase === 'pick') outlineText(ctx, '← → choose · E to pick — $50 on the line', 320, 350, '#ffe78a', 9, 'center');
+  if (m.phase === 'reveal') outlineText(ctx, m.won ? 'THE QUEEN! YOU WIN $100' : 'NOT THE QUEEN. THE HOUSE THANKS YOU.', 320, 350, m.won ? '#8ffff2' : '#ff8a7a', 9, 'center');
+}
+
 function drawNyc() {
   if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
@@ -3450,6 +3561,19 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 150, y: 330, w: 56, h: 40, radius: 42, label: 'Card hustler', action: () => {
+      if ((state.flags.tribute || 0) < 50) {
+        startDialog([{ speaker: 'narrator', text: 'The hustler flips his cards invitingly, then sees your wallet. "Fifty minimum, pal." You do not have fifty.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A three-card monte game on a folding crate. The crowd of "winners" around it all have the same shoes. George notices the shoes. George plays anyway.' },
+        { speaker: 'george', text: 'Fifty bucks. But I’m WATCHING. I have very good eyes. LASIK-adjacent eyes!' }
+      ] : [
+        { speaker: 'narrator', text: 'Three-card monte on 81st street. The hustler does not know whose neighborhood this technically isn’t.' },
+        { speaker: 'tony', text: 'Fifty says I know where the lady is. Deal the cards, Shakespeare.' }
+      ], () => initMonte());
     } },
     { x: 690, y: 250, w: 60, h: 40, radius: 42, label: 'Guy in the doorway', action: () => {
       if (!state.flags.baniaBit) {
@@ -5214,6 +5338,7 @@ function render() {
   else if (state.mode === 'bone') drawBone();
   else if (state.mode === 'peptides') drawPeptides();
   else if (state.mode === 'drive') drawDrive();
+  else if (state.mode === 'monte') drawMonte();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -5339,6 +5464,8 @@ function update(dt) {
     updatePeptides(dt);
   } else if (state.mode === 'drive') {
     updateDrive(dt);
+  } else if (state.mode === 'monte') {
+    updateMonte(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
