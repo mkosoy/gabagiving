@@ -72,13 +72,21 @@ canvas.addEventListener('pointerdown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
-    if (vy >= 290 && vy <= 312) {
-      if (vx < 320) pressed.add('KeyE');
-      else pressed.add('KeyB');
-    } else if (vy >= 312 && vy <= 330) {
-      pressed.add('KeyF');
-    } else {
-      pressed.add('KeyE');
+    if (vy >= 290 && vy <= 311 && vx >= 112 && vx <= 312) pressed.add('KeyE');
+    else if (vy >= 290 && vy <= 311 && vx >= 328 && vx <= 528) pressed.add('KeyB');
+    else if (vy >= 314 && vy <= 335 && vx >= 180 && vx <= 460) pressed.add('KeyF');
+  }
+  if (state.mode === 'menu' && state.menu) {
+    const rect = canvas.getBoundingClientRect();
+    const vx = (e.clientX - rect.left) / rect.width * W;
+    const vy = (e.clientY - rect.top) / rect.height * H;
+    const entries = menuEntries();
+    const idx = Math.floor((vy - 92) / 17);
+    if (vx >= 130 && vx <= 510 && idx >= 0 && idx < entries.length) {
+      state.menu.sel = idx;
+      const it = entries[idx];
+      if (it.open) { audio.sfx('success'); it.act(); }
+      else audio.sfx('denied');
     }
   }
 }, { passive: true });
@@ -129,6 +137,13 @@ function releaseStick(e) {
   stickNub.style.transform = 'translate(0, 0)';
 }
 stickZone.addEventListener('pointerup', releaseStick);
+const menuBtnEl = document.getElementById('menuBtn');
+if (menuBtnEl) menuBtnEl.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  usingTouchControls = true;
+  audio.unlock();
+  pressed.add('Escape');
+});
 stickZone.addEventListener('pointercancel', releaseStick);
 
 function bindButton(id, code) {
@@ -210,11 +225,120 @@ const state = {
   effects: [],
   movers: [],
   npcs: {},
+  unlocked: { house: true },
+  menu: null,
   dreamT: 0,
   stats: { started: 0, calls: 0, vials: 0, smashes: 0, crashes: 0 }
 };
 
-function objective(text) { state.objective = text; }
+function objective(text) { state.objective = text; saveProgress(); }
+
+function saveProgress() {
+  if (state.mode === 'title' || !state.flags) return;
+  try {
+    localStorage.setItem('gabagiving-save-v1', JSON.stringify({
+      flags: state.flags,
+      scene: state.scene,
+      objective: state.objective,
+      player: { x: state.player.x, y: state.player.y, dir: state.player.dir, kind: state.player.kind },
+      stats: state.stats,
+      unlocked: state.unlocked || {}
+    }));
+  } catch (e) { /* storage unavailable */ }
+}
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem('gabagiving-save-v1');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function openMenu() {
+  if (!['explore', 'dialogue'].includes(state.mode)) return;
+  state.menu = { sel: 0, returnMode: state.mode };
+  state.mode = 'menu';
+  audio.sfx('pause');
+}
+
+function closeMenu() {
+  state.mode = state.menu?.returnMode || 'explore';
+  state.menu = null;
+}
+
+function chapterPreset(key) {
+  // Milestone flag presets so chapter select lands in a consistent story state.
+  const base = { houseStep: 9, tvChannel: 3, hasCard: true, sawGeese: true, ajDone: true, mirrorDone: true };
+  if (key === 'rome') Object.assign(state.flags, base, { romeStep: 0 });
+  if (key === 'chamber') Object.assign(state.flags, base, { romeStep: 1 });
+  if (key === 'drive') Object.assign(state.flags, base, { romeStep: 4, boneDone: true });
+  if (key === 'apartment') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: false, aptStep: 0, kramerIn: false, elaineIn: false });
+  if (key === 'club') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: true, aptStep: 4, kramerIn: true, elaineIn: true, clubTalked: {}, clubReady: false });
+}
+
+function jumpChapter(key) {
+  closeMenu();
+  state.menu = null;
+  chapterPreset(key);
+  if (key === 'house') { resetGame(); startGame(); return; }
+  if (key === 'rome') { setScene('rome', 72, 350); state.mode = 'explore'; objective('Walk through Rome and meet Augustus'); return; }
+  if (key === 'chamber') { setScene('chamber', 320, 330); state.mode = 'explore'; objective('Enter the glow-up chamber'); return; }
+  if (key === 'drive') { initDrive(); state.mode = 'drive'; objective('Catch the debtor — grab money boosts'); return; }
+  if (key === 'apartment') { enterApartment(); return; }
+  if (key === 'club') { enterClub(); return; }
+}
+
+function menuEntries() {
+  const u = state.unlocked || {};
+  const entries = [{ label: 'Resume game', hint: 'back to where you were', act: () => closeMenu(), open: true }];
+  const chapters = [
+    ['house', 'Ch.1 — Tony’s House'],
+    ['rome', 'Ch.2 — Rome & Augustus'],
+    ['chamber', 'Ch.3 — Glow-up Chamber'],
+    ['drive', 'Ch.4 — Jersey Road Chase'],
+    ['apartment', 'Ch.5 — Jerry’s Apartment'],
+    ['club', 'Ch.6 — Bada Bing Finale']
+  ];
+  for (const [key, label] of chapters) {
+    const open = !!u[key] || key === 'house';
+    entries.push({
+      label, hint: open ? 'chapter select' : 'locked — play the story',
+      locked: !open,
+      act: () => jumpChapter(key), open
+    });
+  }
+  const games = [
+    ['bone', 'Minigame — Bone Smashing', () => { closeMenu(); chapterPreset('chamber'); startBoneGame(); }, u.chamber],
+    ['peptides', 'Minigame — Peptide Hunt', () => { closeMenu(); startPeptides(); }, u.rome],
+    ['drive', 'Minigame — Road Chase', () => { closeMenu(); initDrive(); state.mode = 'drive'; }, u.apartment || u.drive],
+    ['produce', 'Minigame — Produce Dodge', () => { closeMenu(); startProduceGame(); }, u.satriale],
+    ['bachelor', 'Bonus — Paulie on The Bachelor', () => { closeMenu(); startBonusIntro(); }, u.club],
+    ['augustusnj', 'Bonus — Augustus in NJ', () => { closeMenu(); startAugustusBonus(); }, u.club]
+  ];
+  for (const [, label, act, open] of games) {
+    entries.push({ label, hint: open ? 'minigame' : 'locked', locked: !open, act, open: !!open });
+  }
+  entries.push({
+    label: 'Free Roam — North Caldwell', hint: u.hub || state.flags.freeRoam ? 'open world' : 'unlocks after the finale',
+    locked: !(u.hub || state.flags.freeRoam), open: !!(u.hub || state.flags.freeRoam),
+    act: () => { closeMenu(); enterHub(!state.flags.freeRoam); }
+  });
+  entries.push({ label: 'Restart story', hint: 'erases checkpoint progress', act: () => { closeMenu(); resetGame(); startGame(); }, open: true });
+  return entries;
+}
+
+function continueGame() {
+  const s = loadSave();
+  if (!s) { startGame(); return; }
+  state.flags = Object.assign(state.flags, s.flags || {});
+  state.unlocked = s.unlocked || { house: true };
+  state.stats = Object.assign(state.stats, s.stats || {});
+  setScene(s.scene || 'house', s.player?.x ?? 190, s.player?.y ?? 124);
+  state.player.dir = s.player?.dir || 'down';
+  state.player.kind = s.player?.kind || 'tony';
+  state.mode = 'explore';
+  objective(s.objective || 'Explore');
+}
 function speakerName(key) { return Object.prototype.hasOwnProperty.call(names, key) ? names[key] : (key || ''); }
 
 function startDialog(lines, onDone, opts = {}) {
@@ -417,10 +541,10 @@ const scenes = {
     w: 640, h: 416, label: 'Jerry’s Apartment · Thanksgiving', music: 'apartment',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(0,0,250,112), r(62,112,140,84), r(250,34,100,158), r(350,100,115,92),
-      r(555,10,85,260),
-      r(180,198,215,92), r(395,205,70,85), r(430,292,130,112),
-      r(8,296,150,112), r(522,360,110,56)
+      r(0,0,250,106), r(70,112,120,56), r(254,40,94,110), r(354,104,108,52),
+      r(556,12,76,240),
+      r(186,204,204,76), r(402,210,56,70), r(444,300,108,92),
+      r(242,296,120,46), r(14,304,136,100), r(530,368,98,44)
     ],
     draw: drawApartment,
     interactions: apartmentInteractions
@@ -535,8 +659,10 @@ function setScene(name, x, y) {
   state.scene = name;
   state.player.x = x;
   state.player.y = y;
+  if (state.unlocked) state.unlocked[name] = true;
   const scene = scenes[name];
   if (scene) audio.setMusic(scene.music);
+  saveProgress();
 }
 
 function moveInput() {
@@ -1062,9 +1188,9 @@ function enterApartment() {
   state.npcs.georgeApt = { x: 42, y: 122, dir: 'down', pose: 'stand' };
   objective('Follow the debtor inside');
   startDialog([
-    { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 420, 148, 150); } },
+    { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 300, 176, 150, () => moveActor(state.player, 146, 246, 150, () => moveActor(state.player, 296, 372, 150))); } },
     { speaker: 'tony', text: 'There you are.', action: () => { state.player.dir = 'left'; } },
-    { speaker: 'jerry', text: 'George? Why is a large man jogging into my apartment?' },
+    { speaker: 'jerry', text: 'George? Why is a large man jogging into my apartment?', action: () => { const j = state.npcs.jerryApt; if (j) { j.pose = 'stand'; moveActor(j, 222, 250, 90); } } },
     { speaker: 'narrator', text: 'George emerges from the kitchen holding a spoon and the expression of a man already negotiating.', action: () => moveActor(state.npcs.georgeApt, 280, 166, 64) },
     { speaker: 'george', text: 'Jerry, I can explain. Legally speaking, I probably cannot explain.' }
   ], () => {
@@ -1076,12 +1202,12 @@ function enterApartment() {
 function apartmentInteractions() {
   const s = state.flags.aptStep;
   const list = [];
-  if (s === 1 && !state.flags.hasBat) list.push({ x: 392, y: 296, w: 42, h: 34, label: 'Pick up bat', action: pickBat });
+  if (s === 1 && !state.flags.hasBat) list.push({ x: 204, y: 308, w: 44, h: 36, label: 'Pick up bat', action: pickBat });
   if (s === 2) list.push({ x: 262, y: 152, w: 46, h: 42, label: 'Confront George', action: confrontGeorge });
   if (s === 3) list.push({ x: 240, y: 300, w: 110, h: 40, label: 'Sit for dinner', action: sitDinner });
   if (state.flags.freeRoam) {
     if (state.player.kind === 'george' && !state.flags.humanFund) list.push({ x: 232, y: 306, w: 164, h: 52, label: 'Human Fund', action: humanFundScheme });
-    list.push({ x: 78, y: 8, w: 150, h: 40, label: 'Cereal shelf', action: () => {
+    list.push({ x: 78, y: 8, w: 150, h: 100, radius: 44, label: 'Cereal shelf', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Jerry, the cereal-to-company ratio in this kitchen is why I am the way I am.' },
         { speaker: 'jerry', text: 'You were like this before the cereal, George.' },
@@ -1093,7 +1219,7 @@ function apartmentInteractions() {
         { speaker: 'george', text: 'That explains the fiscal structure of your pantry.' }
       ]);
     } });
-    list.push({ x: 560, y: 20, w: 70, h: 80, label: 'Bike', action: () => startDialog([
+    list.push({ x: 556, y: 20, w: 74, h: 134, radius: 44, label: 'Bike', action: () => startDialog([
       { speaker: 'tony', text: 'Who keeps a bike inside? Guy’s afraid of the outdoors?' },
       { speaker: 'jerry', text: 'It’s decorative transportation.' }
     ]) });
@@ -1287,7 +1413,7 @@ function drawVesuvio() {
     const wx = 320 + Math.sin(state.time * .35) * 110;
     const wy = 240 + Math.cos(state.time * .22) * 60;
     drawPerson(ctx, wx, wy, 'womanD', Math.sin(state.time * .35) > 0 ? 'right' : 'left', state.frame * 2);
-    drawPerson(ctx, 492 + Math.sin(state.time * 1.3) * 2, 226, 'artie', 'left', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 338 + Math.sin(state.time * 1.3) * 2, 192, 'artie', 'down', state.frame, { pose: 'stand' });
     drawPerson(ctx, 180, 246, 'womanC', 'right', state.frame + 1, { pose: 'stand' });
     // oven fire flicker
     const f = Math.sin(state.time * 11) * 2;
@@ -1301,7 +1427,7 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
-    { x: 470, y: 210, w: 48, h: 44, label: 'Artie', action: () => {
+    { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'You ever pretend to own a restaurant to impress a waitress? Asking for a friend.' },
         { speaker: 'artie', text: 'I actually own the restaurant. It impresses nobody. Less than nobody.' },
@@ -1325,7 +1451,7 @@ function vesuvioInteractions() {
         { speaker: 'charmaine', text: 'He wrote her initials in the risotto special. In balsamic.' }
       ]);
     } },
-    { x: 430, y: 30, w: 130, h: 130, label: 'Brick oven', action: () => startDialog([
+    { x: 430, y: 30, w: 130, h: 130, radius: 48, label: 'Brick oven', action: () => startDialog([
       { speaker: 'tony', text: 'Real fire. Real crust. This place beats that pie joint across town.' },
       { speaker: 'artie', text: 'Careful. I almost cried hearing that.' }
     ]) }
@@ -2391,9 +2517,9 @@ function drawApartment() {
       const pulse = (Math.sin(state.time * 5) + 1) / 2;
       ctx.fillStyle = `rgba(255,216,92,${.18 + pulse * .2})`;
       ctx.beginPath();
-      ctx.ellipse(410, 318, 22 + pulse * 5, 10 + pulse * 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(224, 330, 22 + pulse * 5, 10 + pulse * 2, 0, 0, Math.PI * 2);
       ctx.fill();
-      drawBat(ctx, 410, 312, -1.1);
+      drawBat(ctx, 224, 324, -1.1);
     }
     const j = state.npcs.jerryApt || { x: 266, y: 212, dir: 'right', pose: 'sit' };
     const g = state.npcs.georgeApt || { x: 42, y: 122, dir: 'down', pose: 'stand' };
@@ -2825,6 +2951,26 @@ function drawEnding() {
   if (Math.sin(state.time * 5) > 0) outlineText(ctx, 'tap a bonus · R replays the story', 320, 346, '#aeb8d8', 8, 'center');
 }
 
+function drawMenu() {
+  ctx.fillStyle = 'rgba(5,8,20,.72)';
+  ctx.fillRect(0, 0, W, H);
+  drawPanel(130, 30, 380, 326, '#141a33', '#e0ba62');
+  outlineText(ctx, 'MENU', 320, 42, '#ffd34f', 13, 'center');
+  outlineText(ctx, `${usingTouchControls ? 'tap' : 'W/S + E'} to choose · ${usingTouchControls ? 'Menu btn' : 'Esc'} closes`, 320, 62, '#aeb8d8', 7, 'center');
+  const entries = menuEntries();
+  entries.forEach((it, i) => {
+    const y = 92 + i * 17;
+    const sel = i === state.menu.sel;
+    if (sel) {
+      ctx.fillStyle = 'rgba(255,211,79,.14)';
+      ctx.fillRect(142, y - 4, 356, 16);
+    }
+    const color = it.locked ? '#5a6076' : sel ? '#ffe78a' : '#d8deef';
+    outlineText(ctx, `${sel ? '> ' : ''}${it.label}`, 156, y, color, 8);
+    outlineText(ctx, it.locked ? 'locked' : it.hint, 494, y + 1, it.locked ? '#5a6076' : '#8f9ab8', 6, 'right');
+  });
+}
+
 function drawAtmosphere() {
   // Subtle scanlines and vignette sell the retro handheld look without hurting readability.
   ctx.fillStyle = 'rgba(0,0,0,.055)';
@@ -2850,8 +2996,9 @@ function render() {
   else if (state.mode === 'ending') drawEnding();
   else drawWorld();
 
+  if (state.mode === 'menu') drawMenu();
   drawAtmosphere();
-  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce'].includes(state.mode)) drawObjective();
+  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu'].includes(state.mode)) drawObjective();
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
   drawDialog();
@@ -2874,6 +3021,10 @@ function resetGame() {
   state.bonus = null;
   state.produce = null;
   state.bonusReveal = false;
+  state.unlocked = { house: true };
+  state.menu = null;
+  state.npcs = {};
+  state.movers = [];
   audio.setMusic('title');
 }
 
@@ -2897,6 +3048,22 @@ function update(dt) {
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   }
   if (state.help && consume(cancelCodes)) state.help = false;
+  if (consume(['Escape', 'KeyP'])) {
+    if (state.mode === 'menu') closeMenu();
+    else openMenu();
+  }
+  if (state.mode === 'menu') {
+    const entries = menuEntries();
+    if (consume(['ArrowDown', 'KeyS'])) { state.menu.sel = (state.menu.sel + 1) % entries.length; audio.sfx('pickup'); }
+    if (consume(['ArrowUp', 'KeyW'])) { state.menu.sel = (state.menu.sel - 1 + entries.length) % entries.length; audio.sfx('pickup'); }
+    if (interactPressed()) {
+      const it = entries[state.menu.sel];
+      if (it && it.open) { audio.sfx('success'); it.act(); }
+      else audio.sfx('denied');
+    }
+    pressed.clear();
+    return;
+  }
   if (!['title', 'ending'].includes(state.mode) && consume(['KeyR'])) {
     resetGame();
     pressed.clear();
@@ -2904,7 +3071,8 @@ function update(dt) {
   }
 
   if (state.mode === 'title') {
-    if (interactPressed()) startGame();
+    if (consume(['KeyC']) && loadSave()) continueGame();
+    else if (interactPressed()) startGame();
   } else if (state.mode === 'dialogue') {
     updateDialog(dt);
   } else if (state.mode === 'explore') {
