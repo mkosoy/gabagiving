@@ -1041,13 +1041,15 @@ function shoveNearest() {
   const comboMul = Math.min(3, 1 + (combo - 1) * .5);
   // a hostile brawler in range takes the hit instead
   if (hitsBrawler) {
-    bw.hp -= 1;
+    const brickHit = (state.flags.brick || 0) > 0;
+    if (brickHit) state.flags.brick -= 1;
+    bw.hp -= brickHit ? 2 : 1;
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
     bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
     bw.barkT = 1.4;
-    const hitWord = combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
+    const hitWord = brickHit ? 'BRICK!' : combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
     spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? hitWord : 'KNOCKOUT!', '#ffe78a');
     if (combo >= 2) spawnEffect(bw.x + 8, bw.y - 24, `COMBO x${combo}`, '#ff9a3e');
     audio.sfx('smash');
@@ -3674,6 +3676,18 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 700, y: 330, w: 40, h: 30, radius: 40, label: 'Loose brick', hidden: () => (state.flags.brick || 0) > 0, action: () => {
+      state.flags.brick = 3;
+      audio.sfx('pickup');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'BRICK x3 · USE WISELY', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A loose brick. George pockets it with the confidence of a man who has never thrown anything in his life.' },
+        { speaker: 'george', text: 'For protection! The city is dangerous! Also it was FREE. A free brick!' }
+      ] : [
+        { speaker: 'narrator', text: 'A loose brick. In Tony’s hands, masonry is just unfiled paperwork.' },
+        { speaker: 'tony', text: 'Three good swings in this. Maybe four. We’ll see how the brick feels.' }
+      ]);
     } },
     { x: 380, y: 356, w: 66, h: 36, radius: 44, label: 'Steal taxi', hidden: () => !!state.player.inCar, action: () => {
       state.player.inCar = true;
