@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1655,6 +1655,14 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman — soup unopened', label: 'Deliver the soup' }
     ]
   },
+  cannonball: {
+    title: 'THE CANNONBALL',
+    payout: 350, heat: 1.5, timeLimit: 260,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'RACE: reach the Pine Barrens clearing before time runs out', label: 'Tag the clearing' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'RACE BACK to Newman — clock is running', label: 'Win the bet' }
+    ]
+  },
   heatMagnet: {
     title: 'HEAT MAGNET',
     payout: 220, heat: 0, survive: 30,
@@ -1680,7 +1688,7 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'ryeExpress', 'heatMagnet', 'pineFresh'];
+const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh'];
 const KRAMER_CHAIN = ['muffinTops', 'bladderRun'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
@@ -1733,6 +1741,10 @@ function advanceMission() {
       bladderRun: [
         { speaker: 'kramer', text: 'Beautiful. The bladder is empty, the pipeline flows, and the environment? She’ll bounce back. She’s resilient, buddy. They’re very resilient.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I dumped industrial oil in a protected forest! I’m a polluter! A POLLUTER! …It was a lot of money.' : 'Two hundred to empty a balloon in the woods. I’ve buried worse things there. Don’t ask. Seriously — don’t.' }
+      ],
+      cannonball: [
+        { speaker: 'newman', text: 'HA! IN YOUR FACE, FIREMAN LENNY! Er — well done. The $350, minus the standard courier tithe. Hee hee. The tithe is most of it.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove like a maniac through a tunnel for a BET?! People bet on me?! I’m a HORSE! …A fast horse. Fastest in the stable, actually.' : 'Fast driving, no questions, cash at the end. Best job all week.' }
       ],
       bigSalad: [
         { speaker: 'newman', text: 'Yes. YES. Look at the SIZE of it. Big. You have done well. The mail provides. Well — YOU provided. Same thing, essentially.' },
@@ -3710,6 +3722,7 @@ function hubInteractions() {
           catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
           bigSalad: { speaker: 'newman', text: 'Hungry work, the mail. Fetch me a salad from Monk’s. A BIG salad. Not the small. If it’s small, I will know. I ALWAYS know. $120.' },
           soupNaziRun: { speaker: 'newman', text: 'Soup. From the Soup Man. I am… no longer welcome there. A misunderstanding involving the bread line. You go. Follow the rules EXACTLY or there will be NO SOUP. $160.' },
+          cannonball: { speaker: 'newman', text: 'A wager! I bet a VERY smug fireman $350 that nobody sane can reach the Pine Barrens and return before his shift whistle. You are nobody sane. GO! The clock is ALREADY judgemental!' },
           heatMagnet: { speaker: 'newman', text: 'This one is simple. I may have told the police YOU are the mail thief. You’ll have some heat for a bit. Survive it, come back, $220. What — don’t look at me like that, it’s a COMPLIMENT. They believed me instantly!' },
           ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
           pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
