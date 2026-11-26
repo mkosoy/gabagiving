@@ -5021,6 +5021,25 @@ function drawBodega() {
 
 function bodegaInteractions() {
   return [
+    { x: 500, y: 150, w: 60, h: 40, radius: 42, label: 'Pocket a candy bar', action: () => {
+      if ((state.shopliftCd || 0) > state.time) { toast('The clerk is watching the candy aisle now. He KNOWS.'); return; }
+      state.shopliftCd = state.time + 40;
+      const caught = Math.random() < .3;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + (caught ? .8 : .3));
+      if (caught) {
+        audio.sfx('denied');
+        startDialog([
+          { speaker: 'narrator', text: 'The clerk materializes with the silent speed of a man who has seen ten thousand candy bar attempts. “You pay, or you go. Both. Both, and never come back.” You pay $4. You will pay it forever, in shame.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It fell INTO my pocket! Gravity did it! I’m a victim of PHYSICS!' : 'Kid’s got a good eye. Respect. I’m buying two. Full price. We never spoke.' }
+        ]);
+        state.money = Math.max(0, state.money - 4);
+      } else {
+        audio.sfx('pickup');
+        state.money += 2;
+        spawnEffect(state.player.x, state.player.y - 16, 'Pocketed. Smooth.', '#ffd0a0');
+        startDialog([{ speaker: 'narrator', text: 'A candy bar slides into your pocket like it was born there. Somewhere a scanner fails to beep. The thrill is enormous and entirely disproportionate to the prize. You sold the wrapper for $2 to a tourist, somehow.' }]);
+      }
+    } },
     { x: 4, y: 330, w: 60, h: 76, radius: 42, label: 'Leave', action: leaveOutside },
     { x: 258, y: 8, w: 124, h: 90, radius: 52, label: 'Deli counter', action: () => {
       if (!state.flags.gotCoffee) {
