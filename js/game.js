@@ -3656,6 +3656,8 @@ function drawInteractionMarkers() {
 function objectiveTarget() {
   const scene = scenes[state.scene];
   if (!scene || state.mode !== 'explore') return null;
+  // free roam has no single objective — the arrow would just be noise
+  if (state.scene === 'hub') return null;
   const list = scene.interactions().filter((i) => !i.hidden && !/leave|exit/i.test(i.label));
   const priority = list.filter((i) => /talk|meet|speak|order|enter|use|take|sit|answer|carve|answer|glow|drive|start|confront/i.test(i.label));
   return priority[0] || list[0] || null;
