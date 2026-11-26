@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1623,6 +1623,22 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  muffinTops: {
+    title: 'THE MUFFIN TOPS',
+    payout: 140, heat: 0,
+    steps: [
+      { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'Unload the muffin stumps at the bodega. They take anything.', label: 'Dump the stumps' },
+      { scene: 'nyc', x: 300, y: 250, radius: 55, objective: 'Report back to Kramer on the street', label: 'Report to Kramer' }
+    ]
+  },
+  bladderRun: {
+    title: 'THE PETROLEUM PIPELINE',
+    payout: 200, heat: 1,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'Empty the oil bladder in the Pine Barrens. Legally distinct from dumping.', label: 'Empty the bladder' },
+      { scene: 'nyc', x: 300, y: 250, radius: 55, objective: 'Report back to Kramer', label: 'Report to Kramer' }
+    ]
+  },
   bigSalad: {
     title: 'THE BIG SALAD',
     payout: 120, heat: 0,
@@ -1665,6 +1681,10 @@ const MISSION_DEFS = {
   }
 };
 const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'ryeExpress', 'heatMagnet', 'pineFresh'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun'];
+function nextKramerMission() {
+  return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
+}
 function nextMission() {
   return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -1705,6 +1725,14 @@ function advanceMission() {
       turkeyTax: [
         { speaker: 'silvio', text: 'Moist but complete. The bird, she is paid for. You did good — keep the vig.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I collected protection money and everyone was SO POLITE. Is this what power feels like?!' : 'Happy Thanksgiving, Sil. Tell the bird I said so.' }
+      ],
+      muffinTops: [
+        { speaker: 'kramer', text: 'The stumps are MOVED, baby! Kramerica Foods is officially a going concern! Well — a going concern! Ha-YEAH!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I trucked garbage muffins across town for a hundred forty dollars. There are children with lemonade stands out-earning me!' : 'The best part of the muffin IS the top. The man’s not wrong. The rest is garbage logistics.' }
+      ],
+      bladderRun: [
+        { speaker: 'kramer', text: 'Beautiful. The bladder is empty, the pipeline flows, and the environment? She’ll bounce back. She’s resilient, buddy. They’re very resilient.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I dumped industrial oil in a protected forest! I’m a polluter! A POLLUTER! …It was a lot of money.' : 'Two hundred to empty a balloon in the woods. I’ve buried worse things there. Don’t ask. Seriously — don’t.' }
       ],
       bigSalad: [
         { speaker: 'newman', text: 'Yes. YES. Look at the SIZE of it. Big. You have done well. The mail provides. Well — YOU provided. Same thing, essentially.' },
@@ -1771,6 +1799,14 @@ function updateMission() {
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I feel terrible doing this. I also feel terrible NOT doing this. I feel terrible! That’s the constant!' : 'The veal WAS perfect. That’s why you’re still open, Artie.' }
+        ],
+        muffinTops: [
+          { speaker: 'narrator', text: 'Forty pounds of muffin stumps, accepted without a word. The bodega has seen stranger cargo. This week.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'They TOOK them! No questions! What is this city!' : 'Stumps moved. The muffin economy hums along.' }
+        ],
+        bladderRun: [
+          { speaker: 'narrator', text: 'The bladder deflates into the frozen earth with a noise like a dying accordion. Somewhere, a fish lawyer weeps.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s fine! It’s biodegradable! …Is oil biodegradable? IS IT?!' : 'What spills in the Barrens stays in the Barrens.' }
         ],
         bigSalad: [
           { speaker: 'narrator', text: 'One big salad, boxed. It is, undeniably, big. The waitress knows better than to ask who it’s for.' },
@@ -4584,6 +4620,22 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 300, y: 232, w: 40, h: 36, radius: 44, label: 'Kramer', action: () => {
+      if (!state.mission && nextKramerMission()) {
+        const mid = nextKramerMission();
+        startMission(mid);
+        const offers = {
+          muffinTops: { speaker: 'kramer', text: 'Buddy! Perfect timing! Kramerica Foods needs a logistics man. Muffin stumps — forty pounds — to the bodega. They take anything. $140. Giddy up!' },
+          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' }
+        };
+        startDialog([
+          offers[mid],
+          { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      } else startDialog([
+        { speaker: 'kramer', text: state.player.kind === 'george' ? 'Georgie! You look tired. Kramerica Industries is hiring, you know. No benefits, no salary, but the adrenaline — top shelf.' : 'You got the look, buddy. Waste management, huh? I can smell opportunity. And other things. It’s the bladder, don’t ask.' }
+      ]);
     } },
     { x: 250, y: 296, w: 30, h: 26, radius: 40, label: 'Parking meter', action: () => {
       const cd = 20;
