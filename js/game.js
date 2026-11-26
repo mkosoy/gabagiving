@@ -742,13 +742,14 @@ function watchRomanStreamer() {
 
 function talkAugustus() {
   startDialog([
-    { speaker: 'augustus', text: 'Cousin Tony!', action: () => audio.sfx('success') },
-    { speaker: 'narrator', text: 'Augustus kisses Tony on both cheeks. His jawline could open mail.' },
+    { speaker: 'augustus', text: 'Cousin Tony!', action: () => { audio.sfx('success'); state.player.x = 614; state.player.y = 148; state.player.dir = 'right'; } },
+    { speaker: 'narrator', text: 'Augustus kisses Tony on both cheeks. His jawline could open mail.', action: () => { state.player.x = 632; state.player.y = 148; state.player.dir = 'right'; state.playerPose = 'lean'; } },
     { speaker: 'augustus', text: 'You look rough, Ton.' },
     { speaker: 'tony', text: 'Really? You think so?' },
     { speaker: 'augustus', text: 'You have to max, Ton. You cannot be a boss like this. It is a new era.' },
     { speaker: 'augustus', text: 'Come. Get glammed out. Rome did not become Rome with a recessed chin.' }
   ], () => {
+    state.playerPose = null;
     state.flags.romeStep = 1;
     objective('Enter the glow-up chamber');
   });
@@ -1975,7 +1976,7 @@ function drawHouse() {
     }
     // Carmela paces through the kitchen instead of the house feeling frozen.
     const carmX = 486 + Math.sin(state.time * .9) * 34;
-    drawPerson(ctx, carmX, 330, 'carmela', Math.cos(state.time * .9) > 0 ? 'right' : 'left', state.frame * 1.4, { pose: 'stand' });
+    drawPerson(ctx, carmX, 270, 'carmela', Math.cos(state.time * .9) > 0 ? 'right' : 'left', state.frame * 1.4, { pose: 'stand' });
     // Carmela's card is a visible objective object, not an invisible pixel hunt.
     if (!state.flags.hasCard) {
       const pulse = (Math.sin(state.time * 6) + 1) / 2;
@@ -2026,7 +2027,7 @@ function drawHouse() {
     px(ctx, 486, 34, 20, 10, '#78ff9b');
     drawFramedPhoto(sceneArt.cousinTony, 560, 22, 48, 42);
     // AJ shifts in his chair and leans into the desk instead of standing frozen.
-    drawPerson(ctx, 486 + Math.sin(state.time * 2.1) * 1.8, 86, 'aj', 'left', state.frame * 1.5, { pose: 'lean' });
+    drawPerson(ctx, 486 + Math.sin(state.time * 2.1) * 1.8, 88, 'aj', 'left', state.frame * 1.5, { pose: 'sit' });
     return;
   }
   // floor zones
@@ -2134,14 +2135,14 @@ function drawColumn(x, y) {
 function drawRome() {
   const t = state.time;
   const crowd = [
-    [212, 284, 'guard', 0], [238, 296, 'meadow', 1], [296, 296, 'carmela', 2], [326, 284, 'aj', 3]
+    [212, 284, 'romanGuard', 0], [238, 296, 'romanNoblewoman', 1], [296, 296, 'romanCitizenWoman', 2], [326, 284, 'romanCitizen', 3]
   ];
   if (drawSceneArt(sceneArt.rome, 800, 440)) {
     // Living “empty-square” stream performance and imperial court over the illustrated forum.
-    drawPerson(ctx, 266 + Math.sin(t * 1.5) * 5, 228, 'plav', 'down', state.frame, { pose: 'perform' });
+    drawPerson(ctx, 266 + Math.sin(t * 1.5) * 5, 228, 'romanPerformer', 'down', state.frame, { pose: 'perform' });
     crowd.forEach(([x, y, kind, i]) => drawPerson(ctx, x + Math.sin(t * .9 + i) * 3, y + Math.cos(t * 1.2 + i) * 2, kind, 'up', state.frame + i, { pose: 'watch' }));
     drawPerson(ctx, 660 + Math.sin(t * .8) * 4, 150, 'augustus', 'down', state.frame, { pose: 'imperial' });
-    drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'guard', 'down', state.frame, { pose: 'guard' });
+    drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'romanGuard', 'down', state.frame, { pose: 'guard' });
     return;
   }
   // sky/warm backdrop and street
@@ -2168,7 +2169,7 @@ function drawRome() {
   // empty square livestream performer + crowd
   px(ctx, 238, 210, 58, 76, '#7c4a2d');
   px(ctx, 245, 218, 44, 58, 'rgba(0,0,0,0)');
-  drawPerson(ctx, 252, 236, 'plav', 'down', state.frame);
+  drawPerson(ctx, 252, 236, 'romanPerformer', 'down', state.frame);
   px(ctx, 238, 210, 58, 5, '#9a623b');
   px(ctx, 238, 281, 58, 5, '#9a623b');
   px(ctx, 238, 210, 5, 76, '#9a623b');
@@ -2180,7 +2181,7 @@ function drawRome() {
   px(ctx, 690, 130, 84, 52, '#c4b48e');
   px(ctx, 700, 140, 64, 32, '#e4d7b7');
   drawPerson(ctx, 660 + Math.sin(t * .8) * 4, 150, 'augustus', 'down', state.frame);
-  drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'guard', 'down', state.frame);
+  drawPerson(ctx, 724 + Math.sin(t * .7) * 3, 154, 'romanGuard', 'down', state.frame);
   // glow-up chamber entrance
   px(ctx, 744, 150, 48, 34, '#6b442e');
   px(ctx, 750, 156, 36, 28, '#2a1724');
@@ -2326,7 +2327,7 @@ function drawClub() {
 // ---------- Minigame/cinematic rendering ----------
 function drawPlayer() {
   const kind = state.player.kind;
-  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame);
+  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
   if (state.flags.hasBat && state.scene === 'apartment') drawBat(ctx, state.player.x + 17, state.player.y + 11, -0.7);
 }
 

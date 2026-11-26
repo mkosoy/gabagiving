@@ -51,12 +51,38 @@ const illustratedSprites = {
   jerry: loadSprite('./assets/sprites/jerry.webp'),
   george: loadSprite('./assets/sprites/george.webp'),
   kramer: loadSprite('./assets/sprites/kramer.webp'),
-  elaine: loadSprite('./assets/sprites/elaine.webp')
+  elaine: loadSprite('./assets/sprites/elaine.webp'),
+  meadow: loadSprite('./assets/sprites/meadow.webp'),
+  melfi: loadSprite('./assets/sprites/melfi.webp'),
+  christopher: loadSprite('./assets/sprites/christopher.webp'),
+  silvio: loadSprite('./assets/sprites/silvio.webp'),
+  bobby: loadSprite('./assets/sprites/bobby.webp'),
+  artie: loadSprite('./assets/sprites/artie.webp'),
+  irina: loadSprite('./assets/sprites/irina.webp'),
+  junior: loadSprite('./assets/sprites/junior.webp'),
+  janice: loadSprite('./assets/sprites/janice.webp'),
+  plav: loadSprite('./assets/sprites/plav.webp'),
+  romanGuard: loadSprite('./assets/sprites/romanGuard.webp'),
+  romanSenator: loadSprite('./assets/sprites/romanSenator.webp'),
+  romanNoblewoman: loadSprite('./assets/sprites/romanNoblewoman.webp'),
+  romanCitizen: loadSprite('./assets/sprites/romanCitizen.webp'),
+  romanCitizenWoman: loadSprite('./assets/sprites/romanCitizenWoman.webp'),
+  romanPerformer: loadSprite('./assets/sprites/romanPerformer.webp')
 };
+
+const spriteAliases = {
+  tonyMax: 'tony',
+  womanA: 'carmela',
+  womanB: 'meadow',
+  womanC: 'janice',
+  womanD: 'irina',
+  guard: 'romanGuard'
+};
+function canonicalSpriteKind(kind) { return spriteAliases[kind] || kind; }
 
 function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   const pose = options.pose || 'stand';
-  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42 };
+  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46 };
   let h = (heights[kind] || 43) * (options.scale ? options.scale / 1.18 : 1);
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
@@ -112,9 +138,10 @@ const palettes = {
 };
 
 export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, options = {}) {
-  const illustrated = illustratedSprites[kind];
+  const spriteKind = canonicalSpriteKind(kind);
+  const illustrated = illustratedSprites[spriteKind];
   if (illustrated?.complete && illustrated.naturalWidth) {
-    drawIllustratedPerson(ctx, x, y, illustrated, kind, dir, frame, options);
+    drawIllustratedPerson(ctx, x, y, illustrated, spriteKind, dir, frame, options);
     return;
   }
   const p = palettes[kind] || palettes.tony;
@@ -323,7 +350,7 @@ export function drawPortrait(ctx, x, y, kind = 'tony') {
   const p = palettes[kind] || palettes.tony;
   px(ctx, x, y, 34, 34, '#1a2548');
   px(ctx, x + 2, y + 2, 30, 30, '#31477a');
-  const illustrated = illustratedSprites[kind];
+  const illustrated = illustratedSprites[canonicalSpriteKind(kind)];
   if (illustrated?.complete && illustrated.naturalWidth) {
     const h = 31;
     const w = h * illustrated.naturalWidth / illustrated.naturalHeight;
