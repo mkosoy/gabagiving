@@ -2785,7 +2785,7 @@ function hubInteractions() {
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
-    { x: 1000, y: 330, w: 90, h: 50, radius: 46, label: 'Costanza house', action: () => travelHub('costanza') },
+    { x: 856, y: 300, w: 64, h: 56, radius: 52, label: 'Costanza house', action: () => travelHub('costanza') },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
@@ -4746,7 +4746,7 @@ function loop(now) {
 }
 
 if (new URLSearchParams(location.search).has('debug')) {
-  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction };
+  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction, blockedAt };
 }
 
 resetGame();
