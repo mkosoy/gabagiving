@@ -944,6 +944,44 @@ function updateKramerCycle(dt) {
   }
 }
 
+function updateHubEvents(dt) {
+  if (!state.flags.freeRoam || state.scene !== 'hub') return;
+  state.hubEventT = (state.hubEventT ?? 6) - dt;
+  if (state.hubEventT > 0) return;
+  state.hubEventT = 9 + Math.random() * 12;
+  const npcs = ambientFor('hub');
+  const roll = Math.random();
+  if (roll < .3 && npcs.length >= 2) {
+    // two pedestrians argue about nothing
+    const [a, b] = [npcs[0], npcs[npcs.length - 1]];
+    a.bark = 'I’M WALKIN’ HERE!'; a.barkT = 2.2;
+    b.bark = 'YOU GOTTA PROBLEM?!'; b.barkT = 2.6;
+    audio.voice('tony');
+  } else if (roll < .55) {
+    // goose attack
+    const n = npcs[Math.floor(Math.random() * npcs.length)];
+    if (n) {
+      n.bark = 'THE GEESE ARE BACK!'; n.barkT = 2.4;
+      n.diveT = .8;
+      spawnEffect(n.x + 10, n.y - 12, 'HONK!!', '#ffffff');
+      audio.sfx('honk');
+    }
+  } else if (roll < .75) {
+    // car backfire
+    spawnEffect(300 + Math.random() * 200, 252, 'BACKFIRE!', '#ffb13e');
+    audio.sfx('crash');
+    for (const n of npcs) { n.pause = 1.2; }
+  } else {
+    // neighborhood gossip
+    const n = npcs[Math.floor(Math.random() * npcs.length)];
+    if (n) {
+      const gossip = ['Did you hear about the Bing?', 'Some guy hit three pedestrians. Allegedly.', 'Artie’s in love again.', 'They found coins in the pork store.'];
+      n.bark = gossip[Math.floor(Math.random() * gossip.length)];
+      n.barkT = 3;
+    }
+  }
+}
+
 function updateExplore(dt) {
   updatePhone(dt);
   if (state.phone) return;
@@ -951,6 +989,7 @@ function updateExplore(dt) {
   updateRyeHeist(dt);
   updateCop(dt);
   updateKramerCycle(dt);
+  updateHubEvents(dt);
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .06);
   const input = moveInput();
   const p = state.player;
