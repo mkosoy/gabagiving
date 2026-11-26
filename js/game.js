@@ -281,6 +281,7 @@ function saveWorld() {
   try {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
+    out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
 }
@@ -288,6 +289,7 @@ function loadWorld() {
   try {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
+    if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
   } catch (e) { /* ignore */ }
 }
 
@@ -757,7 +759,7 @@ const scenes = {
     colliders: [
       r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
       // dense treeline north and deep woods east/west — the clearing is open
-      r(8,8,752,150), r(8,158,180,250), r(580,158,180,250),
+      r(8,8,752,150), r(40,158,148,250), r(580,158,180,250),
       // frozen pond lower-left, rusty car right
       r(220,300,120,80), r(560,220,90,50)
     ],
@@ -3541,14 +3543,17 @@ function updateBlackjack(dt) {
   bj.t += dt;
   if (bj.phase === 'player') {
     const hint = bjTotal(bj.player) >= 17 ? 'stand?' : 'hit?';
-    if (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed()) {
+    const inp = moveInput();
+    if (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed() || (inp.x < -.5 && !bj.stickHit)) {
+      bj.stickHit = true;
       bj.player.push(bjCard());
       audio.sfx('pickup');
       if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
-    } else if (consume(['ArrowRight', 'KeyD', 'KeyS'])) {
+    } else if (consume(['ArrowRight', 'KeyD', 'KeyS']) || inp.x > .5 || inp.y > .5) {
       bj.phase = 'dealer';
       bj.t = 0;
     }
+    if (inp.x > -.3) bj.stickHit = false;
   } else if (bj.phase === 'dealer') {
     if (bj.t > .7) {
       bj.t = 0;
@@ -4117,11 +4122,11 @@ function nycInteractions() {
     } },
     { x: 250, y: 296, w: 30, h: 26, radius: 40, label: 'Parking meter', action: () => {
       const cd = 20;
-      if ((state.flags.meterT || 0) + cd > state.time) {
+      if ((state.flags.meterT || 0) + cd > Date.now() / 1000) {
         startDialog([{ speaker: 'narrator', text: 'Empty. The city refills these things slower than you can rob them. Impressive, really.' }]);
         return;
       }
-      state.flags.meterT = state.time;
+      state.flags.meterT = Date.now() / 1000;
       const loot = 8 + Math.floor(Math.random() * 10);
       state.flags.tribute = (state.flags.tribute || 0) + loot;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
