@@ -288,8 +288,8 @@ function drawObjective() {
 
 function drawPrompt(inter) {
   if (!inter || state.mode !== 'explore') return;
-  const sx = inter.x + inter.w / 2 - state.camera.x;
-  const sy = inter.y - 15 - state.camera.y;
+  const sx = Math.max(50, Math.min(W - 50, inter.x + inter.w / 2 - state.camera.x));
+  const sy = Math.max(20, inter.y - 15 - state.camera.y);
   drawPanel(sx - 42, sy - 5, 84, 18, '#1b2a55', '#f4df8e');
   outlineText(ctx, `${usingTouchControls ? 'A' : 'E'}  ${inter.label}`, sx, sy + 1, '#fff1a6', 8, 'center');
 }
@@ -2607,7 +2607,7 @@ function drawTitle() {
   outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
   drawPanel(188, 258, 264, 58, 'rgba(12,18,42,.78)', '#6f89c9');
   const blink = Math.sin(state.time * 5) > 0;
-  if (blink) outlineText(ctx, 'PRESS E / SPACE / A TO START', W / 2, 272, '#8ffff2', 11, 'center');
+  if (blink) outlineText(ctx, `PRESS ${(usingTouchControls || navigator.maxTouchPoints > 0) ? 'A / TAP' : 'E / SPACE'} TO START`, W / 2, 272, '#8ffff2', 11, 'center');
   outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 294, '#aeb8d8', 8, 'center');
   outlineText(ctx, 'Unofficial parody fan game · original art and synthesized voices', W / 2, 342, '#777fa5', 7, 'center');
 }
