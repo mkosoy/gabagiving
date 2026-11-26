@@ -358,7 +358,7 @@ const scenes = {
       r(252,8,16,66), r(252,136,16,46), r(352,8,16,58), r(352,126,16,56),
       r(8,174,262,16), r(330,174,302,16),
       r(352,190,16,76), r(352,322,16,86),
-      r(62,45,110,100), r(200,20,62,55), r(18,70,54,58),
+      r(62,45,110,80), r(200,20,62,55), r(18,70,54,58),
       r(392,26,138,76), r(568,86,56,88), r(408,122,70,28),
       r(55,280,175,100), r(24,318,42,42), r(392,210,190,36), r(414,292,160,96)
     ],
@@ -2476,33 +2476,61 @@ function drawDrive() {
 }
 
 function drawTitle() {
-  px(ctx, 0, 0, W, H, '#11162f');
-  // comic four-panel backdrop
-  const panels = [
-    [18, 40, 140, 92, '#7a5139', 'NEW JERSEY'],
-    [172, 40, 140, 92, '#d1b98d', 'ROME'],
-    [326, 40, 140, 92, '#4c4f55', 'THE CHASE'],
-    [480, 40, 140, 92, '#614145', '5A']
-  ];
-  for (const [x, y, w, h, c, label] of panels) {
-    drawPanel(x, y, w, h, c, '#594b39');
-    outlineText(ctx, label, x + w / 2, y + 8, '#ffe5a0', 8, 'center');
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0b1028');
+  grad.addColorStop(.55, '#151b3e');
+  grad.addColorStop(1, '#090b18');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  function artPanel(img, x, y, w, h, label) {
+    drawPanel(x - 2, y - 2, w + 4, h + 4, '#15172c', '#9d7745');
+    if (img.complete && img.naturalWidth) {
+      const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+      const sw = w / scale;
+      const sh = h / scale;
+      const sx = (img.naturalWidth - sw) / 2;
+      const sy = (img.naturalHeight - sh) / 2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+      ctx.fillStyle = 'rgba(5,8,20,.16)';
+      ctx.fillRect(x, y, w, h);
+      ctx.restore();
+    } else px(ctx, x, y, w, h, '#273052');
+    px(ctx, x, y, w, 15, 'rgba(5,8,20,.72)');
+    outlineText(ctx, label, x + w / 2, y + 4, '#ffe5a0', 7, 'center');
   }
-  drawPerson(ctx, 68, 85, 'tony', 'down', state.frame);
-  drawTurkey(ctx, 122, 112, 1.1, true);
+
+  artPanel(sceneArt.house, 18, 34, 140, 92, 'NEW JERSEY');
+  artPanel(sceneArt.rome, 172, 34, 140, 92, 'ROME');
+  artPanel(sceneArt.hub, 326, 34, 140, 92, 'THE CHASE');
+  artPanel(sceneArt.apartment, 480, 34, 140, 92, 'JERRY’S');
+
+  // animated foreground cast and holiday props
+  drawPerson(ctx, 68, 86, 'tony', 'down', state.frame);
+  drawTurkey(ctx, 124, 113 + Math.sin(state.time * 3) * 2, 1.1, true);
   drawPerson(ctx, 224, 78, 'augustus', 'down', state.frame);
-  drawPerson(ctx, 270, 92, 'plav', 'down', state.frame);
   drawCar(396, 110, '#8f1f2e');
-  drawPerson(ctx, 516, 84, 'jerry', 'down', state.frame);
-  drawPerson(ctx, 558, 84, 'kramer', 'down', state.frame + 2);
+  if (state.time % 2 < 1.35) {
+    px(ctx, 382, 103, 7, 3, '#ffe27a');
+    px(ctx, 406, 103, 7, 3, '#ffe27a');
+  }
+  drawPerson(ctx, 512, 84, 'jerry', 'down', state.frame);
+  drawPerson(ctx, 552, 82, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
   drawPerson(ctx, 594, 94, 'george', 'down', state.frame + 1);
 
-  outlineText(ctx, 'TONY SOPRANO', W / 2, 162, '#ffd34f', 25, 'center');
-  outlineText(ctx, 'THANKSGIVING', W / 2, 194, '#fff4c8', 28, 'center');
-  outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 232, '#c8d7ff', 10, 'center');
+  // warmer theatrical title treatment
+  px(ctx, 110, 153, 420, 3, '#6b3e24');
+  outlineText(ctx, 'TONY SOPRANO', W / 2, 164, '#ffd34f', 25, 'center');
+  outlineText(ctx, 'THANKSGIVING', W / 2, 196, '#fff4c8', 28, 'center');
+  outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
+  drawPanel(188, 258, 264, 58, 'rgba(12,18,42,.78)', '#6f89c9');
   const blink = Math.sin(state.time * 5) > 0;
-  if (blink) outlineText(ctx, 'PRESS E / SPACE / A TO START', W / 2, 284, '#8ffff2', 11, 'center');
-  outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 316, '#aeb8d8', 8, 'center');
+  if (blink) outlineText(ctx, 'PRESS E / SPACE / A TO START', W / 2, 272, '#8ffff2', 11, 'center');
+  outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 294, '#aeb8d8', 8, 'center');
   outlineText(ctx, 'Unofficial parody fan game · original art and synthesized voices', W / 2, 342, '#777fa5', 7, 'center');
 }
 

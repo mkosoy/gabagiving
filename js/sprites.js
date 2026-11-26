@@ -36,6 +36,52 @@ function skinShadow(ctx, x, y, w = 16) {
   ctx.fill();
 }
 
+function loadSprite(src) {
+  const img = new Image();
+  img.src = src;
+  return img;
+}
+
+const illustratedSprites = {
+  tony: loadSprite('./assets/sprites/tony.webp'),
+  aj: loadSprite('./assets/sprites/aj.webp'),
+  carmela: loadSprite('./assets/sprites/carmela.webp'),
+  paulie: loadSprite('./assets/sprites/paulie.webp'),
+  augustus: loadSprite('./assets/sprites/augustus.webp'),
+  jerry: loadSprite('./assets/sprites/jerry.webp'),
+  george: loadSprite('./assets/sprites/george.webp'),
+  kramer: loadSprite('./assets/sprites/kramer.webp'),
+  elaine: loadSprite('./assets/sprites/elaine.webp')
+};
+
+function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
+  const pose = options.pose || 'stand';
+  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42 };
+  let h = (heights[kind] || 43) * (options.scale ? options.scale / 1.18 : 1);
+  let w = h * img.naturalWidth / img.naturalHeight;
+  const sitting = pose === 'sit';
+  if (sitting) {
+    h *= .78;
+    w *= .9;
+  }
+  if (kind === 'kramer' && pose !== 'burst') w *= .72; // crop visual emphasis toward Kramer when not using the door-burst pose
+  const bob = pose === 'stand' || pose === 'watch' ? Math.sin(frame * .55) * 1.2 : Math.sin(frame * .35) * .45;
+  const bottom = y + 31 + (sitting ? 4 : 0);
+  const cx = x + 10;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.30)';
+  ctx.beginPath();
+  ctx.ellipse(cx, bottom + 1, Math.max(9, w * .32), 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.translate(cx, bottom + bob * .3);
+  const tilt = pose === 'lean' ? -.08 : pose === 'angry' ? .05 : pose === 'burst' ? -.05 : 0;
+  ctx.rotate(tilt + Math.sin(frame * .25) * .008);
+  if (dir === 'left' && kind !== 'kramer') ctx.scale(-1, 1);
+  const drawX = kind === 'kramer' && pose !== 'burst' ? -w * .62 : -w / 2;
+  ctx.drawImage(img, drawX, -h + bob, w, h);
+  ctx.restore();
+}
+
 const palettes = {
   tony: { skin: '#c8875f', hair: '#27201d', shirt: '#5a1f2e', pants: '#242333', shoes: '#17151a', accent: '#d4aa45' },
   tonyMax: { skin: '#d29a70', hair: '#1d1918', shirt: '#212636', pants: '#151722', shoes: '#101014', accent: '#68d4ff' },
@@ -66,6 +112,11 @@ const palettes = {
 };
 
 export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, options = {}) {
+  const illustrated = illustratedSprites[kind];
+  if (illustrated?.complete && illustrated.naturalWidth) {
+    drawIllustratedPerson(ctx, x, y, illustrated, kind, dir, frame, options);
+    return;
+  }
   const p = palettes[kind] || palettes.tony;
   const maxxed = kind === 'tonyMax' || options.maxxed;
   const pose = options.pose || 'stand';
@@ -272,6 +323,18 @@ export function drawPortrait(ctx, x, y, kind = 'tony') {
   const p = palettes[kind] || palettes.tony;
   px(ctx, x, y, 34, 34, '#1a2548');
   px(ctx, x + 2, y + 2, 30, 30, '#31477a');
+  const illustrated = illustratedSprites[kind];
+  if (illustrated?.complete && illustrated.naturalWidth) {
+    const h = 31;
+    const w = h * illustrated.naturalWidth / illustrated.naturalHeight;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + 2, y + 2, 30, 30);
+    ctx.clip();
+    ctx.drawImage(illustrated, x + 17 - w / 2, y + 32 - h, w, h);
+    ctx.restore();
+    return;
+  }
   px(ctx, x + 8, y + 9, 18, 17, p.skin);
   px(ctx, x + 7, y + 5, 20, 7, p.hair);
   if (kind === 'tonyMax') {

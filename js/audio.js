@@ -61,30 +61,80 @@ export class AudioSys {
 
   voice(speaker = 'tony') {
     if (!this.ctx || !this.enabled) return;
-    const profiles = {
-      tony: [92, 'sawtooth', 0.055, -24],
-      aj: [168, 'square', 0.035, 18],
-      carmela: [210, 'triangle', 0.035, 10],
-      augustus: [126, 'sawtooth', 0.05, 30],
-      christopher: [146, 'square', 0.042, -8],
-      jerry: [184, 'triangle', 0.038, 8],
-      george: [132, 'square', 0.048, -16],
-      kramer: [116, 'sawtooth', 0.046, 38],
-      elaine: [225, 'triangle', 0.038, 14],
-      paulie: [108, 'square', 0.05, -20],
-      bobby: [96, 'triangle', 0.05, -12],
-      artie: [150, 'triangle', 0.042, 8],
-      irina: [205, 'triangle', 0.04, 16],
-      junior: [86, 'sawtooth', 0.055, -28],
-      womanA: [215, 'triangle', 0.035, 12],
-      womanB: [190, 'triangle', 0.035, 8],
-      womanC: [230, 'triangle', 0.035, 14],
-      womanD: [200, 'triangle', 0.035, 10],
-      system: [240, 'sine', 0.025, 0],
-      narrator: [145, 'triangle', 0.03, 0]
+    const jitter = () => 0.92 + Math.random() * 0.16;
+    const patterns = {
+      // pitched syllable-like bursts: low Jersey grumble, nasal teen, frantic George, sliding Kramer, etc.
+      tony: () => {
+        this.tone(92 * jitter(), .07, 'sawtooth', .052, 0, -22);
+        this.tone(74 * jitter(), .055, 'sawtooth', .04, .055, -14);
+      },
+      aj: () => {
+        this.tone(178 * jitter(), .045, 'square', .034, 0, 28);
+        this.tone(145 * jitter(), .04, 'square', .025, .045, -8);
+      },
+      carmela: () => {
+        this.tone(222 * jitter(), .045, 'triangle', .034, 0, 18);
+        this.tone(248 * jitter(), .04, 'triangle', .025, .04, -12);
+      },
+      augustus: () => {
+        this.tone(126 * jitter(), .075, 'sawtooth', .048, 0, 28);
+        this.tone(188 * jitter(), .05, 'triangle', .026, .06, 18);
+      },
+      christopher: () => {
+        this.tone(150 * jitter(), .045, 'square', .04, 0, -10);
+        this.noise(.025, .012, .02, 1400);
+      },
+      jerry: () => {
+        this.tone(190 * jitter(), .04, 'triangle', .034, 0, 18);
+        this.tone(226 * jitter(), .035, 'triangle', .022, .04, -10);
+      },
+      george: () => {
+        this.tone(140 * jitter(), .035, 'square', .046, 0, 35);
+        this.tone(118 * jitter(), .045, 'square', .038, .035, -22);
+      },
+      kramer: () => {
+        this.tone(108 * jitter(), .09, 'sawtooth', .044, 0, 55);
+        this.noise(.035, .015, .02, 1800);
+      },
+      elaine: () => {
+        this.tone(230 * jitter(), .04, 'triangle', .034, 0, 16);
+        this.tone(205 * jitter(), .04, 'triangle', .026, .038, -8);
+      },
+      paulie: () => {
+        this.tone(104 * jitter(), .065, 'square', .052, 0, -24);
+        this.noise(.045, .018, .015, 900);
+      },
+      bobby: () => {
+        this.tone(94 * jitter(), .065, 'triangle', .045, 0, -12);
+        this.tone(86 * jitter(), .05, 'triangle', .03, .05, -8);
+      },
+      artie: () => [148, 166].forEach((f, i) => this.tone(f * jitter(), .045, 'triangle', .03, i * .045, 8)),
+      irina: () => [205, 232].forEach((f, i) => this.tone(f * jitter(), .04, 'triangle', .028, i * .04, 12)),
+      junior: () => {
+        this.tone(84 * jitter(), .08, 'sawtooth', .055, 0, -30);
+        this.noise(.05, .018, .025, 700);
+      },
+      meadow: () => [212, 244].forEach((f, i) => this.tone(f * jitter(), .04, 'triangle', .026, i * .04, 10)),
+      melfi: () => this.tone(176 * jitter(), .06, 'sine', .032, 0, -8),
+      plav: () => {
+        this.tone(164 * jitter(), .035, 'square', .032, 0, 40);
+        this.tone(196 * jitter(), .03, 'square', .024, .032, 30);
+      },
+      janice: () => {
+        this.tone(218 * jitter(), .055, 'sawtooth', .038, 0, 24);
+        this.tone(238 * jitter(), .045, 'sawtooth', .028, .05, 18);
+      }
     };
-    const [freq, type, gain, slide] = profiles[speaker] || profiles.tony;
-    this.tone(freq * (0.92 + Math.random() * 0.16), 0.055 + Math.random() * 0.03, type, gain, 0, slide);
+    if (patterns[speaker]) {
+      patterns[speaker]();
+      return;
+    }
+    if (speaker?.startsWith('woman')) {
+      this.tone((195 + Math.random() * 40) * jitter(), .045, 'triangle', .03, 0, 12);
+      return;
+    }
+    const fallback = speaker === 'system' ? 240 : 145;
+    this.tone(fallback * jitter(), .05, speaker === 'system' ? 'sine' : 'triangle', speaker === 'system' ? .025 : .03, 0, 0);
   }
 
   sfx(name) {
