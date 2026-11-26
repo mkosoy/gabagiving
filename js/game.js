@@ -461,8 +461,8 @@ function blockedAt(x, y) {
   let colliders = scene.colliders;
   if (state.scene === 'njstreet') {
     const cars = [movingCarRect(0), movingCarRect(1)];
-    const alreadyInTraffic = cars.some((c) => rectsOverlap(playerRect(), c));
-    if (!alreadyInTraffic) colliders = colliders.concat(cars);
+    const current = playerRect();
+    colliders = colliders.concat(cars.filter((c) => !rectsOverlap(current, c)));
   }
   return colliders.some((c) => rectsOverlap(pr, c));
 }
