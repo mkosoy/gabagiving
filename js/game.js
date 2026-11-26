@@ -3700,6 +3700,20 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
+    { x: 540, y: 300, w: 60, h: 34, radius: 46, label: 'Pay’n’Spray', action: () => {
+      if (!state.player.inCar) { toast('Drive a car in first. The garage only does cars.'); return; }
+      if ((state.flags.heat || 0) <= 0 && !state.player.carDamage) { toast('Car’s clean. Nothing to spray.'); return; }
+      if (state.money < 50) { toast('Respray is $50. Cash. No invoices, obviously.'); return; }
+      state.money -= 50;
+      state.flags.heat = 0;
+      state.player.carDamage = 0;
+      const colors = ['#3d6b35', '#6b3d3d', '#3d3d6b', '#6b6b3d', '#444'];
+      state.player.carColor = colors[Math.floor(Math.random() * colors.length)];
+      if (state.cop) state.cop = null;
+      if (state.cop2) state.cop2 = null;
+      audio.sfx('cash');
+      startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
     { x: 380, y: 300, w: 34, h: 30, radius: 38, label: 'Quick change', action: () => {
       const toGeorge = state.player.kind !== 'george';
       state.player.kind = toGeorge ? 'george' : 'tony';
