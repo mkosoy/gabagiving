@@ -1296,6 +1296,66 @@ function drawBrawler() {
 
 function updateHubEvents(dt) {
   if (!state.flags.freeRoam || state.scene !== 'hub') return;
+  // persistent reactive traffic: cars brake and honk at pedestrians, crash into the player's car
+  if (!state.hubCars) {
+    state.hubCars = [
+      { x: 100, y: 246, dir: 1, speed: 54, color: '#31445e', honkT: 0, brakeT: 0 },
+      { x: 900, y: 268, dir: -1, speed: 66, color: '#7e2733', honkT: 0, brakeT: 0 }
+    ];
+  }
+  const p = state.player;
+  for (const c of state.hubCars) {
+    if (c.honkT > 0) c.honkT -= dt;
+    if (c.brakeT > 0) c.brakeT -= dt;
+    // is the player in the road ahead of this car?
+    const aheadX = c.x + c.dir * 40;
+    const playerInPath = Math.abs(p.y - c.y) < 18 && ((c.dir > 0 && p.x > c.x - 10 && p.x < aheadX + 55) || (c.dir < 0 && p.x < c.x + 34 && p.x > aheadX - 55));
+    let braking = false;
+    if (!p.inCar && playerInPath) {
+      braking = true;
+      if (c.honkT <= 0) {
+        c.honkT = 1.6 + Math.random();
+        audio.sfx('honk');
+        spawnEffect(c.x + 17, c.y - 12, 'HONK!', '#ffe78a');
+      }
+      // run-down at speed if the car isn't yet braking much
+      const pd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
+      if (pd < 20 && c.brakeT <= 0) {
+        p.inCar = false;
+        spawnEffect(p.x + 8, p.y - 14, 'CLIP!', '#ff6a6a');
+        p.x += c.dir * 30;
+        state.flags.hp = Math.max(1, (state.flags.hp || 3) - 1);
+        audio.sfx('crash');
+      }
+    }
+    // player driving into traffic: fender bender
+    if (p.inCar) {
+      const cd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 10) - (c.y + 7));
+      if (cd < 26 && c.crashT === undefined) {
+        c.crashT = 0;
+        c.brakeT = 2.5;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .75);
+        spawnEffect(c.x + 17, c.y - 10, 'CRUNCH!', '#ff9a7a');
+        audio.sfx('crash');
+        if (!state.cash) state.cash = [];
+        if (Math.random() < .5) state.cash.push({ x: c.x + 22, y: c.y + 16, t: 0 });
+        c.honkT = 2;
+        audio.sfx('honk');
+      }
+    }
+    if (c.crashT !== undefined) {
+      c.crashT += dt;
+      if (c.crashT > 3) delete c.crashT;
+    }
+    if (!braking && c.brakeT <= 0) {
+      c.x += c.dir * c.speed * dt;
+      if (c.dir > 0 && c.x > 1400) { c.x = -60; c.y = 246; }
+      if (c.dir < 0 && c.x < -70) { c.x = 1400; c.y = 268; }
+    } else if (braking) {
+      // crawl slowly while someone stands in the road
+      c.x += c.dir * 9 * dt;
+    }
+  }
   if (state.iceCream) {
     state.iceCream.t += dt;
     state.iceCream.x += 52 * dt;
@@ -3134,15 +3194,16 @@ function drawHubEast() {
 function drawHub() {
   drawHubEast();
   if (drawSceneArt(sceneArt.hub, 640, 416)) {
-    // Traffic keeps the free-roam neighborhood alive.
-    for (let i = 0; i < 2; i++) {
-      const cx = ((state.time * (54 + i * 22) + i * 310) % 1400) - 60;
-      const cy = i ? 268 : 246;
-      // horizontal traffic: sideways-simplified but detailed enough to read as cars
-      const tx = i ? 1340 - cx : cx;
+    // Traffic keeps the free-roam neighborhood alive — persistent reactive cars when available
+    const cars = state.hubCars || [
+      { x: ((state.time * 54) % 1400) - 60, y: 246, dir: 1, color: '#31445e', brakeT: 0 },
+      { x: 1340 - (((state.time * 76 + 310) % 1400) - 60), y: 268, dir: -1, color: '#7e2733', brakeT: 0 }
+    ];
+    for (const c of cars) {
+      const tx = c.x, cy = c.y, i = c.dir < 0 ? 1 : 0;
       px(ctx, tx - 2, cy - 2, 38, 17, 'rgba(0,0,0,.3)');
       px(ctx, tx, cy, 34, 13, '#0d1017');
-      px(ctx, tx + 1, cy + 1, 32, 11, i ? '#7e2733' : '#31445e');
+      px(ctx, tx + 1, cy + 1, 32, 11, c.color || (i ? '#7e2733' : '#31445e'));
       px(ctx, tx + 8, cy + 2, 15, 9, '#9fd4ec');
       px(ctx, tx + 10, cy + 4, 11, 5, i ? '#8e3542' : '#3f5a78');
       px(ctx, tx + 3, cy - 2, 6, 3, '#05070c');
@@ -3150,6 +3211,9 @@ function drawHub() {
       px(ctx, tx + 3, cy + 12, 6, 3, '#05070c');
       px(ctx, tx + 25, cy + 12, 6, 3, '#05070c');
       px(ctx, tx + (i ? 1 : 30), cy + 4, 3, 4, '#fff3b0');
+      // brake lights while braking
+      if ((c.brakeT || 0) > 0) px(ctx, tx + (i ? 30 : 1), cy + 6, 3, 4, '#ff3b2e');
+      if ((c.honkT || 0) > .6) outlineText(ctx, '♪HONK', tx + 17, cy - 8, '#ffe78a', 6, 'center');
     }
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     ctx.fillStyle = `rgba(255,210,92,${.12 + pulse * .16})`;
