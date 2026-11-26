@@ -608,13 +608,15 @@ function drawDialog() {
 
 function drawHelp() {
   if (!state.help) return;
-  drawPanel(150, 64, 340, 150, '#121a35', '#e8e2c8');
+  drawPanel(150, 64, 340, 168, '#121a35', '#e8e2c8');
   outlineText(ctx, 'CONTROLS', 320, 78, '#ffd34f', 12, 'center');
   outlineText(ctx, 'Move: WASD / Arrow keys / touch stick', 174, 104, '#fff', 9);
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
-  outlineText(ctx, 'Click ? again to close', 320, 188, '#ffe78a', 8, 'center');
+  outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
+  outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 186, '#fff', 9);
+  outlineText(ctx, 'Click ? again to close', 320, 202, '#ffe78a', 8, 'center');
 }
 
 // ---------- Scene data ----------
@@ -7447,7 +7449,6 @@ function render() {
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'craps') drawCraps();
-  else if (state.mode === 'help') drawHelp();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7543,15 +7544,9 @@ function update(dt) {
     pressed.clear();
     return;
   }
-  if (state.mode === 'explore' && !state.player.inCar && consume(['KeyH'])) {
-    state.mode = 'help';
+  if (consume(['KeyH']) && state.mode === 'explore') {
+    state.help = !state.help;
     pressed.clear();
-    return;
-  }
-  if (state.mode === 'help') {
-    if (consume(['KeyH', 'KeyE', 'Escape', 'Space'])) state.mode = 'explore';
-    pressed.clear();
-    return;
   }
   if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     resetGame();
