@@ -67,7 +67,12 @@ window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
 canvas.addEventListener('pointerdown', (e) => {
   if (e.pointerType === 'touch') usingTouchControls = true;
-  if (state.mode === 'title' || state.mode === 'dialogue') pressed.add('KeyE');
+  if (state.mode === 'title') {
+    const rect = canvas.getBoundingClientRect();
+    const vx = (e.clientX - rect.left) / rect.width * W;
+    if (loadSave() && vx >= W / 2) pressed.add('KeyC');
+    else pressed.add('KeyE');
+  } else if (state.mode === 'dialogue') pressed.add('KeyE');
   if (state.mode === 'ending') {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
@@ -268,9 +273,9 @@ function closeMenu() {
 
 function chapterPreset(key) {
   // Milestone flag presets so chapter select lands in a consistent story state.
-  const base = { houseStep: 9, tvChannel: 3, hasCard: true, sawGeese: true, ajDone: true, mirrorDone: true };
-  if (key === 'rome') Object.assign(state.flags, base, { romeStep: 0 });
-  if (key === 'chamber') Object.assign(state.flags, base, { romeStep: 1 });
+  const base = { houseStep: 9, tvChannel: 3, hasCard: true, sawGeese: true, ajDone: true, mirrorDone: true, freeRoam: false };
+  if (key === 'rome') Object.assign(state.flags, base, { romeStep: 0, boneDone: false });
+  if (key === 'chamber') Object.assign(state.flags, base, { romeStep: 1, boneDone: false });
   if (key === 'drive') Object.assign(state.flags, base, { romeStep: 4, boneDone: true });
   if (key === 'apartment') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: false, aptStep: 0, kramerIn: false, elaineIn: false });
   if (key === 'club') Object.assign(state.flags, base, { romeStep: 4, boneDone: true, hasBat: true, aptStep: 4, kramerIn: true, elaineIn: true, clubTalked: {}, clubReady: false });
@@ -279,6 +284,8 @@ function chapterPreset(key) {
 function jumpChapter(key) {
   closeMenu();
   state.menu = null;
+  state.dialog = null;
+  state.mode = 'explore';
   chapterPreset(key);
   if (key === 'house') { resetGame(); startGame(); return; }
   if (key === 'rome') { setScene('rome', 72, 350); state.mode = 'explore'; objective('Walk through Rome and meet Augustus'); return; }
@@ -333,10 +340,15 @@ function continueGame() {
   state.flags = Object.assign(state.flags, s.flags || {});
   state.unlocked = s.unlocked || { house: true };
   state.stats = Object.assign(state.stats, s.stats || {});
+  state.mode = 'explore';
+  if ((s.scene === 'apartment') && (state.flags.aptStep || 0) === 0 && !state.flags.freeRoam) {
+    // The apartment introduction dialogue unlocks the bat; replay it instead of stranding the player.
+    enterApartment();
+    return;
+  }
   setScene(s.scene || 'house', s.player?.x ?? 190, s.player?.y ?? 124);
   state.player.dir = s.player?.dir || 'down';
   state.player.kind = s.player?.kind || 'tony';
-  state.mode = 'explore';
   objective(s.objective || 'Explore');
 }
 function speakerName(key) { return Object.prototype.hasOwnProperty.call(names, key) ? names[key] : (key || ''); }
@@ -1097,6 +1109,7 @@ function wakeFromDream() {
 
 // ---------- Driving ----------
 function initDrive() {
+  if (state.unlocked) state.unlocked.drive = true;
   state.drive = {
     x: 320,
     y: 292,
@@ -1373,6 +1386,7 @@ function finalDinner() {
 
 // ---------- Bonus: Augustus in New Jersey / Satriale's ----------
 function startAugustusBonus() {
+  state.flags.freeRoam = false;
   state.player.kind = 'augustus';
   state.flags.augustusAJ = false;
   state.flags.satStep = 0;
@@ -2922,8 +2936,13 @@ function drawTitle() {
   outlineText(ctx, 'A linear pixel-art holiday misadventure', W / 2, 234, '#c8d7ff', 10, 'center');
   drawPanel(188, 258, 264, 58, 'rgba(12,18,42,.78)', '#6f89c9');
   const blink = Math.sin(state.time * 5) > 0;
-  if (blink) outlineText(ctx, `PRESS ${(usingTouchControls || navigator.maxTouchPoints > 0) ? 'A / TAP' : 'E / SPACE'} TO START`, W / 2, 272, '#8ffff2', 11, 'center');
-  outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 294, '#aeb8d8', 8, 'center');
+  const hasSave = !!loadSave();
+  if (blink) outlineText(ctx, hasSave ? 'TAP LEFT: NEW STORY' : `PRESS ${(usingTouchControls || navigator.maxTouchPoints > 0) ? 'A / TAP' : 'E / SPACE'} TO START`, W / 2, 272, '#8ffff2', 11, 'center');
+  if (hasSave) {
+    if (blink) outlineText(ctx, `TAP RIGHT / C: CONTINUE`, W / 2, 286, '#ffe78a', 10, 'center');
+  } else {
+    outlineText(ctx, 'Laptop: WASD/arrows + E · Mobile: touch stick + A', W / 2, 294, '#aeb8d8', 8, 'center');
+  }
   outlineText(ctx, 'Unofficial parody fan game · original art and synthesized voices', W / 2, 342, '#777fa5', 7, 'center');
 }
 
@@ -3001,7 +3020,7 @@ function render() {
   if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu'].includes(state.mode)) drawObjective();
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
-  drawDialog();
+  if (state.mode !== 'menu') drawDialog();
   drawHelp();
 }
 
@@ -3021,7 +3040,7 @@ function resetGame() {
   state.bonus = null;
   state.produce = null;
   state.bonusReveal = false;
-  state.unlocked = { house: true };
+  state.unlocked = Object.assign({ house: true }, state.unlocked || {});
   state.menu = null;
   state.npcs = {};
   state.movers = [];

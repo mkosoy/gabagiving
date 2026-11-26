@@ -40,6 +40,27 @@ export class AudioSys {
     osc.stop(t + dur + 0.02);
   }
 
+  formant(freq = 150, dur = 0.07, type = 'sawtooth', gain = 0.04, when = 0, slide = 0, formantFreq = 800) {
+    // Vocal-ish timbre: oscillator through a bandpass "mouth" filter.
+    if (!this.ctx || !this.enabled) return;
+    const t = this.now() + when;
+    const osc = this.ctx.createOscillator();
+    const filt = this.ctx.createBiquadFilter();
+    const amp = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+    filt.type = 'bandpass';
+    filt.frequency.value = formantFreq;
+    filt.Q.value = 1.1;
+    amp.gain.setValueAtTime(0.0001, t);
+    amp.gain.exponentialRampToValueAtTime(gain, t + 0.012);
+    amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(filt).connect(amp).connect(this.ctx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  }
+
   noise(dur = 0.1, gain = 0.04, when = 0, filterFreq = 900) {
     if (!this.ctx || !this.enabled) return;
     const t = this.now() + when;
@@ -65,16 +86,19 @@ export class AudioSys {
     const patterns = {
       // pitched syllable-like bursts: low Jersey grumble, nasal teen, frantic George, sliding Kramer, etc.
       tony: () => {
-        this.tone(92 * jitter(), .07, 'sawtooth', .052, 0, -22);
-        this.tone(74 * jitter(), .055, 'sawtooth', .04, .055, -14);
+        // gravelly low Jersey two-syllable grumble with breath
+        this.formant(88 * jitter(), .085, 'sawtooth', .06, 0, -20, 620);
+        this.formant(72 * jitter(), .07, 'sawtooth', .05, .08, -16, 540);
+        this.noise(.04, .012, .01, 500);
       },
       aj: () => {
         this.tone(178 * jitter(), .045, 'square', .034, 0, 28);
         this.tone(145 * jitter(), .04, 'square', .025, .045, -8);
       },
       carmela: () => {
-        this.tone(222 * jitter(), .045, 'triangle', .034, 0, 18);
-        this.tone(248 * jitter(), .04, 'triangle', .025, .04, -12);
+        // sharp nasal 'Toneh!' high-low
+        this.formant(250 * jitter(), .045, 'sawtooth', .04, 0, 30, 1300);
+        this.formant(200 * jitter(), .06, 'sawtooth', .034, .048, -28, 1100);
       },
       augustus: () => {
         this.tone(126 * jitter(), .075, 'sawtooth', .048, 0, 28);
@@ -85,24 +109,32 @@ export class AudioSys {
         this.noise(.025, .012, .02, 1400);
       },
       jerry: () => {
-        this.tone(190 * jitter(), .04, 'triangle', .034, 0, 18);
-        this.tone(226 * jitter(), .035, 'triangle', .022, .04, -10);
+        // nasal rhetorical question lilt: up, hold, down
+        this.formant(185 * jitter(), .05, 'sawtooth', .038, 0, 26, 1050);
+        this.formant(215 * jitter(), .045, 'sawtooth', .032, .05, 6, 1100);
+        this.formant(172 * jitter(), .05, 'sawtooth', .03, .095, -22, 950);
       },
       george: () => {
-        this.tone(140 * jitter(), .035, 'square', .046, 0, 35);
-        this.tone(118 * jitter(), .045, 'square', .038, .035, -22);
+        // frantic nasal rise-and-fall chatter, three quick syllables
+        this.formant(150 * jitter(), .04, 'square', .045, 0, 42, 1150);
+        this.formant(168 * jitter(), .035, 'square', .04, .042, 30, 1250);
+        this.formant(122 * jitter(), .05, 'square', .042, .08, -34, 1000);
       },
       kramer: () => {
-        this.tone(108 * jitter(), .09, 'sawtooth', .044, 0, 55);
-        this.noise(.035, .015, .02, 1800);
+        // sliding giddyup swoop plus clatter
+        this.formant(120 * jitter(), .1, 'sawtooth', .05, 0, 78, 900);
+        this.formant(180 * jitter(), .05, 'sawtooth', .03, .09, -40, 1100);
+        this.noise(.03, .016, .02, 2000);
       },
       elaine: () => {
         this.tone(230 * jitter(), .04, 'triangle', .034, 0, 16);
         this.tone(205 * jitter(), .04, 'triangle', .026, .038, -8);
       },
       paulie: () => {
-        this.tone(104 * jitter(), .065, 'square', .052, 0, -24);
-        this.noise(.045, .018, .015, 900);
+        // staccato old-man mutter with a wheeze
+        this.formant(100 * jitter(), .05, 'square', .05, 0, -18, 700);
+        this.formant(96 * jitter(), .04, 'square', .04, .05, -10, 680);
+        this.noise(.05, .02, .09, 800);
       },
       bobby: () => {
         this.tone(94 * jitter(), .065, 'triangle', .045, 0, -12);
@@ -173,6 +205,12 @@ export class AudioSys {
     }
   }
 
+  step(kind = 'tony') {
+    if (!this.ctx || !this.enabled) return;
+    const heavy = kind === 'tony' || kind === 'tonyMax' || kind === 'bobby';
+    this.noise(.028, heavy ? .014 : .008, 0, heavy ? 300 : 500);
+  }
+
   setMusic(mode) {
     this.musicMode = mode;
     this.step = 0;
@@ -206,6 +244,14 @@ export class AudioSys {
       if (this.musicMode === 'house' && s % 5 === 0) this.noise(.025, .006, 0, 520);
       if (this.musicMode === 'rome' && s % 7 === 2) this.noise(.055, .006, 0, 720);
       if (this.musicMode === 'apartment' && s % 9 === 4) this.tone(520, .035, 'sine', .006, 0, -80);
+      // ambient life per location
+      if (this.musicMode === 'house' && Math.random() < .09) this.noise(.03 + Math.random() * .04, .007, 0, 400 + Math.random() * 500); // fire crackle
+      if (this.musicMode === 'apartment' && Math.random() < .04) { const f = 200 + Math.random() * 120; this.tone(f, .18, 'sine', .004, 0, -40); } // traffic hum
+      if (this.musicMode === 'apartment' && Math.random() < .012) this.sfx('honk'); // distant honk
+      if (this.musicMode === 'club' && Math.random() < .05) this.noise(.025, .008, 0, 3200 + Math.random() * 1200); // glass clink
+      if (this.musicMode === 'club' && s % 2 === 0) this.tone(60, .1, 'sine', .012); // bass pulse
+      if (this.musicMode === 'rome' && Math.random() < .03) this.tone(1100 + Math.random() * 500, .09, 'sine', .004, 0, 200); // birds
+      if (this.musicMode === 'house' && Math.random() < .012) this.sfx('turkey'); // distant geese
     }, 180);
   }
 }
