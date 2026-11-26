@@ -268,13 +268,14 @@ function saveProgress() {
       scene: state.scene,
       objective: state.objective,
       player: { x: state.player.x, y: state.player.y, dir: state.player.dir, kind: state.player.kind },
+      returnTo: state.returnTo || null,
       stats: state.stats,
       unlocked: state.unlocked || {}
     }));
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel'];
 function saveWorld() {
   try {
     const out = {};
@@ -429,6 +430,7 @@ function continueGame() {
   setScene(s.scene || 'house', s.player?.x ?? 190, s.player?.y ?? 124);
   state.player.dir = s.player?.dir || 'down';
   state.player.kind = s.player?.kind || 'tony';
+  state.returnTo = s.returnTo || null;
   objective(s.objective || 'Explore');
 }
 function speakerName(key) { return Object.prototype.hasOwnProperty.call(names, key) ? names[key] : (key || ''); }
@@ -1609,8 +1611,11 @@ function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
-  if (state.flags.freeRoam && state.scene !== 'hub') {
-    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => enterHub(false) });
+  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
+    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
+      if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
+      else enterHub(false);
+    } });
   }
   const pc = { x: state.player.x + 8, y: state.player.y + 12 };
   let best = null;
@@ -3000,7 +3005,12 @@ function leaveOutside() {
 function travelHub(place) {
   // remember which outdoor region we came from so interior exits return correctly
   if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
-    state.returnTo = { scene: state.scene, x: Math.max(20, state.player.x), y: Math.min(400, state.player.y + 26) };
+    const bx = Math.max(20, state.player.x);
+    const by = state.player.y;
+    for (const [ox, oy] of [[0, 26], [0, -26], [26, 0], [-26, 0], [0, 44], [0, -44]]) {
+      const cx = bx + ox, cy = Math.max(20, Math.min(400, by + oy));
+      if (!blockedAt(cx, cy) && !blockedAt(cx, cy + 14)) { state.returnTo = { scene: state.scene, x: cx, y: cy }; break; }
+    }
   }
   // revisit surprises: the world remembers what you've been up to
   if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
