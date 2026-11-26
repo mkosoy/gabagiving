@@ -2271,9 +2271,11 @@ function updateExplore(dt) {
   // roadblocks at maximum heat — the whole township knows your car
   if ((state.flags.heat || 0) >= 4.5 && ['hub', 'nyc'].includes(state.scene) && state.player.inCar) {
     if (!state.roadblock) {
-      const rx = state.scene === 'hub' ? 340 : 300;
-      const ry = state.scene === 'hub' ? 296 : 296;
-      state.roadblock = { x: rx, y: ry, hp: 2, scene: state.scene, flareT: 0 };
+      const p0 = state.player;
+      const ahead = ((p0.carV || 0) >= 0 ? 1 : -1) * 130;
+      const maxX = state.scene === 'hub' ? 1200 : 700;
+      const rx = Math.max(80, Math.min(maxX, p0.x + ahead));
+      state.roadblock = { x: rx, y: 296, hp: 2, scene: state.scene, flareT: 0 };
     }
     const rb = state.roadblock;
     if (rb.scene !== state.scene) state.roadblock = null;
