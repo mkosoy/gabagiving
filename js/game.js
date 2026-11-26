@@ -240,6 +240,7 @@ function objective(text) { state.objective = text; saveProgress(); }
 
 function saveProgress() {
   if (state.mode === 'title' || !state.flags) return;
+  if (['bone', 'peptides', 'drive', 'bonus', 'produce', 'dream', 'ending'].includes(state.mode)) return;
   try {
     localStorage.setItem('gabagiving-save-v1', JSON.stringify({
       flags: state.flags,
@@ -315,7 +316,7 @@ function menuEntries() {
     });
   }
   const games = [
-    ['bone', 'Minigame — Bone Smashing', () => { closeMenu(); chapterPreset('chamber'); startBoneGame(); }, u.chamber],
+    ['bone', 'Minigame — Bone Smashing', () => { closeMenu(); startBoneGame(); }, u.chamber],
     ['peptides', 'Minigame — Peptide Hunt', () => { closeMenu(); startPeptides(); }, u.rome],
     ['drive', 'Minigame — Road Chase', () => { closeMenu(); initDrive(); state.mode = 'drive'; }, u.apartment || u.drive],
     ['produce', 'Minigame — Produce Dodge', () => { closeMenu(); startProduceGame(); }, u.satriale],
@@ -689,16 +690,134 @@ function moveInput() {
   return { x, y };
 }
 
+// ---------- Living world: ambient pedestrians, heat, cars ----------
+const ambientSpecs = {
+  hub: [
+    { kind: 'womanB', x: 210, y: 244, region: { x: 180, y: 222, w: 170, h: 70 }, speed: 32 },
+    { kind: 'christopher', x: 480, y: 204, region: { x: 420, y: 178, w: 130, h: 66 }, speed: 36 },
+    { kind: 'womanA', x: 100, y: 206, region: { x: 40, y: 168, w: 130, h: 70 }, speed: 28 },
+    { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 }
+  ],
+  club: [
+    { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
+    { kind: 'christopher', x: 500, y: 270, region: { x: 440, y: 250, w: 130, h: 80 }, speed: 34 }
+  ],
+  vesuvio: [
+    { kind: 'womanB', x: 250, y: 330, region: { x: 220, y: 300, w: 120, h: 70 }, speed: 26 },
+    { kind: 'junior', x: 340, y: 120, region: { x: 290, y: 100, w: 100, h: 60 }, speed: 20 }
+  ],
+  satriale: [
+    { kind: 'womanC', x: 300, y: 330, region: { x: 220, y: 300, w: 180, h: 70 }, speed: 30 }
+  ]
+};
+
+function ambientFor(sceneName) {
+  if (!state.ambient) state.ambient = {};
+  if (!state.ambient[sceneName]) {
+    state.ambient[sceneName] = (ambientSpecs[sceneName] || []).map((a) => ({
+      ...a, tx: a.x, ty: a.y, pause: Math.random() * 2, dir: 'down', barkT: 0, diveT: 0
+    }));
+  }
+  return state.ambient[sceneName];
+}
+
+function updateAmbient(dt) {
+  const list = ambientFor(state.scene);
+  const p = state.player;
+  for (const n of list) {
+    if (n.barkT > 0) n.barkT -= dt;
+    if (n.diveT > 0) { n.diveT -= dt; continue; }
+    const pd = Math.hypot(n.x - p.x, n.y - p.y);
+    // heat 3+: pedestrians edge away from the player
+    if ((state.flags.heat || 0) >= 3 && pd < 70) {
+      const ang = Math.atan2(n.y - p.y, n.x - p.x);
+      const fx = Math.max(n.region.x, Math.min(n.region.x + n.region.w, n.x + Math.cos(ang) * 30));
+      const fy = Math.max(n.region.y, Math.min(n.region.y + n.region.h, n.y + Math.sin(ang) * 30));
+      n.tx = fx; n.ty = fy; n.pause = 0;
+    }
+    if (pd < 22) continue; // don't overlap the player
+    if (n.pause > 0) { n.pause -= dt; continue; }
+    const dx = n.tx - n.x;
+    const dy = n.ty - n.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 3) {
+      n.tx = n.region.x + Math.random() * n.region.w;
+      n.ty = n.region.y + Math.random() * n.region.h;
+      n.pause = .8 + Math.random() * 2.8;
+      continue;
+    }
+    n.x += (dx / d) * n.speed * dt;
+    n.y += (dy / d) * n.speed * dt;
+    n.moving = true;
+    n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    // random ambient mutters
+    if (Math.random() < dt * .06) {
+      n.bark = ['sigh', 'mmpf', 'yeah yeah', 'madone', 'anyway'][Math.floor(Math.random() * 5)];
+      n.barkT = 1.4;
+      audio.voice(n.kind);
+    }
+  }
+  state.flags.heat = Math.max(0, (state.flags.heat || 0) - dt * .08);
+}
+
+function shoveNearest() {
+  const p = state.player;
+  const list = ambientFor(state.scene);
+  let best = null; let bd = 30;
+  for (const n of list) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y);
+    if (d < bd) { best = n; bd = d; }
+  }
+  if (!best) return false;
+  const ang = Math.atan2(best.y - p.y, best.x - p.x) || 0;
+  best.x += Math.cos(ang) * 26;
+  best.y += Math.sin(ang) * 26;
+  best.diveT = .5;
+  best.bark = p.kind === 'george' ? 'SERENITY NOW!' : ['HEY!', 'WATCH IT!', 'THE NERVE!'][Math.floor(Math.random() * 3)];
+  best.barkT = 1.6;
+  state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+  spawnEffect(best.x + 8, best.y - 10, 'SHOVED', '#ff9a7a');
+  audio.sfx('smash');
+  audio.voice(best.kind);
+  return true;
+}
+
+function drawAmbient() {
+  const list = ambientFor(state.scene);
+  for (const n of list) {
+    const frame = n.moving ? state.frame * 1.6 : state.frame * .5;
+    drawPerson(ctx, n.x, n.y, n.kind, n.dir, frame, n.diveT > 0 ? { pose: 'lean' } : {});
+    if (n.barkT > 0 && n.bark) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, n.barkT);
+      outlineText(ctx, n.bark, n.x + 10, n.y - 6, '#fff1a6', 7, 'center');
+      ctx.restore();
+    }
+    n.moving = false;
+  }
+}
+
 function updateExplore(dt) {
   updatePhone(dt);
   if (state.phone) return;
+  updateAmbient(dt);
   const input = moveInput();
   const p = state.player;
-  if (state.flags.freeRoam && consume(['KeyB'])) {
+  // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
+  if (state.flags.freeRoam && consume(['KeyF']) && !p.inCar) shoveNearest();
+  if (state.flags.freeRoam && consume(['KeyB']) && !p.inCar) {
     p.kind = p.kind === 'george' ? 'tonyMax' : 'george';
     p.speed = p.kind === 'george' ? 96 : 88;
     audio.voice(p.kind === 'george' ? 'george' : 'tony');
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
+  }
+  // leaving a borrowed car takes priority over other interactions
+  if (p.inCar && interactPressed() && !nearestInteraction()) {
+    p.inCar = false;
+    p.speed = p.kind === 'george' ? 96 : 88;
+    audio.sfx('door');
+    spawnEffect(p.x + 8, p.y - 8, 'ON FOOT', '#8ffff2');
+    return;
   }
   if (input.x || input.y) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
@@ -708,6 +827,22 @@ function updateExplore(dt) {
     if (!blockedAt(nx, p.y)) p.x = nx;
     const ny = p.y + input.y * sp;
     if (!blockedAt(p.x, ny)) p.y = ny;
+    if (p.inCar) {
+      for (const n of ambientFor(state.scene)) {
+        if (n.diveT > 0) continue;
+        if (Math.abs(n.x - p.x) < 26 && Math.abs(n.y - p.y) < 20) {
+          const side = n.y >= p.y ? 1 : -1;
+          n.y += side * 30;
+          n.diveT = .7;
+          n.bark = ['WHOA!', 'MY LEGS!', 'CRAZY DRIVER!'][Math.floor(Math.random() * 3)];
+          n.barkT = 1.6;
+          state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+          audio.sfx('honk');
+          audio.voice(n.kind);
+          spawnEffect(n.x + 8, n.y - 12, 'DIVE!', '#ff9a7a');
+        }
+      }
+    }
     state.frame += dt * 12;
     p.stepTick = (p.stepTick || 0) - dt;
     if (p.stepTick <= 0) {
@@ -1668,6 +1803,19 @@ function hubInteractions() {
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
+    { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
+      if (state.player.inCar) return;
+      state.player.inCar = true;
+      state.player.speed = 190;
+      audio.sfx('door');
+      audio.sfx('honk');
+      spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'george', text: 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' }
+      ] : [
+        { speaker: 'tony', text: 'Nice car. Means it’s my car now. That’s how that works.' }
+      ]);
+    } },
     { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
       initDrive();
       state.mode = 'drive';
@@ -1705,6 +1853,15 @@ function drawHub() {
       px(ctx, gx, gy, 10, 4, '#f4f0dc');
       px(ctx, gx + 7, gy - 3, 3, 5, '#f4f0dc');
       px(ctx, gx + 10, gy - 2, 2, 1, '#e58d2a');
+    }
+    // parked borrowable car by the curb
+    if (!state.player.inCar) {
+      drawCar(444, 322, '#31445e');
+      const cp = (Math.sin(state.time * 4 + 1) + 1) / 2;
+      ctx.fillStyle = `rgba(143,255,242,${.1 + cp * .12})`;
+      ctx.beginPath();
+      ctx.ellipse(444, 322, 30 + cp * 4, 30 + cp * 4, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
     outlineText(ctx, 'FREE ROAM', 320, 24, '#ffe78a', 10, 'center');
     return;
@@ -2642,6 +2799,10 @@ function drawClub() {
 // ---------- Minigame/cinematic rendering ----------
 function drawPlayer() {
   const kind = state.player.kind;
+  if (state.player.inCar) {
+    drawCar(state.player.x - 12, state.player.y + 2, '#8f1f2e');
+    return;
+  }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
   if (state.flags.hasBat && state.scene === 'apartment') drawBat(ctx, state.player.x + 17, state.player.y + 11, -0.7);
 }
@@ -2671,6 +2832,7 @@ function drawWorld() {
   ctx.save();
   ctx.translate(-Math.round(state.camera.x), -Math.round(state.camera.y));
   scene.draw();
+  drawAmbient();
   drawInteractionMarkers();
   drawPlayer();
   drawEffects();
@@ -2681,6 +2843,11 @@ function drawWorld() {
   if (state.flags.freeRoam) {
     drawPanel(W - 104, 42, 96, 25, '#182448', '#8ffff2');
     outlineText(ctx, state.player.kind === 'george' ? 'GEORGE' : 'TONY', W - 56, 50, '#8ffff2', 8, 'center');
+    if ((state.flags.heat || 0) > 0.3) {
+      drawPanel(W - 172, H - 50, 164, 20, '#33141a', '#ff7a5e');
+      outlineText(ctx, `HEAT ${'!'.repeat(Math.max(1, Math.round(state.flags.heat)))}`, W - 162, H - 44, '#ff9a7a', 7);
+      px(ctx, W - 90, H - 46, Math.min(76, state.flags.heat * 15), 6, '#ff7a5e');
+    }
     const blink = (Math.sin(state.time * 3) + 1) / 2;
     drawPanel(W - 172, H - 26, 164, 20, '#182448', '#8ffff2');
     ctx.globalAlpha = .75 + blink * .25;
