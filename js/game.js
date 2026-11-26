@@ -3673,6 +3673,18 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
+    { x: 380, y: 300, w: 34, h: 30, radius: 38, label: 'Quick change', action: () => {
+      const toGeorge = state.player.kind !== 'george';
+      state.player.kind = toGeorge ? 'george' : 'tony';
+      audio.sfx('pickup');
+      startDialog(toGeorge ? [
+        { speaker: 'narrator', text: 'A quick change behind the hedges — a terrible wig, a worse attitude. You are now GEORGE COSTANZA: faster on foot, but the heat never quite leaves you.' },
+        { speaker: 'george', text: 'I’m out there, Jerry — and I’m LOVING every minute of it!' }
+      ] : [
+        { speaker: 'narrator', text: 'The tracksuit goes back on. You are now TONY SOPRANO: hits harder, commands respect, scares waterfowl.' },
+        { speaker: 'tony', text: 'Ah, that’s better. Room to breathe. Room for everything.' }
+      ]);
+    } },
     { x: 116, y: 128, w: 82, h: 46, label: 'Tony’s house', action: () => travelHub('house') },
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
