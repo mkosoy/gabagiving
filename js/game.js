@@ -4837,9 +4837,10 @@ function drawBeacon() {
 }
 
 function drawMinimap() {
-  if (!state.flags.freeRoam || state.scene !== 'hub' || state.mode !== 'explore') return;
+  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc') || state.mode !== 'explore') return;
   const mx = 8, my = H - 46, mw = 110, mh = 34;
-  const sx = mw / 1280, sy = mh / 416;
+  const sceneW = state.scene === 'nyc' ? 768 : 1280;
+  const sx = mw / sceneW, sy = mh / 416;
   ctx.save();
   ctx.globalAlpha = .88;
   drawPanel(mx, my, mw, mh, '#0d1424', '#4a5a78');
@@ -4847,7 +4848,10 @@ function drawMinimap() {
   // road band
   px(ctx, mx + 2, my + 198 * sy, mw - 4, 90 * sy, '#3a3f48');
   // landmark dots
-  const marks = [
+  const marks = state.scene === 'nyc' ? [
+    [125, 230, '#ffb98a'], [435, 220, '#ffe78a'], [650, 228, '#9fd4ec'], [18, 226, '#8ffff2'],
+    [500, 220, '#e8e2d0'], [160, 350, '#c09aff'], [390, 370, '#e8b822']
+  ] : [
     [157, 150, '#ffd34f'], [525, 150, '#ff9a7a'], [90, 315, '#c09aff'], [554, 395, '#ff6a8a'],
     [320, 325, '#9fd4ec'], [218, 276, '#ffb98a'], [80, 150, '#e8e2d0'], [283, 138, '#e8e2d0'], [609, 162, '#8fb8ff'],
     [1010, 100, '#ff8a8a'], [1100, 350, '#9be59b']
