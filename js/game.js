@@ -287,6 +287,8 @@ function saveWorld() {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
+    out.money = state.money || 0;
+    out.heat = state.flags.heat || 0;
     if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step };
     if (state.player.x !== undefined) { out.scene = state.scene; out.px = Math.round(state.player.x); out.py = Math.round(state.player.y); }
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
@@ -297,6 +299,8 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (typeof w.money === 'number') state.money = w.money;
+    if (typeof w.heat === 'number') state.flags.heat = w.heat;
     if (w.scene && scenes[w.scene] && typeof w.px === 'number' && state.flags.freeRoam) {
       state.scene = w.scene;
       state.player.x = w.px;
