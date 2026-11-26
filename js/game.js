@@ -2428,6 +2428,19 @@ function clubInteractions() {
   if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
+    list.push({ x: 430, y: 250, w: 90, h: 50, radius: 46, label: 'Arm-wrestle the bouncer', action: () => {
+      if ((state.flags.tribute || 0) < 25) {
+        startDialog([{ speaker: 'narrator', text: 'Slippery Pete cracks knuckles the size of ham hocks. Twenty-five dollar entry, champ. You are short.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Slippery Pete, house bouncer, arm-wrestling champion of the Route 22 corridor. George sits down across from him. The table creaks in fear.' },
+        { speaker: 'george', text: 'I have VERY strong wrists. Decades of aggressive mouse use. And I carry spite in the forearms!' }
+      ] : [
+        { speaker: 'narrator', text: 'Slippery Pete cracks his neck. The crowd goes quiet. This is a man who once beat a horse at something.' },
+        { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
+      ], () => initArmWrestle());
+    } });
     list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Gentlemen. Art Vandelay. Importer-exporter. I’m looking for investors.' },
@@ -3317,6 +3330,74 @@ function drawHubEast() {
   // parked stealable coupe at the gas station
   if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
+}
+
+function initArmWrestle() {
+  state.armwrestle = { power: .5, t: 0, duration: 8, done: false, resultT: 0, won: false };
+  state.mode = 'armwrestle';
+  audio.sfx('confirm');
+}
+
+function updateArmWrestle(dt) {
+  const a = state.armwrestle;
+  if (!a) { state.mode = 'explore'; return; }
+  if (a.done) {
+    a.resultT += dt;
+    if (a.resultT > 2.2) {
+      const won = a.won;
+      state.mode = 'explore';
+      state.armwrestle = null;
+      if (won) {
+        state.flags.tribute = (state.flags.tribute || 0) + 75;
+        audio.sfx('cash');
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'GEORGE WINS! The Bing erupts! Somewhere, a single tear rolls down a bouncer’s cheek.' },
+          { speaker: 'george', text: 'FIFTY YEARS of repressed rage, all in the wrist! I could arm-wrestle GOD right now!' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony slams the bouncer’s hand through the table. Literally through it. The table is two tables now.' },
+          { speaker: 'tony', text: 'Tell Paulie he owes me seventy-five bucks. Also tell him he owes me a new table, but he already knew that.' }
+        ]);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The bouncer barely moved. George’s hand hit the table with the sound of a damp sock.' },
+          { speaker: 'george', text: 'My hand slipped! There was lotion! WHO HAS LOTION in a strip club?!' }
+        ] : [
+          { speaker: 'narrator', text: 'The bouncer wins. Tony nods once. This has never happened before and will be discussed never.' },
+          { speaker: 'tony', text: 'Good arm, kid. You got a future. Not HERE, because I control this place, but somewhere. Canada, maybe.' }
+        ]);
+      }
+    }
+    return;
+  }
+  a.t += dt;
+  if (consume(['KeyE', 'Space'])) a.power = Math.min(1, a.power + .055);
+  a.power -= dt * (.09 + a.t * .008);
+  if (a.power <= 0) { a.power = 0; a.done = true; a.won = false; audio.sfx('denied'); }
+  if (a.power >= 1 || a.t >= a.duration) { a.done = true; a.won = a.power >= .62; audio.sfx(a.won ? 'success' : 'denied'); }
+}
+
+function drawArmWrestle() {
+  px(ctx, 0, 0, 640, 416, '#171019');
+  outlineText(ctx, 'ARM WRESTLING · THE BING', 320, 56, '#ffe78a', 12, 'center');
+  const a = state.armwrestle;
+  if (!a) return;
+  px(ctx, 220, 200, 200, 16, '#6b4f2a');
+  px(ctx, 220, 216, 200, 8, '#4a3520');
+  drawPerson(ctx, 250, 185, state.player.kind === 'george' ? 'george' : 'tonyMax', 'right', state.frame * .5, {});
+  drawPerson(ctx, 390, 185, 'silvio', 'left', state.frame * .5, {});
+  const hx = 320 + (a.power - .5) * 90;
+  px(ctx, hx - 8, 176, 16, 14, '#d5a075');
+  px(ctx, hx - 8, 176, 16, 14, '#c08a60');
+  px(ctx, 120, 290, 400, 22, '#1a1020');
+  px(ctx, 122, 292, 396 * a.power, 18, a.power > .62 ? '#4a8f3d' : a.power > .38 ? '#e8b822' : '#c02828');
+  outlineText(ctx, 'YOU', 112, 304, '#8ffff2', 7, 'right');
+  outlineText(ctx, 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
+  if (!a.done) {
+    outlineText(ctx, 'MASH E TO WIN', 320, 340, '#ffe78a', 10, 'center');
+    outlineText(ctx, `${Math.max(0, a.duration - a.t).toFixed(1)}`, 320, 258, '#fffbe8', 10, 'center');
+  } else {
+    outlineText(ctx, a.won ? 'YOU WIN! +$75' : 'CRUSHED. NO PAYOUT.', 320, 340, a.won ? '#8ffff2' : '#ff8a7a', 10, 'center');
+  }
 }
 
 function initMonte() {
@@ -5406,6 +5487,7 @@ function render() {
   else if (state.mode === 'peptides') drawPeptides();
   else if (state.mode === 'drive') drawDrive();
   else if (state.mode === 'monte') drawMonte();
+  else if (state.mode === 'armwrestle') drawArmWrestle();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -5533,6 +5615,8 @@ function update(dt) {
     updateDrive(dt);
   } else if (state.mode === 'monte') {
     updateMonte(dt);
+  } else if (state.mode === 'armwrestle') {
+    updateArmWrestle(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
