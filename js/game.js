@@ -2653,7 +2653,7 @@ function hubInteractions() {
         { speaker: 'tony', text: 'Christopher’s cousin leaves the keys in every car. He’s either stupid or very generous. Either way — mine now.' }
       ]);
     } },
-    { x: 1020, y: 330, w: 90, h: 50, radius: 44, label: 'Gabagool Park', action: () => {
+    { x: 1020, y: 330, w: 90, h: 50, radius: 62, label: 'Gabagool Park', action: () => {
       if (!state.flags.fedGeese) {
         state.flags.fedGeese = true;
         spawnEffect(state.player.x, state.player.y - 16, 'HONK HONK', '#fff1a6');
