@@ -400,10 +400,10 @@ function menuEntries() {
 }
 
 function continueGame() {
-  loadWorld();
   const s = loadSave();
   if (!s) { startGame(); return; }
   state.flags = Object.assign(state.flags, s.flags || {});
+  loadWorld(); // world autosave is newer than any checkpoint — it wins
   state.flags.sandbox = false;
   state.unlocked = s.unlocked || { house: true };
   state.stats = Object.assign(state.stats, s.stats || {});
