@@ -293,7 +293,7 @@ function loadSave() {
 
 function openMenu() {
   if (!['explore', 'dialogue'].includes(state.mode)) return;
-  state.menu = { sel: 0, returnMode: state.mode };
+  state.menu = { sel: 0, scroll: 0, returnMode: state.mode };
   state.mode = 'menu';
   audio.sfx('pause');
 }
@@ -467,6 +467,7 @@ function updateDialog(dt) {
 function finishDialog() {
   const d = state.dialog;
   state.dialog = null;
+  state.interactCooldown = Math.max(state.interactCooldown || 0, .45);
   state.mode = d?.opts?.returnMode || 'explore';
   const cb = d?.onDone;
   if (cb) cb();
@@ -972,7 +973,7 @@ function drawAmbient() {
 function updateCop(dt) {
   if (!state.flags.freeRoam || state.scene !== 'hub') { state.cop = null; return; }
   const heat = state.flags.heat || 0;
-  if (heat >= 3.5 && !state.cop) {
+  if (heat >= 3 && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
     audio.sfx('honk');
     spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
@@ -1084,6 +1085,7 @@ function updateHubEvents(dt) {
 }
 
 function updateExplore(dt) {
+  if (state.interactCooldown > 0) state.interactCooldown -= dt;
   updatePhone(dt);
   if (state.phone) return;
   updateAmbient(dt);
@@ -1156,7 +1158,7 @@ function updateExplore(dt) {
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
   const inter = nearestInteraction();
-  if (inter && interactPressed()) {
+  if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
     audio.sfx('confirm');
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
@@ -2465,6 +2467,7 @@ function travelHub(place) {
   };
   const d = destinations[place];
   if (!d) return;
+  state.interactCooldown = .9;
   setScene(d[0], d[1], d[2]);
   state.mode = 'explore';
   objective('Explore — return to the neighborhood when ready');
@@ -2481,7 +2484,7 @@ function hubInteractions() {
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
-    { x: 460, y: 96, w: 110, h: 30, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
@@ -4279,12 +4282,12 @@ function update(dt) {
   updateMovers(dt);
   for (const e of state.effects) e.t += dt;
   state.effects = state.effects.filter((e) => e.t < e.life);
-  if (consume(['KeyM'])) {
+  if (consume(['KeyN'])) {
     const on = audio.toggle();
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   }
   if (state.help && consume(cancelCodes)) state.help = false;
-  if (consume(['Escape', 'KeyP'])) {
+  if (consume(['Escape', 'KeyP', 'KeyM'])) {
     if (state.mode === 'menu') closeMenu();
     else openMenu();
   }
