@@ -379,7 +379,8 @@ function menuEntries() {
       ['fakeDisability', 'Fake disability', 'Yankees office'],
       ['cheapInvites', 'Cheap invitations', 'Monk’s Café'],
       ['fedGeese', 'Feed the geese', 'Gabagool Park'],
-      ['pawnedWatch', 'Fence goods at the pawn shop', 'east side']
+      ['pawnedWatch', 'Fence goods at the pawn shop', 'east side'],
+      ['elaineDance', 'Elaine’s little kicks', 'Monk’s jukebox']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -2205,6 +2206,18 @@ function monksInteractions() {
         { speaker: 'elaine', text: 'Honestly? He’s got a point about the structural integrity of the second bite.' },
         { speaker: 'george', text: 'FINALLY! Science vindicates me!' }
       ]);
+    } },
+    { x: 40, y: 130, w: 50, h: 50, radius: 38, label: 'Jukebox', action: () => {
+      if (!state.flags.elaineDance) {
+        state.flags.elaineDance = true;
+        audio.sfx('success');
+        startDialog([
+          { speaker: 'narrator', text: 'The jukebox fires up. Elaine rises. What follows is technically dancing — a series of little kicks and thumb-pointing that defies several laws of rhythm.' },
+          { speaker: 'elaine', text: 'What?! This is how I dance! This is dancing! I’m a great dancer!' },
+          { speaker: 'jerry', text: 'It’s like a bee is attacking her feet and she’s politely fighting back.' },
+          { speaker: 'george', text: 'I’ve seen worse. I’ve BEEN worse.' }
+        ]);
+      } else startDialog([{ speaker: 'elaine', text: 'The little kicks stay in the vault. You get one miracle per day.' }]);
     } },
     { x: 560, y: 130, w: 70, h: 60, radius: 40, label: 'Stationery box', action: () => {
       if (state.player.kind !== 'george') {
