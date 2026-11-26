@@ -283,6 +283,8 @@ function saveWorld() {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
+    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step };
+    if (state.player.x !== undefined) { out.scene = state.scene; out.px = Math.round(state.player.x); out.py = Math.round(state.player.y); }
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
 }
@@ -291,6 +293,10 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (w.mission && MISSION_DEFS[w.mission.id] && !state.flags[w.mission.id + 'Done']) {
+      const def = MISSION_DEFS[w.mission.id];
+      state.mission = { id: w.mission.id, step: Math.min(w.mission.step, def.steps.length - 1), deadline: def.timeLimit ? state.time + def.timeLimit : null };
+    }
   } catch (e) { /* ignore */ }
 }
 
