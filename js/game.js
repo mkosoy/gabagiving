@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1039,6 +1039,13 @@ function updateAmbient(dt) {
       continue;
     }
     let spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    if (!n.barkT && Math.random() < dt * .008) {
+      const idle = state.scene === 'nyc'
+        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again']
+        : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!'];
+      n.bark = idle[Math.floor(Math.random() * idle.length)];
+      n.barkT = 1.8;
+    }
     if (typeof weatherRain === 'function' && weatherRain()) {
       spd *= 1.6; // everyone hurries in the rain
       if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
@@ -1198,6 +1205,8 @@ function updateCop(dt) {
   if (heat >= spawnAt && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
     audio.sfx('honk');
+    audio.sfx('denied');
+    spawnEffect(state.player.x + 8, state.player.y - 34, isNight() ? 'NIGHT PATROL!' : 'WANTED!', '#ff6a6a');
     spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
   }
   const c = state.cop;
@@ -1614,6 +1623,53 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  muffinTops: {
+    title: 'THE MUFFIN TOPS',
+    payout: 140, heat: 0,
+    steps: [
+      { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'Unload the muffin stumps at the bodega. They take anything.', label: 'Dump the stumps' },
+      { scene: 'nyc', x: 300, y: 250, radius: 55, objective: 'Report back to Kramer on the street', label: 'Report to Kramer' }
+    ]
+  },
+  bladderRun: {
+    title: 'THE PETROLEUM PIPELINE',
+    payout: 200, heat: 1,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'Empty the oil bladder in the Pine Barrens. Legally distinct from dumping.', label: 'Empty the bladder' },
+      { scene: 'nyc', x: 300, y: 250, radius: 55, objective: 'Report back to Kramer', label: 'Report to Kramer' }
+    ]
+  },
+  bigSalad: {
+    title: 'THE BIG SALAD',
+    payout: 120, heat: 0,
+    steps: [
+      { scene: 'monks', x: 320, y: 300, radius: 80, objective: 'Pick up the big salad at Monk’s. A BIG salad. Big.', label: 'Pick up the salad' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Deliver the salad' }
+    ]
+  },
+  soupNaziRun: {
+    title: 'SOUP FOR NEWMAN',
+    payout: 160, heat: .5,
+    steps: [
+      { scene: 'soup', x: 320, y: 300, radius: 80, objective: 'Get the soup. Follow the rules. Do NOT annoy the man.', label: 'Order the soup' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman — soup unopened', label: 'Deliver the soup' }
+    ]
+  },
+  cannonball: {
+    title: 'THE CANNONBALL',
+    payout: 350, heat: 1.5, timeLimit: 260,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'RACE: reach the Pine Barrens clearing before time runs out', label: 'Tag the clearing' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'RACE BACK to Newman — clock is running', label: 'Win the bet' }
+    ]
+  },
+  heatMagnet: {
+    title: 'HEAT MAGNET',
+    payout: 220, heat: 0, survive: 30,
+    steps: [
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Survive the heat, then report back to Newman', label: 'Report back' }
+    ]
+  },
   turkeyTax: {
     title: 'THE TURKEY TAX',
     payout: 180, heat: 1,
@@ -1632,15 +1688,20 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'ryeExpress', 'pineFresh'];
+const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun'];
+function nextKramerMission() {
+  return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
+}
 function nextMission() {
   return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
 
 function startMission(id) {
   const def = MISSION_DEFS[id];
-  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null };
+  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null, surviveT: def.survive || 0 };
   audio.sfx('success');
+  if (def.survive) state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
 }
 
 function advanceMission() {
@@ -1672,6 +1733,26 @@ function advanceMission() {
       turkeyTax: [
         { speaker: 'silvio', text: 'Moist but complete. The bird, she is paid for. You did good — keep the vig.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I collected protection money and everyone was SO POLITE. Is this what power feels like?!' : 'Happy Thanksgiving, Sil. Tell the bird I said so.' }
+      ],
+      muffinTops: [
+        { speaker: 'kramer', text: 'The stumps are MOVED, baby! Kramerica Foods is officially a going concern! Well — a going concern! Ha-YEAH!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I trucked garbage muffins across town for a hundred forty dollars. There are children with lemonade stands out-earning me!' : 'The best part of the muffin IS the top. The man’s not wrong. The rest is garbage logistics.' }
+      ],
+      bladderRun: [
+        { speaker: 'kramer', text: 'Beautiful. The bladder is empty, the pipeline flows, and the environment? She’ll bounce back. She’s resilient, buddy. They’re very resilient.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I dumped industrial oil in a protected forest! I’m a polluter! A POLLUTER! …It was a lot of money.' : 'Two hundred to empty a balloon in the woods. I’ve buried worse things there. Don’t ask. Seriously — don’t.' }
+      ],
+      cannonball: [
+        { speaker: 'newman', text: 'HA! IN YOUR FACE, FIREMAN LENNY! Er — well done. The $350, minus the standard courier tithe. Hee hee. The tithe is most of it.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove like a maniac through a tunnel for a BET?! People bet on me?! I’m a HORSE! …A fast horse. Fastest in the stable, actually.' : 'Fast driving, no questions, cash at the end. Best job all week.' }
+      ],
+      bigSalad: [
+        { speaker: 'newman', text: 'Yes. YES. Look at the SIZE of it. Big. You have done well. The mail provides. Well — YOU provided. Same thing, essentially.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I carried a salad across state lines! I peaked in college, you know! I had a future!' : 'I’ve moved a lotta things for a lotta people. First salad.' }
+      ],
+      soupNaziRun: [
+        { speaker: 'newman', text: 'Mulligatawny! You actually GOT it! You followed the rules? The line? The ordering? Then you are… adequate!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it. Perfect order. I want that on my tombstone.' : 'Guy runs soup like a crime family. Respect. No bread, though. Cost extra. Even for me.' }
       ],
       pineFresh: [
         { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
@@ -1709,6 +1790,11 @@ function updateMission() {
   }
   if (state.scene !== st.scene) return;
   const p = state.player;
+  if (m0.surviveT > 0) {
+    m0.surviveT -= dt;
+    if (m0.surviveT <= 0) spawnEffect(state.player.x + 8, state.player.y - 20, 'HEAT WEATHERED', '#8ffff2');
+  }
+  if (m0.surviveT > 0) return;
   if (Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
     state.interactCooldown = .8;
     spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
@@ -1725,6 +1811,22 @@ function updateMission() {
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I feel terrible doing this. I also feel terrible NOT doing this. I feel terrible! That’s the constant!' : 'The veal WAS perfect. That’s why you’re still open, Artie.' }
+        ],
+        muffinTops: [
+          { speaker: 'narrator', text: 'Forty pounds of muffin stumps, accepted without a word. The bodega has seen stranger cargo. This week.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'They TOOK them! No questions! What is this city!' : 'Stumps moved. The muffin economy hums along.' }
+        ],
+        bladderRun: [
+          { speaker: 'narrator', text: 'The bladder deflates into the frozen earth with a noise like a dying accordion. Somewhere, a fish lawyer weeps.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s fine! It’s biodegradable! …Is oil biodegradable? IS IT?!' : 'What spills in the Barrens stays in the Barrens.' }
+        ],
+        bigSalad: [
+          { speaker: 'narrator', text: 'One big salad, boxed. It is, undeniably, big. The waitress knows better than to ask who it’s for.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why am I the salad guy? When did I become the salad guy?!' : 'Big salad. Heavy, too. Must be the croutons. Dense croutons.' }
+        ],
+        soupNaziRun: [
+          { speaker: 'narrator', text: 'You stand in line correctly. You order without small talk. You pay without comment. The soup is yours. The system WORKS.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it. Perfect order. PERFECTLY.' : 'In and out. Quiet. Respectful. Like a hit, but with soup.' }
         ],
         pineFresh: [
           { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
@@ -1749,6 +1851,9 @@ function drawMissionHud() {
   if (state.mission.deadline) {
     const left = Math.max(0, state.mission.deadline - state.time);
     outlineText(ctx, `⏱ ${left.toFixed(0)}s`, 490, 20, left < 20 ? '#ff7a6a' : '#ffe78a', 8, 'right');
+  }
+  if (state.mission.surviveT > 0) {
+    outlineText(ctx, `SURVIVE ${state.mission.surviveT.toFixed(0)}s`, 490, 20, '#ff9a3e', 8, 'right');
   }
   // world-space beacon at the step target when in the right scene
   if (state.scene === st.scene) {
@@ -3615,6 +3720,10 @@ function hubInteractions() {
         const offers = {
           packageJob: { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
           catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
+          bigSalad: { speaker: 'newman', text: 'Hungry work, the mail. Fetch me a salad from Monk’s. A BIG salad. Not the small. If it’s small, I will know. I ALWAYS know. $120.' },
+          soupNaziRun: { speaker: 'newman', text: 'Soup. From the Soup Man. I am… no longer welcome there. A misunderstanding involving the bread line. You go. Follow the rules EXACTLY or there will be NO SOUP. $160.' },
+          cannonball: { speaker: 'newman', text: 'A wager! I bet a VERY smug fireman $350 that nobody sane can reach the Pine Barrens and return before his shift whistle. You are nobody sane. GO! The clock is ALREADY judgemental!' },
+          heatMagnet: { speaker: 'newman', text: 'This one is simple. I may have told the police YOU are the mail thief. You’ll have some heat for a bit. Survive it, come back, $220. What — don’t look at me like that, it’s a COMPLIMENT. They believed me instantly!' },
           ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
           pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
         };
@@ -4524,6 +4633,22 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
+    } },
+    { x: 300, y: 232, w: 40, h: 36, radius: 44, label: 'Kramer', action: () => {
+      if (!state.mission && nextKramerMission()) {
+        const mid = nextKramerMission();
+        startMission(mid);
+        const offers = {
+          muffinTops: { speaker: 'kramer', text: 'Buddy! Perfect timing! Kramerica Foods needs a logistics man. Muffin stumps — forty pounds — to the bodega. They take anything. $140. Giddy up!' },
+          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' }
+        };
+        startDialog([
+          offers[mid],
+          { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      } else startDialog([
+        { speaker: 'kramer', text: state.player.kind === 'george' ? 'Georgie! You look tired. Kramerica Industries is hiring, you know. No benefits, no salary, but the adrenaline — top shelf.' : 'You got the look, buddy. Waste management, huh? I can smell opportunity. And other things. It’s the bladder, don’t ask.' }
+      ]);
     } },
     { x: 250, y: 296, w: 30, h: 26, radius: 40, label: 'Parking meter', action: () => {
       const cd = 20;
