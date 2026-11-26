@@ -36,6 +36,7 @@ const sceneArt = {
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
+  ac: loadArt('./assets/bg-ac.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
@@ -789,6 +790,15 @@ const scenes = {
     ],
     draw: drawShore,
     interactions: shoreInteractions
+  },
+  ac: {
+    w: 768, h: 416, label: 'Atlantic City · Always Season', music: 'club',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      r(8,300,752,116), r(8,8,752,100), r(600,180,120,120), r(30,180,110,120)
+    ],
+    draw: drawAC,
+    interactions: acInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -4788,6 +4798,84 @@ function bodegaInteractions() {
   ];
 }
 
+function drawAC() {
+  if (drawSceneArt(sceneArt.ac, 768, 416)) {
+    const flick = Math.sin(state.time * 7) > .6;
+    if (flick) px(ctx, 340 - state.camera.x, 60 - state.camera.y, 60, 6, '#ffd76a');
+    for (let k = 0; k < 4; k++) {
+      const fx = 640 + Math.sin(state.time * 3 + k) * 8 - state.camera.x;
+      const fy = 210 + Math.cos(state.time * 4 + k * 2) * 6 - state.camera.y;
+      px(ctx, fx, fy, 2, 2, '#bfefff');
+    }
+    const wx = 200 + Math.sin(state.time * .2) * 130;
+    drawPerson(ctx, wx, 250, 'womanA', Math.sin(state.time * .2) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
+    const wx2 = 500 - Math.sin(state.time * .16) * 110;
+    drawPerson(ctx, wx2, 230, 'bobby', Math.sin(state.time * .16) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
+    return;
+  }
+  px(ctx, 0, 0, 768, 416, '#1a2030');
+}
+
+function acInteractions() {
+  return [
+    { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 250, y: 150, w: 60, h: 40, radius: 42, label: 'High-roller slots', action: () => {
+      if (state.money < 50) { toast('High-roller slots are $50 a pull.'); return; }
+      state.money -= 50;
+      const roll = Math.random();
+      audio.sfx('spin');
+      if (roll < .04) {
+        state.money += 1000;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'SEVEN SEVEN SEVEN. The machine screams like it is being robbed — which, legally, it is not. A pit boss materializes, counts out $1000, and vanishes like a magic trick in a bad suit.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A THOUSAND! I am up for the YEAR! I am telling everyone! I am telling NO ONE! BOTH!' : 'Now THAT is a machine. Other machines — take notes.' }
+        ]);
+      } else if (roll < .2) {
+        state.money += 120;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'Two sevens and a bell. $120 slides out. The machine is already pretending it never happened.' }]);
+      } else {
+        audio.sfx('thud');
+        startDialog([{ speaker: 'narrator', text: 'Cherry, lemon, and a symbol that might be a duck. The machine eats your $50 with the serenity of a thing that has eaten thousands before it.' }]);
+      }
+    } },
+    { x: 250, y: 260, w: 60, h: 40, radius: 44, label: 'Rolling chair ride', action: () => {
+      if (state.money < 10) { toast('The rolling chair guy wants $10.'); return; }
+      state.money -= 10;
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'A man pushes you the length of the boards in a wicker chair on wheels, narrating the casinos like a very tired nature documentary. It is the most relaxing crime-adjacent ten dollars you have ever spent.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'This is TRANSPORTATION! Why do we walk ANYWHERE! I want one of these for the office! For LIVING!' : 'Now this — this is how a man inspects a boardwalk. Paulie would love this. He ain’t invited.' }
+      ]);
+    } },
+    { x: 620, y: 230, w: 50, h: 44, radius: 44, label: 'The fountain', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Coins glitter at the bottom of the fountain. Hundreds of wishes, layered like sediment. George counts them with his eyes. Somebody’s wish is about a knish.' },
+        { speaker: 'george', text: 'You think anyone notices if you take a few back? Hypothetically? Asking for the Human Fund.' }
+      ] : [
+        { speaker: 'narrator', text: 'The fountain throws glittering arcs into the neon. Tourists throw money in; the ocean, ten yards away, throws it back out. Somewhere in there is a metaphor for the whole town.' },
+        { speaker: 'tony', text: 'I knew a guy who fished these fountains. Made a living. Then he got greedy — started carrying a net. Never carry a net. That is the whole lesson.' }
+      ]);
+    } },
+    { x: 420, y: 150, w: 70, h: 40, radius: 44, label: 'Loan shark', action: () => {
+      if (state.flags.acLoan) {
+        startDialog([{ speaker: 'narrator', text: 'The shark smiles with entirely too many teeth. “Payment Friday. Or don’t. I own a very persuasive pipe wrench either way.”' }]);
+        return;
+      }
+      state.flags.acLoan = true;
+      state.money += 200;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+      audio.sfx('cash');
+      startDialog([
+        { speaker: 'narrator', text: 'A man in a cream suit lends you $200 against “future considerations.” No paperwork. Paperwork is how they GET you, he explains, at length, unprompted.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'No paperwork! Finally, a financial institution that understands me! …Why is he cracking his knuckles like that?' : 'Two hundred, no paper. I’ve been on the other side of this transaction. The view’s worse from here. Heh.' }
+      ]);
+    } }
+  ];
+}
+
 function drawShore() {
   if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
   // rolling wave animation along the blocked beach edge
@@ -4813,6 +4901,7 @@ function drawShore() {
 function shoreInteractions() {
   return [
     { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
+    { x: 752, y: 210, w: 20, h: 90, radius: 44, label: 'AC →', action: () => startTransit('ac', 40, 220, 'ATLANTIC CITY EXPRESSWAY') },
     { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
       if ((state.flags.tribute || 0) < 5) {
         startDialog([{ speaker: 'narrator', text: 'Taffy is five bucks a bag. You have lint and regret. The shopkeep has seen worse — it’s the off-season, everyone has lint and regret.' }]);
