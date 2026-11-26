@@ -2579,7 +2579,20 @@ function enterHub(first = false) {
   }
 }
 
+function schemeCount() {
+  return ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance'].filter((k) => state.flags[k]).length;
+}
+
 function travelHub(place) {
+  // revisit surprises: the world remembers what you've been up to
+  if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
+    state.flags.surpriseShown = true;
+    setTimeout(() => startDialog([
+      { speaker: 'jerry', text: 'Five schemes. FIVE. I counted. The cane, the invitations, the éclair — Newman told me about the rye, by the way. NEWMAN knew before I did.' },
+      { speaker: 'george', text: 'It’s not a scheme if it WORKS, Jerry. Then it’s just… initiative.' },
+      { speaker: 'kramer', text: 'I want in on the next one. Whatever it is. I’m in. Don’t even tell me.' }
+    ]), 600);
+  }
   const destinations = {
     house: ['house', 250, 306, 'Back to the house. The geese have been busy.'],
     satriale: ['satriale', 318, 354, 'Satriale’s smells like cured meat and unresolved grudges.'],
