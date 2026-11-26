@@ -595,6 +595,45 @@ function drawHelp() {
 
 // ---------- Scene data ----------
 function r(x, y, w, h) { return { x, y, w, h }; }
+function costanzaInteractions() {
+  return [
+  { x: 40, y: 140, w: 60, h: 130, radius: 44, label: 'Festivus pole', action: () => {
+    if (!state.flags.festivus) {
+      state.flags.festivus = true;
+      startDialog([
+        { speaker: 'narrator', text: 'A bare aluminum pole. No tinsel. It has a very high strength-to-weight ratio.' },
+        { speaker: 'steinbrenner', text: 'IT’S FESTIVUS FOR THE REST OF US! And tonight — the airing of grievances! I GOT A LOTTA PROBLEMS WITH YOU PEOPLE!' },
+        { speaker: 'george', text: 'Dad, please. It’s Thanksgiving, not Festivus. Different nightmare.' },
+        { speaker: 'steinbrenner', text: 'EVERY DAY IS FESTIVUS IF YOU’RE ANGRY ENOUGH!' }
+      ]);
+    } else startDialog([{ speaker: 'steinbrenner', text: 'The pole requires no decoration. I find tinsel distracting.' }]);
+  } },
+  { x: 140, y: 140, w: 100, h: 60, radius: 40, label: 'Frank', action: () => {
+    if (!state.flags.serenityNow) {
+      state.flags.serenityNow = true;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+      audio.sfx('confession');
+      startDialog([
+        { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
+        { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
+        { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
+      ]);
+    } else startDialog([{ speaker: 'steinbrenner', text: 'INSANITY LATER! …That’s the sequel tape.' }]);
+  } },
+  { x: 500, y: 170, w: 100, h: 60, radius: 40, label: 'Estelle', action: () => {
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'womanB', text: 'Georgie! You’re moving back in! I already told the women at the beauty parlor!' },
+      { speaker: 'george', text: 'MA! I have a life! A career! …of sorts! People depend on me! …allegedly!' },
+      { speaker: 'womanB', text: 'He’s delusional. The busboy at the coffee shop said so.' }
+    ] : [
+      { speaker: 'womanB', text: 'You’re the Soprano boy. Your mother — Livia? — she once said my kreplach was “aggressively beige.” I never forgot.' },
+      { speaker: 'tony', text: 'That… sounds like her. Sorry about the kreplach.' }
+    ]);
+  } },
+  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: () => travelHub('hub') }
+  ];
+}
+
 const scenes = {
   house: {
     w: 640, h: 416, label: 'North Caldwell · Thanksgiving Morning', music: 'house',
@@ -653,8 +692,7 @@ const scenes = {
     interactions: clubInteractions
   },
   costanza: {
-    title: 'The Costanza House',
-    sub: 'Queens. Since 1951.',
+    w: 640, h: 416, label: 'The Costanza House · Queens', music: 'house',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(20,8,230,110), r(250,8,170,100), r(500,8,132,110),
@@ -2845,45 +2883,8 @@ function drawCostanza() {
   outlineText(ctx, 'FESTIVUS POLE', 68, 140, '#9fd4ec', 6, 'center');
   outlineText(ctx, 'Frank', frankX, 205, '#ffb16a', 7, 'center');
   outlineText(ctx, 'Estelle', estX, 225, '#e8e2d0', 7, 'center');
-  hudHint('Frank & Estelle’s castle of anger');
 }
 
-const costanzaInteractions = [
-  { x: 40, y: 140, w: 60, h: 130, radius: 44, label: 'Festivus pole', action: () => {
-    if (!state.flags.festivus) {
-      state.flags.festivus = true;
-      startDialog([
-        { speaker: 'narrator', text: 'A bare aluminum pole. No tinsel. It has a very high strength-to-weight ratio.' },
-        { speaker: 'steinbrenner', text: 'IT’S FESTIVUS FOR THE REST OF US! And tonight — the airing of grievances! I GOT A LOTTA PROBLEMS WITH YOU PEOPLE!' },
-        { speaker: 'george', text: 'Dad, please. It’s Thanksgiving, not Festivus. Different nightmare.' },
-        { speaker: 'steinbrenner', text: 'EVERY DAY IS FESTIVUS IF YOU’RE ANGRY ENOUGH!' }
-      ]);
-    } else startDialog([{ speaker: 'steinbrenner', text: 'The pole requires no decoration. I find tinsel distracting.' }]);
-  } },
-  { x: 140, y: 140, w: 100, h: 60, radius: 40, label: 'Frank', action: () => {
-    if (!state.flags.serenityNow) {
-      state.flags.serenityNow = true;
-      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
-      audio.sfx('confession');
-      startDialog([
-        { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
-        { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
-        { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
-      ]);
-    } else startDialog([{ speaker: 'steinbrenner', text: 'INSANITY LATER! …That’s the sequel tape.' }]);
-  } },
-  { x: 500, y: 170, w: 100, h: 60, radius: 40, label: 'Estelle', action: () => {
-    startDialog(state.player.kind === 'george' ? [
-      { speaker: 'womanB', text: 'Georgie! You’re moving back in! I already told the women at the beauty parlor!' },
-      { speaker: 'george', text: 'MA! I have a life! A career! …of sorts! People depend on me! …allegedly!' },
-      { speaker: 'womanB', text: 'He’s delusional. The busboy at the coffee shop said so.' }
-    ] : [
-      { speaker: 'womanB', text: 'You’re the Soprano boy. Your mother — Livia? — she once said my kreplach was “aggressively beige.” I never forgot.' },
-      { speaker: 'tony', text: 'That… sounds like her. Sorry about the kreplach.' }
-    ]);
-  } },
-  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: () => travelHub('hub') }
-];
 
 function drawMelfiOffice() {
   const img = sceneArt.melfi;
