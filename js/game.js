@@ -1728,6 +1728,20 @@ function drawMissionHud() {
   // world-space beacon at the step target when in the right scene
   if (state.scene === st.scene) {
     const bx = st.x - state.camera.x, by = st.y - state.camera.y;
+    if (bx < -10 || bx > 650 || by < -10 || by > 426) {
+      // offscreen: edge arrow pointing the way, GTA-style
+      const cx2 = 320, cy2 = 208;
+      const ang = Math.atan2(by - cy2, bx - cx2);
+      const ex = cx2 + Math.cos(ang) * 268, ey = cy2 + Math.sin(ang) * 172;
+      const ax = Math.max(18, Math.min(622, ex)), ay = Math.max(46, Math.min(398, ey));
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(ang + Math.PI / 2);
+      ctx.globalAlpha = .75 + Math.sin(state.time * 5) * .25;
+      outlineText(ctx, '▲', 0, 0, '#ffe78a', 12, 'center');
+      ctx.restore();
+      return;
+    }
     const bob = Math.sin(state.time * 3) * 4;
     outlineText(ctx, '▼', bx, by - 26 + bob, '#ffe78a', 10, 'center');
     ctx.save();
