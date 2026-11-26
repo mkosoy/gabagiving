@@ -195,6 +195,18 @@ export class AudioSys {
     } else if (name === 'honk') {
       this.tone(310, .12, 'square', .05);
       this.tone(310, .1, 'square', .04, .13);
+    } else if (name === 'cash') {
+      this.tone(1180, .05, 'square', .03);
+      this.tone(1560, .07, 'square', .025, .05);
+      this.noise(.05, .015, .02, 5200);
+    } else if (name === 'ring') {
+      for (let i = 0; i < 2; i++) {
+        this.tone(880, .18, 'sine', .03, i * .5);
+        this.tone(1100, .18, 'sine', .025, i * .5);
+      }
+    } else if (name === 'thud') {
+      this.noise(.06, .04, 0, 300);
+      this.tone(90, .08, 'sine', .04);
     } else if (name === 'door') {
       this.noise(.08, .03, 0, 1200);
       this.tone(180, .08, 'triangle', .025, .025);
