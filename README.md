@@ -11,7 +11,7 @@ Open `index.html` through any static web server, or deploy the repository direct
 - B: Augustus bonus on the ending screen
 - F: free-roam North Caldwell after finishing the main story
 - R: restart
-- M toggles sound
+- N toggles sound, M opens menu
 
 The game uses original generated scene art, programmatic character sprites, and synthesized dialogue grunts/music; there are no copied show assets.
 

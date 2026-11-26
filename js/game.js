@@ -94,7 +94,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
     const entries = menuEntries();
-    const idx = Math.floor((vy - 92) / 17);
+    const idx = Math.floor((vy - 92) / 17) + (state.menu.scroll || 0);
     if (vx >= 130 && vx <= 510 && idx >= 0 && idx < entries.length) {
       state.menu.sel = idx;
       const it = entries[idx];
@@ -269,7 +269,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -1075,8 +1075,10 @@ function updateBrawler(dt) {
   if (b.hp <= 0) {
     b.t += dt;
     if (b.t > 2.2) {
-      if (Math.random() < .6 && !state.cash) state.cash = [];
-      if (Math.random() < .6) state.cash.push({ x: b.x, y: b.y + 10, t: 0 });
+      if (Math.random() < .6) {
+        if (!state.cash) state.cash = [];
+        state.cash.push({ x: b.x, y: b.y + 10, t: 0 });
+      }
       state.brawler = null;
     }
     return;
@@ -1091,8 +1093,10 @@ function updateBrawler(dt) {
   if (b.state === 'chase') {
     if (pd > 26) {
       const ang = Math.atan2(p.y - b.y, p.x - b.x);
-      b.x += Math.cos(ang) * 68 * dt;
-      b.y += Math.sin(ang) * 68 * dt;
+      const bx = b.x + Math.cos(ang) * 68 * dt;
+      const by = b.y + Math.sin(ang) * 68 * dt;
+      if (!blockedAt(bx, b.y)) b.x = bx;
+      if (!blockedAt(b.x, by)) b.y = by;
       b.dir = Math.abs(p.x - b.x) > Math.abs(p.y - b.y) ? (p.x > b.x ? 'right' : 'left') : (p.y > b.y ? 'down' : 'up');
       b.moving = true;
     } else if (b.swingT <= 0) {
