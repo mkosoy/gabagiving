@@ -2247,7 +2247,13 @@ function updateExplore(dt) {
     else p.dir = input.y > 0 ? 'down' : 'up';
     // cars carry momentum: spin up over ~1.2s instead of instant speed
     if (p.inCar) p.carV = Math.min(1, (p.carV || 0) + dt * 1.2);
-    const sp = p.speed * dt * (p.inCar ? Math.max(.25, p.carV) : 1);
+    const mi0 = moveInput(); const sprinting = !p.inCar && (keys.ShiftLeft || keys.ShiftRight) && Math.hypot(mi0.x, mi0.y) > .1;
+    const sp = p.speed * dt * (p.inCar ? Math.max(.25, p.carV) : 1) * (sprinting ? 1.55 : 1);
+    if (sprinting) {
+      state.frame += dt * 8;
+      if (!state.sprintFxT || state.sprintFxT <= 0) { state.sprintFxT = .3; if (Math.random() < .4) spawnEffect(p.x, p.y + 8, '', '#cccccc'); }
+      else state.sprintFxT -= dt;
+    }
     p.stepAcc = (p.stepAcc || 0) + sp;
     if (p.stepAcc > (p.inCar ? 99999 : 26)) {
       p.stepAcc = 0;
