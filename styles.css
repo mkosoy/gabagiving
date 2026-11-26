@@ -34,7 +34,9 @@ html, body {
   z-index: 5;
 }
 #topActions button,
-#touchButtons button {
+#touchButtons button,
+#btnR,
+#btnF {
   border: 2px solid rgba(255,255,255,.5);
   color: #fff;
   background: rgba(14,18,38,.72);
@@ -105,17 +107,19 @@ html, body {
 #btnB { background: rgba(53,91,150,.72) !important; }
 #btnR, #btnF {
   position: fixed;
-  bottom: calc(186px + env(safe-area-inset-bottom));
+  pointer-events: auto;
+  border-radius: 50% !important;
+  right: calc(10px + env(safe-area-inset-right));
   width: 52px !important;
   height: 52px !important;
   font-size: 18px !important;
 }
 #btnR {
-  right: calc(22px + env(safe-area-inset-right));
+  top: calc(102px + env(safe-area-inset-top));
   background: rgba(67,116,73,.72) !important;
 }
 #btnF {
-  right: calc(84px + env(safe-area-inset-right));
+  top: calc(56px + env(safe-area-inset-top));
   background: rgba(55,116,130,.72) !important;
 }
 @media (pointer: coarse), (max-width: 850px) {
