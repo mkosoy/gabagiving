@@ -1963,6 +1963,7 @@ function updateExplore(dt) {
   // Pine Barrens: the Russian is out there. Rarely, a figure crosses the treeline.
   if (state.scene === 'pines') {
     if (!state.russian) state.russian = { t: 14 + Math.random() * 20, active: false };
+    if (!isNight() && state.russian) state.russian.mugged = false;
     const ru = state.russian;
     if (!ru.active) {
       ru.t -= dt;
@@ -1982,8 +1983,33 @@ function updateExplore(dt) {
       }
     } else {
       ru.life -= dt;
-      ru.x += ru.dir * 34 * dt;
-      if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
+      if (isNight() && !ru.mugged) {
+        // night in the Barrens: he hunts
+        ru.hunter = true;
+        const dx = state.player.x - ru.x;
+        const dy = state.player.y - ru.y;
+        const d = Math.hypot(dx, dy) || 1;
+        if (!state.player.inCar) {
+          ru.x += (dx / d) * 46 * dt;
+          ru.y += (dy / d) * 46 * dt;
+          if (d < 16) {
+            ru.mugged = true;
+            ru.active = false;
+            ru.t = 40 + Math.random() * 30;
+            const take = Math.min(20, state.money);
+            state.money -= take;
+            audio.sfx('thud');
+            shakeScreen(6);
+            startDialog([
+              { speaker: 'narrator', text: 'The fur hat fills your vision. A hand the size of a Christmas ham takes ' + (take ? '$' + take : 'nothing — you are broke, which he seems to respect') + '. He says one word: "Interior… decorator." Then the trees take him back.' },
+              { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He TOOK my money and COMPLIMENTED his own murderer aesthetic! I’m cold and I’m poor and I’m in a FOREST!' : '…Paulie’s never hearing about this. NEVER. Guy hits like a tranquilized bear. I’m not even mad — that’s respect.' }
+            ]);
+          }
+        }
+      } else {
+        ru.x += ru.dir * 34 * dt;
+      }
+      if (ru.life <= 0) { ru.active = false; ru.hunter = false; ru.t = 26 + Math.random() * 30; }
     }
   }
   // gypsy cab mode: driving the stolen taxi in Manhattan attracts fares
