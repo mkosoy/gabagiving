@@ -113,7 +113,17 @@ function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   // illustrated sprites are smooth art, not pixel art: high-quality scaling keeps them crisp
   ctx.imageSmoothingEnabled = true;
   if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, Math.round(drawX), Math.round(-h + bob), Math.round(w), Math.round(h));
+  if (sitting) {
+    // clip the lower body so the figure reads as sunk into the seat rather than perched on it
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-w, -h + bob - 4, w * 2, h * .62);
+    ctx.clip();
+    ctx.drawImage(img, Math.round(drawX), Math.round(-h + bob), Math.round(w), Math.round(h));
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, Math.round(drawX), Math.round(-h + bob), Math.round(w), Math.round(h));
+  }
   ctx.imageSmoothingEnabled = false;
   ctx.restore();
 }
