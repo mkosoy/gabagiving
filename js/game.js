@@ -3677,6 +3677,27 @@ function nycInteractions() {
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
+    { x: 250, y: 296, w: 30, h: 26, radius: 40, label: 'Parking meter', action: () => {
+      const cd = 20;
+      if ((state.flags.meterT || 0) + cd > state.time) {
+        startDialog([{ speaker: 'narrator', text: 'Empty. The city refills these things slower than you can rob them. Impressive, really.' }]);
+        return;
+      }
+      state.flags.meterT = state.time;
+      const loot = 8 + Math.floor(Math.random() * 10);
+      state.flags.tribute = (state.flags.tribute || 0) + loot;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+      audio.sfx('smash');
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 8, `+$${loot} · QUARTERS EVERYWHERE`, '#ffe78a');
+      if (Math.random() < .35) startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George smashes a parking meter open with the brick of civic virtue. Quarters. So many quarters.' },
+        { speaker: 'george', text: 'This is reclaiming! They owe us! You know how much I’ve paid these machines in my LIFE?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony pops the meter like a bottle cap. Quarters scatter. Nobody in Manhattan looks up. Nobody ever looks up.' },
+        { speaker: 'tony', text: 'The city’s been taxin’ me since ‘78. This is just a rebate.' }
+      ]);
+    } },
     { x: 700, y: 330, w: 40, h: 30, radius: 40, label: 'Loose brick', hidden: () => (state.flags.brick || 0) > 0, action: () => {
       state.flags.brick = 3;
       audio.sfx('pickup');
