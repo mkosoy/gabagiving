@@ -197,10 +197,15 @@ export class AudioSys {
       const root = seq[s % seq.length];
       if (root) {
         this.tone(root, .12, 'triangle', .018);
+        this.tone(root * 1.5, .09, 'sine', .007, .018);
         if (s % 4 === 0) this.tone(root / 2, .22, 'sine', .018);
+        if (s % 8 === 6) this.tone(root * 2, .11, 'triangle', .009, .02);
       }
       if ((this.musicMode === 'drive' || this.musicMode === 'club') && s % 2 === 0) this.noise(.035, .012, 0, 2800);
+      if (this.musicMode === 'drive' && s % 4 === 1) this.tone(55, .16, 'sawtooth', .012, 0, 8);
       if (this.musicMode === 'house' && s % 5 === 0) this.noise(.025, .006, 0, 520);
+      if (this.musicMode === 'rome' && s % 7 === 2) this.noise(.055, .006, 0, 720);
+      if (this.musicMode === 'apartment' && s % 9 === 4) this.tone(520, .035, 'sine', .006, 0, -80);
     }, 180);
   }
 }

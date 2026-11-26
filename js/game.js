@@ -533,7 +533,7 @@ function houseInteractions() {
   if (s === 0) list.push({ x: 214, y: 30, w: 38, h: 34, label: 'Flip TV', action: tvSequence });
   if (s === 1) list.push({ x: 20, y: 105, w: 34, h: 28, radius: 56, label: 'Read card', action: readCard });
   if (s === 2) list.push({ x: 108, y: 10, w: 58, h: 28, label: 'Look outside', action: lookWindow });
-  if (s === 3) list.push({ x: 474, y: 82, w: 38, h: 36, radius: 48, label: 'Talk to AJ', action: talkAJ });
+  if (s === 3) list.push({ x: 468, y: 86, w: 52, h: 42, radius: 60, label: 'Talk to AJ', action: talkAJ });
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
   if (s === 5) list.push({ x: 78, y: 240, w: 112, h: 46, label: 'Sit on couch', action: sitCouch });
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
@@ -1447,7 +1447,9 @@ function drawProduce() {
   outlineText(ctx, 'SATRIALE’S PRODUCE INCIDENT', 320, 54, '#7a1f2c', 12, 'center');
   drawPerson(ctx, 314, 98, 'junior', 'down', state.frame * 2);
   outlineText(ctx, 'CAZZATA, MALANGA!', 320, 82, '#ffdf6e', 8, 'center');
-  // flying produce
+  const blink = g.invuln > 0 && Math.sin(state.time * 18) > 0;
+  if (!blink) drawPerson(ctx, g.x - 8, g.y - 14, 'augustus', 'down', state.frame);
+  // flying produce stays visually above the large illustrated avatar for fair dodging
   for (const it of g.items) {
     ctx.save(); ctx.translate(it.x, it.y); ctx.rotate(it.spin);
     if (it.type === 'tomato') {
@@ -1461,8 +1463,6 @@ function drawProduce() {
     }
     ctx.restore();
   }
-  const blink = g.invuln > 0 && Math.sin(state.time * 18) > 0;
-  if (!blink) drawPerson(ctx, g.x - 8, g.y - 14, 'augustus', 'down', state.frame);
   ctx.restore();
   drawPanel(10, 10, 280, 42, '#141f3a', '#e5c36a');
   outlineText(ctx, `PRODUCE DODGE  ♥${g.hearts}`, 20, 18, '#ffe78a', 9);
@@ -1895,6 +1895,32 @@ function drawHouse() {
   if (drawSceneArt(sceneArt.house, 640, 416)) {
     // Interactive channels and characters sit over the illustrated room art.
     drawTV(214, 30);
+    // Geese visibly patrol outside the bedroom window.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(112, 14, 58, 34);
+    ctx.clip();
+    for (let i = 0; i < 3; i++) {
+      const gx = 108 + ((state.time * 8 + i * 25) % 72);
+      const gy = 29 + Math.sin(state.time * 3 + i) * 3 + i * 4;
+      px(ctx, gx, gy, 10, 4, '#f3eedc');
+      px(ctx, gx + 7, gy - 3, 3, 5, '#f3eedc');
+      px(ctx, gx + 10, gy - 2, 2, 1, '#e58d2a');
+    }
+    ctx.restore();
+    // Mirror catches a small animated reflection when Tony is nearby.
+    if (Math.abs(state.player.x - 292) < 55 && state.player.y < 120) {
+      px(ctx, 294, 28, 30, 54, 'rgba(160,210,230,.18)');
+      px(ctx, 303, 38 + Math.sin(state.time * 3) * 1, 12, 12, '#c8875f');
+      px(ctx, 301, 35, 16, 5, '#27201d');
+      px(ctx, 305, 52, 8, 14, '#5a1f2e');
+    }
+    // Turkey steam moves in the kitchen.
+    for (let i = 0; i < 4; i++) {
+      const sy = 360 - ((state.time * 13 + i * 11) % 34);
+      const sx = 486 + i * 7 + Math.sin(state.time * 2 + i) * 3;
+      px(ctx, sx, sy, 2, 5, 'rgba(235,235,220,.38)');
+    }
     // Carmela paces through the kitchen instead of the house feeling frozen.
     const carmX = 486 + Math.sin(state.time * .9) * 34;
     drawPerson(ctx, carmX, 330, 'carmela', Math.cos(state.time * .9) > 0 ? 'right' : 'left', state.frame * 1.4, { pose: 'stand' });
@@ -2379,8 +2405,8 @@ function drawPeptides() {
   ctx.translate(wobbleX, wobbleY);
   for (let x = 20; x < 620; x += 28) for (let y = 40; y < 340; y += 24) px(ctx, x, y, 24, 20, (x + y) % 56 ? '#22304a' : '#1c293f');
   px(ctx, 34, 54, 572, 282, 'rgba(28,40,64,.5)');
-  for (const v of g.vials) drawVial(ctx, v.x, v.y, g.time, v.kind);
   drawPerson(ctx, g.x - 8, g.y - 12, state.player.kind, 'down', state.frame);
+  for (const v of g.vials) drawVial(ctx, v.x, v.y, g.time, v.kind);
   ctx.restore();
   // dizzy overlay
   if (g.dizzy > .45) {
