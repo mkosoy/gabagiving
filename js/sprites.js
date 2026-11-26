@@ -104,7 +104,11 @@ function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   ctx.rotate(tilt + Math.sin(frame * .25) * .008);
   if (dir === 'left' && kind !== 'kramer') ctx.scale(-1, 1);
   const drawX = kind === 'kramer' && pose !== 'burst' ? -w * .62 : -w / 2;
-  ctx.drawImage(img, drawX, -h + bob, w, h);
+  // illustrated sprites are smooth art, not pixel art: high-quality scaling keeps them crisp
+  ctx.imageSmoothingEnabled = true;
+  if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, Math.round(drawX), Math.round(-h + bob), Math.round(w), Math.round(h));
+  ctx.imageSmoothingEnabled = false;
   ctx.restore();
 }
 
