@@ -102,7 +102,12 @@ function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   ctx.fill();
   ctx.translate(cx, bottom + bob * .3);
   const tilt = pose === 'lean' ? -.08 : pose === 'angry' ? .05 : pose === 'burst' ? -.05 : 0;
-  ctx.rotate(tilt + Math.sin(frame * .25) * .008);
+  // cartoon walk cycle: alternating sway + squash that reads as steps even on a static illustration
+  const stepping = Math.sin(frame * 1.1);
+  const walkish = Math.abs(Math.sin(frame * .55));
+  ctx.rotate(tilt + Math.sin(frame * .25) * .008 + stepping * .045 * walkish);
+  const squash = 1 - Math.abs(stepping) * .035 * walkish;
+  ctx.scale(2 - squash > 1 ? 1 + (1 - squash) * .6 : 1, squash);
   if (dir === 'left' && kind !== 'kramer') ctx.scale(-1, 1);
   const drawX = kind === 'kramer' && pose !== 'burst' ? -w * .62 : -w / 2;
   // illustrated sprites are smooth art, not pixel art: high-quality scaling keeps them crisp
