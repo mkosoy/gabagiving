@@ -854,6 +854,7 @@ function updateExplore(dt) {
   updatePhone(dt);
   if (state.phone) return;
   updateAmbient(dt);
+  updateRyeHeist(dt);
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
@@ -975,8 +976,114 @@ function houseInteractions() {
       { speaker: 'tony', text: 'Every time I look at this guy I feel like I owe him money.' },
       { speaker: 'aj', text: 'That’s what makes it art, Dad.' }
     ]) });
+    if (state.player.kind === 'george' && !state.flags.marbleRye && !(state.rye && state.rye.active)) {
+      list.push({ x: 300, y: 370, w: 90, h: 40, label: 'Marble Rye Heist', action: startRyeHeist });
+    }
+    if (state.rye && state.rye.active && !state.rye.hasRye) {
+      list.push({ x: 380, y: 90, w: 70, h: 50, label: 'Grab the rye', action: grabRye });
+    }
+    if (state.rye && state.rye.active && state.rye.hasRye) {
+      list.push({ x: 300, y: 370, w: 90, h: 40, label: 'Escape with rye', action: escapeRye });
+    }
   }
   return list;
+}
+
+function startRyeHeist() {
+  state.rye = {
+    active: true,
+    hasRye: false,
+    caughtT: 0,
+    guards: [
+      { kind: 'carmela', x: 200, y: 200, wp: [[200, 200], [420, 200], [420, 290], [200, 290]], wi: 0, dir: 'down' },
+      { kind: 'womanA', x: 480, y: 130, wp: [[480, 130], [140, 130]], wi: 0, dir: 'left' }
+    ]
+  };
+  objective('Steal the marble rye — don’t get spotted!');
+  audio.sfx('denied');
+  startDialog([
+    { speaker: 'george', text: 'The rye. They took it back uneaten. Uneaten! That bread cost me four dollars and my dignity.' },
+    { speaker: 'narrator', text: 'Sneak to the kitchen table, grab the marble rye, and escape without being spotted. If they see you, you drop everything.' },
+    { speaker: 'george', text: 'This is not stealing. This is bread repatriation.' }
+  ]);
+}
+
+function grabRye() {
+  state.rye.hasRye = true;
+  audio.sfx('pickup');
+  spawnEffect(state.player.x + 8, state.player.y - 10, 'RYE ACQUIRED', '#ffe78a');
+  objective('Escape with the rye!');
+}
+
+function escapeRye() {
+  state.flags.marbleRye = true;
+  state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+  state.rye.active = false;
+  state.rye = null;
+  audio.sfx('success');
+  objective('Scheme complete: Marble Rye Heist');
+  startDialog([
+    { speaker: 'george', text: 'I got it! The bread is mine! Tell the Rosses nothing!' },
+    { speaker: 'narrator', text: 'Somewhere, an elderly couple remains unaware that dinner-roll justice has been served.' },
+    { speaker: 'tony', text: 'You risked a criminal record over bread. I almost respect it.' }
+  ]);
+}
+
+function updateRyeHeist(dt) {
+  const r = state.rye;
+  if (!r || !r.active || state.scene !== 'house') return;
+  r.caughtT = Math.max(0, r.caughtT - dt);
+  const p = state.player;
+  for (const g of r.guards) {
+    const target = g.wp[g.wi];
+    const dx = target[0] - g.x, dy = target[1] - g.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 6) g.wi = (g.wi + 1) % g.wp.length;
+    else {
+      g.x += dx / d * 42 * dt;
+      g.y += dy / d * 42 * dt;
+      g.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    }
+    if (r.caughtT <= 0 && Math.hypot(g.x + 8 - (p.x + 8), g.y + 12 - (p.y + 12)) < 44) {
+      r.caughtT = 2.5;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+      if (r.hasRye) { r.hasRye = false; spawnEffect(p.x + 8, p.y - 10, 'DROPPED THE RYE', '#ff8e8e'); }
+      p.x = 320; p.y = 380;
+      audio.sfx('denied');
+      audio.voice(g.kind === 'carmela' ? 'carmela' : 'tony');
+      startDialog([
+        { speaker: 'carmela', text: 'George?! What are you doing in my kitchen?' },
+        { speaker: 'george', text: 'Inspecting! I inspect bread. Professional bread inspector. Vanderlay Industries, bread division!' }
+      ]);
+    }
+  }
+}
+
+function drawSchemeProps() {
+  const r = state.rye;
+  if (!r || !r.active || state.scene !== 'house') return;
+  if (!r.hasRye) {
+    // marble rye on the kitchen table
+    const bob = Math.sin(state.time * 3) * 1.5;
+    px(ctx, 404, 108 + bob, 26, 12, '#8a5a2e');
+    px(ctx, 406, 110 + bob, 22, 8, '#a86f3c');
+    for (let i = 0; i < 4; i++) px(ctx, 408 + i * 5, 111 + bob + (i % 2), 2, 4, '#5e3a1c');
+    const pulse = (Math.sin(state.time * 4) + 1) / 2;
+    ctx.fillStyle = `rgba(255,216,92,${.12 + pulse * .18})`;
+    ctx.beginPath();
+    ctx.ellipse(417, 114, 26 + pulse * 5, 16 + pulse * 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (const g of r.guards) {
+    drawPerson(ctx, g.x, g.y, g.kind, g.dir, state.frame);
+    // vision indicator
+    ctx.fillStyle = 'rgba(255,80,60,.18)';
+    ctx.beginPath();
+    const vx = g.x + 8 + (g.dir === 'right' ? 30 : g.dir === 'left' ? -30 : 0);
+    const vy = g.y + 12 + (g.dir === 'down' ? 28 : g.dir === 'up' ? -28 : 0);
+    ctx.ellipse(vx, vy, 30, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function houseObjective() {
@@ -3082,6 +3189,7 @@ function drawWorld() {
   ctx.translate(-Math.round(state.camera.x), -Math.round(state.camera.y));
   scene.draw();
   drawAmbient();
+  drawSchemeProps();
   drawInteractionMarkers();
   drawPlayer();
   drawEffects();
