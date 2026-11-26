@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1614,6 +1614,13 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  heatMagnet: {
+    title: 'HEAT MAGNET',
+    payout: 220, heat: 0, survive: 30,
+    steps: [
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Survive the heat, then report back to Newman', label: 'Report back' }
+    ]
+  },
   turkeyTax: {
     title: 'THE TURKEY TAX',
     payout: 180, heat: 1,
@@ -1632,15 +1639,16 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'ryeExpress', 'pineFresh'];
+const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'ryeExpress', 'heatMagnet', 'pineFresh'];
 function nextMission() {
   return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
 
 function startMission(id) {
   const def = MISSION_DEFS[id];
-  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null };
+  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null, surviveT: def.survive || 0 };
   audio.sfx('success');
+  if (def.survive) state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
 }
 
 function advanceMission() {
@@ -1709,6 +1717,11 @@ function updateMission() {
   }
   if (state.scene !== st.scene) return;
   const p = state.player;
+  if (m0.surviveT > 0) {
+    m0.surviveT -= dt;
+    if (m0.surviveT <= 0) spawnEffect(state.player.x + 8, state.player.y - 20, 'HEAT WEATHERED', '#8ffff2');
+  }
+  if (m0.surviveT > 0) return;
   if (Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
     state.interactCooldown = .8;
     spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
@@ -1749,6 +1762,9 @@ function drawMissionHud() {
   if (state.mission.deadline) {
     const left = Math.max(0, state.mission.deadline - state.time);
     outlineText(ctx, `⏱ ${left.toFixed(0)}s`, 490, 20, left < 20 ? '#ff7a6a' : '#ffe78a', 8, 'right');
+  }
+  if (state.mission.surviveT > 0) {
+    outlineText(ctx, `SURVIVE ${state.mission.surviveT.toFixed(0)}s`, 490, 20, '#ff9a3e', 8, 'right');
   }
   // world-space beacon at the step target when in the right scene
   if (state.scene === st.scene) {
@@ -3615,6 +3631,7 @@ function hubInteractions() {
         const offers = {
           packageJob: { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
           catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
+          heatMagnet: { speaker: 'newman', text: 'This one is simple. I may have told the police YOU are the mail thief. You’ll have some heat for a bit. Survive it, come back, $220. What — don’t look at me like that, it’s a COMPLIMENT. They believed me instantly!' },
           ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
           pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
         };
