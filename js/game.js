@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen'];
 function saveWorld() {
   try {
     const out = {};
@@ -608,6 +608,39 @@ function drawDialog() {
     px(ctx, ax + 2, ay + 4, 6, 4, '#fff1a6');
     px(ctx, ax + 4, ay + 8, 2, 3, '#fff1a6');
   }
+}
+
+function drawTrivia() {
+  const tv = state.trivia;
+  if (!tv) return;
+  const q = tv.qs[tv.i];
+  ctx.fillStyle = 'rgba(8,6,12,.92)';
+  ctx.fillRect(130, 90, 380, 220);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(130, 90, 380, 220);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`TRIVIA NIGHT — Q${tv.i + 1}/3`, 320, 116);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '11px monospace';
+  if (q) {
+    const lines = wrapText(ctx, q.q, 320, 11);
+    lines.forEach((ln, li) => ctx.fillText(ln, 320, 146 + li * 14));
+    if (tv.resultT > 0) {
+      ctx.fillStyle = tv.lastCorrect ? '#7ad47a' : '#d47a7a';
+      ctx.fillText(tv.lastCorrect ? 'CORRECT!' : `wrong — it was “${q.a}”`, 320, 216);
+    } else {
+      ctx.fillStyle = tv.pick === 0 ? '#ffd23e' : '#f5efdc';
+      ctx.fillText('◀ ' + q.opts[0], 320, 200);
+      ctx.fillStyle = tv.pick === 1 ? '#ffd23e' : '#f5efdc';
+      ctx.fillText(q.opts[1] + ' ▶', 320, 224);
+      ctx.fillStyle = '#888';
+      ctx.font = '9px monospace';
+      ctx.fillText('←→ choose · E answer · Q bail', 320, 256);
+    }
+  }
+  ctx.textAlign = 'left';
 }
 
 function drawFastTravel() {
@@ -1408,6 +1441,35 @@ function drawRussian() {
   px(ctx, ru.x - 3, ru.y + 2, 3, 4, '#1c1814');
   px(ctx, ru.x + 1, ru.y + 2, 3, 4, '#1c1814');
   ctx.globalAlpha = 1;
+}
+
+function drawIceCream() {
+  const ic = state.iceCream;
+  if (!ic || state.scene !== 'hub' || isNight() || ic.t > 0) return;
+  drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
+  px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
+  px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawFireworks() {
+  if (!['shore', 'ac'].includes(state.scene) || !isNight()) { state.fireworks = null; return; }
+  if (!state.fireworks) state.fireworks = [];
+  if (Math.random() < .012 && state.fireworks.length < 3) {
+    state.fireworks.push({ x: 120 + Math.random() * 520, y: 40 + Math.random() * 90, t: 0, hue: ['#ff6a8a', '#ffd23e', '#8ffff2', '#c09aff'][Math.floor(Math.random() * 4)] });
+    if (audio && audio.sfx) audio.sfx('thud');
+  }
+  for (const fw of state.fireworks) {
+    fw.t += .016;
+    const r = fw.t * 60;
+    const alpha = Math.max(0, 1 - fw.t / 1.3);
+    ctx.globalAlpha = alpha;
+    for (let k = 0; k < 12; k++) {
+      const ang = (k / 12) * Math.PI * 2;
+      px(ctx, fw.x - state.camera.x + Math.cos(ang) * r, fw.y - state.camera.y + Math.sin(ang) * r * .8, 2, 2, fw.hue);
+    }
+    ctx.globalAlpha = 1;
+  }
+  state.fireworks = state.fireworks.filter(f => f.t < 1.3);
 }
 
 function drawPackages() {
@@ -2349,6 +2411,17 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // ice cream truck — drifts through the neighborhood by day, forever out of reach
+  if (state.scene === 'hub' && !isNight()) {
+    if (!state.iceCream) state.iceCream = { x: -80, y: 300, t: 20 + Math.random() * 30 };
+    const ic = state.iceCream;
+    ic.t -= dt;
+    if (ic.t <= 0) {
+      ic.x += 42 * dt;
+      if (!ic.jingled) { ic.jingled = true; audio.sfx('pickup'); spawnEffect(Math.min(600, Math.max(40, ic.x + 40)), 270, '~ ice cream ~', '#ffe7f0'); }
+      if (ic.x > 1360) { ic.x = -80; ic.t = 60 + Math.random() * 60; ic.jingled = false; }
+    }
+  }
   // hidden gabagool packages — find all ten
   if (!state.pkgSpots) {
     state.pkgSpots = [
@@ -3632,6 +3705,27 @@ function drawMonks() {
 
 function monksInteractions() {
   const list = [
+    { x: 270, y: 220, w: 60, h: 40, radius: 42, label: 'Trivia night', action: () => {
+      if (state.mode === 'trivia') return;
+      if (state.money < 10) { toast('Trivia entry is $10.'); return; }
+      state.money -= 10;
+      state.mode = 'trivia';
+      const bank = [
+        { q: 'The Soup Man’s most famous rule?', a: 'no soup for you', opts: ['no soup for you', 'soup for all'] },
+        { q: 'What’s in the Pine Barrens?', a: 'an interior decorator', opts: ['an interior decorator', 'a picnic'] },
+        { q: 'Vandelay Industries exports…', a: 'latex', opts: ['latex', 'coffee tables'] },
+        { q: 'Frank Costanza’s holiday?', a: 'festivus', opts: ['festivus', 'feastivus'] },
+        { q: 'Satriale’s is a…', a: 'pork store', opts: ['pork store', 'bakery'] },
+        { q: 'George’s alter ego architect?', a: 'art vandelay', opts: ['art vandelay', 'buck n'] },
+        { q: 'The big salad requires…', a: 'big lettuce', opts: ['big lettuce', 'small forks'] },
+        { q: 'Tony sees Dr. Melfi for…', a: 'panic attacks', opts: ['panic attacks', 'foot pain'] }
+      ];
+      const qs = [];
+      const pool = bank.slice();
+      while (qs.length < 3 && pool.length) qs.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+      state.trivia = { qs, i: 0, right: 0, pick: null, resultT: 0 };
+      audio.sfx('pickup');
+    } },
     { x: 520, y: 160, w: 60, h: 40, radius: 40, label: 'Open mic', action: () => {
       const sets = [
         [
@@ -4066,6 +4160,7 @@ function loseProduceGame() {
 
 function enterHub(first = false) {
   state.flags.freeRoam = true;
+  if (!state.flags.helpSeen) { state.flags.helpSeen = true; state.help = true; }
   if (state.player.kind !== 'george') state.player.kind = 'tonyMax';
   state.player.speed = state.player.kind === 'george' ? 96 : 88;
   setScene('hub', 320, 214);
@@ -5768,6 +5863,14 @@ function nycInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
+    { x: 430, y: 250, w: 50, h: 34, radius: 40, label: 'Feed the pigeons', action: () => {
+      if ((state.pigeonCd || 0) > state.time) { toast('The pigeons are full. They are judging you anyway. It’s their way.'); return; }
+      state.pigeonCd = state.time + 30;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .3);
+      audio.sfx('pickup');
+      spawnEffect(state.player.x, state.player.y - 16, 'the flock approves', '#b8d0e0');
+      startDialog([{ speaker: 'narrator', text: 'You scatter crumbs. The flock descends with military precision. For one shining moment, you are the most important creature in Manhattan. Then the crumbs are gone, and so is their respect.' }]);
+    } },
     { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'jerry', text: 'George. Please tell me you’re not doing crimes with the mailman again. The last time, my super got a subpoena. A SUBPOENA, George!' },
@@ -7081,6 +7184,8 @@ function drawWorld() {
   drawLeaves();
   drawSnatcher();
   drawPackages();
+  drawFireworks();
+  drawIceCream();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
@@ -7743,6 +7848,7 @@ function render() {
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
+  else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7940,6 +8046,38 @@ function update(dt) {
         state.strength = null;
       }
     }
+  } else if (state.mode === 'trivia') {
+    const tv = state.trivia;
+    if (!tv) { state.mode = 'explore'; return; }
+    if (tv.resultT > 0) {
+      tv.resultT -= dt;
+      if (tv.resultT <= 0) {
+        tv.i += 1;
+        tv.pick = null;
+        if (tv.i >= tv.qs.length) {
+          const won = tv.right >= 2;
+          state.mode = 'explore';
+          if (won) { state.money += 50; audio.sfx('cash'); }
+          startDialog([{ speaker: 'narrator', text: won ? `${tv.right}/3 correct! The trivia master — a man named Bubble — slides you $50 and mutters that the questions were too easy. They were not. They were never easy.` : `${tv.right}/3. Bubble shakes his head with the deep disappointment of a man who owns every encyclopedia. The $10 is gone, but the shame is free.` }]);
+          state.trivia = null;
+        }
+      }
+      return;
+    }
+    const q = tv.qs[tv.i];
+    if (!q) { state.mode = 'explore'; state.trivia = null; return; }
+    const mi = moveInput();
+    if (consume(['ArrowLeft', 'KeyA']) || mi.x < -.5) tv.pick = 0;
+    if (consume(['ArrowRight', 'KeyD']) || mi.x > .5) tv.pick = 1;
+    if (consume(['Digit1'])) tv.pick = 0;
+    if (consume(['Digit2'])) tv.pick = 1;
+    if (tv.pick !== null && consume(['KeyE', 'Space'])) {
+      const correct = q.opts[tv.pick] === q.a;
+      if (correct) { tv.right += 1; audio.sfx('pickup'); } else audio.sfx('thud');
+      tv.lastCorrect = correct;
+      tv.resultT = 1.1;
+    }
+    if (consume(['Escape', 'KeyQ'])) { state.mode = 'explore'; state.trivia = null; }
   } else if (state.mode === 'craps') {
     const c = state.craps;
     if (c.phase === 'choose') {
