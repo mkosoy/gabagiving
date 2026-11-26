@@ -1240,6 +1240,28 @@ function updateExplore(dt) {
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
   const inter = nearestInteraction();
+  if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
+    // small talk: pedestrians answer when you walk up and engage them
+    let talker = null; let td = 34;
+    for (const n of ambientFor(state.scene)) {
+      const d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (d < td) { talker = n; td = d; }
+    }
+    if (talker) {
+      state.interactCooldown = .6;
+      const lines = state.player.kind === 'george'
+        ? [['You look familiar. Do I owe you money?', 'george'], ['Nice walking weather. Terrible standing weather.', 'george']]
+        : [['You didn’t see me here. Capisce?', 'tony'], ['Beautiful day. Shame to waste it, huh?', 'tony']];
+      const pick = lines[Math.floor((state.time * .5) % lines.length)];
+      talker.bark = state.player.kind === 'george' ? '...who are you?' : 'uh — yes sir, Mr. Soprano';
+      talker.barkT = 2;
+      audio.voice(p.kind === 'george' ? 'george' : 'tony');
+      startDialog([
+        { speaker: p.kind === 'george' ? 'george' : 'tony', text: pick[0] },
+        { speaker: 'narrator', text: talker.bark }
+      ], { returnMode: 'explore' });
+    }
+  }
   if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
     audio.sfx('confirm');
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
