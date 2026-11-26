@@ -1443,6 +1443,18 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawWildTurkey() {
+  const tk = state.turkey;
+  if (!tk || state.scene !== 'hub') return;
+  const bob = Math.sin(state.time * 6) * 1;
+  px(ctx, tk.x - 4 - state.camera.x, tk.y - 8 + bob - state.camera.y, 9, 8, '#5a3a20');
+  px(ctx, tk.x - 6 - state.camera.x, tk.y - 12 + bob - state.camera.y, 12, 5, '#7a5230');
+  px(ctx, tk.x + 3 - state.camera.x, tk.y - 13 + bob - state.camera.y, 3, 4, '#c03838');
+  px(ctx, tk.x + 4 - state.camera.x, tk.y - 10 + bob - state.camera.y, 2, 2, '#ffd23e');
+  px(ctx, tk.x - 2 - state.camera.x, tk.y + bob - state.camera.y, 2, 3, '#8a6a30');
+  px(ctx, tk.x + 1 - state.camera.x, tk.y + bob - state.camera.y, 2, 3, '#8a6a30');
+}
+
 function drawIceCream() {
   const ic = state.iceCream;
   if (!ic || state.scene !== 'hub' || isNight() || ic.t > 0) return;
@@ -2411,6 +2423,26 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // the wild turkey of North Caldwell — unbothered, unhurried, unarmed
+  if (state.scene === 'hub') {
+    if (!state.turkey) state.turkey = { x: 600, y: 300, wx: 600, wy: 300, t: 0 };
+    const tk = state.turkey;
+    tk.t -= dt;
+    if (tk.t <= 0) {
+      tk.t = 2 + Math.random() * 3;
+      tk.wx = Math.max(200, Math.min(1100, tk.x + (Math.random() - .5) * 220));
+      tk.wy = Math.max(230, Math.min(360, tk.y + (Math.random() - .5) * 120));
+    }
+    const dx = tk.wx - tk.x, dy = tk.wy - tk.y;
+    const dd = Math.hypot(dx, dy);
+    if (dd > 4) { tk.x += (dx / dd) * 22 * dt; tk.y += (dy / dd) * 22 * dt; }
+    // gobble at the player if close
+    const pd = Math.hypot(tk.x - state.player.x, tk.y - state.player.y);
+    if (pd < 60 && Math.random() < dt * .3) {
+      audio.sfx('turkey');
+      spawnEffect(tk.x, tk.y - 14, ['GOBBLE', 'gobble gobble', 'GLUB'][Math.floor(Math.random() * 3)], '#d4a838');
+    }
+  }
   // ice cream truck — drifts through the neighborhood by day, forever out of reach
   if (state.scene === 'hub' && !isNight()) {
     if (!state.iceCream) state.iceCream = { x: -80, y: 300, t: 20 + Math.random() * 30 };
@@ -5257,7 +5289,18 @@ function acInteractions() {
     } },
     { x: 420, y: 150, w: 70, h: 40, radius: 44, label: 'Loan shark', action: () => {
       if (state.flags.acLoan) {
-        startDialog([{ speaker: 'narrator', text: 'The shark smiles with entirely too many teeth. “Payment Friday. Or don’t. I own a very persuasive pipe wrench either way.”' }]);
+        if (state.money >= 250) {
+          state.money -= 250;
+          state.flags.acLoan = false;
+          state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+          audio.sfx('cash');
+          startDialog([
+            { speaker: 'narrator', text: 'You count out $250. The shark makes it disappear with the efficiency of a man who has never once needed a receipt. “Pleasure. Tell your friends. Don’t tell your friends.” The wrench stays hypothetical.' },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Paid in full! My kneecaps are MINE again! I’m never borrowing again! …Unless the rates improve!' : 'Clean. That’s how you do business. No paper, no problems, no reminders.' }
+          ]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The shark smiles with entirely too many teeth. “Payment Friday — $250. Or don’t. I own a very persuasive pipe wrench either way.” You need the cash first. Somehow. Anyhow.' }]);
+        }
         return;
       }
       state.flags.acLoan = true;
@@ -7186,6 +7229,7 @@ function drawWorld() {
   drawPackages();
   drawFireworks();
   drawIceCream();
+  drawWildTurkey();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
