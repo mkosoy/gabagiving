@@ -2565,6 +2565,13 @@ function drawHubEast() {
   px(ctx, 640, 286, 640, 10, '#8e8e86');
   // road dashes
   for (let x = 650; x < 1280; x += 42) px(ctx, x, 240, 22, 3, '#d8c86a');
+  // grass texture speckle across the east side
+  for (let gx = 648; gx < 1272; gx += 17) {
+    const gy1 = 20 + ((gx * 7919) % 150);
+    px(ctx, gx, gy1, 3, 2, gx % 3 ? '#35512e' : '#466841');
+    const gy2 = 300 + ((gx * 4999) % 96);
+    px(ctx, gx + 7, gy2, 3, 2, gx % 3 ? '#3a5733' : '#4a6c42');
+  }
   // north buildings: brick apartments, gas station, house row
   px(ctx, 672, 18, 172, 108, '#6e3f30');
   px(ctx, 680, 26, 156, 12, '#522c22');
@@ -2573,6 +2580,16 @@ function drawHubEast() {
     px(ctx, wx, wy, 16, 3, '#e8f4fa');
   }
   outlineText(ctx, 'COSTANZA CT', 758, 40, '#ffd9a0', 7, 'center');
+  // brick texture lines
+  for (let by = 30; by < 122; by += 9) px(ctx, 674, by, 168, 1, 'rgba(0,0,0,.18)');
+  // stoop + door
+  px(ctx, 744, 92, 26, 34, '#3a221a');
+  px(ctx, 738, 118, 40, 8, '#8e8e86');
+  // oak tree between buildings
+  px(ctx, 872, 88, 8, 34, '#4a3826');
+  px(ctx, 856, 58, 40, 34, '#2e5230');
+  px(ctx, 862, 48, 28, 22, '#3a6a3c');
+  px(ctx, 884, 108, 60, 8, 'rgba(0,0,0,.22)');
   // gas station
   px(ctx, 920, 18, 162, 108, '#d8d2c4');
   px(ctx, 920, 18, 162, 22, '#b3312c');
@@ -2582,6 +2599,13 @@ function drawHubEast() {
   px(ctx, 946, 62, 18, 22, '#22303e');
   px(ctx, 990, 62, 18, 22, '#22303e');
   px(ctx, 1032, 60, 40, 30, '#9fd4ec');
+  // gas station canopy shadow + price sign
+  px(ctx, 928, 100, 150, 10, 'rgba(0,0,0,.25)');
+  px(ctx, 1082, 44, 22, 56, '#2b2f36');
+  px(ctx, 1084, 48, 18, 14, '#e8e0c8');
+  outlineText(ctx, '3.89', 1093, 52, '#b3312c', 5, 'center');
+  px(ctx, 1084, 66, 18, 14, '#e8e0c8');
+  outlineText(ctx, '4.19', 1093, 70, '#b3312c', 5, 'center');
   // east end cap house
   px(ctx, 1140, 18, 112, 108, '#7a5c38');
   px(ctx, 1150, 34, 28, 24, '#c8e2ee');
