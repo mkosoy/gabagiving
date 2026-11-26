@@ -5245,6 +5245,21 @@ function drawPines() {
 
 function pinesInteractions() {
   return [
+    { x: 300, y: 250, w: 50, h: 40, radius: 44, label: 'Disturbed earth', action: () => {
+      const finds = [
+        { text: 'You dig. A single ice skate, ancient and rusted. Size 14. You rebury it with more respect than it probably deserves.', money: 0 },
+        { text: 'You dig. A coffee can full of quarters — somebody’s rainy-day fund from 1974. The rain came. $38 in vintage change.', money: 38 },
+        { text: 'You dig. A very heavy door hinge and a note that just says “SORRY — P.” You stop digging. You will never dig again. …You pocket a $5 that was under the hinge.', money: 5 },
+        { text: 'You dig. Nothing. Just cold pine soil. Somewhere behind you, a branch breaks, and you decide the digging is done.', money: 0 }
+      ];
+      const f = finds[Math.floor(Math.random() * finds.length)];
+      if (f.money) state.money += f.money;
+      audio.sfx(f.money ? 'cash' : 'pickup');
+      startDialog([
+        { speaker: 'narrator', text: f.text },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging in a HAUNTED FOREST! For QUARTERS! This is what my life is now!' : 'Ground keeps secrets. That’s the business model. Always has been.' }
+      ]);
+    } },
     { x: 730, y: 200, w: 36, h: 100, radius: 46, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
       audio.sfx('honk');
