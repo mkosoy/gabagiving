@@ -30,6 +30,7 @@ const sceneArt = {
   nyc: loadArt('./assets/bg-nyc.webp'),
   pines: loadArt('./assets/bg-pines.webp'),
   bodega: loadArt('./assets/bg-bodega.webp'),
+  shore: loadArt('./assets/bg-shore.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -771,6 +772,16 @@ const scenes = {
     ],
     draw: drawBodega,
     interactions: bodegaInteractions
+  },
+  shore: {
+    w: 768, h: 416, label: 'Jersey Shore · Off Season', music: 'dream',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      // ocean/beach blocked bottom, shop row blocked top with door gaps
+      r(8,330,752,86), r(8,8,240,110), r(520,8,240,110), r(8,118,60,120), r(700,118,60,120)
+    ],
+    draw: drawShore,
+    interactions: shoreInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -4330,6 +4341,66 @@ function bodegaInteractions() {
   ];
 }
 
+function drawShore() {
+  if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
+  // rolling wave animation along the blocked beach edge
+  for (let i = 0; i < 8; i++) {
+    const wx = 30 + i * 95 + Math.sin(state.time * 1.2 + i) * 14;
+    const wy = 330 + Math.sin(state.time * 1.7 + i * 2) * 6;
+    ctx.save();
+    ctx.globalAlpha = .35 + Math.sin(state.time * 2 + i) * .2;
+    px(ctx, wx, wy, 42, 3, '#cfe8f4');
+    ctx.restore();
+  }
+  // seagulls
+  for (let i = 0; i < 4; i++) {
+    const gx = (state.time * (14 + i * 5) + i * 190) % 820 - 30;
+    const gy = 60 + i * 24 + Math.sin(state.time * 2 + i * 3) * 10;
+    px(ctx, gx, gy, 5, 2, '#e8e8e0');
+    if (Math.floor(state.time * 6 + i) % 2) px(ctx, gx - 2, gy - 1, 3, 1, '#e8e8e0');
+    else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
+  }
+  outlineText(ctx, '← north', 24, 200, '#ffe78a', 7, 'left');
+}
+
+function shoreInteractions() {
+  return [
+    { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
+    { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
+      if ((state.flags.tribute || 0) < 5) {
+        startDialog([{ speaker: 'narrator', text: 'Taffy is five bucks a bag. You have lint and regret. The shopkeep has seen worse — it’s the off-season, everyone has lint and regret.' }]);
+        return;
+      }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A bag of saltwater taffy. George eats eleven pieces in ninety seconds and immediately requires a sit-down.' },
+        { speaker: 'george', text: 'The trick is you don’t chew. Chewing is how they get you. You let it dissolve like a memory!' }
+      ] : [
+        { speaker: 'narrator', text: 'Taffy. Tony regards it with suspicion, eats one piece, then buys three more bags for the ride home.' },
+        { speaker: 'tony', text: 'What. It’s for the kids. Some of it. Look — the molasses one’s mine, that’s non-negotiable.' }
+      ]);
+    } },
+    { x: 330, y: 240, w: 120, h: 60, radius: 48, label: 'Watch the ocean', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George stares at the Atlantic. Somewhere out there: Portugal. He will never go. He thinks about this for a long time.' },
+        { speaker: 'george', text: 'You know what the ocean is? A reminder. Everything is huge and I am very, very small. I need a taffy.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony watches the water. Melfi would call this processing. Tony calls it looking at water. Both are true.' },
+        { speaker: 'tony', text: 'My old man never took us down the shore. First time I saw the ocean I was nineteen, on a… work trip. Funny what you remember.' }
+      ]);
+    } },
+    { x: 520, y: 200, w: 100, h: 60, radius: 46, label: 'Feed the gulls', action: () => {
+      audio.sfx('turkey');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+      startDialog([
+        { speaker: 'narrator', text: 'You throw one taffy crumb. Eleven thousand seagulls arrive as a single organism. A sign nearby says DO NOT FEED THE GULLS in very large letters.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'THEY’RE ORGANIZED! THEY HAVE A STRUCTURE! The big one is clearly management!' : 'Even the birds down here got a crew. Look at the little one — he’s the earner. The fat one? Union rep.' }
+      ]);
+    } }
+  ];
+}
+
 function drawPines() {
   if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
   // drifting mist
@@ -4353,6 +4424,7 @@ function drawPines() {
 
 function pinesInteractions() {
   return [
+    { x: 730, y: 200, w: 36, h: 100, radius: 46, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
       audio.sfx('honk');
       startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
