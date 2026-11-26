@@ -1443,6 +1443,27 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawFireworks() {
+  if (!['shore', 'ac'].includes(state.scene) || !isNight()) { state.fireworks = null; return; }
+  if (!state.fireworks) state.fireworks = [];
+  if (Math.random() < .012 && state.fireworks.length < 3) {
+    state.fireworks.push({ x: 120 + Math.random() * 520, y: 40 + Math.random() * 90, t: 0, hue: ['#ff6a8a', '#ffd23e', '#8ffff2', '#c09aff'][Math.floor(Math.random() * 4)] });
+    if (audio && audio.sfx) audio.sfx('thud');
+  }
+  for (const fw of state.fireworks) {
+    fw.t += .016;
+    const r = fw.t * 60;
+    const alpha = Math.max(0, 1 - fw.t / 1.3);
+    ctx.globalAlpha = alpha;
+    for (let k = 0; k < 12; k++) {
+      const ang = (k / 12) * Math.PI * 2;
+      px(ctx, fw.x - state.camera.x + Math.cos(ang) * r, fw.y - state.camera.y + Math.sin(ang) * r * .8, 2, 2, fw.hue);
+    }
+    ctx.globalAlpha = 1;
+  }
+  state.fireworks = state.fireworks.filter(f => f.t < 1.3);
+}
+
 function drawPackages() {
   if (!state.pkgSpots) return;
   for (let pi = 0; pi < state.pkgSpots.length; pi++) {
@@ -7143,6 +7164,7 @@ function drawWorld() {
   drawLeaves();
   drawSnatcher();
   drawPackages();
+  drawFireworks();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
