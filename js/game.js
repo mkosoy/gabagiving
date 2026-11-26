@@ -27,6 +27,7 @@ function loadArt(src) {
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
+  nyc: loadArt('./assets/bg-nyc.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -632,7 +633,7 @@ function costanzaInteractions() {
       { speaker: 'tony', text: 'That… sounds like her. Sorry about the kreplach.' }
     ]);
   } },
-  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: () => travelHub('hub') }
+  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: leaveOutside }
   ];
 }
 
@@ -735,6 +736,18 @@ const scenes = {
     ],
     draw: drawHub,
     interactions: hubInteractions
+  },
+  nyc: {
+    w: 768, h: 416, label: 'Manhattan · Upper West Side', music: 'monks',
+    colliders: [
+      r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
+      // building rows with gaps at doorways: Monk's ~125, soup ~435, Jerry's ~650
+      r(8,8,100,196), r(150,8,270,196), r(470,8,160,196), r(688,8,76,196),
+      // sidewalk furniture: newsstand and subway stairwell
+      r(500,200,58,34), r(4,200,26,52)
+    ],
+    draw: drawNyc,
+    interactions: nycInteractions
   },
   vesuvio: {
     w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'vesuvio',
@@ -906,6 +919,13 @@ const ambientSpecs = {
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
+  ],
+  nyc: [
+    { kind: 'womanA', x: 200, y: 250, region: { x: 60, y: 236, w: 640, h: 40 }, speed: 38 },
+    { kind: 'jerry', x: 500, y: 246, region: { x: 420, y: 236, w: 300, h: 36 }, speed: 30 },
+    { kind: 'womanD', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
+    { kind: 'christopher', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 28 },
+    { kind: 'womanC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
@@ -2623,7 +2643,7 @@ function monksInteractions() {
         { speaker: 'tony', text: 'Coffee. Black. Like my soul after talking to my mother.' }
       ]);
     } },
-    { x: 570, y: 330, w: 60, h: 80, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 570, y: 330, w: 60, h: 80, radius: 42, label: 'Leave', action: leaveOutside }
   ];
   return list;
 }
@@ -2687,7 +2707,7 @@ function soupInteractions() {
       ] : [
         { speaker: 'tony', text: 'Nice bread. At my house, Carmela hides the good bread from me. Don’t ask.' }
       ]) },
-    { x: 400, y: 356, w: 110, h: 50, radius: 44, label: 'Leave', action: () => travelHub('hub') }
+    { x: 400, y: 356, w: 110, h: 50, radius: 44, label: 'Leave', action: leaveOutside }
   ];
 }
 
@@ -2775,7 +2795,7 @@ function yankeesInteractions() {
       ] : [
         { speaker: 'tony', text: 'Gold trophies in a case. Reminds me — I gotta collect something from a guy who collects things.' }
       ]) },
-    { x: 560, y: 350, w: 70, h: 60, radius: 42, label: 'Leave', action: () => travelHub('hub') }
+    { x: 560, y: 350, w: 70, h: 60, radius: 42, label: 'Leave', action: leaveOutside }
   ];
 }
 
@@ -2967,7 +2987,19 @@ function grabStash(key) {
   if (!left) objective('Bring the cash to Derek at the gas station');
 }
 
+function leaveOutside() {
+  const r = state.returnTo;
+  if (r && r.scene !== state.scene && scenes[r.scene]) {
+    setScene(r.scene, r.x, r.y);
+    state.mode = 'explore';
+  } else travelHub('hub');
+}
+
 function travelHub(place) {
+  // remember which outdoor region we came from so interior exits return correctly
+  if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
+    state.returnTo = { scene: state.scene, x: Math.max(20, state.player.x), y: Math.min(400, state.player.y + 26) };
+  }
   // revisit surprises: the world remembers what you've been up to
   if (!state.flags.sandbox && schemeCount() >= 5 && !state.flags.surpriseShown && place === 'apartment') {
     state.flags.pendingSurprise = true;
@@ -3001,11 +3033,17 @@ function hubInteractions() {
     { x: 474, y: 126, w: 102, h: 50, label: 'Satriale’s', action: () => travelHub('satriale') },
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
-    { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
-    { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
-    { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
-    { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 1236, y: 210, w: 44, h: 90, radius: 52, label: 'NYC →', action: () => {
+      audio.sfx('honk');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George takes the tunnel. He gripes about the toll the entire way through.' },
+        { speaker: 'george', text: 'Eighteen dollars! For a hole in a river! I could SWIM for free!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony points the car east. Manhattan. More people to owe him money per square mile than anywhere on earth.' },
+        { speaker: 'tony', text: 'The city. Love it. Hate the parking.' }
+      ], () => { setScene('nyc', 40, 250); state.mode = 'explore'; objective('Manhattan — Seinfeld country'); });
+    } },
     { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
       if (!state.flags.packageHeist) {
         state.flags.packageHeist = true;
@@ -3219,6 +3257,81 @@ function drawHubEast() {
   // parked stealable coupe at the gas station
   if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
+}
+
+function drawNyc() {
+  if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
+    px(ctx, 0, 0, 768, 416, '#5a4a3a');
+  }
+  // moving taxis on the road, both directions
+  for (let i = 0; i < 3; i++) {
+    const cx = ((state.time * (60 + i * 24) + i * 300) % 940) - 80;
+    const tx = i === 1 ? 848 - cx : cx;
+    const cy = 292 + (i % 2) * 30;
+    px(ctx, tx - 2, cy - 2, 34, 15, 'rgba(0,0,0,.3)');
+    px(ctx, tx, cy, 30, 11, '#c9a015');
+    px(ctx, tx + 2, cy + 1, 26, 9, '#e8b822');
+    px(ctx, tx + 7, cy + 2, 14, 7, '#9fd4ec');
+    px(ctx, tx + 12, cy - 2, 6, 3, '#fff3b0');
+    px(ctx, tx + 3, cy + 10, 5, 3, '#05070c');
+    px(ctx, tx + 22, cy + 10, 5, 3, '#05070c');
+    // honk reaction when the player jaywalks in front
+    const p = state.player;
+    if (!p.inCar && Math.abs(p.y - cy) < 20 && Math.abs(p.x - tx) < 46 && Math.floor(state.time * 1.5) % 3 === 0) {
+      outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
+      if (Math.random() < .02) audio.sfx('honk');
+    }
+  }
+  // steam curling from the manhole
+  const steamX = 420, steamY = 306;
+  for (let s = 0; s < 3; s++) {
+    const st = (state.time * 1.2 + s * .5) % 1.5;
+    ctx.globalAlpha = Math.max(0, .5 - st * .35);
+    ctx.fillStyle = '#d8d8d0';
+    ctx.beginPath();
+    ctx.arc(steamX + Math.sin(st * 4 + s) * 6, steamY - st * 30, 3 + st * 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  outlineText(ctx, 'MONK’S', 125, 218, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'SOUP', 435, 210, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'JERRY’S', 650, 210, '#fff1a6', 7, 'center');
+  outlineText(ctx, 'SUBWAY', 18, 196, '#8ffff2', 6, 'center');
+  outlineText(ctx, '← NJ TURNPIKE', 6, 300, '#ffe78a', 7, 'left');
+}
+
+function nycInteractions() {
+  return [
+    { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
+    { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
+    { x: 624, y: 200, w: 52, h: 44, radius: 42, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
+    { x: 4, y: 200, w: 28, h: 52, radius: 40, label: 'Subway to Yankees', action: () => {
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'The 1 train wheezes uptown. Someone is performing magic tricks for no one.' }
+      ], () => travelHub('yankees'));
+    } },
+    { x: 500, y: 200, w: 58, h: 34, radius: 40, label: 'Newsstand', action: () => {
+      if (!state.flags.boughtPaper) {
+        state.flags.boughtPaper = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George buys a paper. Headline: LOCAL MAN’S CHARITY REVEALED AS INDEX CARD. He buys every copy.' },
+          { speaker: 'george', text: 'Damage control. Standard damage control.' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony buys a paper. He reads the horses, then the horoscope Carmela likes, then nothing else.' },
+          { speaker: 'tony', text: 'Two dollars for bad news. At least the bagels here are honest.' }
+        ]);
+        audio.sfx('pickup');
+      } else startDialog([{ speaker: 'narrator', text: 'Same headlines. Somehow worse the second time.' }]);
+    } },
+    { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'Back through the tunnel. The skyline shrinks in the mirror. Jersey spreads out like a forgiving buffet.' }
+      ], () => { setScene('hub', 1196, 250); state.mode = 'explore'; objective('North Caldwell — free roam'); });
+    } }
+  ];
 }
 
 function drawHub() {
