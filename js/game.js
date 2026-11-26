@@ -3700,7 +3700,7 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
-    { x: 540, y: 300, w: 60, h: 34, radius: 46, label: 'Pay’n’Spray', action: () => {
+    { x: 420, y: 340, w: 60, h: 34, radius: 44, label: 'Pay’n’Spray', action: () => {
       if (!state.player.inCar) { toast('Drive a car in first. The garage only does cars.'); return; }
       if ((state.flags.heat || 0) <= 0 && !state.player.carDamage) { toast('Car’s clean. Nothing to spray.'); return; }
       if (state.money < 50) { toast('Respray is $50. Cash. No invoices, obviously.'); return; }
