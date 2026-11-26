@@ -631,7 +631,7 @@ const scenes = {
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(0,0,250,106), r(70,112,120,56), r(254,40,94,110), r(354,104,108,52),
       r(556,12,76,240),
-      r(186,204,204,76), r(402,210,56,70), r(444,300,108,92),
+      r(130,190,270,98), r(402,210,56,70), r(444,300,108,92),
       r(242,296,120,46), r(14,304,136,100), r(530,368,98,44)
     ],
     draw: drawApartment,
@@ -1903,10 +1903,10 @@ function enterApartment() {
   state.mode = 'explore';
   objective('Follow the debtor inside');
   startDialog([
-    { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 300, 176, 150, () => moveActor(state.player, 146, 246, 150, () => moveActor(state.player, 296, 372, 150))); } },
+    { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 300, 160, 150, () => moveActor(state.player, 130, 320, 150, () => moveActor(state.player, 296, 372, 150))); } },
     { speaker: 'tony', text: 'There you are.', action: () => { state.player.dir = 'left'; } },
     { speaker: 'jerry', text: 'George? Why is a large man jogging into my apartment?', action: () => { const j = state.npcs.jerryApt; if (j) { j.pose = 'stand'; moveActor(j, 222, 250, 90); } } },
-    { speaker: 'narrator', text: 'George emerges from the kitchen holding a spoon and the expression of a man already negotiating.', action: () => moveActor(state.npcs.georgeApt, 280, 166, 64) },
+    { speaker: 'narrator', text: 'George emerges from the kitchen holding a spoon and the expression of a man already negotiating.', action: () => moveActor(state.npcs.georgeApt, 300, 162, 64) },
     { speaker: 'george', text: 'Jerry, I can explain. Legally speaking, I probably cannot explain.' }
   ], () => {
     state.flags.aptStep = 1;
