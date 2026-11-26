@@ -1571,7 +1571,9 @@ function updateExplore(dt) {
   if (input.x || input.y) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
     else p.dir = input.y > 0 ? 'down' : 'up';
-    const sp = p.speed * dt;
+    // cars carry momentum: spin up over ~1.2s instead of instant speed
+    if (p.inCar) p.carV = Math.min(1, (p.carV || 0) + dt * 1.2);
+    const sp = p.speed * dt * (p.inCar ? Math.max(.25, p.carV) : 1);
     p.stepAcc = (p.stepAcc || 0) + sp;
     if (p.stepAcc > (p.inCar ? 99999 : 26)) {
       p.stepAcc = 0;
@@ -1604,6 +1606,7 @@ function updateExplore(dt) {
       p.stepTick = .24;
     }
   } else {
+    if (p.inCar) p.carV = Math.max(0, (p.carV || 0) - dt * 2);
     state.frame += dt * 2;
   }
   const scene = scenes[state.scene];
