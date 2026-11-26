@@ -274,7 +274,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -2969,7 +2969,7 @@ function enterHub(first = false) {
   }
 }
 
-const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid'];
+const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid','latexExport'];
 
 function schemeCount() {
   return SCHEME_FLAGS.filter((k) => state.flags[k]).length;
@@ -3324,6 +3324,35 @@ function nycInteractions() {
         ]);
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'Same headlines. Somehow worse the second time.' }]);
+    } },
+    { x: 600, y: 290, w: 90, h: 46, radius: 44, label: 'Payphone', hidden: () => !!state.flags.latexExport, action: () => {
+      if (state.player.kind === 'george') {
+        startDialog([
+          { speaker: 'narrator', text: 'A payphone rings. Nobody answers payphones. George answers the payphone.', action: () => audio.sfx('ring') },
+          { speaker: 'george', text: 'Vandelay Industries, import-export. Latex. Yes, we HAVE the latex. Tell the buyers the latex is en route!' },
+          { speaker: 'jerry', text: 'George, you are screaming into a payphone on 81st street about latex that does not exist.' },
+          { speaker: 'george', text: 'Perception IS inventory, Jerry! Word of this gets out, we move UNITS!' },
+          { speaker: 'narrator', text: 'A confused tourist hands George $40 to stop shouting. Vandelay Industries has its first revenue.' }
+        ], () => {
+          state.flags.latexExport = true;
+          state.flags.tribute = (state.flags.tribute || 0) + 40;
+          spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · +$40', '#ffe78a');
+          audio.sfx('success');
+          objective('Scheme complete: Vandelay latex export');
+        });
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'A payphone rings. Tony picks it up out of pure instinct. It’s a wrong number asking about latex.' },
+          { speaker: 'tony', text: 'Latex? Yeah, we got latex. Cash only, pick up at Satriale’s, tell NOBODY.' },
+          { speaker: 'narrator', text: 'There is no latex. But somebody is now driving to a pork store with $40. That’s business.' }
+        ], () => {
+          state.flags.latexExport = true;
+          state.flags.tribute = (state.flags.tribute || 0) + 40;
+          spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · +$40', '#ffe78a');
+          audio.sfx('success');
+          objective('Scheme complete: the latex that never existed');
+        });
+      }
     } },
     { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
       audio.sfx('honk');
