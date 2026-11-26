@@ -1184,7 +1184,17 @@ function shoveNearest() {
   // a whiffed punch at empty air must not build one
   const bw = state.brawler;
   const hitsBrawler = bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34;
-  if (!hitsBrawler && !best) return false;
+  if (!hitsBrawler && !best) {
+    // swinging at empty air near the turkey is a mistake the turkey remembers
+    const tk = state.turkey;
+    if (tk && state.scene === 'hub' && Math.hypot(tk.x - p.x, tk.y - p.y) < 36 && !tk.enraged) {
+      tk.enraged = 8;
+      audio.sfx('turkey');
+      spawnEffect(tk.x, tk.y - 16, 'GOBBLE GOBBLE GOBBLE', '#ff5040');
+      startDialog([{ speaker: 'narrator', text: 'You swing at the turkey. The turkey does not forgive. The turkey has never forgiven anything. RUN.' }]);
+    }
+    return false;
+  }
   // combo tracking: consecutive hits within 1.4s build a combo
   const now = state.time;
   if (!state.combo || now - (state.comboT || 0) > 1.4) state.combo = 0;
@@ -2436,6 +2446,22 @@ function updateExplore(dt) {
     const dx = tk.wx - tk.x, dy = tk.wy - tk.y;
     const dd = Math.hypot(dx, dy);
     if (dd > 4) { tk.x += (dx / dd) * 22 * dt; tk.y += (dy / dd) * 22 * dt; }
+    if (tk.enraged) {
+      tk.enraged -= dt;
+      const dxp = state.player.x - tk.x, dyp = state.player.y - tk.y;
+      const dp = Math.hypot(dxp, dyp) || 1;
+      if (!state.player.inCar) {
+        tk.x += (dxp / dp) * 62 * dt;
+        tk.y += (dyp / dp) * 62 * dt;
+        if (dp < 14) {
+          spawnEffect(state.player.x, state.player.y - 18, 'PECKED!', '#ff8e8e');
+          audio.sfx('turkey');
+          tk.enraged = 0;
+          state.money = Math.max(0, state.money - 3);
+          startDialog([{ speaker: 'narrator', text: 'The turkey exacts its price: three dollars, in the sense that you drop three dollars while fleeing. North Caldwell belongs to the turkey now. It always did.' }]);
+        }
+      }
+    }
     // gobble at the player if close
     const pd = Math.hypot(tk.x - state.player.x, tk.y - state.player.y);
     if (pd < 60 && Math.random() < dt * .3) {
