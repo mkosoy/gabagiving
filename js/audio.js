@@ -237,6 +237,7 @@ export class AudioSys {
         apartment: [220, 0, 262, 330, 262, 0, 220, 0],
         club: [98, 0, 123, 98, 147, 123, 165, 0],
         monks: [262, 311, 349, 392, 349, 311, 262, 233],
+        nyc: [233, 262, 0, 311, 349, 311, 262, 233],
         soup: [220, 0, 0, 233, 0, 0, 220, 196],
         vesuvio: [262, 330, 392, 330, 349, 392, 523, 392],
         satriale: [147, 0, 175, 147, 196, 175, 147, 131],
@@ -264,6 +265,10 @@ export class AudioSys {
       if (this.musicMode === 'club' && s % 2 === 0) this.tone(60, .1, 'sine', .012); // bass pulse
       if (this.musicMode === 'rome' && Math.random() < .03) this.tone(1100 + Math.random() * 500, .09, 'sine', .004, 0, 200); // birds
       if (this.musicMode === 'house' && Math.random() < .012) this.sfx('turkey'); // distant geese
+      if (this.musicMode === 'nyc' && Math.random() < .07) { const f = 150 + Math.random() * 130; this.tone(f, .22, 'sine', .005, 0, -30); } // traffic rumble
+      if (this.musicMode === 'nyc' && Math.random() < .02) this.sfx('honk'); // cabbies
+      if (this.musicMode === 'nyc' && Math.random() < .008) { for (let i = 0; i < 5; i++) setTimeout(() => this.tone(660 + i * 90, .06, 'sine', .006), i * 90); } // distant siren
+      if (this.musicMode === 'nyc' && Math.random() < .025) this.noise(.02 + Math.random() * .03, .005, 0, 2400 + Math.random() * 800); // bus brakes
     }, 180);
   }
 }

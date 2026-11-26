@@ -738,7 +738,7 @@ const scenes = {
     interactions: hubInteractions
   },
   nyc: {
-    w: 768, h: 416, label: 'Manhattan · Upper West Side', music: 'monks',
+    w: 768, h: 416, label: 'Manhattan · Upper West Side', music: 'nyc',
     colliders: [
       r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
       // building rows with gaps at doorways: Monk's ~125, soup ~435, Jerry's ~650
