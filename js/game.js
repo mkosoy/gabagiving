@@ -280,7 +280,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1366,6 +1366,17 @@ function drawRoadblock() {
   px(ctx, rb.x - 8, rb.y + 8, 16, 3, '#ff8c1a');
 }
 
+function drawTailCourier() {
+  const tl = state.tail;
+  if (!tl || state.scene !== 'hub') return;
+  drawPerson(ctx, tl.x, tl.y, 'bobby', 'down', Math.floor(state.time * 6) % 4, { pose: 'walk' });
+  // suspicion indicator
+  if (tl.suspicion > .3) {
+    px(ctx, tl.x - 10, tl.y - 26, 20 * Math.min(1, tl.suspicion / 3), 3, '#ff5040');
+    px(ctx, tl.x - 10, tl.y - 26, 20, 1, '#802020');
+  }
+}
+
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
@@ -1721,6 +1732,13 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. It never happened.', label: 'Finish the job' }
     ]
   },
+  bigMouth: {
+    title: 'BIG MOUTH',
+    payout: 250, heat: 0, tail: true,
+    steps: [
+      { scene: 'hub', x: 320, y: 290, radius: 60, objective: 'BIG MOUTH: tail the courier — close enough to see, far enough to breathe', label: 'Tail the courier' }
+    ]
+  },
   heatMagnet: {
     title: 'HEAT MAGNET',
     payout: 220, heat: 0, survive: 30,
@@ -1850,6 +1868,54 @@ function updateMission() {
     ]);
     return;
   }
+  if (MISSION_DEFS[m0.id].tail) {
+    const p0 = state.player;
+    if (!state.tail) state.tail = { x: 200, y: 250, wp: 0, progress: 0, suspicion: 0, barkT: 0 };
+    const tl = state.tail;
+    if (state.scene !== 'hub') { return; }
+    const wps = [[200, 250], [430, 250], [430, 340], [200, 340], [320, 210]];
+    const wp = wps[tl.wp];
+    const dx = wp[0] - tl.x, dy = wp[1] - tl.y;
+    const dd = Math.hypot(dx, dy) || 1;
+    if (dd < 8) tl.wp = (tl.wp + 1) % wps.length;
+    else { tl.x += (dx / dd) * 42 * dt; tl.y += (dy / dd) * 42 * dt; }
+    const pd = Math.hypot(tl.x - p0.x, tl.y - p0.y);
+    if (pd < 200 && pd > 34) {
+      tl.progress += dt;
+      tl.suspicion = Math.max(0, tl.suspicion - dt * .5);
+    } else if (pd <= 34) {
+      tl.suspicion += dt;
+      if (tl.barkT <= 0) { tl.barkT = 2.5; spawnEffect(tl.x, tl.y - 20, 'why are you following me?!', '#ffb0a0'); }
+      tl.barkT -= dt;
+    }
+    if (tl.suspicion >= 3) {
+      state.mission = null;
+      state.tail = null;
+      audio.sfx('denied');
+      startDialog([
+        { speaker: 'narrator', text: 'The courier wheels around. “I KNEW IT!” He power-walks away, looking backwards the entire time. The tail is blown.' },
+        { speaker: 'system', text: 'MISSION FAILED — talk to Silvio to retry.' }
+      ]);
+      return;
+    }
+    if (pd > 260) {
+      tl.progress = Math.max(0, tl.progress - dt * 2);
+    }
+    if (tl.progress >= 45) {
+      const def = MISSION_DEFS[m0.id];
+      state.mission = null;
+      state.tail = null;
+      state.flags.bigMouthDone = true;
+      state.money += def.payout;
+      audio.sfx('cash');
+      startDialog([
+        { speaker: 'narrator', text: 'Forty-five seconds of perfect surveillance. The courier’s route, his stops, his little sandwich break — all yours. Silvio listens without blinking, which for Silvio is a standing ovation.' },
+        { speaker: 'silvio', text: 'Good. Here. You didn’t see anything, and neither did he. That’s the whole job.' },
+        { speaker: 'system', text: `MISSION COMPLETE — BIG MOUTH. +$${def.payout}` }
+      ]);
+    }
+    return;
+  }
   if (state.scene !== st.scene) return;
   const p = state.player;
   if (m0.surviveT > 0) {
@@ -1945,6 +2011,19 @@ function drawMissionHud() {
     ctx.stroke();
     ctx.restore();
   }
+  if (state.mission && state.mission.id === 'bigMouth' && state.tail) {
+    const tl = state.tail;
+    ctx.fillStyle = '#202028';
+    ctx.fillRect(230, 40, 180, 8);
+    ctx.fillStyle = '#8ffff2';
+    ctx.fillRect(230, 40, 180 * Math.min(1, tl.progress / 45), 8);
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TAIL ' + Math.floor(tl.progress) + '/45s — not too close, not too far', 320, 58);
+    ctx.textAlign = 'left';
+  }
+
 }
 
 function updateExplore(dt) {
@@ -3046,7 +3125,13 @@ function clubInteractions() {
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
-    if (!state.mission && !state.flags.turkeyTaxDone && state.flags.freeRoam) {
+    if (!state.mission && state.flags.turkeyTaxDone && !state.flags.bigMouthDone && state.flags.freeRoam) {
+      startMission('bigMouth');
+      startDialog([
+        { speaker: 'silvio', text: 'One more thing. A courier’s been walking envelopes through the neighborhood that ain’t ours. Tail him. Close enough to see, far enough he don’t feel you. He makes you, you’re done. $250.' },
+        { speaker: 'system', text: 'Mission accepted: BIG MOUTH. Follow the objective banner.' }
+      ]);
+    } else if (!state.mission && !state.flags.turkeyTaxDone && state.flags.freeRoam) {
       startMission('turkeyTax');
       startDialog([
         { speaker: 'silvio', text: 'Hey. Boss’s orders — the Thanksgiving envelopes don’t collect themselves. Vesuvio first, then Satriale’s. Bring ’em back moist. $180 for the legwork.' },
@@ -6455,6 +6540,7 @@ function drawWorld() {
   drawRoadblock();
   drawHubEventProps();
   drawRussian();
+  drawTailCourier();
   drawBrawler();
   drawCash();
   drawInteractionMarkers();
