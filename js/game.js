@@ -63,6 +63,10 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch') usingTouchControls = true;
+  if (state.mode === 'title' || state.mode === 'dialogue') pressed.add('KeyE');
+}, { passive: true });
 window.addEventListener('pointerup', () => audio.unlock(), { passive: true });
 window.addEventListener('touchend', () => audio.unlock(), { passive: true });
 
