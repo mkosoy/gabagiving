@@ -3119,7 +3119,7 @@ function hubInteractions() {
       ] : [
         { speaker: 'narrator', text: 'Tony points the car east. Manhattan. More people to owe him money per square mile than anywhere on earth.' },
         { speaker: 'tony', text: 'The city. Love it. Hate the parking.' }
-      ], () => { setScene('nyc', 40, 250); state.mode = 'explore'; objective('Manhattan — Seinfeld country'); });
+      ], () => startTransit('nyc', 40, 250, null));
     } },
     { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
       if (!state.flags.packageHeist) {
@@ -3336,6 +3336,70 @@ function drawHubEast() {
   // parked stealable coupe at the gas station
   if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
+}
+
+function startTransit(destScene, x, y, flavor) {
+  state.transit = { dest: destScene, x, y, t: 0, dur: 3.6, flavor };
+  state.mode = 'transit';
+  state.dialog = null;
+  audio.sfx('door');
+}
+
+function updateTransit(dt) {
+  const tr = state.transit;
+  if (!tr) { state.mode = 'explore'; return; }
+  tr.t += dt;
+  if (tr.t >= tr.dur) {
+    setScene(tr.dest, tr.x, tr.y);
+    state.mode = 'explore';
+    state.transit = null;
+    objective(tr.dest === 'nyc' ? 'Manhattan — Seinfeld country' : 'North Caldwell — free roam');
+  }
+}
+
+function drawTransit() {
+  const tr = state.transit;
+  px(ctx, 0, 0, 640, 416, '#060608');
+  if (!tr) return;
+  const speed = 1 + Math.sin(tr.t * 2) * .1;
+  // tunnel walls with perspective
+  ctx.fillStyle = '#141210';
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(240, 140); ctx.lineTo(240, 300); ctx.lineTo(0, 416); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(640, 0); ctx.lineTo(400, 140); ctx.lineTo(400, 300); ctx.lineTo(640, 416); ctx.closePath();
+  ctx.fill();
+  // road
+  ctx.fillStyle = '#232028';
+  ctx.beginPath();
+  ctx.moveTo(240, 140); ctx.lineTo(400, 140); ctx.lineTo(520, 416); ctx.lineTo(120, 416); ctx.closePath();
+  ctx.fill();
+  // moving lane dashes + tunnel lights streaking past
+  for (let i = 0; i < 6; i++) {
+    const k = ((tr.t * 2.2 * speed + i / 6) % 1);
+    const y = 140 + k * 276;
+    const w = 3 + k * 10;
+    const laneX = 320 - (k * 60);
+    px(ctx, 320 - w / 2, y, w, 8 + k * 22, '#8a8358');
+    px(ctx, laneX - w / 2, y, w * .6, 6 + k * 16, '#5a5548');
+    px(ctx, 640 - laneX - w / 2, y, w * .6, 6 + k * 16, '#5a5548');
+  }
+  // overhead tunnel lights
+  for (let i = 0; i < 4; i++) {
+    const k = ((tr.t * 1.6 * speed + i / 4) % 1);
+    const y = 60 + k * 100;
+    const spread = 20 + k * 200;
+    ctx.fillStyle = `rgba(255,220,140,${.1 + k * .3})`;
+    ctx.fillRect(320 - spread, y, spread * 2, 2 + k * 3);
+  }
+  // the car, centered, slight weave
+  const weave = Math.sin(tr.t * 3.2) * 6;
+  drawCar(320 + weave, 330, state.player.carColor || '#8f1f2e', false, 0);
+  // progress flavor
+  if (tr.t < 1.4) outlineText(ctx, tr.dest === 'nyc' ? 'HOLLAND TUNNEL → MANHATTAN' : 'HOLLAND TUNNEL → NEW JERSEY', 320, 96, '#ffe78a', 10, 'center');
+  else if (tr.t > tr.dur - 1.2) outlineText(ctx, tr.dest === 'nyc' ? 'MANHATTAN · UPPER WEST SIDE' : 'NORTH CALDWELL · NEW JERSEY', 320, 96, '#8ffff2', 11, 'center');
+  if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
 }
 
 function initArmWrestle() {
@@ -3760,7 +3824,7 @@ function nycInteractions() {
       audio.sfx('honk');
       startDialog([
         { speaker: 'narrator', text: 'Back through the tunnel. The skyline shrinks in the mirror. Jersey spreads out like a forgiving buffet.' }
-      ], () => { setScene('hub', 1196, 250); state.mode = 'explore'; objective('North Caldwell — free roam'); });
+      ], () => startTransit('hub', 1196, 250, null));
     } }
   ];
 }
@@ -5549,6 +5613,7 @@ function render() {
   else if (state.mode === 'drive') drawDrive();
   else if (state.mode === 'monte') drawMonte();
   else if (state.mode === 'armwrestle') drawArmWrestle();
+  else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -5556,7 +5621,7 @@ function render() {
 
   if (state.mode === 'menu') drawMenu();
   drawAtmosphere();
-  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu'].includes(state.mode)) drawObjective();
+  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu', 'transit', 'monte', 'armwrestle'].includes(state.mode)) drawObjective();
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
   if (state.mode !== 'menu') drawDialog();
@@ -5678,6 +5743,8 @@ function update(dt) {
     updateMonte(dt);
   } else if (state.mode === 'armwrestle') {
     updateArmWrestle(dt);
+  } else if (state.mode === 'transit') {
+    updateTransit(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
