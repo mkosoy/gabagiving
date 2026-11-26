@@ -4197,7 +4197,6 @@ function render() {
 }
 
 function resetGame() {
-  loadWorld();
   state.mode = 'title';
   state.scene = 'house';
   state.player = { x: 190, y: 124, dir: 'down', kind: 'tony', speed: 88 };
@@ -4217,6 +4216,7 @@ function resetGame() {
   state.menu = null;
   state.npcs = {};
   state.movers = [];
+  loadWorld();
   audio.setMusic('title');
 }
 
