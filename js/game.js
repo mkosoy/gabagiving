@@ -1137,10 +1137,19 @@ function drawAmbient() {
   }
 }
 
+function isNight() {
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return false;
+  const dayT = (state.time % 240) / 240;
+  return dayT >= .62 && dayT < .95;
+}
+
 function updateCop(dt) {
   if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
-  if (heat >= 3 && !state.cop) {
+  // night makes the law jumpy — they come out earlier and backup arrives sooner
+  const spawnAt = isNight() ? 2.2 : 3;
+  const backupAt = isNight() ? 2.8 : 3.5;
+  if (heat >= spawnAt && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
     audio.sfx('honk');
     spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
@@ -1154,12 +1163,12 @@ function updateCop(dt) {
     return;
   }
   // wanted escalation: a second unit joins at high heat
-  if (heat >= 3.5 && !state.cop2) {
+  if (heat >= backupAt && !state.cop2) {
     state.cop2 = { x: state.scene === 'nyc' ? 740 : 1240, y: 380, flashT: 0, bustT: 0 };
     spawnEffect(state.player.x + 8, state.player.y - 20, 'BACKUP CALLED!', '#8fb8ff');
     audio.sfx('honk');
   }
-  if (heat < 3 && state.cop2) state.cop2 = null;
+  if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
   const p = state.player;
   const speed = p.inCar ? 150 : 120;
   for (const unit of [c, state.cop2].filter(Boolean)) {
