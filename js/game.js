@@ -28,6 +28,8 @@ const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
   nyc: loadArt('./assets/bg-nyc.webp'),
+  pines: loadArt('./assets/bg-pines.webp'),
+  bodega: loadArt('./assets/bg-bodega.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -275,11 +277,12 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone'];
 function saveWorld() {
   try {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
+    out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
 }
@@ -287,6 +290,7 @@ function loadWorld() {
   try {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
+    if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
   } catch (e) { /* ignore */ }
 }
 
@@ -751,6 +755,29 @@ const scenes = {
     draw: drawNyc,
     interactions: nycInteractions
   },
+  bodega: {
+    w: 640, h: 416, label: 'Bodega · W 81st', music: 'nyc',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      // shelf walls north/east/west, center aisle shelves, deli counter north-center
+      r(8,8,250,120), r(390,8,242,120), r(8,128,60,200), r(572,128,60,200),
+      r(258,8,124,90), r(180,180,120,60), r(340,180,120,60)
+    ],
+    draw: drawBodega,
+    interactions: bodegaInteractions
+  },
+  pines: {
+    w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
+    colliders: [
+      r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
+      // dense treeline north and deep woods east/west — the clearing is open
+      r(8,8,752,150), r(40,158,148,250), r(580,158,180,250),
+      // frozen pond lower-left, rusty car right
+      r(220,300,120,80), r(560,220,90,50)
+    ],
+    draw: drawPines,
+    interactions: pinesInteractions
+  },
   vesuvio: {
     w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'vesuvio',
     colliders: [
@@ -1005,7 +1032,11 @@ function updateAmbient(dt) {
       n.pause = .8 + Math.random() * 2.8;
       continue;
     }
-    const spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    let spd = n.fleeing ? n.speed * 2.2 : n.speed;
+    if (typeof weatherRain === 'function' && weatherRain()) {
+      spd *= 1.6; // everyone hurries in the rain
+      if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
+    }
     n.x += (dx / d) * spd * dt;
     n.y += (dy / d) * spd * dt;
     n.moving = true;
@@ -1041,13 +1072,15 @@ function shoveNearest() {
   const comboMul = Math.min(3, 1 + (combo - 1) * .5);
   // a hostile brawler in range takes the hit instead
   if (hitsBrawler) {
-    bw.hp -= 1;
+    const brickHit = (state.flags.brick || 0) > 0;
+    if (brickHit) state.flags.brick -= 1;
+    bw.hp -= brickHit ? 2 : 1;
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
     bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
     bw.barkT = 1.4;
-    const hitWord = combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
+    const hitWord = brickHit ? 'BRICK!' : combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
     spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? hitWord : 'KNOCKOUT!', '#ffe78a');
     if (combo >= 2) spawnEffect(bw.x + 8, bw.y - 24, `COMBO x${combo}`, '#ff9a3e');
     audio.sfx('smash');
@@ -1137,10 +1170,19 @@ function drawAmbient() {
   }
 }
 
+function isNight() {
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return false;
+  const dayT = (state.time % 240) / 240;
+  return dayT >= .62 && dayT < .95;
+}
+
 function updateCop(dt) {
   if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
-  if (heat >= 3 && !state.cop) {
+  // night makes the law jumpy — they come out earlier and backup arrives sooner
+  const spawnAt = isNight() ? 2.2 : 3;
+  const backupAt = isNight() ? 2.8 : 3.5;
+  if (heat >= spawnAt && !state.cop) {
     state.cop = { x: 40, y: 100, flashT: 0, bustT: 0 };
     audio.sfx('honk');
     spawnEffect(state.player.x + 8, state.player.y - 20, 'COPS!', '#8fb8ff');
@@ -1154,12 +1196,12 @@ function updateCop(dt) {
     return;
   }
   // wanted escalation: a second unit joins at high heat
-  if (heat >= 3.5 && !state.cop2) {
+  if (heat >= backupAt && !state.cop2) {
     state.cop2 = { x: state.scene === 'nyc' ? 740 : 1240, y: 380, flashT: 0, bustT: 0 };
     spawnEffect(state.player.x + 8, state.player.y - 20, 'BACKUP CALLED!', '#8fb8ff');
     audio.sfx('honk');
   }
-  if (heat < 3 && state.cop2) state.cop2 = null;
+  if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
   const p = state.player;
   const speed = p.inCar ? 150 : 120;
   for (const unit of [c, state.cop2].filter(Boolean)) {
@@ -1171,12 +1213,15 @@ function updateCop(dt) {
     const d = Math.hypot(dx, dy) || 1;
     unit.x += dx / d * speed * dt;
     unit.y += dy / d * speed * dt;
+    unit.angle = Math.atan2(dy, dx) + Math.PI / 2;
   }
   const dx = (p.x + 8) - c.x, dy = (p.y + 8) - c.y;
   const d = Math.hypot(dx, dy) || 1;
   // either unit close enough counts toward the bust
   const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
-  if (Math.min(d, d2) < 30) {
+  // GTA rules: they can't cuff a moving car — you have to stop or be on foot
+  const evading = p.inCar && (p.carV || 0) > .45;
+  if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
     if (c.bustT > .8) {
       state.cop = null;
@@ -1194,6 +1239,10 @@ function updateCop(dt) {
       ]);
     }
   } else c.bustT = Math.max(0, c.bustT - dt);
+  if (evading && Math.min(d, d2) < 130 && Math.random() < dt * .5) {
+    spawnEffect(c.x + 8, c.y - 14, 'PULL OVER!', '#9fc4ec');
+    audio.sfx('honk');
+  }
 }
 
 function drawHubEventProps() {
@@ -1234,10 +1283,24 @@ function drawHubEventProps() {
   }
 }
 
+
+function drawRussian() {
+  const ru = state.russian;
+  if (state.scene !== 'pines' || !ru || !ru.active) return;
+  const fade = Math.min(1, ru.life);
+  ctx.globalAlpha = .35 + fade * .5;
+  px(ctx, ru.x - 4, ru.y - 10, 9, 12, '#2c2620');
+  px(ctx, ru.x - 3, ru.y - 14, 7, 5, '#4a4238');
+  px(ctx, ru.x - 2, ru.y - 9, 5, 3, '#c8b89a');
+  px(ctx, ru.x - 3, ru.y + 2, 3, 4, '#1c1814');
+  px(ctx, ru.x + 1, ru.y + 2, 3, 4, '#1c1814');
+  ctx.globalAlpha = 1;
+}
+
 function drawCop() {
   if (state.scene !== 'hub' && state.scene !== 'nyc') return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
-    drawCar(c.x, c.y, '#e8ecf2');
+    drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
     px(ctx, c.x - 7, c.y - 4, 6, 3, phase ? '#ff4444' : '#882222');
@@ -1511,6 +1574,167 @@ function updateHubEvents(dt) {
   }
 }
 
+// ---------- Mission system: multi-step jobs with objective HUD ----------
+const MISSION_DEFS = {
+  packageJob: {
+    title: 'THE PACKAGE JOB',
+    payout: 200, heat: 1,
+    steps: [
+      { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'Deliver the package to the bodega clerk in Manhattan', label: 'Hand off the package' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman in North Caldwell', label: 'Report the delivery' }
+    ]
+  },
+  catalogCaper: {
+    title: 'THE CATALOG CAPER',
+    payout: 150, heat: .5,
+    steps: [
+      { scene: 'yankees', x: 320, y: 300, radius: 58, objective: 'Drop the catalogs at the Yankees office', label: 'Drop the catalogs' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman in North Caldwell', label: 'Report the delivery' }
+    ]
+  },
+  ryeExpress: {
+    title: 'THE RYE EXPRESS',
+    payout: 300, heat: 0, timeLimit: 210,
+    steps: [
+      { scene: 'costanza', x: 320, y: 260, radius: 90, objective: 'Get the marble rye to the Costanza house — before Frank notices — NOW', label: 'Deliver the rye' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
+    ]
+  },
+  pineFresh: {
+    title: 'PINE FRESH',
+    payout: 250, heat: 2,
+    steps: [
+      { scene: 'pines', x: 400, y: 260, radius: 70, objective: 'Leave the box in the Pine Barrens clearing. Don’t look.', label: 'Leave the box' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. Act natural.', label: 'Report the burial' }
+    ]
+  }
+};
+const MISSION_CHAIN = ['packageJob', 'catalogCaper', 'ryeExpress', 'pineFresh'];
+function nextMission() {
+  return MISSION_CHAIN.find((id) => !state.flags[id + 'Done']);
+}
+
+function startMission(id) {
+  const def = MISSION_DEFS[id];
+  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null };
+  audio.sfx('success');
+}
+
+function advanceMission() {
+  const m = state.mission;
+  if (!m) return;
+  const def = MISSION_DEFS[m.id];
+  m.step += 1;
+  if (m.step >= def.steps.length) {
+    // mission complete
+    state.mission = null;
+    state.flags[m.id + 'Done'] = true;
+    state.flags.tribute = (state.flags.tribute || 0) + def.payout;
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
+    audio.sfx('cash');
+    audio.sfx('success');
+    const endings = {
+      packageJob: state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
+        { speaker: 'george', text: 'What was IN that package?!' },
+        { speaker: 'newman', text: 'Vanity press cassettes. Pirate whale songs. The whales never see a dime, George. And now… neither do you. Not legally!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony reports the delivery. $200 for an hour of driving. Honest work, dishonest cargo.' },
+        { speaker: 'tony', text: 'You never ask what’s in the box. That’s rule one. Rule two is you take the cash and forget the box.' }
+      ],
+      catalogCaper: [
+        { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      pineFresh: [
+        { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I buried a BOX for a MAILMAN in a HAUNTED FOREST and a large Russian watched me do it! I need to sit down. Forever!' : 'Pine Barrens. Always the Pine Barrens. Tell Paulie the spot’s taken.' }
+      ]
+    };
+    startDialog(endings[m.id] || [{ speaker: 'system', text: 'Mission complete.' }]);
+  } else {
+    audio.sfx('confirm');
+    const st = def.steps[m.step];
+    startDialog([{ speaker: 'system', text: `New objective: ${st.objective}` }]);
+  }
+}
+
+function missionStep() {
+  if (!state.mission) return null;
+  return MISSION_DEFS[state.mission.id].steps[state.mission.step];
+}
+
+function updateMission() {
+  const st = missionStep();
+  if (!st) return;
+  const m0 = state.mission;
+  if (m0.deadline && state.time > m0.deadline) {
+    const id = m0.id;
+    state.mission = null;
+    audio.sfx('denied');
+    startDialog([
+      { speaker: 'narrator', text: 'Too slow. The job falls through. Newman will pretend he never offered it, out loud, repeatedly, to everyone.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The traffic! The tunnel! I demand a recount!' : 'Yeah, yeah. Another day, another blown deadline in this economy.' },
+      { speaker: 'system', text: 'MISSION FAILED — talk to Newman to retry.' },
+      ...(MISSION_DEFS[id].failExtra || [])
+    ]);
+    return;
+  }
+  if (state.scene !== st.scene) return;
+  const p = state.player;
+  if (Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
+    state.interactCooldown = .8;
+    spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
+    if (state.mission.step === 0) {
+      const dropLines = {
+        packageJob: [
+          { speaker: 'narrator', text: 'The clerk takes the package without looking at it, slides it under the counter, and resumes being deeply interested in a lottery magazine. Professional.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why do I feel like I just committed three crimes? It was a BODEGA drop. People do bodega drops!' : 'Smooth. In and out. The way she goes.' }
+        ],
+        catalogCaper: [
+          { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
+        ],
+        pineFresh: [
+          { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging a hole in a mafia forest with my HANDS for a postal worker! This is the low point! …It’s not the low point, is it. There’s lower!' : 'Soft ground. Good. Means nobody else dug here first. Means nobody else WILL.' }
+        ]
+      };
+      startDialog(dropLines[state.mission.id] || [], () => advanceMission());
+    } else advanceMission();
+  }
+}
+
+function drawMissionHud() {
+  const m = state.mission;
+  if (!m) return;
+  const def = MISSION_DEFS[m.id];
+  const st = def.steps[m.step];
+  // objective banner, fixed to screen
+  ctx.fillStyle = 'rgba(5,8,14,.72)';
+  ctx.fillRect(140, 8, 360, 30);
+  outlineText(ctx, `★ ${def.title}`, 152, 20, '#ffe78a', 7, 'left');
+  outlineText(ctx, st.objective, 152, 32, '#cfe4f8', 6, 'left');
+  if (state.mission.deadline) {
+    const left = Math.max(0, state.mission.deadline - state.time);
+    outlineText(ctx, `⏱ ${left.toFixed(0)}s`, 490, 20, left < 20 ? '#ff7a6a' : '#ffe78a', 8, 'right');
+  }
+  // world-space beacon at the step target when in the right scene
+  if (state.scene === st.scene) {
+    const bx = st.x - state.camera.x, by = st.y - state.camera.y;
+    const bob = Math.sin(state.time * 3) * 4;
+    outlineText(ctx, '▼', bx, by - 26 + bob, '#ffe78a', 10, 'center');
+    ctx.save();
+    ctx.globalAlpha = .5 + Math.sin(state.time * 4) * .25;
+    ctx.strokeStyle = '#ffe78a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(bx, by, 16, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function updateExplore(dt) {
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
@@ -1534,23 +1758,88 @@ function updateExplore(dt) {
   updateHubEvents(dt);
   updateBrawler(dt);
   updateCash(dt);
+  if (state.scene === 'nyc') {
+    for (const c of (state.nycCars || [])) {
+      if (c.honkBack > 0) {
+        c.honkBack -= dt;
+        if (c.honkBack <= 0 && !c.honked) { c.honked = true; audio.sfx('honk'); }
+      } else c.honked = false;
+    }
+  }
+  // Pine Barrens: the Russian is out there. Rarely, a figure crosses the treeline.
+  if (state.scene === 'pines') {
+    if (!state.russian) state.russian = { t: 14 + Math.random() * 20, active: false };
+    const ru = state.russian;
+    if (!ru.active) {
+      ru.t -= dt;
+      if (ru.t <= 0) {
+        ru.active = true;
+        ru.x = Math.random() < .5 ? 60 : 700;
+        ru.dir = ru.x < 300 ? 1 : -1;
+        ru.y = 150 + Math.random() * 30;
+        ru.life = 2.6;
+        if (!state.flags.russianSeen) {
+          state.flags.russianSeen = true;
+          startDialog([
+            { speaker: 'narrator', text: 'A figure moves between the trees. Big. Fur hat. He is not running from anything. He is simply… enduring.' },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Did you see that?! That guy looked like he survived things! TERRIBLE things! I don’t want to know what things!' : 'Guy’s an interior decorator. That’s a joke. You had to be there. Paulie almost died making that joke.' }
+          ]);
+        } else spawnEffect(ru.x, ru.y - 16, '…he’s still out here…', '#b8c8e0');
+      }
+    } else {
+      ru.life -= dt;
+      ru.x += ru.dir * 34 * dt;
+      if (ru.life <= 0) { ru.active = false; ru.t = 26 + Math.random() * 30; }
+    }
+  }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .03);
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
-  if (state.flags.freeRoam && consume(['KeyF']) && !p.inCar) shoveNearest();
+  if (state.flags.freeRoam && !p.inCar && consume(['KeyF'])) shoveNearest();
   if (state.flags.freeRoam && consume(['KeyB']) && !p.inCar) {
     p.kind = p.kind === 'george' ? 'tonyMax' : 'george';
     p.speed = p.kind === 'george' ? 96 : 88;
     audio.voice(p.kind === 'george' ? 'george' : 'tony');
     spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
   }
+  // GTA staples: horn and radio in a borrowed car
+  if (state.flags.freeRoam && p.inCar && (consume(['KeyH']) || consume(['KeyF']))) {
+    audio.sfx('honk');
+    for (const n of ambientFor(state.scene)) {
+      const d = Math.hypot(n.x - p.x, n.y - p.y);
+      if (d < 90) {
+        n.diveT = Math.max(n.diveT || 0, .6);
+        n.bark = ['WATCH IT!', 'I’M WALKIN HERE!', 'THE NERVE!', 'LEARN TO DRIVE!'][Math.floor(Math.random() * 4)];
+        n.barkT = 1.4;
+      }
+    }
+    if (state.scene === 'nyc') {
+      for (const c of (state.nycCars || [])) {
+        if (Math.hypot(c.x - p.x, (c.y || 0) - p.y) < 200 && Math.random() < .6) {
+          c.honkBack = .5 + Math.random();
+        }
+      }
+    }
+    spawnEffect(p.x + 8, p.y - 10, 'HONK!', '#ffe78a');
+  }
+  if (state.flags.freeRoam && p.inCar && consume(['KeyR'])) {
+    const stations = ['drive', 'nyc', 'club', 'rome', 'dream'];
+    state.carRadio = ((state.carRadio ?? -1) + 1) % stations.length;
+    audio.setMusic(stations[state.carRadio]);
+    const names = ['WBPM 88.1 — the drive mix', 'WNYC — traffic & smooth', 'WBING — club classics', 'WROME — amore hour', 'WPINE — late night static'];
+    spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
+  }
   // leaving a borrowed car takes priority over other interactions
   if (p.inCar && interactPressed()) {
     p.inCar = false;
+    p.carColor = null;
     p.speed = p.kind === 'george' ? 96 : 88;
+    state.carRadio = undefined;
+    const sc = scenes[state.scene];
+    if (sc) audio.setMusic(sc.music);
     audio.sfx('door');
     spawnEffect(p.x + 8, p.y - 8, 'ON FOOT', '#8ffff2');
     return;
@@ -1558,16 +1847,40 @@ function updateExplore(dt) {
   if (input.x || input.y) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
     else p.dir = input.y > 0 ? 'down' : 'up';
-    const sp = p.speed * dt;
+    // cars carry momentum: spin up over ~1.2s instead of instant speed
+    if (p.inCar) p.carV = Math.min(1, (p.carV || 0) + dt * 1.2);
+    const sp = p.speed * dt * (p.inCar ? Math.max(.25, p.carV) : 1);
     p.stepAcc = (p.stepAcc || 0) + sp;
     if (p.stepAcc > (p.inCar ? 99999 : 26)) {
       p.stepAcc = 0;
       audio.step(p.kind);
     }
     const nx = p.x + input.x * sp;
-    if (!blockedAt(nx, p.y)) p.x = nx;
+    const hitWallX = blockedAt(nx, p.y);
+    if (!hitWallX) p.x = nx;
     const ny = p.y + input.y * sp;
-    if (!blockedAt(p.x, ny)) p.y = ny;
+    const hitWallY = blockedAt(p.x, ny);
+    if (!hitWallY) p.y = ny;
+    if (p.inCar && (hitWallX || hitWallY) && (p.carV || 0) > .55) {
+      p.carDamage = (p.carDamage || 0) + 1;
+      p.carV = .2;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .4);
+      audio.sfx('crash');
+      spawnEffect(p.x + 8, p.y - 8, p.carDamage >= 3 ? 'TOTALED!' : 'CRUNCH', '#ff9a7a');
+      if (p.carDamage >= 3) {
+        p.inCar = false;
+        p.carColor = null;
+        p.carDamage = 0;
+        p.speed = p.kind === 'george' ? 96 : 88;
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The car is totaled. George exits through the door that no longer opens, onto the street, in front of witnesses.' },
+          { speaker: 'george', text: 'The brakes! The BRAKES in this city are all defective! I’m writing a letter!' }
+        ] : [
+          { speaker: 'narrator', text: 'Totaled. Tony steps out, looks at the wreck, and walks away at exactly the speed of a man who has never seen this car before.' },
+          { speaker: 'tony', text: 'What car? I’m a pedestrian. Always have been. Beautiful neighborhood for walking.' }
+        ]);
+      }
+    }
     if (p.inCar) {
       for (const n of ambientFor(state.scene)) {
         if (n.diveT > 0) continue;
@@ -1591,12 +1904,14 @@ function updateExplore(dt) {
       p.stepTick = .24;
     }
   } else {
+    if (p.inCar) p.carV = Math.max(0, (p.carV || 0) - dt * 2);
     state.frame += dt * 2;
   }
   const scene = scenes[state.scene];
   state.camera.x = Math.max(0, Math.min(scene.w - W, p.x - W / 2));
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
+  updateMission();
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
@@ -2418,6 +2733,32 @@ function clubInteractions() {
   if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
+    list.push({ x: 430, y: 250, w: 90, h: 50, radius: 28, label: 'Arm-wrestle the bouncer', action: () => {
+      if ((state.flags.tribute || 0) < 25) {
+        startDialog([{ speaker: 'narrator', text: 'Slippery Pete cracks knuckles the size of ham hocks. Twenty-five dollar entry, champ. You are short.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Slippery Pete, house bouncer, arm-wrestling champion of the Route 22 corridor. George sits down across from him. The table creaks in fear.' },
+        { speaker: 'george', text: 'I have VERY strong wrists. Decades of aggressive mouse use. And I carry spite in the forearms!' }
+      ] : [
+        { speaker: 'narrator', text: 'Slippery Pete cracks his neck. The crowd goes quiet. This is a man who once beat a horse at something.' },
+        { speaker: 'tony', text: 'Twenty-five bucks says you go home cryin to your wife. Lets dance, big guy.' }
+      ], () => { state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 25); initArmWrestle(); });
+    } });
+    list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
+      if ((state.flags.tribute || 0) < 50) {
+        startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A blackjack table in the back room. George has a SYSTEM. The system is: never hit on twelve. Or always hit on twelve. He’s written it down wrong.' },
+        { speaker: 'george', text: 'Fifty dollars. But statistically, over time, the player edge with my system is… I’m going to lose this fifty dollars.' }
+      ] : [
+        { speaker: 'narrator', text: 'The back room blackjack table. Tony’s game. Tony’s room. Tony’s everything, technically, through a shell company.' },
+        { speaker: 'tony', text: 'Deal. And remember — I know where the cards LIVE.' }
+      ], () => initBlackjack());
+    } });
     list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Gentlemen. Art Vandelay. Importer-exporter. I’m looking for investors.' },
@@ -3058,6 +3399,7 @@ function travelHub(place) {
     rome: ['rome', 430, 330, 'The marble arch hums with imperial nonsense.'],
     club: ['club', 320, 330, 'The Bing is quiet again — suspiciously quiet.'],
     apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
+    bodega: ['bodega', 60, 350, 'The bodega smells like coffee, lottery dreams, and cat.'],
     vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.'],
     monks: ['monks', 590, 370, 'Monk’s Café. Coffee, big salads, and petty grievances.'],
     soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
@@ -3082,6 +3424,16 @@ function hubInteractions() {
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
+    { x: 600, y: 388, w: 90, h: 26, radius: 50, label: 'Pine Barrens ↓', action: () => {
+      audio.sfx('honk');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'South on the parkway, past where the trees stop being decorative and start being evidence.' },
+        { speaker: 'george', text: 'Why are we going to the Pine Barrens? Nothing good happens in the Pine Barrens! I’ve seen exactly one documentary about this!' }
+      ] : [
+        { speaker: 'narrator', text: 'The parkway south. The pines close in. Tony drives quieter the deeper it gets. Everybody does. That’s the Barrens.' },
+        { speaker: 'tony', text: 'Beautiful country. Very peaceful. Don’t ask me why I know that.' }
+      ], () => startTransit('pines', 300, 240, 'GARDEN STATE PARKWAY · SOUTH'));
+    } },
     { x: 1236, y: 210, w: 44, h: 90, radius: 52, label: 'NYC →', action: () => {
       audio.sfx('honk');
       startDialog(state.player.kind === 'george' ? [
@@ -3090,25 +3442,7 @@ function hubInteractions() {
       ] : [
         { speaker: 'narrator', text: 'Tony points the car east. Manhattan. More people to owe him money per square mile than anywhere on earth.' },
         { speaker: 'tony', text: 'The city. Love it. Hate the parking.' }
-      ], () => { setScene('nyc', 40, 250); state.mode = 'explore'; objective('Manhattan — Seinfeld country'); });
-    } },
-    { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
-      if (!state.flags.packageHeist) {
-        state.flags.packageHeist = true;
-        state.flags.tribute = (state.flags.tribute || 0) + 30;
-        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
-        audio.sfx('cash');
-        const nm = (ambientFor('hub') || []).find((x) => x.npc === 'newman');
-        if (nm) { nm.bark = 'MY PACKAGE! THAT’S FEDERAL PROPERTY!'; nm.barkT = 3; }
-        startDialog(state.player.kind === 'george' ? [
-          { speaker: 'narrator', text: 'George swipes a misdelivered package off the stoop. Inside: cassette tapes of wind sounds. $30 of pure profit, somehow.' },
-          { speaker: 'george', text: 'It was misdelivered! Legally that’s a gray area! A very comfortable gray area!' },
-          { speaker: 'jerry', text: 'You just robbed a federal mail carrier of whale noises, George. Congratulations. NEWMAN’S going to hear about this. From himself.' }
-        ] : [
-          { speaker: 'narrator', text: 'Tony palms the package. Wind-sound cassettes. The fencing guys pay $30 for anything in a box, don’t ask.' },
-          { speaker: 'tony', text: 'Federal property my ass. It was sittin’ there. That’s not theft, that’s yard sales with extra steps.' }
-        ]);
-      } else startDialog([{ speaker: 'narrator', text: 'No more packages today. Newman counts them twice now.' }]);
+      ], () => startTransit('nyc', 40, 250, null));
     } },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
     { x: 856, y: 300, w: 64, h: 56, radius: 52, label: 'Costanza house', action: () => travelHub('costanza') },
@@ -3145,7 +3479,7 @@ function hubInteractions() {
         { speaker: 'narrator', text: 'The pumps are old but the coffee inside is somehow older.' }
       ]);
     } },
-    { x: 1158, y: 250, w: 80, h: 46, radius: 48, label: 'Pawn shop', action: () => {
+    { x: 1158, y: 250, w: 80, h: 46, radius: 30, label: 'Pawn shop', action: () => {
       if ((state.flags.tribute || 0) >= 100 && !state.flags.pawnedWatch) {
         state.flags.pawnedWatch = true;
         state.flags.tribute += 150;
@@ -3165,6 +3499,7 @@ function hubInteractions() {
       if (state.player.inCar) return;
       state.player.inCar = true;
       state.player.speed = 200;
+      state.player.carColor = '#31445e';
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
       audio.sfx('door');
       audio.sfx('honk');
@@ -3174,6 +3509,12 @@ function hubInteractions() {
       ] : [
         { speaker: 'tony', text: 'Christopher’s cousin leaves the keys in every car. He’s either stupid or very generous. Either way — mine now.' }
       ]);
+    } },
+    { x: 1060, y: 300, w: 80, h: 50, radius: 52, label: 'Chase the loose goose', hidden: () => !!state.flags.gooseCaught, action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'A park ranger flags you down, out of breath. A goose has escaped the petting enclosure. It is, quote, “the mean one.” $60 reward. He hands you a pair of very small gloves.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Sixty dollars for a goose? What’s the goose’s side of this arrangement, economically? …Fine. I’m in. I was BORN for poultry pursuit!' : 'Sixty bucks to grab a bird. In my day the birds grabbed YOU. Times change. I’m in.' }
+      ], () => initGooseChase());
     } },
     { x: 990, y: 250, w: 100, h: 40, radius: 58, label: 'Gabagool Park', action: () => {
       if (!state.flags.fedGeese) {
@@ -3190,6 +3531,7 @@ function hubInteractions() {
       if (state.player.inCar) return;
       state.player.inCar = true;
       state.player.speed = 190;
+      state.player.carColor = '#3d6b35';
       audio.sfx('door');
       audio.sfx('honk');
       spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
@@ -3205,7 +3547,21 @@ function hubInteractions() {
       objective('Catch the debtor — grab money boosts');
     } },
     { x: 530, y: 200, w: 60, h: 56, radius: 44, label: 'Newman', action: () => {
-      if (state.player.kind === 'george') startDialog([
+      if (!state.mission && nextMission()) {
+        const mid = nextMission();
+        startMission(mid);
+        const offers = {
+          packageJob: { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
+          catalogCaper: { speaker: 'newman', text: 'More work, if you want it. A few… surplus catalogs. Deliver them to the Yankees offices. Steinbrenner’s people HATE surplus mail. Hee hee. $150.' },
+          ryeExpress: { speaker: 'newman', text: 'SPEED job. A marble rye — don’t ask — must reach the Costanza house before Frank Costanza finishes his pre-dinner interrogation of the silverware. You have minutes. MINUTES, hee hee. $300 for a fast pair of legs.' },
+          pineFresh: { speaker: 'newman', text: 'One more job. Simple. A box. The Pine Barrens. You put it in the ground, you come back, you forget the whole drive. $250. Don’t look inside. SERIOUSLY. Even I don’t know what’s in it. I lied just now — I do know. Don’t look.' }
+        };
+        startDialog([
+          offers[mid],
+          { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      }
+      else if (state.player.kind === 'george') startDialog([
         { speaker: 'newman', text: 'Heh heh heh… Georgie boy. Out for a little walk? Careful — the mail never sleeps.' },
         { speaker: 'george', text: 'Newman! I know you’re the one writing COSTANZA on my packages! It stops TODAY!' },
         { speaker: 'newman', text: 'Oh, it never stops, George. Neither rain nor sleet nor your tiny little outrage.' }
@@ -3307,6 +3663,642 @@ function drawHubEast() {
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
 }
 
+function initGooseChase() {
+  state.goosechase = {
+    gx: 320, gy: 200, gvx: 0, gvy: 0,
+    px: 320, py: 340,
+    t: 0, duration: 25, done: false, resultT: 0, won: false, panic: 0
+  };
+  state.mode = 'goosechase';
+  audio.sfx('turkey');
+}
+
+function updateGooseChase(dt) {
+  const g = state.goosechase;
+  if (!g) { state.mode = 'explore'; return; }
+  if (g.done) {
+    g.resultT += dt;
+    if (g.resultT > 2.2) {
+      const won = g.won;
+      state.mode = 'explore';
+      state.goosechase = null;
+      if (won) {
+        state.flags.tribute = (state.flags.tribute || 0) + 60;
+        state.flags.gooseCaught = true;
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 8, '+$60 · GOOSE CAUGHT', '#8ffff2');
+        startDialog([
+          { speaker: 'narrator', text: 'CAUGHT! The goose is returned to the grateful park ranger, who pays a small reward and asks no questions about the wrenches.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I caught a goose! With my HANDS! Nobody can ever take this away from me!' : 'Tell the ranger the goose is lucky I respect wildlife. Also tell him the goose started it.' }
+        ]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'Time. The goose stands at the far end of the park, breathing evenly, making direct eye contact. It knows.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It CHEATED! It used the pond! Waterfowl home advantage!' : 'I got respect for that goose. I also got a hat full of nothin’. We’re done here.' }
+        ]);
+      }
+    }
+    return;
+  }
+  g.t += dt;
+  // player control
+  const inp = moveInput();
+  const spd = 130;
+  if (inp.x || inp.y) {
+    g.px = Math.max(40, Math.min(600, g.px + inp.x * spd * dt));
+    g.py = Math.max(90, Math.min(360, g.py + inp.y * spd * dt));
+  }
+  // goose flees the player, panics harder when close; slight random wobble
+  const dx = g.gx - g.px, dy = g.gy - g.py;
+  const d = Math.hypot(dx, dy) || 1;
+  const fear = d < 130 ? (130 - d) / 130 : 0;
+  g.panic = Math.max(g.panic - dt, fear > 0 ? .8 : 0);
+  const fleeSpd = fear > 0 ? (90 + fear * 95) : 26;
+  if (fear > 0) {
+    g.gvx = (dx / d) * fleeSpd + Math.sin(state.time * 5) * 30;
+    g.gvy = (dy / d) * fleeSpd + Math.cos(state.time * 4.3) * 26;
+  } else {
+    g.gvx = Math.sin(state.time * .9) * 26;
+    g.gvy = Math.cos(state.time * .7) * 20;
+  }
+  g.gx = Math.max(40, Math.min(600, g.gx + g.gvx * dt));
+  g.gy = Math.max(90, Math.min(360, g.gy + g.gvy * dt));
+  if (d < 22) {
+    g.done = true;
+    g.won = true;
+    audio.sfx('success');
+    audio.sfx('turkey');
+  }
+  if (g.t >= g.duration) { g.done = true; g.won = false; audio.sfx('denied'); }
+}
+
+function drawGoose(gx, gy, panic) {
+  const flap = panic > 0 ? Math.sin(state.time * 24) * 3 : 0;
+  px(ctx, gx - 7, gy - 2 + flap, 5, 4, '#f4f0dc');
+  px(ctx, gx + 2, gy - 2 - flap, 5, 4, '#f4f0dc');
+  px(ctx, gx - 4, gy, 9, 6, '#fffbe8');
+  px(ctx, gx + 3, gy - 5, 3, 5, '#fffbe8');
+  px(ctx, gx + 4, gy - 6, 2, 2, '#222');
+  px(ctx, gx + 6, gy - 4, 3, 2, '#e8a020');
+  px(ctx, gx - 2, gy + 6, 2, 3, '#e8a020');
+  px(ctx, gx + 1, gy + 6, 2, 3, '#e8a020');
+}
+
+function drawGooseChase() {
+  const g = state.goosechase;
+  px(ctx, 0, 0, 640, 416, '#3d6b35');
+  // park detail
+  for (let i = 0; i < 30; i++) px(ctx, (i * 97) % 640, 80 + (i * 61) % 300, 3, 2, '#2e5428');
+  ctx.fillStyle = '#4a7a40';
+  ctx.beginPath();
+  ctx.ellipse(320, 420, 380, 100, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // pond corner
+  ctx.fillStyle = '#3a6a8f';
+  ctx.beginPath();
+  ctx.ellipse(590, 100, 80, 46, 0, 0, Math.PI * 2);
+  ctx.fill();
+  outlineText(ctx, 'GABAGOOL PARK · CATCH THE GOOSE', 320, 40, '#ffe78a', 11, 'center');
+  if (!g) return;
+  if (!g.done) outlineText(ctx, `${Math.max(0, g.duration - g.t).toFixed(1)}s`, 320, 62, '#fffbe8', 10, 'center');
+  drawGoose(g.gx, g.gy, g.panic);
+  if (g.panic > .2 && Math.floor(state.time * 4) % 2 === 0) outlineText(ctx, 'HONK!', g.gx + 10, g.gy - 12, '#ffe78a', 6, 'left');
+  drawPerson(ctx, g.px, g.py, state.player.kind === 'george' ? 'george' : 'tonyMax', state.time % .8 < .4 ? 'down' : 'up', state.frame * 2, {});
+  if (!g.done) {
+    outlineText(ctx, 'arrows to run — touch the goose to catch it', 320, 390, '#e8e2d0', 8, 'center');
+  } else {
+    outlineText(ctx, g.won ? 'CAUGHT! +$60' : 'THE GOOSE ENDURES.', 320, 390, g.won ? '#8ffff2' : '#ff8a7a', 10, 'center');
+  }
+}
+
+function initBlackjack() {
+  const deck = () => Math.min(10, 1 + Math.floor(Math.random() * 13));
+  const card = () => { const v = deck(); return v === 1 ? 11 : v; };
+  state.blackjack = {
+    player: [card(), card()], dealer: [card(), card()],
+    phase: 'player', result: null, t: 0, bet: 50
+  };
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 50);
+  state.mode = 'blackjack';
+  audio.sfx('pickup');
+}
+
+function bjTotal(hand) {
+  let t = hand.reduce((a, b) => a + b, 0);
+  let aces = hand.filter((v) => v === 11).length;
+  while (t > 21 && aces > 0) { t -= 10; aces -= 1; }
+  return t;
+}
+
+function bjCard() { const v = Math.min(10, 1 + Math.floor(Math.random() * 13)); return v === 1 ? 11 : v; }
+
+function updateBlackjack(dt) {
+  const bj = state.blackjack;
+  if (!bj) { state.mode = 'explore'; return; }
+  bj.t += dt;
+  if (bj.phase === 'player') {
+    const hint = bjTotal(bj.player) >= 17 ? 'stand?' : 'hit?';
+    const inp = { x: axis.x, y: axis.y }; // touch stick only — keyboard must not feed gesture detection
+    // dominant-axis only, and the stick must return to neutral between gestures
+    const hitDir = inp.x < -.6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3;
+    const standDir = (inp.x > .6 && Math.abs(inp.x) > Math.abs(inp.y) * 1.3) || (inp.y > .6 && inp.y > Math.abs(inp.x) * 1.3);
+    if (!bj.stickLock && (consume(['ArrowLeft', 'KeyA', 'KeyH']) || interactPressed() || hitDir)) {
+      bj.stickLock = true;
+      bj.player.push(bjCard());
+      audio.sfx('pickup');
+      if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
+    } else if (!bj.stickLock && (consume(['ArrowRight', 'ArrowDown', 'KeyD', 'KeyS']) || standDir)) {
+      bj.stickLock = true;
+      bj.phase = 'dealer';
+      bj.t = 0;
+    }
+    if (!hitDir && !standDir) bj.stickLock = false;
+  } else if (bj.phase === 'dealer') {
+    if (bj.t > .7) {
+      bj.t = 0;
+      if (bjTotal(bj.dealer) < 17) { bj.dealer.push(bjCard()); audio.sfx('pickup'); }
+      else {
+        const pt = bjTotal(bj.player), dt2 = bjTotal(bj.dealer);
+        bj.result = dt2 > 21 || pt > dt2 ? 'win' : pt === dt2 ? 'push' : 'lose';
+        bj.phase = 'done';
+        audio.sfx(bj.result === 'win' ? 'success' : bj.result === 'push' ? 'pickup' : 'denied');
+      }
+    }
+  } else if (bj.phase === 'done' && bj.t > 1.8) {
+    const r = bj.result;
+    state.mode = 'explore';
+    state.blackjack = null;
+    if (r === 'win') {
+      state.flags.tribute = (state.flags.tribute || 0) + 100;
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$100 · BLACKJACK PAYS', '#8ffff2');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'George wins! He immediately asks the dealer about the surrender rule, the insurance rule, and whether tips are mandatory.' : 'Tony wins. The dealer slides the chips over. He has been instructed, at length, to be very fast about it.' }
+      ]);
+    } else if (r === 'push') {
+      state.flags.tribute = (state.flags.tribute || 0) + 50;
+      startDialog([{ speaker: 'narrator', text: 'Push. Nobody wins. Somehow the least satisfying outcome in all of gambling.' }]);
+    } else {
+      startDialog([
+        { speaker: 'narrator', text: r === 'bust' ? 'Bust. The dealer collects without looking up, the way they do.' : 'Dealer wins. The felt absorbs your fifty dollars like it was never there.' }
+      ]);
+    }
+  }
+}
+
+function bjDrawHand(hand, x, y, hideFirst) {
+  for (let i = 0; i < hand.length; i++) {
+    const cx = x + i * 34;
+    const hidden = hideFirst && i === 0;
+    px(ctx, cx - 14, y - 20, 28, 40, hidden ? '#2a4a8f' : '#f4efdc');
+    px(ctx, cx - 11, y - 17, 22, 34, hidden ? '#3a5a9f' : '#fffbe8');
+    if (!hidden) {
+      const v = hand[i];
+      outlineText(ctx, v === 11 ? 'A' : String(v), cx, y + 5, v === 11 ? '#c02828' : '#222', 12, 'center');
+    }
+  }
+}
+
+function drawBlackjack() {
+  px(ctx, 0, 0, 640, 416, '#0d2818');
+  outlineText(ctx, 'BLACKJACK · THE BING BACK ROOM', 320, 46, '#ffe78a', 11, 'center');
+  const bj = state.blackjack;
+  if (!bj) return;
+  // felt table
+  ctx.fillStyle = '#1a4a2e';
+  ctx.beginPath();
+  ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#c8a040';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  const hideDealer = bj.phase === 'player';
+  bjDrawHand(bj.dealer, 290, 150, hideDealer);
+  outlineText(ctx, 'DEALER' + (hideDealer ? '' : ` · ${bjTotal(bj.dealer)}`), 320, 112, '#fffbe8', 8, 'center');
+  bjDrawHand(bj.player, 290, 300, false);
+  outlineText(ctx, `YOU · ${bjTotal(bj.player)}`, 320, 344, '#fffbe8', 8, 'center');
+  if (bj.phase === 'player') {
+    outlineText(ctx, 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
+  } else if (bj.phase === 'done') {
+    const msg = { win: 'YOU WIN! +$100', bust: 'BUST — HOUSE TAKES IT', lose: 'DEALER WINS', push: 'PUSH — BET RETURNED' }[bj.result];
+    outlineText(ctx, msg, 320, 386, bj.result === 'win' ? '#8ffff2' : bj.result === 'push' ? '#ffe78a' : '#ff8a7a', 10, 'center');
+  } else {
+    outlineText(ctx, 'dealer plays…', 320, 386, '#9d8fc9', 8, 'center');
+  }
+}
+
+function startTransit(destScene, x, y, flavor) {
+  state.transit = { dest: destScene, x, y, t: 0, dur: 3.6, flavor };
+  state.mode = 'transit';
+  state.dialog = null;
+  audio.sfx('door');
+}
+
+function updateTransit(dt) {
+  const tr = state.transit;
+  if (!tr) { state.mode = 'explore'; return; }
+  tr.t += dt;
+  if (tr.t >= tr.dur) {
+    setScene(tr.dest, tr.x, tr.y);
+    state.mode = 'explore';
+    state.transit = null;
+    objective(tr.dest === 'nyc' ? 'Manhattan — Seinfeld country' : 'North Caldwell — free roam');
+  }
+}
+
+function drawTransit() {
+  const tr = state.transit;
+  px(ctx, 0, 0, 640, 416, '#060608');
+  if (!tr) return;
+  const speed = 1 + Math.sin(tr.t * 2) * .1;
+  // tunnel walls with perspective
+  ctx.fillStyle = '#141210';
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(240, 140); ctx.lineTo(240, 300); ctx.lineTo(0, 416); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(640, 0); ctx.lineTo(400, 140); ctx.lineTo(400, 300); ctx.lineTo(640, 416); ctx.closePath();
+  ctx.fill();
+  // road
+  ctx.fillStyle = '#232028';
+  ctx.beginPath();
+  ctx.moveTo(240, 140); ctx.lineTo(400, 140); ctx.lineTo(520, 416); ctx.lineTo(120, 416); ctx.closePath();
+  ctx.fill();
+  // moving lane dashes + tunnel lights streaking past
+  for (let i = 0; i < 6; i++) {
+    const k = ((tr.t * 2.2 * speed + i / 6) % 1);
+    const y = 140 + k * 276;
+    const w = 3 + k * 10;
+    const laneX = 320 - (k * 60);
+    px(ctx, 320 - w / 2, y, w, 8 + k * 22, '#8a8358');
+    px(ctx, laneX - w / 2, y, w * .6, 6 + k * 16, '#5a5548');
+    px(ctx, 640 - laneX - w / 2, y, w * .6, 6 + k * 16, '#5a5548');
+  }
+  // overhead tunnel lights
+  for (let i = 0; i < 4; i++) {
+    const k = ((tr.t * 1.6 * speed + i / 4) % 1);
+    const y = 60 + k * 100;
+    const spread = 20 + k * 200;
+    ctx.fillStyle = `rgba(255,220,140,${.1 + k * .3})`;
+    ctx.fillRect(320 - spread, y, spread * 2, 2 + k * 3);
+  }
+  // the car, centered, slight weave
+  const weave = Math.sin(tr.t * 3.2) * 6;
+  drawCar(320 + weave, 330, state.player.carColor || '#8f1f2e', false, 0);
+  // progress flavor
+  const heads = { nyc: ['HOLLAND TUNNEL → MANHATTAN', 'MANHATTAN · UPPER WEST SIDE'], hub: ['HOLLAND TUNNEL → NEW JERSEY', 'NORTH CALDWELL · NEW JERSEY'], pines: ['GARDEN STATE PARKWAY · SOUTH', 'THE PINE BARRENS'] };
+  const hh = heads[tr.dest] || heads.hub;
+  if (tr.t < 1.4) outlineText(ctx, hh[0], 320, 96, '#ffe78a', 10, 'center');
+  else if (tr.t > tr.dur - 1.2) outlineText(ctx, hh[1], 320, 96, '#8ffff2', 11, 'center');
+  if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
+}
+
+function drawBodega() {
+  if (!drawSceneArt(sceneArt.bodega, 640, 416)) px(ctx, 0, 0, 640, 416, '#4a3a28');
+  // the cat shifts position slightly, as cats do
+  const cx = 480 + Math.sin(state.time * .3) * 4;
+  px(ctx, cx, 60, 14, 8, '#3a3430');
+  px(ctx, cx + 11, 57, 5, 5, '#3a3430');
+  px(ctx, cx + 12, 56, 1, 1, '#e8b822');
+  px(ctx, cx + 14, 56, 1, 1, '#e8b822');
+  if (Math.floor(state.time * 2) % 4 === 0) px(ctx, cx + 2, 68, 10, 2, '#3a3430'); // tail twitch
+  outlineText(ctx, 'Exit', 24, 380, '#ffe78a', 7, 'left');
+}
+
+function bodegaInteractions() {
+  return [
+    { x: 4, y: 330, w: 60, h: 76, radius: 42, label: 'Leave', action: leaveOutside },
+    { x: 258, y: 8, w: 124, h: 90, radius: 52, label: 'Deli counter', action: () => {
+      if (!state.flags.gotCoffee) {
+        state.flags.gotCoffee = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+        audio.sfx('pickup');
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'Bodega coffee, $2, hot enough to strip paint. George adds six sugars and calls it breakfast.' },
+          { speaker: 'george', text: 'This is the best coffee in Manhattan. Don’t tell Monk’s I said that. Don’t tell anyone anything I say, ever.' }
+        ] : [
+          { speaker: 'narrator', text: 'Bodega coffee. Tony judges it against a lifetime of espresso and finds it… acceptable. Barely. It’s hot.' },
+          { speaker: 'tony', text: 'Two bucks. In Jersey this is a dollar. In Manhattan it’s two. That’s the whole economy in one cup.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'More coffee? Your heart says yes. Your other organs are holding a vote.' }]);
+    } },
+    { x: 460, y: 40, w: 80, h: 60, radius: 44, label: 'Pet the cat', action: () => {
+      audio.sfx('turkey');
+      startDialog([
+        { speaker: 'narrator', text: 'The bodega cat allows exactly two pets, then bites the air near your hand as a warning. Standard bodega cat contract.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I respect a cat with boundaries. I have NO boundaries and look how that’s working out!' : 'This cat’s got more authority than most of my captains.' }
+      ]);
+    } },
+    { x: 390, y: 100, w: 120, h: 40, radius: 44, label: 'Scratch ticket', action: () => {
+      const cd = 30;
+      if ((state.flags.scratchT || 0) + cd > Date.now() / 1000) {
+        startDialog([{ speaker: 'narrator', text: 'The clerk shakes his head. One ticket per customer per… while. He doesn’t make the rules. He absolutely makes the rules.' }]);
+        return;
+      }
+      if ((state.flags.tribute || 0) < 5) {
+        startDialog([{ speaker: 'narrator', text: 'Scratch tickets are $5. You have less than $5. The lottery is not for you today.' }]);
+        return;
+      }
+      state.flags.scratchT = Date.now() / 1000;
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+      audio.sfx('pickup');
+      const roll = Math.random();
+      if (roll < .12) {
+        state.flags.tribute = (state.flags.tribute || 0) + 100;
+        audio.sfx('success');
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 8, 'JACKPOT! +$100', '#8ffff2');
+        startDialog([
+          { speaker: 'narrator', text: 'A HUNDRED DOLLARS! The clerk is genuinely happy for you. He’s never seen this happen. Nobody has.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I WON! I NEVER WIN! This changes EVERYTHING! …It’s a hundred dollars. It changes nothing! BUT STILL!' : 'Heh. Reminds me of the numbers game, except legal and worse odds. I’ll take it.' }
+        ]);
+      } else if (roll < .35) {
+        state.flags.tribute = (state.flags.tribute || 0) + 10;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'Ten dollars. You doubled your money. You are now up $5 on the transaction and down nothing on the dream.' }]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'Nothing. Three shiny little nothing symbols. The ticket goes in the gutter outside, where it joins its family.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'RIGGED! The whole lottery is a tax on people who are bad at math! …I’ll take another.' : 'Shoulda bought the cannoli instead.' }
+        ]);
+      }
+    } }
+  ];
+}
+
+function drawPines() {
+  if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
+  // drifting mist
+  for (let i = 0; i < 4; i++) {
+    const mx = ((state.time * (6 + i * 3) + i * 200) % 900) - 60;
+    ctx.globalAlpha = .1 + Math.sin(state.time * .5 + i) * .04;
+    ctx.fillStyle = '#c8d4c8';
+    ctx.beginPath();
+    ctx.ellipse(mx, 240 + i * 40, 120, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // frost sparkle
+  if (Math.random() < .3) {
+    const fx = 200 + Math.random() * 360, fy = 180 + Math.random() * 180;
+    px(ctx, fx, fy, 1, 1, '#e8f4ff');
+  }
+  outlineText(ctx, '← BACK TO CIVILIZATION', 8, 400, '#ffe78a', 7, 'left');
+  if (!state.flags.russianFound) outlineText(ctx, 'fresh footprints in the frost…', 420, 190, '#9ab8c8', 6, 'center');
+}
+
+function pinesInteractions() {
+  return [
+    { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
+      audio.sfx('honk');
+      startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
+    } },
+    { x: 400, y: 160, w: 130, h: 90, radius: 52, label: 'Follow the footprints', hidden: () => !!state.flags.russianFound, action: () => {
+      state.flags.russianFound = true;
+      audio.sfx('turkey');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Footprints in the frost. They lead in a circle. A perfect, deranged circle. George follows them for twenty minutes and ends up exactly here.' },
+        { speaker: 'george', text: 'He’s OUT there! A Russian! He killed sixteen Czechoslovakians! Or he WAS sixteen Czechoslovakians — the story keeps changing!' },
+        { speaker: 'narrator', text: 'A branch cracks somewhere deep in the pines. George leaves. George leaves very quickly. +$40 in loose change abandoned along the footprints.' }
+      ] : [
+        { speaker: 'narrator', text: 'The footprints loop, double back, and vanish at a tree. The tree is just a tree. Probably. Tony looks up into it for a long time.' },
+        { speaker: 'tony', text: 'Guy was an interior decorator. Killed sixteen Czechoslovakians. You’re not gonna believe this — his house looked like shit.' },
+        { speaker: 'narrator', text: 'Something moves in the deep pines. Or nothing does. The Barrens don’t say. Tony finds $40 in shell casings and loose change along the trail.' }
+      ], () => {
+        state.flags.tribute = (state.flags.tribute || 0) + 40;
+        spawnEffect(state.player.x + 8, state.player.y - 8, '+$40 · THE BARRENS PROVIDE', '#8ffff2');
+        audio.sfx('cash');
+      });
+    } },
+    { x: 250, y: 190, w: 200, h: 130, radius: 40, label: 'Paulie', hidden: () => !!state.flags.pinesTalkedPaulie, action: () => {
+      state.flags.pinesTalkedPaulie = true;
+      startDialog([
+        { speaker: 'paulie', text: 'What are YOU doing here? …Actually, don’t answer that. We’re both not here. That’s the beauty of the Barrens — nobody’s ever here.' },
+        { speaker: 'paulie', text: 'Christopher lost his shoes. Don’t ask. It’s a whole thing. We’re looking for the van. The van is… somewhere. Trees all look the same out here. THAT’S the problem with nature.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m just hiking! People hike! Hiking is a thing people do voluntarily!' : 'Paulie. You didn’t see me, I didn’t see you, the trees saw nothing. Standard arrangement.' }
+      ]);
+    } },
+    { x: 300, y: 220, w: 220, h: 120, radius: 40, label: 'Christopher', hidden: () => !!state.flags.pinesTalkedChris, action: () => {
+      state.flags.pinesTalkedChris = true;
+      startDialog([
+        { speaker: 'christopher', text: 'Yo. You didn’t happen to see a van? Or a shoe? Or a Russian? …Forget I asked. All three of those questions are rhetorical.' },
+        { speaker: 'christopher', text: 'It’s beautiful out here though, right? Very serene. I’m thinking of writing a screenplay about it. “A guy loses a shoe in the woods.” It writes itself!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That’s a terrible premise. No offense. Actually — what if the shoe is a metaphor?' : 'Stick to hurricanes, Christopher. And get your shoes. It’s November.' }
+      ]);
+    } },
+    { x: 560, y: 200, w: 90, h: 50, radius: 46, label: 'Rusty abandoned car', action: () => {
+      if (!state.flags.pinesCarLooted) {
+        state.flags.pinesCarLooted = true;
+        state.flags.tribute = (state.flags.tribute || 0) + 25;
+        audio.sfx('door');
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'An abandoned sedan, vines through the windows. Glovebox: $25, a cassette of Romanian folk music, and a parking ticket from 1986.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Finders keepers! That’s the LAW. Maritime law! …We’re nowhere near water, but still!' : 'Romanian folk. Guy had taste. Shame about whatever happened to him. Which I know nothing about.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'Nothing left but rust and Romanian folk. The cassette is starting to grow on you, honestly.' }]);
+    } },
+    { x: 220, y: 290, w: 120, h: 80, radius: 54, label: 'Frozen pond', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The pond is frozen solid-ish. George tests it with one foot. The ice makes a sound like a threat.' },
+        { speaker: 'george', text: 'I’m not falling through ice in SOUTH JERSEY. That’s not how I go. I go in a way that embarrasses my family, not one that confuses them!' }
+      ] : [
+        { speaker: 'narrator', text: 'Frozen pond. Still. The kind of still that makes a man think about things. Tony thinks about things for exactly four seconds, then stops.' },
+        { speaker: 'tony', text: 'Nice spot. Very undisturbed. Let’s keep it that way.' }
+      ]);
+    } }
+  ];
+}
+
+function initArmWrestle() {
+  state.armwrestle = { power: .5, t: 0, duration: 8, done: false, resultT: 0, won: false };
+  state.mode = 'armwrestle';
+  audio.sfx('confirm');
+}
+
+function updateArmWrestle(dt) {
+  const a = state.armwrestle;
+  if (!a) { state.mode = 'explore'; return; }
+  if (a.done) {
+    a.resultT += dt;
+    if (a.resultT > 2.2) {
+      const won = a.won;
+      state.mode = 'explore';
+      state.armwrestle = null;
+      if (won) {
+        state.flags.tribute = (state.flags.tribute || 0) + 75;
+        audio.sfx('cash');
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'GEORGE WINS! The Bing erupts! Somewhere, a single tear rolls down a bouncer’s cheek.' },
+          { speaker: 'george', text: 'FIFTY YEARS of repressed rage, all in the wrist! I could arm-wrestle GOD right now!' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony slams the bouncer’s hand through the table. Literally through it. The table is two tables now.' },
+          { speaker: 'tony', text: 'Tell Paulie he owes me seventy-five bucks. Also tell him he owes me a new table, but he already knew that.' }
+        ]);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The bouncer barely moved. George’s hand hit the table with the sound of a damp sock.' },
+          { speaker: 'george', text: 'My hand slipped! There was lotion! WHO HAS LOTION in a strip club?!' }
+        ] : [
+          { speaker: 'narrator', text: 'The bouncer wins. Tony nods once. This has never happened before and will be discussed never.' },
+          { speaker: 'tony', text: 'Good arm, kid. You got a future. Not HERE, because I control this place, but somewhere. Canada, maybe.' }
+        ]);
+      }
+    }
+    return;
+  }
+  a.t += dt;
+  if (consume(['KeyE', 'Space'])) a.power = Math.min(1, a.power + .055);
+  if (a.power >= 1) { a.done = true; a.won = true; audio.sfx('success'); return; } // slamming the meter wins instantly
+  a.power -= dt * (.09 + a.t * .008);
+  if (a.power <= 0) { a.power = 0; a.done = true; a.won = false; audio.sfx('denied'); }
+  if (a.t >= a.duration) { a.done = true; a.won = a.power >= .62; audio.sfx(a.won ? 'success' : 'denied'); }
+}
+
+function drawArmWrestle() {
+  px(ctx, 0, 0, 640, 416, '#171019');
+  outlineText(ctx, 'ARM WRESTLING · THE BING', 320, 56, '#ffe78a', 12, 'center');
+  const a = state.armwrestle;
+  if (!a) return;
+  px(ctx, 220, 200, 200, 16, '#6b4f2a');
+  px(ctx, 220, 216, 200, 8, '#4a3520');
+  drawPerson(ctx, 250, 185, state.player.kind === 'george' ? 'george' : 'tonyMax', 'right', state.frame * .5, {});
+  drawPerson(ctx, 390, 185, 'silvio', 'left', state.frame * .5, {});
+  const hx = 320 + (a.power - .5) * 90;
+  px(ctx, hx - 8, 176, 16, 14, '#d5a075');
+  px(ctx, hx - 8, 176, 16, 14, '#c08a60');
+  px(ctx, 120, 290, 400, 22, '#1a1020');
+  px(ctx, 122, 292, 396 * a.power, 18, a.power > .62 ? '#4a8f3d' : a.power > .38 ? '#e8b822' : '#c02828');
+  outlineText(ctx, 'YOU', 112, 304, '#8ffff2', 7, 'right');
+  outlineText(ctx, 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
+  if (!a.done) {
+    outlineText(ctx, 'MASH E TO WIN', 320, 340, '#ffe78a', 10, 'center');
+    outlineText(ctx, `${Math.max(0, a.duration - a.t).toFixed(1)}`, 320, 258, '#fffbe8', 10, 'center');
+  } else {
+    outlineText(ctx, a.won ? 'YOU WIN! +$75' : 'CRUSHED. NO PAYOUT.', 320, 340, a.won ? '#8ffff2' : '#ff8a7a', 10, 'center');
+  }
+}
+
+function initMonte() {
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 50);
+  state.monte = {
+    phase: 'show', t: 0,
+    queen: Math.floor(Math.random() * 3),
+    pos: [0, 1, 2], // card index -> slot
+    px: [0, 1, 2].map((s) => 200 + s * 120), // animated pixel x per card
+    sel: 1, swaps: 0, swapT: 0, reveal: -1,
+    won: false, selEdge: 0
+  };
+  state.mode = 'monte';
+  audio.sfx('pickup');
+}
+
+function monteCardX(slot) { return 200 + slot * 120; }
+
+function updateMonte(dt) {
+  const m = state.monte;
+  if (!m) { state.mode = 'explore'; return; }
+  m.t += dt;
+  // cards glide toward their slot positions — the shuffle is watchable
+  for (let c = 0; c < 3; c++) {
+    const target = monteCardX(m.pos[c]);
+    m.px[c] += (target - m.px[c]) * Math.min(1, dt * 14);
+  }
+  if (m.phase === 'show' && m.t > 1.6) {
+    m.phase = 'shuffle';
+    m.t = 0;
+    m.swapT = 0;
+  } else if (m.phase === 'shuffle') {
+    m.swapT += dt;
+    if (m.swapT > .42) {
+      m.swapT = 0;
+      m.swaps += 1;
+      const a = Math.floor(Math.random() * 3);
+      let b = Math.floor(Math.random() * 3);
+      if (b === a) b = (a + 1) % 3;
+      const ia = m.pos.indexOf(a), ib = m.pos.indexOf(b);
+      m.pos[ia] = b; m.pos[ib] = a;
+      audio.sfx('pickup');
+    }
+    if (m.swaps >= 7 && m.px.every((x, c) => Math.abs(x - monteCardX(m.pos[c])) < 4)) { m.phase = 'pick'; m.t = 0; }
+  } else if (m.phase === 'pick') {
+    const inp = moveInput();
+    if (consume(['ArrowLeft', 'KeyA']) || (inp.x < -.5 && m.selEdge <= 0)) { m.sel = Math.max(0, m.sel - 1); m.selEdge = .25; audio.sfx('pickup'); }
+    if (consume(['ArrowRight', 'KeyD']) || (inp.x > .5 && m.selEdge <= 0)) { m.sel = Math.min(2, m.sel + 1); m.selEdge = .25; audio.sfx('pickup'); }
+    if (m.selEdge > 0) m.selEdge -= dt;
+    if (interactPressed()) {
+      m.reveal = m.sel;
+      m.won = m.pos[m.queen] === m.sel;
+      m.phase = 'reveal';
+      m.t = 0;
+      audio.sfx(m.won ? 'success' : 'denied');
+    }
+  } else if (m.phase === 'reveal' && m.t > 2) {
+    const won = m.won;
+    state.mode = 'explore';
+    state.monte = null;
+    if (won) {
+      state.flags.tribute = (state.flags.tribute || 0) + 150;
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$150 · WINNER!', '#8ffff2');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George finds the queen! The hustler pays out with the dead-eyed smile of a man reconsidering his career.', action: () => audio.sfx('cash') },
+        { speaker: 'george', text: 'I BEAT THE STREET! I am OF the street! I could do this for a living!' },
+        { speaker: 'narrator', text: 'He could not do this for a living. The first win is always free. That’s how they get you.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony’s eyes never left the queen. The hustler hands over the cash with respect.', action: () => audio.sfx('cash') },
+        { speaker: 'tony', text: 'I ran card games before you were a gleam in some degenerate’s eye. Double or nothing? …Nah. I’m here for the soup.' }
+      ]);
+    } else {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Wrong card. The hustler pockets George’s fifty before the disappointment even lands.' },
+        { speaker: 'george', text: 'IT SWITCHED! I SAW it switch! This is rigged! There’s a plant! There’s ALWAYS a plant!' }
+      ] : [
+        { speaker: 'narrator', text: 'Wrong card. Tony watches his fifty disappear into a front pocket.' },
+        { speaker: 'tony', text: 'Cute. It’s a good scam. I know because I invented it in 1979 and they stole it from ME.' }
+      ]);
+    }
+  }
+}
+
+function drawMonte() {
+  px(ctx, 0, 0, 640, 416, '#1c1710');
+  px(ctx, 0, 200, 640, 216, '#2c2419');
+  outlineText(ctx, 'THREE-CARD MONTE', 320, 60, '#ffe78a', 12, 'center');
+  const m = state.monte;
+  if (!m) return;
+  drawPerson(ctx, 320, 130, 'christopher', 'down', state.frame * .3, {});
+  px(ctx, 150, 210, 340, 90, '#6b4f2a');
+  px(ctx, 150, 210, 340, 8, '#8a6a3a');
+  for (let card = 0; card < 3; card++) {
+    const slot = m.pos[card];
+    let cx = m.px[card];
+    const cy = 235;
+    const isQueen = card === m.queen;
+    // reveal flips the card sitting in the SLOT the player picked — not the card index
+    const inPickedSlot = slot === m.reveal;
+    const faceUp = (m.phase === 'show' && isQueen) || (m.phase === 'reveal' && inPickedSlot) || (m.phase === 'reveal' && m.t > 1 && isQueen);
+    px(ctx, cx - 28, cy - 38, 56, 76, faceUp ? '#f4efdc' : '#2a4a8f');
+    px(ctx, cx - 24, cy - 34, 48, 68, faceUp ? '#fffbe8' : '#3a5a9f');
+    if (faceUp && isQueen) {
+      outlineText(ctx, 'Q', cx, cy + 8, '#c02828', 26, 'center');
+    } else if (faceUp) {
+      outlineText(ctx, 'J', cx, cy + 8, '#333', 26, 'center');
+    } else {
+      px(ctx, cx - 16, cy - 26, 32, 52, '#24407e');
+    }
+    if (m.phase === 'pick' && m.sel === slot) {
+      const pulse = .5 + Math.sin(state.time * 8) * .3;
+      ctx.strokeStyle = `rgba(255,231,138,${pulse})`;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(cx - 32, cy - 42, 64, 84);
+    }
+  }
+  if (m.phase === 'show') outlineText(ctx, 'Follow the QUEEN…', 320, 350, '#fffbe8', 9, 'center');
+  if (m.phase === 'shuffle') outlineText(ctx, 'Eyes on the cards…', 320, 350, '#fffbe8', 9, 'center');
+  if (m.phase === 'pick') outlineText(ctx, '← → choose · E to pick — $50 on the line', 320, 350, '#ffe78a', 9, 'center');
+  if (m.phase === 'reveal') outlineText(ctx, m.won ? 'THE QUEEN! YOU WIN $150' : 'NOT THE QUEEN. THE HOUSE THANKS YOU.', 320, 350, m.won ? '#8ffff2' : '#ff8a7a', 9, 'center');
+}
+
 function drawNyc() {
   if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
@@ -3324,6 +4316,25 @@ function drawNyc() {
     px(ctx, tx + 22, cy + 10, 5, 3, '#05070c');
     if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
     if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
+  }
+  // parked stealable taxi
+  if (!state.player.inCar) {
+    px(ctx, 380, 356, 30, 11, '#c9a015');
+    px(ctx, 382, 357, 26, 9, '#e8b822');
+    px(ctx, 387, 358, 14, 7, '#9fd4ec');
+    px(ctx, 392, 354, 6, 3, '#fff3b0');
+    px(ctx, 383, 365, 5, 3, '#05070c');
+    px(ctx, 402, 365, 5, 3, '#05070c');
+  }
+  // parked mail truck — Newman's route, keys in the ignition
+  if (!state.player.inCar) {
+    px(ctx, 640, 354, 34, 13, '#b8b4a8');
+    px(ctx, 642, 355, 30, 11, '#dcd8cc');
+    px(ctx, 642, 356, 12, 9, '#c8c4b8');
+    px(ctx, 655, 357, 8, 6, '#9fd4ec');
+    px(ctx, 644, 357, 4, 4, '#2848a0'); // eagle-ish blob
+    px(ctx, 643, 366, 5, 3, '#05070c');
+    px(ctx, 664, 366, 5, 3, '#05070c');
   }
   // pigeon flock that scatters when the player plows through
   if (!state.pigeons) {
@@ -3378,6 +4389,7 @@ function nycInteractions() {
         { speaker: 'narrator', text: 'The 1 train wheezes uptown. Someone is performing magic tricks for no one.' }
       ], () => travelHub('yankees'));
     } },
+    { x: 540, y: 196, w: 46, h: 40, radius: 40, label: 'Bodega', action: () => travelHub('bodega') },
     { x: 500, y: 200, w: 58, h: 34, radius: 40, label: 'Newsstand', action: () => {
       if (!state.flags.boughtPaper) {
         state.flags.boughtPaper = true;
@@ -3451,6 +4463,88 @@ function nycInteractions() {
         audio.sfx('pickup');
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
+    { x: 250, y: 296, w: 30, h: 26, radius: 40, label: 'Parking meter', action: () => {
+      const cd = 20;
+      if ((state.flags.meterT || 0) + cd > Date.now() / 1000) {
+        startDialog([{ speaker: 'narrator', text: 'Empty. The city refills these things slower than you can rob them. Impressive, really.' }]);
+        return;
+      }
+      state.flags.meterT = Date.now() / 1000;
+      const loot = 8 + Math.floor(Math.random() * 10);
+      state.flags.tribute = (state.flags.tribute || 0) + loot;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+      audio.sfx('smash');
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 8, `+$${loot} · QUARTERS EVERYWHERE`, '#ffe78a');
+      if (Math.random() < .35) startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George smashes a parking meter open with the brick of civic virtue. Quarters. So many quarters.' },
+        { speaker: 'george', text: 'This is reclaiming! They owe us! You know how much I’ve paid these machines in my LIFE?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony pops the meter like a bottle cap. Quarters scatter. Nobody in Manhattan looks up. Nobody ever looks up.' },
+        { speaker: 'tony', text: 'The city’s been taxin’ me since ‘78. This is just a rebate.' }
+      ]);
+    } },
+    { x: 700, y: 330, w: 40, h: 30, radius: 40, label: 'Loose brick', hidden: () => (state.flags.brick || 0) > 0, action: () => {
+      state.flags.brick = 3;
+      audio.sfx('pickup');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'BRICK x3 · USE WISELY', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A loose brick. George pockets it with the confidence of a man who has never thrown anything in his life.' },
+        { speaker: 'george', text: 'For protection! The city is dangerous! Also it was FREE. A free brick!' }
+      ] : [
+        { speaker: 'narrator', text: 'A loose brick. In Tony’s hands, masonry is just unfiled paperwork.' },
+        { speaker: 'tony', text: 'Three good swings in this. Maybe four. We’ll see how the brick feels.' }
+      ]);
+    } },
+    { x: 380, y: 356, w: 66, h: 36, radius: 44, label: 'Steal taxi', hidden: () => !!state.player.inCar, action: () => {
+      state.player.inCar = true;
+      state.player.speed = 210;
+      state.player.carColor = '#e8b822';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
+      audio.sfx('door');
+      audio.sfx('honk');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'GRAND THEFT TAXI', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George steals a cab. Within forty seconds, three tourists climb in the back before he can object.' },
+        { speaker: 'george', text: 'I’m not a cab! …I mean, technically NOW I am a cab. Times Square, I guess. Meter’s running!' }
+      ] : [
+        { speaker: 'tony', text: 'A yellow cab. Perfect. Nobody looks twice at a cab in Manhattan. That’s not theft, that’s camouflage.' }
+      ]);
+    } },
+    { x: 640, y: 358, w: 66, h: 36, radius: 44, label: 'Steal mail truck', hidden: () => !!state.player.inCar, action: () => {
+      state.player.inCar = true;
+      state.player.speed = 150;
+      state.player.carColor = '#dcd8cc';
+      state.player.carDamage = 0;
+      state.player.carV = 0;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 2);
+      audio.sfx('door');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'FEDERAL OFFENSE!', '#ff9a7a');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A USPS mail truck, keys in the ignition. Newman left it running to double-park for a gyro. George commits a federal crime for a slightly faster vehicle.' },
+        { speaker: 'george', text: 'It’s not stealing — I’m relocating government property! …Why does it smell like old tuna?' },
+        { speaker: 'newman', text: 'MY TRUCK! COSTANZAAAA! You can’t handle the ROUTE! There are five hundred undelivered L.L. Bean catalogs in there! FIVE! HUNDRED!' }
+      ] : [
+        { speaker: 'narrator', text: 'A mail truck. Tony considers the resale value of mail. Approximately zero. But it’s slow, armored, and absolutely nobody tailgates a mail truck.' },
+        { speaker: 'tony', text: 'Thing drives like a refrigerator. But a refrigerator nobody pulls in front of.' },
+        { speaker: 'newman', text: 'MAIL THEFT IS A FEDERAL CRIME, SOPRANO! I mean — I’m going to need a ride to work now. Don’t suppose you’re headed to the depot?' }
+      ]);
+    } },
+    { x: 150, y: 330, w: 56, h: 40, radius: 42, label: 'Card hustler', action: () => {
+      if ((state.flags.tribute || 0) < 50) {
+        startDialog([{ speaker: 'narrator', text: 'The hustler flips his cards invitingly, then sees your wallet. "Fifty minimum, pal." You do not have fifty.' }]);
+        return;
+      }
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A three-card monte game on a folding crate. The crowd of "winners" around it all have the same shoes. George notices the shoes. George plays anyway.' },
+        { speaker: 'george', text: 'Fifty bucks. But I’m WATCHING. I have very good eyes. LASIK-adjacent eyes!' }
+      ] : [
+        { speaker: 'narrator', text: 'Three-card monte on 81st street. The hustler does not know whose neighborhood this technically isn’t.' },
+        { speaker: 'tony', text: 'Fifty says I know where the lady is. Deal the cards, Shakespeare.' }
+      ], () => initMonte());
+    } },
     { x: 690, y: 250, w: 60, h: 40, radius: 42, label: 'Guy in the doorway', action: () => {
       if (!state.flags.baniaBit) {
         state.flags.baniaBit = true;
@@ -3470,7 +4564,7 @@ function nycInteractions() {
       audio.sfx('honk');
       startDialog([
         { speaker: 'narrator', text: 'Back through the tunnel. The skyline shrinks in the mirror. Jersey spreads out like a forgiving buffet.' }
-      ], () => { setScene('hub', 1196, 250); state.mode = 'explore'; objective('North Caldwell — free roam'); });
+      ], () => startTransit('hub', 1196, 250, null));
     } }
   ];
 }
@@ -4484,7 +5578,8 @@ function drawClub() {
 function drawPlayer() {
   const kind = state.player.kind;
   if (state.player.inCar) {
-    drawCar(state.player.x - 12, state.player.y + 2, '#8f1f2e');
+    const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
+    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
     return;
   }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
@@ -4546,9 +5641,10 @@ function drawBeacon() {
 }
 
 function drawMinimap() {
-  if (!state.flags.freeRoam || state.scene !== 'hub' || state.mode !== 'explore') return;
+  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc') || state.mode !== 'explore') return;
   const mx = 8, my = H - 46, mw = 110, mh = 34;
-  const sx = mw / 1280, sy = mh / 416;
+  const sceneW = state.scene === 'nyc' ? 768 : 1280;
+  const sx = mw / sceneW, sy = mh / 416;
   ctx.save();
   ctx.globalAlpha = .88;
   drawPanel(mx, my, mw, mh, '#0d1424', '#4a5a78');
@@ -4556,7 +5652,10 @@ function drawMinimap() {
   // road band
   px(ctx, mx + 2, my + 198 * sy, mw - 4, 90 * sy, '#3a3f48');
   // landmark dots
-  const marks = [
+  const marks = state.scene === 'nyc' ? [
+    [125, 230, '#ffb98a'], [435, 220, '#ffe78a'], [650, 228, '#9fd4ec'], [18, 226, '#8ffff2'],
+    [500, 220, '#e8e2d0'], [160, 350, '#c09aff'], [390, 370, '#e8b822']
+  ] : [
     [157, 150, '#ffd34f'], [525, 150, '#ff9a7a'], [90, 315, '#c09aff'], [554, 395, '#ff6a8a'],
     [320, 325, '#9fd4ec'], [218, 276, '#ffb98a'], [80, 150, '#e8e2d0'], [283, 138, '#e8e2d0'], [609, 162, '#8fb8ff'],
     [1010, 100, '#ff8a8a'], [1100, 350, '#9be59b']
@@ -4622,6 +5721,7 @@ function drawWorld() {
   drawSchemeProps();
   drawCop();
   drawHubEventProps();
+  drawRussian();
   drawBrawler();
   drawCash();
   drawInteractionMarkers();
@@ -4630,6 +5730,7 @@ function drawWorld() {
   ctx.restore();
   drawObjectiveArrow();
   drawMinimap();
+  drawMissionHud();
   drawBeacon();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
@@ -4830,7 +5931,13 @@ function drawPeptides() {
   outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
-function drawCar(x, y, color = '#8f1f2e', target = false) {
+function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
+  if (angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.translate(-x, -y);
+  }
   // shadow
   px(ctx, x - 15, y - 19, 30, 40, 'rgba(0,0,0,.35)');
   // body
@@ -4851,6 +5958,7 @@ function drawCar(x, y, color = '#8f1f2e', target = false) {
   px(ctx, x + 5, y - 20, 5, 3, '#fff3b0');
   px(ctx, x - 10, y + 17, 5, 3, '#ff5d52');
   px(ctx, x + 5, y + 17, 5, 3, '#ff5d52');
+  if (angle) ctx.restore();
   // wheels
   px(ctx, x - 15, y - 13, 4, 9, '#05070c');
   px(ctx, x + 11, y - 13, 4, 9, '#05070c');
@@ -5194,7 +6302,59 @@ function drawMenu() {
   if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
+function weatherRain() {
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return 0;
+  // rain for ~90s out of every 360s, offset so it doesn't sync with night
+  const wt = state.time % 360;
+  return wt > 240 && wt < 330 ? 1 : 0;
+}
+
 function drawAtmosphere() {
+  // rain — slanted streaks + ground darkening, before everything else atmospheric
+  if (weatherRain() && (state.mode === 'explore' || state.mode === 'transit')) {
+    ctx.fillStyle = 'rgba(40,50,80,.14)';
+    ctx.fillRect(0, 0, W, H);
+    const seed = Math.floor(state.time * 24);
+    for (let i = 0; i < 46; i++) {
+      const rx = ((seed * 37 + i * 89) % 700) - 30;
+      const ry = ((seed * 53 + i * 61) % 440) - 20;
+      ctx.fillStyle = `rgba(170,190,230,${.25 + (i % 3) * .1})`;
+      ctx.fillRect(rx, ry, 1, 7);
+      ctx.fillRect(rx - 1, ry + 7, 1, 3);
+    }
+    if (Math.random() < .02) audio.noise(.06, .008, 0, 2600); // patter
+  }
+  // day/night cycle for the outdoor open world — 4-minute days, warm dusk, blue night
+  if ((state.scene === 'hub' || state.scene === 'nyc') && (state.mode === 'explore' || state.mode === 'monte')) {
+    const dayT = (state.time % 240) / 240;
+    // daylight 0-.5, dusk .5-.65, night .65-.9, dawn .9-1
+    let dark = 0, warm = 0;
+    if (dayT < .5) dark = 0;
+    else if (dayT < .65) { const k = (dayT - .5) / .15; dark = k * .34; warm = Math.sin(k * Math.PI) * .5; }
+    else if (dayT < .9) dark = .34;
+    else dark = .34 * (1 - (dayT - .9) / .1);
+    if (warm > 0) {
+      ctx.fillStyle = `rgba(255,120,40,${warm * .16})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (dark > 0) {
+      ctx.fillStyle = `rgba(8,12,48,${dark})`;
+      ctx.fillRect(0, 0, W, H);
+      // streetlamps and windows glow at night
+      if (dark > .2) {
+        const sceneW = scenes[state.scene]?.w || 1280;
+        for (let wx = 100; wx < sceneW; wx += 220) {
+          const lx = wx - (state.camera?.x || 0);
+          if (lx < -50 || lx > W + 50) continue;
+          const g = ctx.createRadialGradient(lx, 210, 4, lx, 210, 46);
+          g.addColorStop(0, 'rgba(255,220,120,.24)');
+          g.addColorStop(1, 'rgba(255,220,120,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(lx - 46, 164, 92, 92);
+        }
+      }
+    }
+  }
   // Subtle scanlines and vignette sell the retro handheld look without hurting readability.
   ctx.fillStyle = 'rgba(0,0,0,.055)';
   for (let y = 1; y < H; y += 4) ctx.fillRect(0, y, W, 1);
@@ -5214,6 +6374,11 @@ function render() {
   else if (state.mode === 'bone') drawBone();
   else if (state.mode === 'peptides') drawPeptides();
   else if (state.mode === 'drive') drawDrive();
+  else if (state.mode === 'monte') drawMonte();
+  else if (state.mode === 'armwrestle') drawArmWrestle();
+  else if (state.mode === 'transit') drawTransit();
+  else if (state.mode === 'blackjack') drawBlackjack();
+  else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -5221,7 +6386,7 @@ function render() {
 
   if (state.mode === 'menu') drawMenu();
   drawAtmosphere();
-  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu'].includes(state.mode)) drawObjective();
+  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu', 'transit', 'monte', 'armwrestle'].includes(state.mode)) drawObjective();
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
   if (state.mode !== 'menu') drawDialog();
@@ -5307,7 +6472,7 @@ function update(dt) {
     pressed.clear();
     return;
   }
-  if (!['title', 'ending'].includes(state.mode) && consume(['KeyR'])) {
+  if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     resetGame();
     pressed.clear();
     return;
@@ -5339,6 +6504,16 @@ function update(dt) {
     updatePeptides(dt);
   } else if (state.mode === 'drive') {
     updateDrive(dt);
+  } else if (state.mode === 'monte') {
+    updateMonte(dt);
+  } else if (state.mode === 'armwrestle') {
+    updateArmWrestle(dt);
+  } else if (state.mode === 'transit') {
+    updateTransit(dt);
+  } else if (state.mode === 'blackjack') {
+    updateBlackjack(dt);
+  } else if (state.mode === 'goosechase') {
+    updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
