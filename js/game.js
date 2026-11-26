@@ -444,7 +444,7 @@ function startDialog(lines, onDone, opts = {}) {
 }
 
 function currentLine() {
-  return state.dialog?.lines[state.dialog.i];
+  return state.dialog?.lines?.[state.dialog.i];
 }
 
 function updateDialog(dt) {
