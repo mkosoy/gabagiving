@@ -1080,7 +1080,7 @@ function shoveNearest() {
   if (hitsBrawler) {
     const brickHit = (state.flags.brick || 0) > 0;
     if (brickHit) state.flags.brick -= 1;
-    bw.hp -= brickHit ? 2 : 1;
+    bw.hp -= brickHit ? 2 : (state.player.kind === 'george' ? 1 : 1.5);
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
@@ -1209,7 +1209,8 @@ function updateCop(dt) {
   }
   if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
   const p = state.player;
-  const speed = p.inCar ? 150 : 120;
+  const maxHeat = (state.flags.heat || 0) >= 4.5;
+  const speed = (p.inCar ? 150 : 120) * (maxHeat ? 1.3 : 1);
   for (const unit of [c, state.cop2].filter(Boolean)) {
     unit.flashT += dt;
     // second unit approaches from a flanking angle
@@ -1229,7 +1230,7 @@ function updateCop(dt) {
   const evading = p.inCar && (p.carV || 0) > .45;
   if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
-    if (c.bustT > .8) {
+    if (c.bustT > (maxHeat ? .5 : .8)) {
       state.cop = null;
       state.cop2 = null;
       state.flags.heat = 0;
@@ -1831,7 +1832,7 @@ function updateExplore(dt) {
   }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
-  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * .03);
+  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
