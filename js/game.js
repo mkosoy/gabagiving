@@ -349,7 +349,7 @@ function drawHelp() {
   outlineText(ctx, 'Move: WASD / Arrow keys / touch stick', 174, 104, '#fff', 9);
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
-  outlineText(ctx, 'M or Sound button toggles audio', 174, 158, '#fff', 9);
+  outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
   outlineText(ctx, 'Click ? again to close', 320, 188, '#ffe78a', 8, 'center');
 }
 
@@ -492,6 +492,12 @@ function updateExplore(dt) {
   if (state.phone) return;
   const input = moveInput();
   const p = state.player;
+  if (state.flags.freeRoam && consume(['KeyB'])) {
+    p.kind = p.kind === 'george' ? 'tonyMax' : 'george';
+    p.speed = p.kind === 'george' ? 96 : 88;
+    audio.voice(p.kind === 'george' ? 'george' : 'tony');
+    spawnEffect(p.x + 8, p.y - 8, p.kind === 'george' ? 'GEORGE' : 'TONY', '#8ffff2');
+  }
   if (input.x || input.y) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
     else p.dir = input.y > 0 ? 'down' : 'up';
@@ -2363,6 +2369,10 @@ function drawWorld() {
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
   outlineText(ctx, scene.label, 16, 50, '#ddd5bd', 7);
+  if (state.flags.freeRoam) {
+    drawPanel(W - 104, 42, 96, 25, '#182448', '#8ffff2');
+    outlineText(ctx, state.player.kind === 'george' ? 'GEORGE' : 'TONY', W - 56, 50, '#8ffff2', 8, 'center');
+  }
 }
 
 function drawDream() {
