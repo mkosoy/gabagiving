@@ -610,19 +610,55 @@ function drawDialog() {
   }
 }
 
+function drawFastTravel() {
+  const regions = [
+    ['hub', 'North Caldwell', 'the neighborhood — Newman, Satriale’s, Vesuvio'],
+    ['nyc', 'Manhattan', 'Monk’s, the soup stand, Jerry’s, Kramer'],
+    ['pines', 'The Pine Barrens', 'snow, mist, and the Russian'],
+    ['shore', 'Jersey Shore', 'boardwalk, gulls, high striker'],
+    ['ac', 'Atlantic City', 'neon, slots, rolling chairs']
+  ];
+  ctx.fillStyle = 'rgba(8,6,12,.92)';
+  ctx.fillRect(150, 80, 340, 240);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(150, 80, 340, 240);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FAST TRAVEL', 320, 104);
+  ctx.textAlign = 'left';
+  regions.forEach((r, i) => {
+    const sel = i === (state.ftSel || 0);
+    ctx.fillStyle = sel ? '#ffd23e' : '#f5efdc';
+    ctx.font = (sel ? 'bold ' : '') + '11px monospace';
+    ctx.fillText((sel ? '▶ ' : '  ') + r[1] + (r[0] === state.scene ? '  (here)' : ''), 168, 134 + i * 24);
+    if (sel) {
+      ctx.fillStyle = '#888';
+      ctx.font = '9px monospace';
+      ctx.fillText('   ' + r[2], 168, 146 + i * 24);
+    }
+  });
+  ctx.fillStyle = '#888';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('↑↓ choose · E travel · T close', 320, 308);
+  ctx.textAlign = 'left';
+}
+
 function drawHelp() {
   if (!state.help) return;
-  drawPanel(150, 64, 340, 182, '#121a35', '#e8e2c8');
+  drawPanel(150, 64, 340, 196, '#121a35', '#e8e2c8');
   outlineText(ctx, 'CONTROLS', 320, 78, '#ffd34f', 12, 'center');
   outlineText(ctx, 'Move: WASD / Arrow keys / touch stick', 174, 104, '#fff', 9);
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
   outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
-  outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 186, '#fff', 9);
+  outlineText(ctx, 'T: fast travel between regions', 174, 186, '#fff', 9);
+  outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
   const st = state.stats;
   outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 200, '#8fb8ff', 8, 'center');
-  outlineText(ctx, 'Click ? again to close', 320, 216, '#ffe78a', 8, 'center');
+  outlineText(ctx, 'Click ? again to close', 320, 228, '#ffe78a', 8, 'center');
 }
 
 // ---------- Scene data ----------
@@ -7592,6 +7628,7 @@ function render() {
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'craps') drawCraps();
+  else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7685,6 +7722,32 @@ function update(dt) {
       else audio.sfx('denied');
     }
     pressed.clear();
+    return;
+  }
+  if (state.mode === 'explore' && state.flags.freeRoam && consume(['KeyT']) && !state.player.inCar) {
+    state.mode = 'fasttravel';
+    state.ftSel = 0;
+    pressed.clear();
+    return;
+  }
+  if (state.mode === 'fasttravel') {
+    const regions = [
+      ['hub', 320, 250, 'North Caldwell', 'GARDEN STATE PARKWAY'],
+      ['nyc', 300, 250, 'Manhattan', 'HOLLAND TUNNEL'],
+      ['pines', 384, 210, 'The Pine Barrens', 'GARDEN STATE PARKWAY · SOUTH'],
+      ['shore', 384, 220, 'Jersey Shore', 'GARDEN STATE PARKWAY · EXIT 88'],
+      ['ac', 380, 220, 'Atlantic City', 'ATLANTIC CITY EXPRESSWAY']
+    ];
+    if (consume(['ArrowUp', 'KeyW'])) { state.ftSel = (state.ftSel - 1 + regions.length) % regions.length; audio.sfx('pickup'); }
+    if (consume(['ArrowDown', 'KeyS'])) { state.ftSel = (state.ftSel + 1) % regions.length; audio.sfx('pickup'); }
+    if (consume(['KeyE', 'Space', 'Enter'])) {
+      const [dest, x, y, , flavor] = regions[state.ftSel];
+      if (dest === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
+      else startTransit(dest, x, y, flavor);
+      pressed.clear();
+      return;
+    }
+    if (consume(['Escape', 'KeyT'])) { state.mode = 'explore'; pressed.clear(); }
     return;
   }
   if (consume(['KeyH']) && state.mode === 'explore') {
