@@ -2345,11 +2345,11 @@ function updateExplore(dt) {
   // hidden gabagool packages — find all ten
   if (!state.pkgSpots) {
     state.pkgSpots = [
-      { scene: 'hub', x: 116, y: 320 }, { scene: 'hub', x: 1120, y: 130 },
+      { scene: 'hub', x: 210, y: 330 }, { scene: 'hub', x: 1120, y: 130 },
       { scene: 'nyc', x: 60, y: 350 }, { scene: 'nyc', x: 700, y: 340 },
-      { scene: 'pines', x: 120, y: 320 }, { scene: 'pines', x: 660, y: 150 },
+      { scene: 'pines', x: 270, y: 320 }, { scene: 'pines', x: 330, y: 200 },
       { scene: 'shore', x: 150, y: 300 }, { scene: 'shore', x: 600, y: 160 },
-      { scene: 'ac', x: 80, y: 260 }, { scene: 'ac', x: 690, y: 260 }
+      { scene: 'ac', x: 210, y: 240 }, { scene: 'ac', x: 540, y: 240 }
     ];
   }
   for (let pi = 0; pi < state.pkgSpots.length; pi++) {
