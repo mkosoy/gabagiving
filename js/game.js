@@ -247,6 +247,12 @@ const state = {
 function objective(text) { state.objective = text; saveProgress(); }
 
 function saveProgress() {
+  if (state.flags.freeRoam && !state.flags.sandbox) {
+    try {
+      const existing = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (existing && existing.scene && existing.scene !== 'hub' && !existing.flags?.freeRoam) return;
+    } catch (e) { /* fall through */ }
+  }
   if (state.mode === 'title' || !state.flags) return;
   if (state.flags.sandbox) return;
   if (['bone', 'peptides', 'drive', 'bonus', 'produce', 'dream', 'ending'].includes(state.mode)) return;
@@ -693,6 +699,18 @@ const scenes = {
 };
 
 function moveActor(actor, x, y, speed = 92, onDone = null) {
+  if (blockedAt(x, y)) {
+    // scripted moves must never end inside furniture — spiral out for open floor
+    let found = null;
+    for (let rad = 8; rad <= 96 && !found; rad += 8) {
+      for (let ang = 0; ang < 360 && !found; ang += 45) {
+        const cx = x + Math.cos(ang * Math.PI / 180) * rad;
+        const cy = y + Math.sin(ang * Math.PI / 180) * rad;
+        if (!blockedAt(cx, cy)) found = [cx, cy];
+      }
+    }
+    if (found) { x = found[0]; y = found[1]; }
+  }
   state.movers = state.movers.filter((m) => m.actor !== actor);
   state.movers.push({ actor, x, y, speed, onDone });
 }
@@ -2017,7 +2035,7 @@ function drawMonks() {
 
 function monksInteractions() {
   const list = [
-    { x: 288, y: 200, w: 120, h: 100, radius: 44, label: 'The booth', action: () => {
+    { x: 288, y: 200, w: 120, h: 100, radius: 22, label: 'The booth', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Jerry. Big Salad. I bought it for Elaine once and she never thanked me properly. The thanks ratio was all wrong.' },
         { speaker: 'jerry', text: 'You handed her a salad, George. It wasn’t a kidney.' },
@@ -2437,7 +2455,7 @@ function hubInteractions() {
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 46, y: 130, w: 66, h: 44, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
-    { x: 460, y: 60, w: 110, h: 40, label: 'Yankees office', action: () => travelHub('yankees') },
+    { x: 460, y: 96, w: 110, h: 30, label: 'Yankees office', action: () => travelHub('yankees') },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
       if (state.player.inCar) return;
       state.player.inCar = true;
@@ -3506,7 +3524,8 @@ function objectiveTarget() {
   const scene = scenes[state.scene];
   if (!scene || state.mode !== 'explore') return null;
   const list = scene.interactions().filter((i) => !i.hidden && !/leave|exit/i.test(i.label));
-  return list[0] || null;
+  const priority = list.filter((i) => /talk|meet|speak|order|enter|use|take|sit|answer|carve|answer|glow|drive|start|confront/i.test(i.label));
+  return priority[0] || list[0] || null;
 }
 
 function drawObjectiveArrow() {
@@ -3990,8 +4009,13 @@ function drawMenu() {
   outlineText(ctx, 'MENU', 320, 42, '#ffd34f', 13, 'center');
   outlineText(ctx, `${usingTouchControls ? 'tap' : 'W/S + E'} to choose · ${usingTouchControls ? 'Menu btn' : 'Esc'} closes`, 320, 62, '#aeb8d8', 7, 'center');
   const entries = menuEntries();
-  entries.forEach((it, i) => {
-    const y = 92 + i * 17;
+  const MAXROWS = 14;
+  if (state.menu.sel < state.menu.scroll) state.menu.scroll = state.menu.sel;
+  if (state.menu.sel >= state.menu.scroll + MAXROWS) state.menu.scroll = state.menu.sel - MAXROWS + 1;
+  const scroll = state.menu.scroll || 0;
+  entries.slice(scroll, scroll + MAXROWS).forEach((it, j) => {
+    const i = scroll + j;
+    const y = 92 + j * 17;
     const sel = i === state.menu.sel;
     if (sel) {
       ctx.fillStyle = 'rgba(255,211,79,.14)';
@@ -4001,6 +4025,8 @@ function drawMenu() {
     outlineText(ctx, `${sel ? '> ' : ''}${it.label}`, 156, y, color, 8);
     outlineText(ctx, it.locked ? 'locked' : it.hint, 494, y + 1, it.locked ? '#5a6076' : '#8f9ab8', 6, 'right');
   });
+  if (scroll > 0) outlineText(ctx, '▲ more', 320, 84, '#8f9ab8', 7, 'center');
+  if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 348, '#8f9ab8', 7, 'center');
 }
 
 function drawAtmosphere() {

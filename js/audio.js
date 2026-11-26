@@ -4,7 +4,7 @@ export class AudioSys {
     this.enabled = true;
     this.musicTimer = null;
     this.musicMode = 'title';
-    this.step = 0;
+    this.musicStep = 0;
   }
 
   unlock() {
@@ -220,14 +220,14 @@ export class AudioSys {
 
   setMusic(mode) {
     this.musicMode = mode;
-    this.step = 0;
+    this.musicStep = 0;
   }
 
   startMusic() {
     if (this.musicTimer) return;
     this.musicTimer = setInterval(() => {
       if (!this.ctx || !this.enabled || this.ctx.state !== 'running') return;
-      const s = this.step++;
+      const s = this.musicStep++;
       const modes = {
         title: [196, 0, 247, 294, 330, 294, 247, 0],
         house: [196, 0, 220, 0, 262, 0, 220, 0],
