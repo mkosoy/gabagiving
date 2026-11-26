@@ -2300,7 +2300,13 @@ function updateExplore(dt) {
     if (Math.abs(input.x) > Math.abs(input.y)) p.dir = input.x > 0 ? 'right' : 'left';
     else p.dir = input.y > 0 ? 'down' : 'up';
     // cars carry momentum: spin up over ~1.2s instead of instant speed
-    if (p.inCar) p.carV = Math.min(1, (p.carV || 0) + dt * 1.2);
+    if (p.inCar) {
+      const wet = weatherRain() && ['hub', 'nyc', 'shore', 'pines'].includes(state.scene);
+      p.carV = Math.min(1, (p.carV || 0) + dt * (wet ? .8 : 1.2));
+      if (wet && Math.abs(p.carV) > .7 && (input.x || input.y) && Math.random() < dt * .5) {
+        spawnEffect(p.x, p.y + 10, 'screech', '#b8d0e0');
+      }
+    }
     const mi0 = moveInput(); const sprinting = !p.inCar && (keys.ShiftLeft || keys.ShiftRight) && Math.hypot(mi0.x, mi0.y) > .1;
     const sp = p.speed * dt * (p.inCar ? Math.max(.25, p.carV) : 1) * (sprinting ? 1.55 : 1);
     if (sprinting) {
@@ -2362,7 +2368,7 @@ function updateExplore(dt) {
       p.stepTick = .24;
     }
   } else {
-    if (p.inCar) p.carV = Math.max(0, (p.carV || 0) - dt * 2);
+    if (p.inCar) p.carV = Math.max(0, (p.carV || 0) - dt * (weatherRain() ? 1.2 : 2));
     state.frame += dt * 2;
   }
   const scene = scenes[state.scene];
