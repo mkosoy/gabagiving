@@ -34,6 +34,7 @@ const sceneArt = {
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
   melfi: loadArt('./assets/bg-melfi.webp'),
+  costanza: loadArt('./assets/bg-apartment.webp'),
   chamber: loadArt('./assets/bg-chamber.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
@@ -272,7 +273,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -385,7 +386,9 @@ function menuEntries() {
       ['pawnedWatch', 'Fence goods at the pawn shop', 'east side'],
       ['elaineDance', 'Elaine’s little kicks', 'Monk’s jukebox'],
       ['therapyDone', 'Therapy session', 'Melfi’s office'],
-      ['marineBiologist', 'Marine biologist', 'Monk’s payphone']
+      ['marineBiologist', 'Marine biologist', 'Monk’s payphone'],
+      ['festivus', 'Aired grievances', 'Costanza house'],
+      ['serenityNow', 'Serenity now', 'Costanza house']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -648,6 +651,17 @@ const scenes = {
     ],
     draw: drawClub,
     interactions: clubInteractions
+  },
+  costanza: {
+    title: 'The Costanza House',
+    sub: 'Queens. Since 1951.',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,8,230,110), r(250,8,170,100), r(500,8,132,110),
+      r(130,190,270,98), r(18,180,110,80), r(480,150,150,60)
+    ],
+    draw: drawCostanza,
+    interactions: costanzaInteractions
   },
   melfi: {
     w: 640, h: 416, label: 'Dr. Melfi’s Office · By Appointment', music: 'house',
@@ -2706,6 +2720,7 @@ function travelHub(place) {
     soup: ['soup', 450, 370, 'The soup stand. The rules are the rules.'],
     yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
     melfi: ['melfi', 320, 380, 'Dr. Melfi’s office. It smells like leather, tissues, and carefully withheld judgment.'],
+    costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -2729,6 +2744,7 @@ function hubInteractions() {
     { x: 240, y: 118, w: 86, h: 40, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 586, y: 152, w: 46, h: 24, label: 'Yankees office', action: () => travelHub('yankees') },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
+    { x: 1000, y: 330, w: 90, h: 50, radius: 46, label: 'Costanza house', action: () => travelHub('costanza') },
     { x: 960, y: 110, w: 100, h: 40, radius: 44, label: 'Moltisanti Motors', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'A gas station with no attendant. Self-serve. Like life, Jerry. Self-serve.' },
@@ -2814,6 +2830,60 @@ function hubInteractions() {
   ];
   return list;
 }
+
+function drawCostanza() {
+  const img = sceneArt.costanza;
+  if (img.complete && img.naturalWidth) ctx.drawImage(img, 8, 8, 624, 400);
+  const frankX = 150, estX = 520;
+  drawPerson(ctx, frankX, 172, 'steinbrenner', 'right', state.frame * .5, { pose: 'sit' });
+  if (!state.flags.serenityNow) outlineText(ctx, 'SERENITY NOW!', frankX + 30, 118, '#ff9a7a', 8, 'center');
+  drawPerson(ctx, estX, 190, 'womanB', 'left', state.frame * .5, {});
+  if (!state.flags.serenityNow) outlineText(ctx, 'Frank, stop yelling!', estX - 24, 148, '#e8e2d0', 7, 'center');
+  // festivus pole in the corner
+  px(ctx, 66, 150, 5, 120, '#c9ccd6');
+  px(ctx, 60, 268, 18, 5, '#8a8f9c');
+  outlineText(ctx, 'FESTIVUS POLE', 68, 140, '#9fd4ec', 6, 'center');
+  outlineText(ctx, 'Frank', frankX, 205, '#ffb16a', 7, 'center');
+  outlineText(ctx, 'Estelle', estX, 225, '#e8e2d0', 7, 'center');
+  hudHint('Frank & Estelle’s castle of anger');
+}
+
+const costanzaInteractions = [
+  { x: 40, y: 140, w: 60, h: 130, radius: 44, label: 'Festivus pole', action: () => {
+    if (!state.flags.festivus) {
+      state.flags.festivus = true;
+      startDialog([
+        { speaker: 'narrator', text: 'A bare aluminum pole. No tinsel. It has a very high strength-to-weight ratio.' },
+        { speaker: 'steinbrenner', text: 'IT’S FESTIVUS FOR THE REST OF US! And tonight — the airing of grievances! I GOT A LOTTA PROBLEMS WITH YOU PEOPLE!' },
+        { speaker: 'george', text: 'Dad, please. It’s Thanksgiving, not Festivus. Different nightmare.' },
+        { speaker: 'steinbrenner', text: 'EVERY DAY IS FESTIVUS IF YOU’RE ANGRY ENOUGH!' }
+      ]);
+    } else startDialog([{ speaker: 'steinbrenner', text: 'The pole requires no decoration. I find tinsel distracting.' }]);
+  } },
+  { x: 140, y: 140, w: 100, h: 60, radius: 40, label: 'Frank', action: () => {
+    if (!state.flags.serenityNow) {
+      state.flags.serenityNow = true;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+      audio.sfx('confession');
+      startDialog([
+        { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
+        { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
+        { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
+      ]);
+    } else startDialog([{ speaker: 'steinbrenner', text: 'INSANITY LATER! …That’s the sequel tape.' }]);
+  } },
+  { x: 500, y: 170, w: 100, h: 60, radius: 40, label: 'Estelle', action: () => {
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'womanB', text: 'Georgie! You’re moving back in! I already told the women at the beauty parlor!' },
+      { speaker: 'george', text: 'MA! I have a life! A career! …of sorts! People depend on me! …allegedly!' },
+      { speaker: 'womanB', text: 'He’s delusional. The busboy at the coffee shop said so.' }
+    ] : [
+      { speaker: 'womanB', text: 'You’re the Soprano boy. Your mother — Livia? — she once said my kreplach was “aggressively beige.” I never forgot.' },
+      { speaker: 'tony', text: 'That… sounds like her. Sorry about the kreplach.' }
+    ]);
+  } },
+  { x: 18, y: 330, w: 80, h: 76, radius: 40, label: 'Leave for the neighborhood', action: () => travelHub('hub') }
+];
 
 function drawMelfiOffice() {
   const img = sceneArt.melfi;
@@ -4525,7 +4595,7 @@ function resetGame() {
 function startOpenWorld() {
   resetGame();
   state.flags.sandbox = true;
-  state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true, yankees: true, melfi: true };
+  state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true, yankees: true, melfi: true, costanza: true };
   state.flags.hasBat = true;
   state.flags.houseStep = 9;
   state.player.kind = 'tonyMax';
