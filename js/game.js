@@ -1978,10 +1978,27 @@ function initDrive() {
     road: 0,
     spawn: .2,
     obstacles: [],
+    particles: [],
     shake: 0,
     boost: 0,
+    speed: .42,
     finished: false
   };
+}
+
+function spawnSparks(d, x, y, n = 10) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const v = 40 + Math.random() * 90;
+    d.particles.push({
+      x, y,
+      vx: Math.cos(a) * v,
+      vy: Math.sin(a) * v - 30,
+      life: .5 + Math.random() * .4,
+      t: 0,
+      color: Math.random() < .5 ? '#ffd76e' : Math.random() < .5 ? '#ff9a4a' : '#c8ccd4'
+    });
+  }
 }
 
 function updateDrive(dt) {
@@ -1989,61 +2006,97 @@ function updateDrive(dt) {
   const d = state.drive;
   if (!d || d.finished) return;
   const input = moveInput();
-  d.x = Math.max(205, Math.min(435, d.x + input.x * 190 * dt));
+  // acceleration physics: up = gas, down = brake, natural drift toward cruise speed
+  const cruise = .42;
+  if (input.y < 0) d.speed = Math.min(1, d.speed + .52 * dt);
+  else if (input.y > 0) d.speed = Math.max(.12, d.speed - 1.15 * dt);
+  else d.speed += (cruise - d.speed) * Math.min(1, .35 * dt);
+  // steering tightens slightly at speed
+  d.x = Math.max(180, Math.min(460, d.x + input.x * (140 + d.speed * 120) * dt));
   d.boost = Math.max(0, d.boost - dt);
-  const boostMul = d.boost > 0 ? 1.75 : 1;
-  d.road += dt * (185 + d.progress * .6) * boostMul;
-  d.progress += dt * 2.7 * boostMul;
+  const boostMul = d.boost > 0 ? 1.6 : 1;
+  const scroll = (110 + d.speed * 330) * boostMul;
+  d.road += dt * scroll;
+  d.progress += dt * 5.2 * d.speed * boostMul;
+  // exhaust particles when flooring it
+  if (input.y < 0 && Math.random() < dt * 14) {
+    d.particles.push({ x: d.x + (Math.random() - .5) * 10, y: d.y + 20, vx: (Math.random() - .5) * 12, vy: 40 + Math.random() * 30, life: .5, t: 0, color: 'rgba(120,120,120,.5)', smoke: true });
+  }
   d.spawn -= dt;
   if (d.spawn <= 0) {
-    d.spawn = Math.max(.45, .88 - d.progress * .004);
+    d.spawn = Math.max(.5, .95 - d.progress * .004);
     const typeRoll = Math.random();
-    const type = typeRoll < .14 ? 'money' : typeRoll < .42 ? 'gabagool' : typeRoll < .58 ? 'nycrew' : typeRoll < .78 ? 'janice' : 'paulie';
-    const lanes = [220, 275, 330, 385, 430];
+    const type = typeRoll < .13 ? 'money' : typeRoll < .34 ? 'gabagool' : typeRoll < .5 ? 'nycrew' : typeRoll < .64 ? 'traffic' : typeRoll < .78 ? 'nycar' : typeRoll < .9 ? 'janice' : 'paulie';
+    const lanes = [195, 250, 305, 360, 415, 455];
     d.obstacles.push({
       type,
       x: lanes[Math.floor(Math.random() * lanes.length)],
       y: -45,
-      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : type === 'nycrew' ? (Math.random() - .5) * 90 : 0,
+      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : type === 'nycrew' ? (Math.random() - .5) * 90 : type === 'nycar' ? (Math.random() - .5) * 40 : 0,
       hit: false,
       sprite: Math.random() < .5 ? 'silvio' : 'christopher',
-      wobble: Math.random() * 10
+      wobble: Math.random() * 10,
+      carColor: ['#4a5e78', '#6e5540', '#556b4f', '#7a4a55'][Math.floor(Math.random() * 4)],
+      speedMul: type === 'traffic' ? .45 + Math.random() * .2 : type === 'nycar' ? .7 : 1
     });
   }
   for (const o of d.obstacles) {
-    o.y += dt * (150 + d.progress * .8);
+    o.y += dt * scroll * (o.speedMul || 1);
     o.x += o.vx * dt;
     if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
-    if (o.x < 190 || o.x > 450) o.vx *= -1;
+    if (o.x < 178 || o.x > 462) o.vx *= -1;
     const ox = o.x - 13, oy = o.y - 12;
     const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
     if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 26, h: 24 })) {
       o.hit = true;
       if (o.type === 'money') {
         d.boost = 2.7;
-        d.progress = Math.min(100, d.progress + 4);
+        d.score += 100;
+        spawnEffect(o.x, o.y - 8, '+$100', '#9be59b');
         audio.sfx('pickup');
       } else if (o.type === 'nycrew') {
         d.score += 250;
-        d.progress = Math.min(100, d.progress + 2.5);
         d.boost = Math.max(d.boost, 1.1);
         o.spin = 1;
+        spawnSparks(d, o.x, o.y, 8);
         spawnEffect(o.x, o.y - 8, '+250 NY CREW', '#ffe78a');
         audio.sfx('smash');
         audio.voice('junior');
+      } else if (o.type === 'nycar' && d.speed > .62) {
+        // ram them at speed: spin them out
+        d.score += 400;
+        o.spin = 1.2;
+        d.speed = Math.max(.35, d.speed - .18);
+        d.shake = .3;
+        spawnSparks(d, o.x, o.y, 16);
+        spawnEffect(o.x, o.y - 8, 'RAMMED +$400', '#ffe78a');
+        audio.sfx('smash');
+        audio.voice('tony');
       } else {
+        // crash: lose speed hard
         d.health -= 1;
-        d.progress = Math.max(0, d.progress - 3);
+        d.speed = Math.max(.15, d.speed * .42);
         d.shake = .45;
+        spawnSparks(d, (d.x + o.x) / 2, d.y - 10, 14);
         state.stats.crashes += 1;
         audio.sfx(o.type === 'gabagool' ? 'splash' : 'crash');
+        if (o.type === 'traffic' || o.type === 'nycar') o.spin = .8;
         if (d.health <= 0) {
           d.health = 3;
           d.progress = Math.max(0, d.progress - 8);
+          d.speed = .2;
         }
       }
     }
   }
+  // particles
+  for (const p of d.particles) {
+    p.t += dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    if (!p.smoke) p.vy += 120 * dt;
+  }
+  d.particles = d.particles.filter((p) => p.t < p.life);
   d.obstacles = d.obstacles.filter((o) => o.y < 410);
   d.shake = Math.max(0, d.shake - dt);
   if (d.progress >= 100) {
@@ -4447,8 +4500,16 @@ function drawDrive() {
   const shakeX = d.shake ? (Math.random() - .5) * 6 : 0;
   ctx.save();
   ctx.translate(shakeX, 0);
-  // autumn suburbs, parallax: far lawns scroll slow, near detail scrolls fast
+  // sky strip with distant NYC skyline scrolling very slowly
   px(ctx, 0, 0, W, H, '#7c8c58');
+  const skyOff = (d.road * .06) % 640;
+  for (let i = 0; i < 2; i++) {
+    const bx = i * 640 - skyOff;
+    // distant skyline silhouette in the upper-left horizon gap
+    ctx.fillStyle = 'rgba(60,70,95,.45)';
+    const towers = [[30, 26], [44, 40], [58, 30], [74, 48], [92, 22], [108, 34]];
+    for (const [tx, th] of towers) ctx.fillRect(bx + tx, 0, 10, th);
+  }
   for (let i = 0; i < 8; i++) {
     const y = ((i * 120 + d.road * .3) % 460) - 60;
     const left = i % 2 === 0;
@@ -4462,6 +4523,25 @@ function drawDrive() {
     px(ctx, left ? 96 : 491, y + 6, 26, 18, i % 3 ? '#c86d31' : '#d79531');
     px(ctx, left ? 100 : 495, y + 2, 18, 10, '#e0a33c');
   }
+  // billboards with Jersey flavor, alternating sides
+  const billboards = [
+    ['SATRIALE’S', 'PORK STORE · 2 MI', '#8f1f2e'],
+    ['MOLTISANTI', 'MOTORS · CERTIFIED', '#1f3a8f'],
+    ['GABAGOOL', 'EXIT 13 · FRESH', '#3d6b35'],
+    ['VESUVIO', 'FINE DINING', '#7a4a12']
+  ];
+  for (let i = 0; i < 4; i++) {
+    const y = ((i * 190 + d.road * .45) % 760) - 120;
+    if (y < -70 || y > H + 20) continue;
+    const left = i % 2 === 0;
+    const bx = left ? 52 : 508;
+    const [line1, line2, bg] = billboards[i % billboards.length];
+    px(ctx, bx + 18, y + 26, 6, 26, '#4a3a28');
+    px(ctx, bx, y, 64, 30, '#20180f');
+    px(ctx, bx + 2, y + 2, 60, 26, bg);
+    outlineText(ctx, line1, bx + 32, y + 6, '#fff', 6, 'center');
+    outlineText(ctx, line2, bx + 32, y + 17, '#ffd98a', 5, 'center');
+  }
   for (let i = 0; i < 10; i++) {
     const y = ((i * 70 + d.road * .62) % 440) - 50;
     // near fences + mailboxes whipping past
@@ -4473,12 +4553,19 @@ function drawDrive() {
       px(ctx, left ? 116 : 512, y + 8, 13, 8, '#8a2f2f');
     }
   }
-  // road with asphalt speckle
+  // road with asphalt speckle — 4 lanes
   px(ctx, 170, 0, 300, H, '#4c4f55');
   for (let i = 0; i < 26; i++) {
     const sy = ((i * 61 + d.road) % 400) - 20;
     px(ctx, 195 + (i * 97) % 250, sy, 3, 2, 'rgba(255,255,255,.06)');
     px(ctx, 210 + (i * 53) % 230, sy + 8, 2, 2, 'rgba(0,0,0,.15)');
+  }
+  // guardrails: metal band + posts
+  px(ctx, 172, 0, 4, H, '#9aa2ad');
+  px(ctx, 464, 0, 4, H, '#9aa2ad');
+  for (let y = ((d.road * .95) % 30) - 30; y < H; y += 30) {
+    px(ctx, 171, y, 6, 4, '#6e757f');
+    px(ctx, 463, y + 15, 6, 4, '#6e757f');
   }
   px(ctx, 182, 0, 8, H, '#d7d0bc');
   px(ctx, 450, 0, 8, H, '#d7d0bc');
@@ -4487,7 +4574,19 @@ function drawDrive() {
     px(ctx, 172, y, 8, 8, '#6f954f');
     px(ctx, 460, y + 13, 8, 8, '#6f954f');
   }
-  for (let y = ((d.road) % 52) - 52; y < H; y += 52) px(ctx, 316, y, 8, 28, '#e8d66c');
+  // 3 dashed lane lines for 4 lanes
+  for (const lx of [245, 320, 395]) {
+    for (let y = ((d.road) % 52) - 52; y < H; y += 52) px(ctx, lx - 3, y, 6, 28, '#e8d66c');
+  }
+  // speed-dependent road vibration streaks at high speed
+  if (d.speed > .75) {
+    ctx.fillStyle = `rgba(255,255,255,${(d.speed - .75) * .5})`;
+    for (let i = 0; i < 6; i++) {
+      const lx = 190 + ((i * 71 + 40) % 260);
+      const ly = ((i * 137 + d.road * 3.6) % 380) - 20;
+      ctx.fillRect(lx, ly, 2, 30);
+    }
+  }
   // target black sedan far ahead
   const targetY = 48 + Math.sin(state.time * 3) * 3;
   drawCar(320, targetY, '#111722', true);
@@ -4527,21 +4626,64 @@ function drawDrive() {
       drawPerson(ctx, o.x - 8, o.y - 14, o.sprite, o.vx > 0 ? 'right' : 'left', state.frame * 1.4);
       ctx.restore();
       if (!o.hit) outlineText(ctx, 'NY', o.x, o.y - 22, '#ff8e8e', 6, 'center');
+    } else if (o.type === 'traffic') {
+      ctx.save();
+      if (o.spin) {
+        ctx.translate(o.x, o.y);
+        ctx.rotate((1.2 - o.spin) * 7);
+        ctx.translate(-o.x, -o.y);
+      }
+      drawCar(o.x, o.y, o.carColor || '#4a5e78');
+      ctx.restore();
+    } else if (o.type === 'nycar') {
+      ctx.save();
+      if (o.spin) {
+        ctx.translate(o.x, o.y);
+        ctx.rotate((1.2 - o.spin) * 8);
+        ctx.translate(-o.x, -o.y);
+      }
+      drawCar(o.x, o.y, '#14181f');
+      // NY crew passengers visible in the rear window
+      px(ctx, o.x - 6, o.y + 6, 4, 4, '#e8b88a');
+      px(ctx, o.x + 2, o.y + 6, 4, 4, '#d8a878');
+      ctx.restore();
+      if (!o.hit) outlineText(ctx, 'NY CREW', o.x, o.y - 26, '#ff8e8e', 6, 'center');
     } else {
       drawCar(o.x, o.y, '#59624a');
       drawPerson(ctx, o.x - 7, o.y - 16, 'paulie', 'down', state.frame);
     }
   }
+  // particles: sparks and exhaust smoke
+  for (const p of d.particles) {
+    const a = Math.max(0, 1 - p.t / p.life);
+    ctx.globalAlpha = a;
+    if (p.smoke) {
+      const r = 3 + p.t * 14;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      px(ctx, p.x - 1, p.y - 1, 3, 3, p.color);
+    }
+    ctx.globalAlpha = 1;
+  }
   if (d.boost > 0) {
     for (let i = 0; i < 4; i++) px(ctx, d.x - 10 + i * 6, d.y + 22 + i * 5, 3, 12, i % 2 ? '#ffb13e' : '#f4e27a');
-    ctx.fillStyle = 'rgba(255,255,255,.16)';
-    for (let i = 0; i < 7; i++) {
-      const lx = 190 + ((i * 53 + d.road * 2.2) % 260);
-      const ly = ((i * 97 + d.road * 3.2) % 360) - 20;
-      ctx.fillRect(lx, ly, 2, 26);
-    }
   }
+  // player car: lean into steering, brake lights flare when slowing
+  const input = moveInput();
+  ctx.save();
+  ctx.translate(d.x, d.y);
+  ctx.rotate(input.x * .06 * (0.5 + d.speed));
+  ctx.translate(-d.x, -d.y);
   drawCar(d.x, d.y, d.boost > 0 ? '#b82835' : '#8f1f2e');
+  if (input.y > 0) {
+    ctx.fillStyle = 'rgba(255,60,50,.55)';
+    ctx.fillRect(d.x - 11, d.y + 15, 7, 6);
+    ctx.fillRect(d.x + 4, d.y + 15, 7, 6);
+  }
+  ctx.restore();
   ctx.restore();
   // HUD
   drawPanel(10, 10, 280, 44, '#141f3a', '#e5c36a');
@@ -4550,12 +4692,18 @@ function drawDrive() {
   px(ctx, 20, 38, Math.min(180, d.progress * 1.8), 7, '#e45445');
   outlineText(ctx, `♥ ${d.health}`, 216, 31, '#ff8e8e', 10);
   outlineText(ctx, `$${d.score || 0}`, 216, 19, '#9be59b', 9);
+  // speedometer
+  drawPanel(306, 10, 110, 30, '#141f3a', '#e5c36a');
+  const mph = Math.round(25 + d.speed * 85);
+  outlineText(ctx, `${mph} MPH`, 318, 16, d.speed > .75 ? '#ffe06e' : '#cfd8ea', 10);
+  px(ctx, 318, 33, 86, 4, '#30384d');
+  px(ctx, 318, 33, Math.round(d.speed * 86), 4, d.speed > .75 ? '#ffe06e' : '#69a2e2');
   if (d.boost > 0) {
-    px(ctx, 306, 18, 110, 14, '#173521');
-    px(ctx, 308, 20, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
-    outlineText(ctx, 'MONEY BOOST', 361, 21, '#102415', 7, 'center');
+    px(ctx, 306, 46, 110, 14, '#173521');
+    px(ctx, 308, 48, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
+    outlineText(ctx, 'MONEY BOOST', 361, 48, '#102415', 7, 'center');
   }
-  outlineText(ctx, 'Money = speed boost · run down NY crew for cash · dodge gabagool and family', 320, 340, '#fff', 8, 'center');
+  outlineText(ctx, '↑ gas · ↓ brake · ram NY crew cars at speed for cash · money = boost', 320, 340, '#fff', 8, 'center');
 }
 
 function drawTitle() {
@@ -4849,7 +4997,7 @@ function loop(now) {
 }
 
 if (new URLSearchParams(location.search).has('debug')) {
-  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction, blockedAt };
+  window.__game = { state, scenes, startGame, setScene, startDialog, ringPhone, resetGame, nearestInteraction, blockedAt, initDrive };
 }
 
 resetGame();
