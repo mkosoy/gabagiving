@@ -1313,6 +1313,9 @@ function updateHubEvents(dt) {
 }
 
 function updateExplore(dt) {
+  // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
+  const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys.has(k)) || (state.player.movingScript);
+  state.idleT = moving || state.dialog ? 0 : (state.idleT || 0) + dt;
   if (state.flags.pendingSurprise && !state.dialog && !state.phone) {
     state.flags.pendingSurprise = false;
     state.flags.surpriseShown = true;
@@ -3997,6 +4000,31 @@ function objectiveTarget() {
   return priority[0] || list[0] || null;
 }
 
+function drawBeacon() {
+  if (!state || (state.idleT || 0) < 5 || state.dialog || state.mode !== 'explore') return;
+  const it = nearestInteraction();
+  if (!it) return;
+  const t = state.time;
+  const cx = it.x + it.w / 2, cy = it.y + it.h / 2;
+  const pulse = 1 + Math.sin(t * 5) * .25;
+  const r = (16 + (t % 1.4) * 26) * pulse;
+  const fade = Math.max(0, .8 - (t % 1.4) * .55);
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.strokeStyle = '#ffd24a';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = .9;
+  // bouncing chevron above the target
+  const bob = Math.sin(t * 6) * 4;
+  ctx.fillStyle = '#ffd24a';
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy - 34 - bob); ctx.lineTo(cx + 8, cy - 34 - bob); ctx.lineTo(cx, cy - 22 - bob);
+  ctx.closePath(); ctx.fill();
+  outlineText(ctx, it.label || 'here', cx, cy - 44 - bob, '#ffe8a3', 7, 'center');
+  ctx.restore();
+}
+
 function drawMinimap() {
   if (!state.flags.freeRoam || state.scene !== 'hub' || state.mode !== 'explore') return;
   const mx = 8, my = H - 46, mw = 110, mh = 34;
@@ -4082,6 +4110,7 @@ function drawWorld() {
   ctx.restore();
   drawObjectiveArrow();
   drawMinimap();
+  drawBeacon();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
   outlineText(ctx, scene.label, 16, 50, '#ddd5bd', 7);
