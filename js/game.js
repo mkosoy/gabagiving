@@ -273,7 +273,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekMission','derekCash','derekPaid','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -1944,6 +1944,7 @@ function wakeFromDream() {
   setScene('house', 250, 306);
   state.mode = 'explore';
   state.flags.houseStep = 6;
+  state.flags.derekMission = true;
   objective(houseObjective());
   startDialog([
     { speaker: 'narrator', text: 'Tony jolts awake on the couch. The documentary credits roll. The robe is somehow tighter around the jaw.' },
@@ -1956,7 +1957,6 @@ function wakeFromDream() {
       { speaker: 'tony', text: 'A hundred fifty. For a burrito incident. Fine — I know a few places money tends to fall outta people’s pockets. I’ll find you by the gas station.' },
       { speaker: 'derek', text: 'Hurry, Tony. And Tony — this stays between us. Attorney-client, whatever.' }
     ], () => {
-      state.flags.derekMission = true;
       objective('Find $150 around the neighborhood for Derek');
     });
   });
@@ -2785,8 +2785,10 @@ function enterHub(first = false) {
   }
 }
 
+const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid'];
+
 function schemeCount() {
-  return WORLD_FLAGS.filter((k) => k !== 'tribute' && state.flags[k]).length;
+  return SCHEME_FLAGS.filter((k) => state.flags[k]).length;
 }
 
 function grabStash(key) {
@@ -4739,6 +4741,7 @@ function startOpenWorld() {
   state.unlocked = { house: true, hub: true, drive: true, chamber: true, club: true, rome: true, apartment: true, satriale: true, vesuvio: true, monks: true, soup: true, yankees: true, melfi: true, costanza: true };
   state.flags.hasBat = true;
   state.flags.houseStep = 9;
+  state.flags.derekMission = true;
   state.player.kind = 'tonyMax';
   startGame.__skipIntro = true;
   setScene('hub', 320, 240);
