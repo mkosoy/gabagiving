@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1574,6 +1574,99 @@ function updateHubEvents(dt) {
   }
 }
 
+// ---------- Mission system: multi-step jobs with objective HUD ----------
+const MISSION_DEFS = {
+  packageJob: {
+    title: 'THE PACKAGE JOB',
+    steps: [
+      { scene: 'bodega', x: 320, y: 90, radius: 62, objective: 'Deliver the package to the bodega clerk in Manhattan', label: 'Hand off the package' },
+      { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman in North Caldwell', label: 'Report the delivery' }
+    ]
+  }
+};
+
+function startMission(id) {
+  state.mission = { id, step: 0 };
+  audio.sfx('success');
+}
+
+function advanceMission() {
+  const m = state.mission;
+  if (!m) return;
+  const def = MISSION_DEFS[m.id];
+  m.step += 1;
+  if (m.step >= def.steps.length) {
+    // mission complete
+    state.mission = null;
+    state.flags.packageJobDone = true;
+    state.flags.tribute = (state.flags.tribute || 0) + 200;
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+    audio.sfx('cash');
+    audio.sfx('success');
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
+      { speaker: 'george', text: 'What was IN that package?!' },
+      { speaker: 'newman', text: 'Vanity press cassettes. Pirate whale songs. The whales never see a dime, George. And now… neither do you. Not legally!' }
+    ] : [
+      { speaker: 'narrator', text: 'Tony reports the delivery. $200 for an hour of driving. Honest work, dishonest cargo.' },
+      { speaker: 'tony', text: 'You never ask what’s in the box. That’s rule one. Rule two is you take the cash and forget the box.' }
+    ]);
+  } else {
+    audio.sfx('confirm');
+    const st = def.steps[m.step];
+    startDialog([{ speaker: 'system', text: `New objective: ${st.objective}` }]);
+  }
+}
+
+function missionStep() {
+  if (!state.mission) return null;
+  return MISSION_DEFS[state.mission.id].steps[state.mission.step];
+}
+
+function updateMission() {
+  const st = missionStep();
+  if (!st) return;
+  if (state.scene !== st.scene) return;
+  const p = state.player;
+  if (Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
+    state.interactCooldown = .8;
+    spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
+    if (state.mission.step === 0) {
+      // handoff flavor before advancing
+      startDialog([
+        { speaker: 'narrator', text: 'The clerk takes the package without looking at it, slides it under the counter, and resumes being deeply interested in a lottery magazine. Professional.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why do I feel like I just committed three crimes? It was a BODEGA drop. People do bodega drops!' : 'Smooth. In and out. The way she goes.' }
+      ], () => advanceMission());
+    } else advanceMission();
+  }
+}
+
+function drawMissionHud() {
+  const m = state.mission;
+  if (!m) return;
+  const def = MISSION_DEFS[m.id];
+  const st = def.steps[m.step];
+  // objective banner, fixed to screen
+  ctx.fillStyle = 'rgba(5,8,14,.72)';
+  ctx.fillRect(140, 8, 360, 30);
+  outlineText(ctx, `★ ${def.title}`, 152, 20, '#ffe78a', 7, 'left');
+  outlineText(ctx, st.objective, 152, 32, '#cfe4f8', 6, 'left');
+  // world-space beacon at the step target when in the right scene
+  if (state.scene === st.scene) {
+    const bx = st.x - state.camera.x, by = st.y - state.camera.y;
+    const bob = Math.sin(state.time * 3) * 4;
+    outlineText(ctx, '▼', bx, by - 26 + bob, '#ffe78a', 10, 'center');
+    ctx.save();
+    ctx.globalAlpha = .5 + Math.sin(state.time * 4) * .25;
+    ctx.strokeStyle = '#ffe78a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(bx, by, 16, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
 function updateExplore(dt) {
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
@@ -1637,7 +1730,7 @@ function updateExplore(dt) {
   const input = moveInput();
   const p = state.player;
   // GTA-lite: shove nearby pedestrians, or hop out of a borrowed car
-  if (state.flags.freeRoam && consume(['KeyF']) && !p.inCar) shoveNearest();
+  if (state.flags.freeRoam && !p.inCar && consume(['KeyF'])) shoveNearest();
   if (state.flags.freeRoam && consume(['KeyB']) && !p.inCar) {
     p.kind = p.kind === 'george' ? 'tonyMax' : 'george';
     p.speed = p.kind === 'george' ? 96 : 88;
@@ -1750,6 +1843,7 @@ function updateExplore(dt) {
   state.camera.x = Math.max(0, Math.min(scene.w - W, p.x - W / 2));
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
+  updateMission();
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
@@ -3282,24 +3376,6 @@ function hubInteractions() {
         { speaker: 'tony', text: 'The city. Love it. Hate the parking.' }
       ], () => startTransit('nyc', 40, 250, null));
     } },
-    { x: 196, y: 250, w: 64, h: 44, radius: 46, label: 'Misdelivered package', action: () => {
-      if (!state.flags.packageHeist) {
-        state.flags.packageHeist = true;
-        state.flags.tribute = (state.flags.tribute || 0) + 30;
-        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
-        audio.sfx('cash');
-        const nm = (ambientFor('hub') || []).find((x) => x.npc === 'newman');
-        if (nm) { nm.bark = 'MY PACKAGE! THAT’S FEDERAL PROPERTY!'; nm.barkT = 3; }
-        startDialog(state.player.kind === 'george' ? [
-          { speaker: 'narrator', text: 'George swipes a misdelivered package off the stoop. Inside: cassette tapes of wind sounds. $30 of pure profit, somehow.' },
-          { speaker: 'george', text: 'It was misdelivered! Legally that’s a gray area! A very comfortable gray area!' },
-          { speaker: 'jerry', text: 'You just robbed a federal mail carrier of whale noises, George. Congratulations. NEWMAN’S going to hear about this. From himself.' }
-        ] : [
-          { speaker: 'narrator', text: 'Tony palms the package. Wind-sound cassettes. The fencing guys pay $30 for anything in a box, don’t ask.' },
-          { speaker: 'tony', text: 'Federal property my ass. It was sittin’ there. That’s not theft, that’s yard sales with extra steps.' }
-        ]);
-      } else startDialog([{ speaker: 'narrator', text: 'No more packages today. Newman counts them twice now.' }]);
-    } },
     { x: 1160, y: 110, w: 80, h: 40, radius: 44, label: 'Melfi’s office', action: () => travelHub('melfi') },
     { x: 856, y: 300, w: 64, h: 56, radius: 52, label: 'Costanza house', action: () => travelHub('costanza') },
     { x: 100, y: 150, w: 60, h: 40, radius: 42, label: 'Loose envelope', hidden: () => !state.flags.derekMission || state.flags.cashStash1, action: () => grabStash('cashStash1') },
@@ -3403,7 +3479,15 @@ function hubInteractions() {
       objective('Catch the debtor — grab money boosts');
     } },
     { x: 530, y: 200, w: 60, h: 56, radius: 44, label: 'Newman', action: () => {
-      if (state.player.kind === 'george') startDialog([
+      if (!state.mission && !state.flags.packageJobDone) {
+        startMission('packageJob');
+        startDialog([
+          { speaker: 'newman', text: state.player.kind === 'george' ? 'Costanza. Perfect. I need a package taken to a bodega in Manhattan. No questions. $200. You look like a man who needs $200.' : 'Mr. Soprano! An honor. A package, the bodega on 81st, no questions, $200. It’s practically charity work.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why no questions? What’s in it?! …You know what, I don’t want to know. I want the $200.' : 'No questions means it ain’t wind cassettes. Fine. For $200, it’s wind cassettes.' },
+          { speaker: 'system', text: 'Mission accepted: THE PACKAGE JOB. Follow the objective banner.' }
+        ]);
+      }
+      else if (state.player.kind === 'george') startDialog([
         { speaker: 'newman', text: 'Heh heh heh… Georgie boy. Out for a little walk? Careful — the mail never sleeps.' },
         { speaker: 'george', text: 'Newman! I know you’re the one writing COSTANZA on my packages! It stops TODAY!' },
         { speaker: 'newman', text: 'Oh, it never stops, George. Neither rain nor sleet nor your tiny little outrage.' }
@@ -5572,6 +5656,7 @@ function drawWorld() {
   ctx.restore();
   drawObjectiveArrow();
   drawMinimap();
+  drawMissionHud();
   drawBeacon();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
@@ -6313,7 +6398,7 @@ function update(dt) {
     pressed.clear();
     return;
   }
-  if (!['title', 'ending'].includes(state.mode) && !state.player.inCar && consume(['KeyR'])) {
+  if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     resetGame();
     pressed.clear();
     return;
