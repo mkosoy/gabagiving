@@ -4746,11 +4746,54 @@ function startTransit(destScene, x, y, flavor) {
   audio.sfx('door');
 }
 
+const TRANSIT_EVENTS = [
+  {
+    key: 'deer', prompt: 'DEER IN THE ROAD! ◀ swerve · brake ▶',
+    left: { text: 'You swerve onto the shoulder. The deer watches you leave with the total indifference of a creature that has done this before. Because it has. Twice today.', effect: s => { } },
+    right: { text: 'You brake hard. The deer passes. Your coffee does not survive, but the bumper does. New Jersey owes you nothing for this.', effect: s => { } },
+    timeout: { text: 'THUMP. A glancing hit — the deer is fine, they are built like tiny cars. Your dignity and $20 of body work are not.', effect: s => { s.money = Math.max(0, s.money - 20); } }
+  },
+  {
+    key: 'toll', prompt: 'TOLL BOOTH! ◀ exact change · no-charge lane ▶',
+    left: { text: 'Exact change, smooth toss, green light. Somewhere a toll collector nods at the purest transaction in New Jersey.', effect: s => { s.money = Math.max(0, s.money - 2); } },
+    right: { text: 'You blow through the no-charge lane. A camera flashes. Somewhere, a violation notice begins its long journey to an address you don’t technically have.', effect: s => { s.flags.heat = Math.min(5, (s.flags.heat || 0) + .5); } },
+    timeout: { text: 'You freeze at the booth. The attendant sighs the sigh of a thousand frozen tourists. $5 and a lecture.', effect: s => { s.money = Math.max(0, s.money - 5); } }
+  },
+  {
+    key: 'speedtrap', prompt: 'SPEED TRAP AHEAD! ◀ ease off · GUN IT ▶',
+    left: { text: 'You ease off as the cruiser glides by. The trooper’s eyes say “not today, but soon.” Wise.', effect: s => { } },
+    right: { text: 'You gun it. For four seconds you are the fastest thing in either state. Then you spend the rest of the drive checking the mirror, which is its own punishment.', effect: s => { if (Math.random() < .4) s.flags.heat = Math.min(5, (s.flags.heat || 0) + .5); } },
+    timeout: { text: 'You drive right past the trap at exactly the worst speed. The ticket is $30 and written with insulting neatness.', effect: s => { s.money = Math.max(0, s.money - 30); } }
+  }
+];
+
 function updateTransit(dt) {
   const tr = state.transit;
   if (!tr) { state.mode = 'explore'; return; }
   tr.t += dt;
-  if (tr.t >= tr.dur) {
+  if (tr.eventT === undefined && tr.t > 1.2 && Math.random() < .5) {
+    tr.event = TRANSIT_EVENTS[Math.floor(Math.random() * TRANSIT_EVENTS.length)];
+    tr.eventT = 0;
+    audio.sfx('denied');
+  }
+  if (tr.event && tr.eventT >= 0) {
+    tr.eventT += dt;
+    let choice = null;
+    if (consume(['ArrowLeft', 'KeyA'])) choice = 'left';
+    if (consume(['ArrowRight', 'KeyD'])) choice = 'right';
+    if (choice || tr.eventT > 1.6) {
+      const out = choice ? tr.event[choice] : tr.event.timeout;
+      out.effect(state);
+      audio.sfx(choice ? 'pickup' : 'thud');
+      tr.eventResult = out.text;
+      tr.event = null;
+      tr.eventT = -1;
+      tr.resultT = 2;
+    }
+    return;
+  }
+  if (tr.resultT > 0) tr.resultT -= dt;
+  if (tr.t >= tr.dur + (tr.resultT > 0 ? tr.resultT : 0)) {
     setScene(tr.dest, tr.x, tr.y);
     state.mode = 'explore';
     state.transit = null;
@@ -4803,6 +4846,35 @@ function drawTransit() {
   if (tr.t < 1.4) outlineText(ctx, hh[0], 320, 96, '#ffe78a', 10, 'center');
   else if (tr.t > tr.dur - 1.2) outlineText(ctx, hh[1], 320, 96, '#8ffff2', 11, 'center');
   if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
+  if (tr && tr.event) {
+    ctx.fillStyle = 'rgba(8,6,12,.85)';
+    ctx.fillRect(90, 150, 460, 100);
+    ctx.strokeStyle = '#ffd23e';
+    ctx.strokeRect(90, 150, 460, 100);
+    ctx.fillStyle = '#ffd23e';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(tr.event.prompt, 320, 185);
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.fillText('choose fast — left or right', 320, 210);
+    const bar = Math.max(0, 1 - (tr.eventT || 0) / 1.6);
+    ctx.fillStyle = '#ff5040';
+    ctx.fillRect(140, 228, 360 * bar, 5);
+    ctx.textAlign = 'left';
+  } else if (tr && tr.eventResult && tr.resultT > 0) {
+    ctx.fillStyle = 'rgba(8,6,12,.85)';
+    ctx.fillRect(70, 160, 500, 76);
+    ctx.strokeStyle = '#8ffff2';
+    ctx.strokeRect(70, 160, 500, 76);
+    ctx.fillStyle = '#f5efdc';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    const lines = wrapText(ctx, tr.eventResult, 460, 10);
+    lines.slice(0, 3).forEach((ln, li) => ctx.fillText(ln, 320, 180 + li * 13));
+    ctx.textAlign = 'left';
+  }
+
 }
 
 function drawBodega() {
