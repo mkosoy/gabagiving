@@ -1314,7 +1314,7 @@ function updateHubEvents(dt) {
 
 function updateExplore(dt) {
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
-  const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys.has(k)) || (state.player.movingScript);
+  const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
   state.idleT = moving || state.dialog ? 0 : (state.idleT || 0) + dt;
   if (state.flags.pendingSurprise && !state.dialog && !state.phone) {
     state.flags.pendingSurprise = false;
@@ -4005,7 +4005,7 @@ function drawBeacon() {
   const it = nearestInteraction();
   if (!it) return;
   const t = state.time;
-  const cx = it.x + it.w / 2, cy = it.y + it.h / 2;
+  const cx = it.x + it.w / 2 - (state.camera?.x || 0), cy = it.y + it.h / 2 - (state.camera?.y || 0);
   const pulse = 1 + Math.sin(t * 5) * .25;
   const r = (16 + (t % 1.4) * 26) * pulse;
   const fade = Math.max(0, .8 - (t % 1.4) * .55);
