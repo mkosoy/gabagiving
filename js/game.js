@@ -18,9 +18,10 @@ const W = canvas.width;
 const H = canvas.height;
 const audio = new AudioSys();
 
+const ASSET_V = '3';
 function loadArt(src) {
   const img = new Image();
-  img.src = src;
+  img.src = src + (src.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
   return img;
 }
 const sceneArt = {
@@ -2009,9 +2010,18 @@ function drawHub() {
     for (let i = 0; i < 2; i++) {
       const cx = ((state.time * (54 + i * 22) + i * 310) % 760) - 60;
       const cy = i ? 268 : 246;
-      px(ctx, i ? 700 - cx : cx, cy, 34, 13, '#101521');
-      px(ctx, (i ? 700 - cx : cx) + 5, cy + 3, 24, 7, i ? '#7e2733' : '#31445e');
-      px(ctx, (i ? 700 - cx : cx) + (i ? 2 : 28), cy + 5, 3, 3, '#ffe59b');
+      // horizontal traffic: sideways-simplified but detailed enough to read as cars
+      const tx = i ? 700 - cx : cx;
+      px(ctx, tx - 2, cy - 2, 38, 17, 'rgba(0,0,0,.3)');
+      px(ctx, tx, cy, 34, 13, '#0d1017');
+      px(ctx, tx + 1, cy + 1, 32, 11, i ? '#7e2733' : '#31445e');
+      px(ctx, tx + 8, cy + 2, 15, 9, '#9fd4ec');
+      px(ctx, tx + 10, cy + 4, 11, 5, i ? '#8e3542' : '#3f5a78');
+      px(ctx, tx + 3, cy - 2, 6, 3, '#05070c');
+      px(ctx, tx + 25, cy - 2, 6, 3, '#05070c');
+      px(ctx, tx + 3, cy + 12, 6, 3, '#05070c');
+      px(ctx, tx + 25, cy + 12, 6, 3, '#05070c');
+      px(ctx, tx + (i ? 1 : 30), cy + 4, 3, 4, '#fff3b0');
     }
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     ctx.fillStyle = `rgba(255,210,92,${.12 + pulse * .16})`;
@@ -3195,15 +3205,32 @@ function drawPeptides() {
 }
 
 function drawCar(x, y, color = '#8f1f2e', target = false) {
-  px(ctx, x - 14, y - 20, 28, 40, '#161920');
-  px(ctx, x - 11, y - 17, 22, 34, color);
-  px(ctx, x - 8, y - 11, 16, 9, '#78a9c8');
-  px(ctx, x - 8, y + 4, 16, 8, '#32445a');
-  px(ctx, x - 16, y - 13, 4, 9, '#111');
-  px(ctx, x + 12, y - 13, 4, 9, '#111');
-  px(ctx, x - 16, y + 8, 4, 9, '#111');
-  px(ctx, x + 12, y + 8, 4, 9, '#111');
-  if (target) px(ctx, x - 8, y - 26, 16, 3, '#ffe06e');
+  // shadow
+  px(ctx, x - 15, y - 19, 30, 40, 'rgba(0,0,0,.35)');
+  // body
+  px(ctx, x - 13, y - 20, 26, 40, '#0d1017');
+  px(ctx, x - 11, y - 18, 22, 36, color);
+  // hood shine + trunk
+  px(ctx, x - 9, y - 17, 18, 4, 'rgba(255,255,255,.22)');
+  px(ctx, x - 9, y + 13, 18, 3, 'rgba(0,0,0,.25)');
+  // windshield + rear window
+  px(ctx, x - 9, y - 11, 18, 8, '#9fd4ec');
+  px(ctx, x - 9, y - 11, 18, 2, '#d6f1ff');
+  px(ctx, x - 9, y + 5, 18, 6, '#6f97b4');
+  // roof
+  px(ctx, x - 9, y - 2, 18, 6, color);
+  px(ctx, x - 9, y - 2, 18, 1, 'rgba(255,255,255,.28)');
+  // headlights + taillights
+  px(ctx, x - 10, y - 20, 5, 3, '#fff3b0');
+  px(ctx, x + 5, y - 20, 5, 3, '#fff3b0');
+  px(ctx, x - 10, y + 17, 5, 3, '#ff5d52');
+  px(ctx, x + 5, y + 17, 5, 3, '#ff5d52');
+  // wheels
+  px(ctx, x - 15, y - 13, 4, 9, '#05070c');
+  px(ctx, x + 11, y - 13, 4, 9, '#05070c');
+  px(ctx, x - 15, y + 6, 4, 9, '#05070c');
+  px(ctx, x + 11, y + 6, 4, 9, '#05070c');
+  if (target) px(ctx, x - 8, y - 27, 16, 3, '#ffe06e');
 }
 
 function drawDrive() {
