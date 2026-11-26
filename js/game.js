@@ -907,6 +907,20 @@ function shoveNearest() {
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bd) { best = n; bd = d; }
   }
+  // a hostile brawler in range takes the hit instead
+  const bw = state.brawler;
+  if (bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34) {
+    bw.hp -= 1;
+    bw.hitT = .5;
+    bw.x += (bw.x - state.player.x) * .3;
+    bw.y += (bw.y - state.player.y) * .3;
+    bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
+    bw.barkT = 1.4;
+    spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? 'POW' : 'KNOCKOUT!', '#ffe78a');
+    audio.sfx('smash');
+    if (bw.hp <= 0) spawnEffect(state.player.x + 8, state.player.y - 22, state.player.kind === 'george' ? 'GEORGE WINS?!' : 'TONY WINS', '#9be59b');
+    return true;
+  }
   if (!best) return false;
   const ang = Math.atan2(best.y - p.y, best.x - p.x) || 0;
   best.x += Math.cos(ang) * 26;
@@ -1046,6 +1060,73 @@ function updateKramerCycle(dt) {
   }
 }
 
+function updateBrawler(dt) {
+  if (state.scene !== 'hub' || !state.flags.freeRoam) { state.brawler = null; return; }
+  const p = state.player;
+  if (!state.brawler && Math.random() < dt * .02) {
+    state.brawler = { x: 900 + Math.random() * 300, y: 200 + Math.random() * 120, hp: 3, state: 'prowl', t: 0, tx: 700, ty: 240, barkT: 0, swingT: 0, hitT: 0 };
+  }
+  const b = state.brawler;
+  if (!b) return;
+  if (b.barkT > 0) b.barkT -= dt;
+  if (b.hitT > 0) b.hitT -= dt;
+  if (b.swingT > 0) b.swingT -= dt;
+  const pd = Math.hypot(b.x - p.x, b.y - p.y);
+  if (b.hp <= 0) {
+    b.t += dt;
+    if (b.t > 2.2) {
+      if (Math.random() < .6 && !state.cash) state.cash = [];
+      if (Math.random() < .6) state.cash.push({ x: b.x, y: b.y + 10, t: 0 });
+      state.brawler = null;
+    }
+    return;
+  }
+  // notice the player: trash talk, then chase and swing
+  if (pd < 120 && b.state === 'prowl') {
+    b.state = 'chase';
+    b.bark = p.kind === 'george' ? 'YOU! PARKS-WEARING GUY!' : 'SOPRANO! THIS IS OUR SIDE NOW!';
+    b.barkT = 2;
+    audio.voice('christopher');
+  }
+  if (b.state === 'chase') {
+    if (pd > 26) {
+      const ang = Math.atan2(p.y - b.y, p.x - b.x);
+      b.x += Math.cos(ang) * 68 * dt;
+      b.y += Math.sin(ang) * 68 * dt;
+      b.dir = Math.abs(p.x - b.x) > Math.abs(p.y - b.y) ? (p.x > b.x ? 'right' : 'left') : (p.y > b.y ? 'down' : 'up');
+      b.moving = true;
+    } else if (b.swingT <= 0) {
+      b.swingT = 1.1;
+      b.moving = false;
+      if ((state.flags.hp || 3) <= 1) {
+        state.flags.hp = 3;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
+        spawnEffect(p.x, p.y - 18, '-$40 ROBBED', '#ff6a6a');
+        b.bark = 'THANKS FOR THE DONATION!';
+        b.barkT = 1.8;
+      } else {
+        state.flags.hp = (state.flags.hp || 3) - 1;
+        spawnEffect(p.x, p.y - 18, 'OOF', '#ff6a6a');
+      }
+      audio.sfx('smash');
+    }
+  }
+}
+
+function drawBrawler() {
+  const b = state.brawler;
+  if (!b) return;
+  if (b.hp <= 0) {
+    drawPerson(ctx, b.x, b.y + 6, 'christopher', 'down', 0, { pose: 'lean' });
+    outlineText(ctx, 'KNOCKED OUT', b.x + 8, b.y - 10, '#ff9a7a', 7, 'center');
+    return;
+  }
+  drawPerson(ctx, b.x, b.y, 'christopher', b.dir || 'down', b.moving ? state.frame * 1.6 : state.frame * .5, b.hitT > 0 ? { pose: 'lean' } : {});
+  // hp pips
+  for (let i = 0; i < b.hp; i++) px(ctx, b.x + 2 + i * 6, b.y - 8, 4, 3, '#ff5a5a');
+  if (b.barkT > 0 && b.bark) outlineText(ctx, b.bark, b.x + 8, b.y - 16, '#ffb1a1', 7, 'center');
+}
+
 function updateHubEvents(dt) {
   if (!state.flags.freeRoam || state.scene !== 'hub') return;
   state.hubEventT = (state.hubEventT ?? 6) - dt;
@@ -1093,6 +1174,7 @@ function updateExplore(dt) {
   updateCop(dt);
   updateKramerCycle(dt);
   updateHubEvents(dt);
+  updateBrawler(dt);
   updateCash(dt);
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
@@ -3734,6 +3816,7 @@ function drawWorld() {
   drawAmbient();
   drawSchemeProps();
   drawCop();
+  drawBrawler();
   drawCash();
   drawInteractionMarkers();
   drawPlayer();
@@ -3746,6 +3829,9 @@ function drawWorld() {
   if (state.flags.freeRoam) {
     drawPanel(W - 104, 42, 96, 25, '#182448', '#8ffff2');
     outlineText(ctx, state.player.kind === 'george' ? 'GEORGE' : 'TONY', W - 56, 50, '#8ffff2', 8, 'center');
+    if ((state.flags.hp || 3) < 3) {
+      for (let i = 0; i < 3; i++) px(ctx, W - 100 + i * 12, 52, 9, 7, i < (state.flags.hp || 3) ? '#ff5a5a' : '#3a2a2a');
+    }
     if (state.flags.tribute) {
       drawPanel(W - 104, 70, 96, 18, '#14261a', '#9be59b');
       outlineText(ctx, `$${state.flags.tribute}`, W - 56, 75, '#9be59b', 7, 'center');
