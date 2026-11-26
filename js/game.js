@@ -275,7 +275,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit'];
 function saveWorld() {
   try {
     const out = {};
@@ -1235,7 +1235,7 @@ function drawHubEventProps() {
 }
 
 function drawCop() {
-  if (state.scene !== 'hub') return;
+  if (state.scene !== 'hub' && state.scene !== 'nyc') return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
     drawCar(c.x, c.y, '#e8ecf2');
     // flashing lightbar
@@ -3005,6 +3005,7 @@ function leaveOutside() {
 function travelHub(place) {
   // remember which outdoor region we came from so interior exits return correctly
   if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
+    state.returnTo = null;
     const bx = Math.max(20, state.player.x);
     const by = state.player.y;
     for (const [ox, oy] of [[0, 26], [0, -26], [26, 0], [-26, 0], [0, 44], [0, -44]]) {
