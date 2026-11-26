@@ -277,7 +277,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1606,6 +1606,15 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman', label: 'Collect payment' }
     ]
   },
+  turkeyTax: {
+    title: 'THE TURKEY TAX',
+    payout: 180, heat: 1,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 300, radius: 62, objective: 'Collect the Thanksgiving donation from Vesuvio', label: 'Collect from Artie' },
+      { scene: 'satriale', x: 262, y: 300, radius: 62, objective: 'Collect the donation from Satriale’s', label: 'Collect the envelope' },
+      { scene: 'club', x: 300, y: 150, radius: 55, objective: 'Bring the envelopes back to Silvio at the Bing', label: 'Deliver the take' }
+    ]
+  },
   pineFresh: {
     title: 'PINE FRESH',
     payout: 250, heat: 2,
@@ -1651,6 +1660,10 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      turkeyTax: [
+        { speaker: 'silvio', text: 'Moist but complete. The bird, she is paid for. You did good — keep the vig.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I collected protection money and everyone was SO POLITE. Is this what power feels like?!' : 'Happy Thanksgiving, Sil. Tell the bird I said so.' }
       ],
       pineFresh: [
         { speaker: 'narrator', text: 'The box is in the ground. You did not look inside. You will never know. Some things are better buried — literally everything, in New Jersey.' },
@@ -1700,6 +1713,10 @@ function updateMission() {
         catalogCaper: [
           { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
+        ],
+        turkeyTax: [
+          { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I feel terrible doing this. I also feel terrible NOT doing this. I feel terrible! That’s the constant!' : 'The veal WAS perfect. That’s why you’re still open, Artie.' }
         ],
         pineFresh: [
           { speaker: 'narrator', text: 'The clearing. Frozen earth, no witnesses — except, in the distance, a large shape that does not hurry. The box goes in the ground. It never happened.' },
@@ -2750,7 +2767,15 @@ function clubInteractions() {
   const list = [];
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
-  if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
+  list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
+    if (!state.mission && !state.flags.turkeyTaxDone && state.flags.freeRoam) {
+      startMission('turkeyTax');
+      startDialog([
+        { speaker: 'silvio', text: 'Hey. Boss’s orders — the Thanksgiving envelopes don’t collect themselves. Vesuvio first, then Satriale’s. Bring ’em back moist. $180 for the legwork.' },
+        { speaker: 'system', text: 'Mission accepted: THE TURKEY TAX. Follow the objective banner.' }
+      ]);
+    } else clubTalk('silvio');
+  } });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
     list.push({ x: 430, y: 250, w: 90, h: 50, radius: 28, label: 'Arm-wrestle the bouncer', action: () => {
