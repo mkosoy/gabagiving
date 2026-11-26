@@ -5768,6 +5768,14 @@ function nycInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
+    { x: 430, y: 250, w: 50, h: 34, radius: 40, label: 'Feed the pigeons', action: () => {
+      if ((state.pigeonCd || 0) > state.time) { toast('The pigeons are full. They are judging you anyway. It’s their way.'); return; }
+      state.pigeonCd = state.time + 30;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .3);
+      audio.sfx('pickup');
+      spawnEffect(state.player.x, state.player.y - 16, 'the flock approves', '#b8d0e0');
+      startDialog([{ speaker: 'narrator', text: 'You scatter crumbs. The flock descends with military precision. For one shining moment, you are the most important creature in Manhattan. Then the crumbs are gone, and so is their respect.' }]);
+    } },
     { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'jerry', text: 'George. Please tell me you’re not doing crimes with the mailman again. The last time, my super got a subpoena. A SUBPOENA, George!' },
