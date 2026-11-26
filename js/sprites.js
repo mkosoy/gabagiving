@@ -127,6 +127,12 @@ export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, op
     px(ctx, torsoX + 3, torsoY + 1, torsoW - 6, 10, '#f1eadc');
     px(ctx, torsoX + 8, torsoY + 2, 2, 9, '#b8ac98');
   }
+  if (kind === 'aj') {
+    px(ctx, torsoX - 2, torsoY - 1, torsoW + 4, 5, '#11151d');
+    px(ctx, torsoX + 4, torsoY + 2, torsoW - 8, 8, '#1c2029');
+    px(ctx, torsoX + 7, torsoY + 3, 4, 1, '#313947');
+    px(ctx, torsoX + 8, torsoY + 8, 2, 5, '#11151d');
+  }
   if (kind === 'tony' || kind === 'tonyMax') {
     px(ctx, torsoX + 7, torsoY + 1, 3, 11, p.accent);
     px(ctx, torsoX + 4, torsoY + 5, torsoW - 8, 1, '#d4aa45');
@@ -212,6 +218,13 @@ export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, op
   } else if (kind === 'jerry') {
     px(ctx, headX, headY - 3, headW, 5, p.hair);
     px(ctx, headX + 3, headY - 5, headW - 6, 3, p.hair);
+  } else if (kind === 'aj') {
+    px(ctx, headX - 1, headY - 3, headW + 2, 5, p.hair);
+    px(ctx, headX + 1, headY - 5, 4, 3, p.hair);
+    px(ctx, headX + 6, headY - 6, 4, 4, p.hair);
+    px(ctx, headX + 11, headY - 4, 4, 3, p.hair);
+    px(ctx, headX + 2, headY + 1, 4, 3, p.hair);
+    px(ctx, headX + 8, headY, 5, 2, p.hair);
   } else if (kind === 'bobby') {
     px(ctx, headX + 1, headY - 2, headW - 2, 4, p.hair);
     px(ctx, headX + 3, headY + 9, headW - 6, 3, '#6b4b36'); // beard
@@ -239,6 +252,9 @@ export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, op
     if (kind === 'aj') {
       px(ctx, headX - 2, headY + 2, 3, 8, '#22252d');
       px(ctx, headX + headW - 1, headY + 2, 3, 8, '#22252d');
+      px(ctx, headX + 4, eyeY - 2, 4, 1, '#0d0f14');
+      px(ctx, headX + headW - 8, eyeY - 2, 4, 1, '#0d0f14');
+      px(ctx, headX + 5, headY + 11, 6, 1, '#4f3028');
     }
     if (kind === 'melfi') {
       px(ctx, headX + 3, eyeY - 1, 5, 3, '#20242a');

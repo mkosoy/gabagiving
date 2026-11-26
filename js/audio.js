@@ -150,6 +150,7 @@ export class AudioSys {
         if (s % 4 === 0) this.tone(root / 2, .22, 'sine', .018);
       }
       if ((this.musicMode === 'drive' || this.musicMode === 'club') && s % 2 === 0) this.noise(.035, .012, 0, 2800);
+      if (this.musicMode === 'house' && s % 5 === 0) this.noise(.025, .006, 0, 520);
     }, 180);
   }
 }

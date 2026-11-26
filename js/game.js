@@ -484,6 +484,11 @@ function updateExplore(dt) {
     const ny = p.y + input.y * sp;
     if (!blockedAt(p.x, ny)) p.y = ny;
     state.frame += dt * 12;
+    p.stepTick = (p.stepTick || 0) - dt;
+    if (p.stepTick <= 0) {
+      audio.tone(92 + Math.random() * 18, .025, 'triangle', .006);
+      p.stepTick = .24;
+    }
   } else {
     state.frame += dt * 2;
   }
@@ -1835,23 +1840,53 @@ function drawWindow(x, y, w = 58, h = 34) {
 }
 
 function drawTV(x, y) {
+  const t = state.time;
   px(ctx, x, y, 38, 30, '#161a20');
   px(ctx, x + 3, y + 4, 32, 20, state.flags.tvChannel === 3 ? '#315aa8' : state.flags.tvChannel ? '#332b32' : '#263141');
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x + 3, y + 4, 32, 20);
+  ctx.clip();
   if (state.flags.tvChannel === 1) {
-    px(ctx, x + 5, y + 8, 12, 6, '#5f6a78');
-    px(ctx, x + 22, y + 7, 8, 8, '#d8d3c0');
-    px(ctx, x + 7, y + 18, 22, 2, '#d66b3e');
+    // war documentary: drifting smoke, moving tracer fire, marching silhouettes
+    px(ctx, x + 3, y + 4, 32, 20, '#263141');
+    for (let i = 0; i < 4; i++) {
+      const sx = x + 4 + ((t * 7 + i * 11) % 34);
+      px(ctx, sx, y + 7 + i * 3, 5, 2, 'rgba(180,190,200,.55)');
+    }
+    for (let i = 0; i < 3; i++) {
+      const sx = x + 4 + ((t * 28 + i * 13) % 34);
+      px(ctx, sx, y + 12 + i * 3, 7, 1, '#ffb453');
+    }
+    for (let i = 0; i < 3; i++) px(ctx, x + 6 + i * 9, y + 17 + Math.sin(t * 8 + i) * 1, 3, 5, '#17191f');
   } else if (state.flags.tvChannel === 2) {
-    px(ctx, x + 5, y + 7, 10, 10, '#f0c0d8');
-    px(ctx, x + 19, y + 8, 12, 5, '#c7c7c7');
+    // baking show: rotating cake and sliding mixer
+    px(ctx, x + 3, y + 4, 32, 20, '#4a2d42');
+    const spin = Math.sin(t * 6) * 2;
+    px(ctx, x + 6, y + 9, 11 + spin, 8, '#f0c0d8');
+    px(ctx, x + 8, y + 7, 7, 3, '#fff0f7');
+    px(ctx, x + 20 + Math.sin(t * 3) * 4, y + 8, 10, 5, '#c7c7c7');
+    px(ctx, x + 23 + Math.sin(t * 3) * 4, y + 13, 3, 6, '#777');
   } else if (state.flags.tvChannel === 3) {
-    px(ctx, x + 7, y + 7, 6, 13, '#d8d1bd');
-    px(ctx, x + 18, y + 6, 5, 14, '#d8d1bd');
-    px(ctx, x + 27, y + 8, 4, 12, '#d8d1bd');
+    // Rome documentary: sunlight sweeps columns while a tiny procession moves
+    px(ctx, x + 3, y + 4, 32, 20, '#315aa8');
+    const sweep = x + 3 + ((t * 12) % 38) - 6;
+    ctx.fillStyle = 'rgba(255,225,120,.18)';
+    ctx.fillRect(sweep, y + 4, 8, 20);
+    for (let i = 0; i < 3; i++) px(ctx, x + 7 + i * 10, y + 7, 5, 14, '#d8d1bd');
+    const march = (t * 8) % 36;
+    for (let i = 0; i < 3; i++) px(ctx, x + 3 + march + i * 5, y + 18, 3, 3, '#5e1f27');
     outlineText(ctx, 'ROME', x + 6, y + 18, '#ffd34f', 5);
   } else {
-    for (let i = 0; i < 14; i++) px(ctx, x + 5 + (i * 7) % 27, y + 6 + (i * 5) % 15, 2, 2, i % 2 ? '#fff' : '#5e6f82');
+    for (let i = 0; i < 18; i++) {
+      const flicker = Math.sin(t * 17 + i * 4) > 0 ? 1 : 0;
+      px(ctx, x + 5 + (i * 7 + Math.floor(t * 9)) % 27, y + 6 + (i * 5) % 15, 2, 2, flicker ? '#fff' : '#5e6f82');
+    }
   }
+  // CRT scanline glides over every channel
+  const scan = y + 4 + ((t * 18) % 20);
+  px(ctx, x + 3, scan, 32, 1, 'rgba(255,255,255,.10)');
+  ctx.restore();
   px(ctx, x + 10, y + 30, 18, 4, '#101318');
 }
 
@@ -1859,6 +1894,30 @@ function drawHouse() {
   if (drawSceneArt(sceneArt.house, 640, 416)) {
     // Interactive channels and characters sit over the illustrated room art.
     drawTV(214, 30);
+    // Carmela paces through the kitchen instead of the house feeling frozen.
+    const carmX = 486 + Math.sin(state.time * .9) * 34;
+    drawPerson(ctx, carmX, 330, 'carmela', Math.cos(state.time * .9) > 0 ? 'right' : 'left', state.frame * 1.4, { pose: 'stand' });
+    // Carmela's card is a visible objective object, not an invisible pixel hunt.
+    if (!state.flags.hasCard) {
+      const pulse = (Math.sin(state.time * 6) + 1) / 2;
+      ctx.fillStyle = `rgba(255,220,105,${.18 + pulse * .22})`;
+      ctx.beginPath();
+      ctx.ellipse(37, 115, 18 + pulse * 4, 13 + pulse * 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      px(ctx, 28, 106, 18, 13, '#f4e5bc');
+      px(ctx, 30, 108, 14, 2, '#caa46c');
+      px(ctx, 31, 113, 10, 1, '#7a4936');
+      px(ctx, 31, 116, 12, 1, '#7a4936');
+      px(ctx, 41, 104, 4, 4, '#b23b32');
+    }
+    // Fireplace flame flicker in the den.
+    for (let i = 0; i < 5; i++) {
+      const fx = 18 + i * 7;
+      const fh = 10 + Math.sin(state.time * 9 + i * 1.7) * 4;
+      px(ctx, fx, 306 - fh, 5, fh, i % 2 ? '#ffb13e' : '#e34d27');
+      px(ctx, fx + 1, 306 - fh * .62, 3, fh * .55, '#ffe27a');
+    }
+    px(ctx, 12, 306, 44, 5, '#2b1710');
     // Plav's stream glows inside AJ's monitor.
     px(ctx, 414, 31, 66, 26, '#101820');
     px(ctx, 418, 35, 58, 18, '#1d4d67');
@@ -1870,8 +1929,8 @@ function drawHouse() {
     px(ctx, 443, 48, 7, 2, '#6f3c2d');
     px(ctx, 486, 34, 20, 10, '#78ff9b');
     drawFramedPhoto(sceneArt.cousinTony, 560, 22, 48, 42);
-    // AJ leans into the desk instead of standing in empty space.
-    drawPerson(ctx, 486, 86, 'aj', 'left', state.frame, { pose: 'lean' });
+    // AJ shifts in his chair and leans into the desk instead of standing frozen.
+    drawPerson(ctx, 486 + Math.sin(state.time * 2.1) * 1.8, 86, 'aj', 'left', state.frame * 1.5, { pose: 'lean' });
     return;
   }
   // floor zones
@@ -2177,12 +2236,32 @@ function drawPlayer() {
   if (state.flags.hasBat && state.scene === 'apartment') drawBat(ctx, state.player.x + 17, state.player.y + 11, -0.7);
 }
 
+function drawInteractionMarkers() {
+  const scene = scenes[state.scene];
+  if (!scene || state.mode !== 'explore') return;
+  const list = scene.interactions().filter((i) => !i.hidden);
+  for (const it of list) {
+    const cx = it.x + it.w / 2;
+    const cy = it.y - 8 + Math.sin(state.time * 5 + cx * .1) * 2;
+    const pulse = (Math.sin(state.time * 6 + cx) + 1) / 2;
+    ctx.fillStyle = `rgba(255,216,92,${.55 + pulse * .35})`;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx - 5, cy - 8);
+    ctx.lineTo(cx + 5, cy - 8);
+    ctx.closePath();
+    ctx.fill();
+    px(ctx, cx - 1, cy - 14, 2, 5, '#fff0a6');
+  }
+}
+
 function drawWorld() {
   const scene = scenes[state.scene];
   if (!scene) return;
   ctx.save();
   ctx.translate(-Math.round(state.camera.x), -Math.round(state.camera.y));
   scene.draw();
+  drawInteractionMarkers();
   drawPlayer();
   ctx.restore();
   // location badge
