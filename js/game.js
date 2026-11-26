@@ -966,6 +966,10 @@ const ambientSpecs = {
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
+  shore: [
+    { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
+    { kind: 'bobby', x: 500, y: 260, region: { x: 120, y: 150, w: 500, h: 160 }, speed: 20 }
+  ],
   nyc: [
     { kind: 'kramer', x: 300, y: 244, region: { x: 560, y: 236, w: 150, h: 36 }, speed: 44, npc: 'kramer' },
     { kind: 'elaine', x: 460, y: 254, region: { x: 90, y: 238, w: 300, h: 36 }, speed: 36 },
