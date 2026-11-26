@@ -1443,6 +1443,14 @@ function drawRussian() {
   ctx.globalAlpha = 1;
 }
 
+function drawIceCream() {
+  const ic = state.iceCream;
+  if (!ic || state.scene !== 'hub' || isNight() || ic.t > 0) return;
+  drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
+  px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
+  px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
 function drawFireworks() {
   if (!['shore', 'ac'].includes(state.scene) || !isNight()) { state.fireworks = null; return; }
   if (!state.fireworks) state.fireworks = [];
@@ -2403,6 +2411,17 @@ function updateExplore(dt) {
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
   const input = moveInput();
   const p = state.player;
+  // ice cream truck — drifts through the neighborhood by day, forever out of reach
+  if (state.scene === 'hub' && !isNight()) {
+    if (!state.iceCream) state.iceCream = { x: -80, y: 300, t: 20 + Math.random() * 30 };
+    const ic = state.iceCream;
+    ic.t -= dt;
+    if (ic.t <= 0) {
+      ic.x += 42 * dt;
+      if (!ic.jingled) { ic.jingled = true; audio.sfx('pickup'); spawnEffect(Math.min(600, Math.max(40, ic.x + 40)), 270, '~ ice cream ~', '#ffe7f0'); }
+      if (ic.x > 1360) { ic.x = -80; ic.t = 60 + Math.random() * 60; ic.jingled = false; }
+    }
+  }
   // hidden gabagool packages — find all ten
   if (!state.pkgSpots) {
     state.pkgSpots = [
@@ -7165,6 +7184,7 @@ function drawWorld() {
   drawSnatcher();
   drawPackages();
   drawFireworks();
+  drawIceCream();
   drawHubEventProps();
   drawRussian();
   drawTailCourier();
