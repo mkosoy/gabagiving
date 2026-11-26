@@ -28,6 +28,7 @@ const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
   nyc: loadArt('./assets/bg-nyc.webp'),
+  pines: loadArt('./assets/bg-pines.webp'),
   hubeast: loadArt('./assets/bg-hubeast.webp'),
   apartment: loadArt('./assets/bg-apartment-v2.webp'),
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
@@ -275,7 +276,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted'];
 function saveWorld() {
   try {
     const out = {};
@@ -750,6 +751,18 @@ const scenes = {
     ],
     draw: drawNyc,
     interactions: nycInteractions
+  },
+  pines: {
+    w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
+    colliders: [
+      r(0,0,768,8), r(0,408,768,8), r(0,0,4,416), r(764,0,4,416),
+      // dense treeline north and deep woods east/west — the clearing is open
+      r(8,8,752,150), r(8,158,180,250), r(580,158,180,250),
+      // frozen pond lower-left, rusty car right
+      r(220,300,120,80), r(560,220,90,50)
+    ],
+    draw: drawPines,
+    interactions: pinesInteractions
   },
   vesuvio: {
     w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'vesuvio',
@@ -3128,6 +3141,16 @@ function hubInteractions() {
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
+    { x: 600, y: 388, w: 90, h: 26, radius: 50, label: 'Pine Barrens ↓', action: () => {
+      audio.sfx('honk');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'South on the parkway, past where the trees stop being decorative and start being evidence.' },
+        { speaker: 'george', text: 'Why are we going to the Pine Barrens? Nothing good happens in the Pine Barrens! I’ve seen exactly one documentary about this!' }
+      ] : [
+        { speaker: 'narrator', text: 'The parkway south. The pines close in. Tony drives quieter the deeper it gets. Everybody does. That’s the Barrens.' },
+        { speaker: 'tony', text: 'Beautiful country. Very peaceful. Don’t ask me why I know that.' }
+      ], () => startTransit('pines', 300, 240, 'GARDEN STATE PARKWAY · SOUTH'));
+    } },
     { x: 1236, y: 210, w: 44, h: 90, radius: 52, label: 'NYC →', action: () => {
       audio.sfx('honk');
       startDialog(state.player.kind === 'george' ? [
@@ -3523,9 +3546,79 @@ function drawTransit() {
   const weave = Math.sin(tr.t * 3.2) * 6;
   drawCar(320 + weave, 330, state.player.carColor || '#8f1f2e', false, 0);
   // progress flavor
-  if (tr.t < 1.4) outlineText(ctx, tr.dest === 'nyc' ? 'HOLLAND TUNNEL → MANHATTAN' : 'HOLLAND TUNNEL → NEW JERSEY', 320, 96, '#ffe78a', 10, 'center');
-  else if (tr.t > tr.dur - 1.2) outlineText(ctx, tr.dest === 'nyc' ? 'MANHATTAN · UPPER WEST SIDE' : 'NORTH CALDWELL · NEW JERSEY', 320, 96, '#8ffff2', 11, 'center');
+  const heads = { nyc: ['HOLLAND TUNNEL → MANHATTAN', 'MANHATTAN · UPPER WEST SIDE'], hub: ['HOLLAND TUNNEL → NEW JERSEY', 'NORTH CALDWELL · NEW JERSEY'], pines: ['GARDEN STATE PARKWAY · SOUTH', 'THE PINE BARRENS'] };
+  const hh = heads[tr.dest] || heads.hub;
+  if (tr.t < 1.4) outlineText(ctx, hh[0], 320, 96, '#ffe78a', 10, 'center');
+  else if (tr.t > tr.dur - 1.2) outlineText(ctx, hh[1], 320, 96, '#8ffff2', 11, 'center');
   if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
+}
+
+function drawPines() {
+  if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
+  // drifting mist
+  for (let i = 0; i < 4; i++) {
+    const mx = ((state.time * (6 + i * 3) + i * 200) % 900) - 60;
+    ctx.globalAlpha = .1 + Math.sin(state.time * .5 + i) * .04;
+    ctx.fillStyle = '#c8d4c8';
+    ctx.beginPath();
+    ctx.ellipse(mx, 240 + i * 40, 120, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // frost sparkle
+  if (Math.random() < .3) {
+    const fx = 200 + Math.random() * 360, fy = 180 + Math.random() * 180;
+    px(ctx, fx, fy, 1, 1, '#e8f4ff');
+  }
+  outlineText(ctx, '← BACK TO CIVILIZATION', 8, 400, '#ffe78a', 7, 'left');
+  if (!state.flags.russianFound) outlineText(ctx, 'fresh footprints in the frost…', 420, 190, '#9ab8c8', 6, 'center');
+}
+
+function pinesInteractions() {
+  return [
+    { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
+      audio.sfx('honk');
+      startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
+    } },
+    { x: 400, y: 160, w: 130, h: 90, radius: 52, label: 'Follow the footprints', hidden: () => !!state.flags.russianFound, action: () => {
+      state.flags.russianFound = true;
+      audio.sfx('turkey');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Footprints in the frost. They lead in a circle. A perfect, deranged circle. George follows them for twenty minutes and ends up exactly here.' },
+        { speaker: 'george', text: 'He’s OUT there! A Russian! He killed sixteen Czechoslovakians! Or he WAS sixteen Czechoslovakians — the story keeps changing!' },
+        { speaker: 'narrator', text: 'A branch cracks somewhere deep in the pines. George leaves. George leaves very quickly. +$40 in loose change abandoned along the footprints.' }
+      ] : [
+        { speaker: 'narrator', text: 'The footprints loop, double back, and vanish at a tree. The tree is just a tree. Probably. Tony looks up into it for a long time.' },
+        { speaker: 'tony', text: 'Guy was an interior decorator. Killed sixteen Czechoslovakians. You’re not gonna believe this — his house looked like shit.' },
+        { speaker: 'narrator', text: 'Something moves in the deep pines. Or nothing does. The Barrens don’t say. Tony finds $40 in shell casings and loose change along the trail.' }
+      ], () => {
+        state.flags.tribute = (state.flags.tribute || 0) + 40;
+        spawnEffect(state.player.x + 8, state.player.y - 8, '+$40 · THE BARRENS PROVIDE', '#8ffff2');
+        audio.sfx('cash');
+      });
+    } },
+    { x: 560, y: 200, w: 90, h: 50, radius: 46, label: 'Rusty abandoned car', action: () => {
+      if (!state.flags.pinesCarLooted) {
+        state.flags.pinesCarLooted = true;
+        state.flags.tribute = (state.flags.tribute || 0) + 25;
+        audio.sfx('door');
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'An abandoned sedan, vines through the windows. Glovebox: $25, a cassette of Romanian folk music, and a parking ticket from 1986.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Finders keepers! That’s the LAW. Maritime law! …We’re nowhere near water, but still!' : 'Romanian folk. Guy had taste. Shame about whatever happened to him. Which I know nothing about.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'Nothing left but rust and Romanian folk. The cassette is starting to grow on you, honestly.' }]);
+    } },
+    { x: 220, y: 290, w: 120, h: 80, radius: 54, label: 'Frozen pond', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The pond is frozen solid-ish. George tests it with one foot. The ice makes a sound like a threat.' },
+        { speaker: 'george', text: 'I’m not falling through ice in SOUTH JERSEY. That’s not how I go. I go in a way that embarrasses my family, not one that confuses them!' }
+      ] : [
+        { speaker: 'narrator', text: 'Frozen pond. Still. The kind of still that makes a man think about things. Tony thinks about things for exactly four seconds, then stops.' },
+        { speaker: 'tony', text: 'Nice spot. Very undisturbed. Let’s keep it that way.' }
+      ]);
+    } }
+  ];
 }
 
 function initArmWrestle() {
