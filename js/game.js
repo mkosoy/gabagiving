@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan'];
 function saveWorld() {
   try {
     const out = {};
@@ -3445,6 +3445,28 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
+    { x: 480, y: 300, w: 80, h: 40, radius: 46, label: 'The Feast', action: () => {
+      if (!state.flags.bigOneDone || !state.flags.kramericaBookDone || !state.flags.pineRunnerDone) {
+        toast('Something’s being prepared here. Finish the crews’ work first — Newman, Kramer, Silvio.');
+        return;
+      }
+      if (state.flags.feastDone) {
+        startDialog([{ speaker: 'artie', text: 'The leftovers are in the back. They are, technically, eternal. Help yourself — forever.' }]);
+        return;
+      }
+      state.flags.feastDone = true;
+      state.money += 1000;
+      state.flags.heat = 0;
+      audio.sfx('cash');
+      audio.sfx('success');
+      startDialog([
+        { speaker: 'narrator', text: 'The doors close. The sign flips to PRIVATE. Every table in Vesuvio fills at once — Silvio, Paulie, Christopher, Artie, Kramer sliding in sideways, Newman uninvited but present, even the Soup Man’s nephew. The table groans under the weight of it.' },
+        { speaker: 'artie', text: 'For the two who ran every job this season — the courier kings of the tri-state area! Veal, turkey, the big salad, and ONE — count it — ONE marble rye!' },
+        { speaker: 'silvio', text: 'You moved product through three counties and a boardwalk. The boss says the tribute is forgiven, the heat is forgotten, and this — a thousand, cash — is the cleanest money you’ll ever make. Salut.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m being TOASTED! By MOBSTERS! This is the greatest day of my life and I can never tell my parents!' : 'This is what it’s about. The food, the family — even the mailman. Everybody eats. HAPPY THANKSGIVING, ya miserable convicts.' },
+        { speaker: 'system', text: 'THE FEAST — all mission chains complete. +$1000, heat cleared. The world stays open — the shore, the city, the Pines are all still out there.' }
+      ]);
+    } },
     { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'You ever pretend to own a restaurant to impress a waitress? Asking for a friend.' },
