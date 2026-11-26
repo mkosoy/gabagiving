@@ -2005,13 +2005,15 @@ function soupInteractions() {
 
 function drawYankees() {
   if (drawSceneArt(sceneArt.yankees, 640, 416)) {
-    // Steinbrenner holds court behind the big desk, trembling with fury
+    // Steinbrenner paces in front of the big desk, trembling with fury
+    const pace = Math.sin(state.time * .7);
+    const sx2 = 322 + pace * 70;
     const shake = Math.sin(state.time * 13) * 1.2;
-    drawPerson(ctx, 322 + shake, 78, 'junior', 'down', state.frame * 1.4, { pose: 'angry' });
+    drawPerson(ctx, sx2 + shake, 165, 'junior', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
     // steam of rage
     if (Math.sin(state.time * 2) > .6) {
-      px(ctx, 316, 62, 3, 6, 'rgba(255,120,90,.5)');
-      px(ctx, 330, 62, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 - 5, 150, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 + 9, 150, 3, 6, 'rgba(255,120,90,.5)');
     }
     // George sleeping under his desk when scheme active
     if (state.flags.deskNap) {
@@ -2035,7 +2037,7 @@ const steinbrennerRants = [
 
 function yankeesInteractions() {
   return [
-    { x: 280, y: 60, w: 110, h: 60, radius: 46, label: 'Steinbrenner', action: () => {
+    { x: 250, y: 140, w: 150, h: 56, radius: 46, label: 'Steinbrenner', action: () => {
       const rant = steinbrennerRants[Math.floor(Math.random() * steinbrennerRants.length)];
       if (state.player.kind === 'george') startDialog([
         { speaker: 'steinbrenner', text: rant },
