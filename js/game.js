@@ -3372,6 +3372,29 @@ function drawMonks() {
 
 function monksInteractions() {
   const list = [
+    { x: 520, y: 160, w: 60, h: 40, radius: 40, label: 'Open mic', action: () => {
+      const sets = [
+        [
+          { speaker: 'jerry', text: 'What is the deal with Thanksgiving? It’s the only holiday where the main event is a creature that can’t even fly properly. It’s not a bird, it’s a rumor with feathers!' },
+          { speaker: 'narrator', text: 'The crowd chuckles. One man in the back laughs too hard and is quietly asked to leave. This is how comedy stays pure.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He’s gotten better! I hate that. His improvement is a personal attack on me!' : 'Kid’s got timing. Reminds me of a guy we used to know. Don’t ask what happened to the guy.' }
+        ],
+        [
+          { speaker: 'bania', text: 'So I’m at the dry cleaner — and I just want to say: where do the hangers GO?! They come from nowhere, they return to nowhere — it’s the Circle of Hangers!' },
+          { speaker: 'narrator', text: 'Somewhere, Kenny Bania is doing crowd work at a table that did not consent. The set is mercifully short. The crowd applauds mostly in relief.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That was AWFUL. Awful! And he’s doing Jerry’s dinner slot next week! I have to fix this! I HAVE to!' : 'I seen worse acts get better tables. I said what I said.' }
+        ],
+        [
+          { speaker: 'jerry', text: 'People in this city don’t walk, they migrate. It’s a crosswalk, not a savanna! Pick a direction and commit — this isn’t a relationship!' },
+          { speaker: 'narrator', text: 'A solid little set. The waitress comped his coffee, which in this room is a Grammy.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I could do this. I could absolutely do this. I have observations! SO many observations. I’m told they’re mostly complaints, but still!' : 'He ain’t wrong about the walking. I once followed a guy three blocks just to see if he’d ever decide. He didn’t.' }
+        ]
+      ];
+      const idx = (state.flags.openMicCount || 0) % sets.length;
+      state.flags.openMicCount = (state.flags.openMicCount || 0) + 1;
+      audio.sfx('pickup');
+      startDialog(sets[idx]);
+    } },
     { x: 288, y: 200, w: 120, h: 100, radius: 22, label: 'The booth', action: () => {
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'Jerry. Big Salad. I bought it for Elaine once and she never thanked me properly. The thanks ratio was all wrong.' },
