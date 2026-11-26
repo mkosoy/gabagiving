@@ -2958,6 +2958,13 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 320, y: 330, w: 60, h: 30, radius: 42, label: 'Dice game', action: () => {
+    if (state.mode === 'craps') return;
+    if (state.money < 25) { toast('The dice game is $25 minimum.'); return; }
+    state.mode = 'craps';
+    state.craps = { bet: 25, phase: 'choose', pick: null, t: 0 };
+    audio.sfx('pickup');
+  } });
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
   if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
@@ -4155,6 +4162,45 @@ function drawStrength() {
   ctx.font = '10px monospace';
   if (st.swinging) ctx.fillText('press E at the peak!', 320, 276);
   else ctx.fillText({ bell: 'DING DING DING! +$50', big: 'SO CLOSE! +$15', ok: 'halfway — $5 back', weak: 'pathetic. honestly.' }[st.result], 320, 276);
+  ctx.textAlign = 'left';
+}
+
+function drawCraps() {
+  const c = state.craps;
+  if (!c) return;
+  ctx.fillStyle = 'rgba(8,6,12,.9)';
+  ctx.fillRect(190, 80, 260, 200);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect(190, 80, 260, 200);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BACK ROOM DICE — $25', 320, 104);
+  ctx.font = '11px monospace';
+  if (c.phase === 'choose') {
+    ctx.fillText('pick a side, then E to roll', 320, 132);
+    ctx.fillStyle = c.pick === 'under' ? '#ffd23e' : '#f5efdc';
+    ctx.fillText('◀ UNDER 8  (A / 1)', 320, 160);
+    ctx.fillStyle = c.pick === 'over' ? '#ffd23e' : '#f5efdc';
+    ctx.fillText('OVER 7  (D / 2) ▶', 320, 182);
+    ctx.fillStyle = '#888';
+    ctx.fillText('7 always loses. Q to walk away.', 320, 214);
+  } else {
+    const shake = c.phase === 'roll' ? Math.sin(state.time * 40) * 4 : 0;
+    ctx.font = 'bold 30px monospace';
+    ctx.fillText(c.phase === 'roll' ? '…' : String(c.d1), 290 + shake, 160);
+    ctx.fillText(c.phase === 'roll' ? '…' : String(c.d2), 350 - shake, 160);
+    ctx.font = '11px monospace';
+    if (c.phase === 'done') {
+      ctx.fillStyle = c.win ? '#7ad47a' : '#d47a7a';
+      ctx.fillText(c.seven ? 'SEVEN — house eats it' : c.win ? `TOTAL ${c.d1 + c.d2} — YOU WIN $${c.bet * 2}` : `TOTAL ${c.d1 + c.d2} — house wins`, 320, 200);
+      ctx.fillStyle = '#888';
+      ctx.fillText('E to continue', 320, 226);
+    } else {
+      ctx.fillStyle = '#888';
+      ctx.fillText('rolling…', 320, 200);
+    }
+  }
   ctx.textAlign = 'left';
 }
 
@@ -6961,6 +7007,7 @@ function render() {
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
+  else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -7126,6 +7173,42 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'craps') {
+    const c = state.craps;
+    if (c.phase === 'choose') {
+      if (consume(['ArrowLeft', 'KeyA']) || consume(['Digit1'])) c.pick = 'under';
+      if (consume(['ArrowRight', 'KeyD']) || consume(['Digit2'])) c.pick = 'over';
+      if (consume(['Escape', 'KeyQ'])) { state.mode = 'explore'; state.craps = null; return; }
+      if (c.pick && consume(['KeyE', 'Space'])) {
+        state.money -= c.bet;
+        c.phase = 'roll';
+        c.t = 0;
+        c.d1 = 1 + Math.floor(Math.random() * 6);
+        c.d2 = 1 + Math.floor(Math.random() * 6);
+        audio.sfx('spin');
+      }
+    } else if (c.phase === 'roll') {
+      c.t += dt;
+      if (c.t > 1.2) {
+        c.phase = 'done';
+        const total = c.d1 + c.d2;
+        const over = total >= 8;
+        c.win = (c.pick === 'over') === over && total !== 7;
+        c.seven = total === 7;
+        if (c.win) { state.money += c.bet * 2; audio.sfx('cash'); }
+        else audio.sfx('thud');
+        c.resultT = 1.4;
+      }
+    } else if (c.phase === 'done') {
+      c.resultT -= dt;
+      if (c.resultT <= 0 || consume(['KeyE', 'Space'])) {
+        const total = c.d1 + c.d2;
+        state.mode = 'explore';
+        const tone = c.seven ? 'Seven. The house always eats sevens. Paulie nods like he invented math.' : c.win ? `The dice come up ${total}. “Winner,” the dealer mutters, sliding you $${c.bet * 2}. Silvio applauds once. Once.` : `The dice come up ${total}. Wrong side. The dealer’s face does not move. It never moves.`;
+        startDialog([{ speaker: 'narrator', text: tone }]);
+        state.craps = null;
       }
     }
   } else if (state.mode === 'slots') {
