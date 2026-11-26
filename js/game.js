@@ -1259,7 +1259,7 @@ function updateExplore(dt) {
       startDialog([
         { speaker: p.kind === 'george' ? 'george' : 'tony', text: pick[0] },
         { speaker: 'narrator', text: talker.bark }
-      ], { returnMode: 'explore' });
+      ]);
     }
   }
   if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
