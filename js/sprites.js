@@ -87,8 +87,8 @@ function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
   if (sitting) {
-    h *= .78;
-    w *= .9;
+    h *= .86;
+    w *= .94;
   }
   if (kind === 'kramer' && pose !== 'burst') w *= .72; // crop visual emphasis toward Kramer when not using the door-burst pose
   const bob = pose === 'stand' || pose === 'watch' ? Math.sin(frame * .55) * 1.2 : Math.sin(frame * .35) * .45;
@@ -452,9 +452,10 @@ export function drawBat(ctx, x, y, angle = -0.5) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  px(ctx, -2, -10, 4, 15, '#bd8650');
-  px(ctx, -1, -15, 3, 6, '#d7a66a');
-  px(ctx, -2, 5, 4, 3, '#5b3824');
+  px(ctx, -3, -14, 6, 22, '#bd8650');
+  px(ctx, -2, -22, 5, 9, '#d7a66a');
+  px(ctx, -2, 8, 6, 4, '#5b3824');
+  px(ctx, -1, -19, 2, 12, 'rgba(255,240,200,.35)');
   ctx.restore();
 }
 

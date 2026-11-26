@@ -26,7 +26,8 @@ function loadArt(src) {
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
-  apartment: loadArt('./assets/bg-apartment.webp'),
+  apartment: loadArt('./assets/bg-apartment-v2.webp'),
+  vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   rome: loadArt('./assets/bg-rome.webp'),
   club: loadArt('./assets/bg-club.webp'),
   satriale: loadArt('./assets/bg-satriale.webp'),
@@ -67,6 +68,19 @@ window.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
 canvas.addEventListener('pointerdown', (e) => {
   if (e.pointerType === 'touch') usingTouchControls = true;
   if (state.mode === 'title' || state.mode === 'dialogue') pressed.add('KeyE');
+  if (state.mode === 'ending') {
+    const rect = canvas.getBoundingClientRect();
+    const vx = (e.clientX - rect.left) / rect.width * W;
+    const vy = (e.clientY - rect.top) / rect.height * H;
+    if (vy >= 290 && vy <= 312) {
+      if (vx < 320) pressed.add('KeyE');
+      else pressed.add('KeyB');
+    } else if (vy >= 312 && vy <= 330) {
+      pressed.add('KeyF');
+    } else {
+      pressed.add('KeyE');
+    }
+  }
 }, { passive: true });
 window.addEventListener('pointerup', () => audio.unlock(), { passive: true });
 window.addEventListener('touchend', () => audio.unlock(), { passive: true });
@@ -194,6 +208,8 @@ const state = {
   produce: null,
   bonusReveal: false,
   effects: [],
+  movers: [],
+  npcs: {},
   dreamT: 0,
   stats: { started: 0, calls: 0, vials: 0, smashes: 0, crashes: 0 }
 };
@@ -401,8 +417,10 @@ const scenes = {
     w: 640, h: 416, label: 'Jerry’s Apartment · Thanksgiving', music: 'apartment',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(34,42,126,58), r(440,26,144,74), r(48,232,132,58), r(254,216,132,48),
-      r(496,194,82,118), r(232,306,164,52)
+      r(0,0,250,112), r(62,112,140,84), r(250,34,100,158), r(350,100,115,92),
+      r(555,10,85,260),
+      r(180,198,215,92), r(395,205,70,85), r(430,292,130,112),
+      r(8,296,150,112), r(522,360,110,56)
     ],
     draw: drawApartment,
     interactions: apartmentInteractions
@@ -411,7 +429,7 @@ const scenes = {
     w: 640, h: 416, label: 'Bada Bing · Thanksgiving Night', music: 'club',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(34,38,168,82), r(446,38,150,82), r(238,178,164,70), r(82,302,96,52), r(458,302,96,52)
+      r(34,38,168,82), r(446,38,150,82), r(246,184,148,58), r(82,302,96,52), r(458,302,96,52)
     ],
     draw: drawClub,
     interactions: clubInteractions
@@ -436,17 +454,57 @@ const scenes = {
     draw: drawHub,
     interactions: hubInteractions
   },
+  vesuvio: {
+    w: 640, h: 416, label: 'Vesuvio · Dinner Service', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(0,80,205,135), r(430,20,150,160),
+      r(150,196,130,92), r(398,186,132,92),
+      r(56,288,152,104), r(388,288,144,112),
+      r(320,392,160,24)
+    ],
+    draw: drawVesuvio,
+    interactions: vesuvioInteractions
+  },
   satriale: {
     w: 640, h: 416, label: 'Satriale’s Pork Store · Dream', music: 'club',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(28,34,584,62), r(70,136,118,52), r(448,136,118,52),
-      r(244,236,152,58), r(46,320,110,48), r(482,318,108,48)
+      r(28,34,584,62), r(74,130,104,40), r(456,130,104,40),
+      r(258,242,124,44), r(46,330,96,38), r(496,328,94,38)
     ],
     draw: drawSatriale,
     interactions: satrialeInteractions
   }
 };
+
+function moveActor(actor, x, y, speed = 92, onDone = null) {
+  state.movers = state.movers.filter((m) => m.actor !== actor);
+  state.movers.push({ actor, x, y, speed, onDone });
+}
+
+function updateMovers(dt) {
+  for (const m of state.movers) {
+    const a = m.actor;
+    const dx = m.x - a.x;
+    const dy = m.y - a.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 2) {
+      a.x = m.x;
+      a.y = m.y;
+      m.done = true;
+      if (m.onDone) m.onDone();
+      continue;
+    }
+    const step = Math.min(d, m.speed * dt);
+    a.x += (dx / d) * step;
+    a.y += (dy / d) * step;
+    a.moving = true;
+    a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    state.frame += dt * 2.5;
+  }
+  state.movers = state.movers.filter((m) => !m.done);
+}
 
 function rectsOverlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -553,7 +611,7 @@ function nearestInteraction() {
   if (!scene) return null;
   const list = scene.interactions().filter((i) => !i.hidden);
   if (state.flags.freeRoam && state.scene !== 'hub') {
-    list.push({ x: 292, y: 382, w: 96, h: 30, label: 'Neighborhood', action: () => enterHub(false) });
+    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => enterHub(false) });
   }
   const pc = { x: state.player.x + 8, y: state.player.y + 12 };
   let best = null;
@@ -997,12 +1055,18 @@ function updateDrive(dt) {
 
 // ---------- Apartment ----------
 function enterApartment() {
-  setScene('apartment', 316, 370);
+  setScene('apartment', 498, 126);
   state.flags.aptStep = 0;
+  state.player.dir = 'down';
+  state.npcs.jerryApt = { x: 266, y: 212, dir: 'right', pose: 'sit' };
+  state.npcs.georgeApt = { x: 42, y: 122, dir: 'down', pose: 'stand' };
   objective('Follow the debtor inside');
   startDialog([
-    { speaker: 'narrator', text: 'Tony follows him through a purple door into a familiar-looking sitcom apartment.' },
-    { speaker: 'tony', text: 'There you are.' }
+    { speaker: 'narrator', text: 'Tony shoulders through the door into a familiar-looking sitcom apartment.', action: () => { audio.sfx('door'); moveActor(state.player, 420, 148, 150); } },
+    { speaker: 'tony', text: 'There you are.', action: () => { state.player.dir = 'left'; } },
+    { speaker: 'jerry', text: 'George? Why is a large man jogging into my apartment?' },
+    { speaker: 'narrator', text: 'George emerges from the kitchen holding a spoon and the expression of a man already negotiating.', action: () => moveActor(state.npcs.georgeApt, 280, 166, 64) },
+    { speaker: 'george', text: 'Jerry, I can explain. Legally speaking, I probably cannot explain.' }
   ], () => {
     state.flags.aptStep = 1;
     objective('Pick up the bat');
@@ -1012,17 +1076,24 @@ function enterApartment() {
 function apartmentInteractions() {
   const s = state.flags.aptStep;
   const list = [];
-  if (s === 1 && !state.flags.hasBat) list.push({ x: 275, y: 224, w: 34, h: 24, label: 'Pick up bat', action: pickBat });
-  if (s === 2) list.push({ x: 340, y: 270, w: 38, h: 40, label: 'Confront George', action: confrontGeorge });
-  if (s === 3) list.push({ x: 280, y: 312, w: 42, h: 34, label: 'Sit for dinner', action: sitDinner });
+  if (s === 1 && !state.flags.hasBat) list.push({ x: 392, y: 296, w: 42, h: 34, label: 'Pick up bat', action: pickBat });
+  if (s === 2) list.push({ x: 262, y: 152, w: 46, h: 42, label: 'Confront George', action: confrontGeorge });
+  if (s === 3) list.push({ x: 240, y: 300, w: 110, h: 40, label: 'Sit for dinner', action: sitDinner });
   if (state.flags.freeRoam) {
     if (state.player.kind === 'george' && !state.flags.humanFund) list.push({ x: 232, y: 306, w: 164, h: 52, label: 'Human Fund', action: humanFundScheme });
-    list.push({ x: 48, y: 96, w: 96, h: 34, label: 'Cereal shelf', action: () => startDialog([
-      { speaker: 'jerry', text: 'You can tell a lot about a man by his cereal-to-company ratio.' },
-      { speaker: 'tony', text: 'I’m more of a pork store guy.' },
-      { speaker: 'george', text: 'That explains the fiscal structure of your pantry.' }
-    ]) });
-    list.push({ x: 538, y: 98, w: 50, h: 48, label: 'Bike', action: () => startDialog([
+    list.push({ x: 78, y: 8, w: 150, h: 40, label: 'Cereal shelf', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'Jerry, the cereal-to-company ratio in this kitchen is why I am the way I am.' },
+        { speaker: 'jerry', text: 'You were like this before the cereal, George.' },
+        { speaker: 'george', text: 'The cereal accelerated it!' }
+      ]);
+      else startDialog([
+        { speaker: 'jerry', text: 'You can tell a lot about a man by his cereal-to-company ratio.' },
+        { speaker: 'tony', text: 'I’m more of a pork store guy.' },
+        { speaker: 'george', text: 'That explains the fiscal structure of your pantry.' }
+      ]);
+    } });
+    list.push({ x: 560, y: 20, w: 70, h: 80, label: 'Bike', action: () => startDialog([
       { speaker: 'tony', text: 'Who keeps a bike inside? Guy’s afraid of the outdoors?' },
       { speaker: 'jerry', text: 'It’s decorative transportation.' }
     ]) });
@@ -1058,11 +1129,11 @@ function humanFundScheme() {
 function pickBat() {
   state.flags.hasBat = true;
   startDialog([
-    { speaker: 'tony', text: 'There you are.' },
+    { speaker: 'tony', text: 'You know, my Uncle Junior took me to see the Yankees as a kid.', action: () => { state.player.dir = 'left'; audio.voice('tony'); } },
+    { speaker: 'jerry', text: 'Hmm. You don’t look like a varsity athlete.' },
+    { speaker: 'george', text: 'What are you, a scout?' },
     { speaker: 'jerry', text: 'Woah, George — is this guy here because of your Human Fund?' },
     { speaker: 'george', text: 'Steinbrenner’s not going to like this. I need to be back at the office in an hour.' },
-    { speaker: 'tony', text: 'You need George Steinbrenner?' },
-    { speaker: 'george', text: 'What are you, a scout?' },
     { speaker: 'narrator', text: 'The door explodes open.', action: () => { state.flags.kramerIn = true; audio.sfx('door'); } },
     { speaker: 'kramer', text: 'Ohhh, tension. I love Thanksgiving tension.' },
     { speaker: 'jerry', text: 'Alright, sit down, fella. We’re about to have Thanksgiving.' },
@@ -1110,16 +1181,24 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
-  if (!talked.christopher) list.push({ x: 224, y: 154, w: 38, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
-  if (!talked.paulie) list.push({ x: 400, y: 154, w: 38, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
-  if (!talked.silvio) list.push({ x: 312, y: 118, w: 38, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
+  if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
+  if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
+  if (!talked.silvio) list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => clubTalk('silvio') });
   if (state.flags.clubReady && !state.flags.freeRoam) list.push({ x: 292, y: 246, w: 58, h: 36, label: 'Carve turkey', action: finalDinner });
   if (state.flags.freeRoam) {
-    list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => startDialog([
-      { speaker: 'paulie', text: 'I saved you a seat, Ton. Also somebody left four roses in the basement. Don’t ask.' },
-      { speaker: 'silvio', text: 'The camera is still down there. Hypothetically.' },
-      { speaker: 'tony', text: 'What am I, the Museum of Bad Decisions?' }
-    ]) });
+    list.push({ x: 230, y: 176, w: 180, h: 76, label: 'Table surprise', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'Gentlemen. Art Vandelay. Importer-exporter. I’m looking for investors.' },
+        { speaker: 'paulie', text: 'Investors in what?' },
+        { speaker: 'george', text: 'Importing. And exporting. Some light smuggling-adjacent consulting.' },
+        { speaker: 'silvio', text: 'You got five seconds to stop talking or become a story we tell.' }
+      ]);
+      else startDialog([
+        { speaker: 'paulie', text: 'I saved you a seat, Ton. Also somebody left four roses in the basement. Don’t ask.' },
+        { speaker: 'silvio', text: 'The camera is still down there. Hypothetically.' },
+        { speaker: 'tony', text: 'What am I, the Museum of Bad Decisions?' }
+      ]);
+    } });
   }
   return list;
 }
@@ -1153,11 +1232,12 @@ function clubTalk(who) {
 
 function finalDinner() {
   startDialog([
-    { speaker: 'narrator', text: 'Tony raises the carving knife. The crew goes quiet. Somewhere outside, a goose honks with respect.', action: () => audio.sfx('turkey') },
+    { speaker: 'narrator', text: 'Tony walks to the head of the table. The crew goes quiet.', action: () => { moveActor(state.player, 320, 150, 110); } },
+    { speaker: 'narrator', text: 'He raises the carving knife over the turkey. Somewhere outside, a goose honks with respect.', action: () => { state.playerPose = 'perform'; state.player.dir = 'down'; audio.sfx('turkey'); spawnEffect(320, 176, 'CARVE', '#ffe78a'); } },
     { speaker: 'tony', text: 'Family. That’s the thing. Complicated, loud, sometimes they owe you money — but family.' },
     { speaker: 'christopher', text: 'Beautiful, Ton’.' },
     { speaker: 'paulie', text: 'Can we eat now? The painter says hunger ages the neck.' },
-    { speaker: 'tony', text: 'Yeah. Happy Thanksgiving.' }
+    { speaker: 'tony', text: 'Yeah. Happy Thanksgiving.', action: () => { state.playerPose = null; } }
   ], () => {
     state.mode = 'ending';
     audio.setMusic('ending');
@@ -1201,14 +1281,66 @@ function meetAugustusAJ() {
   });
 }
 
+function drawVesuvio() {
+  if (drawSceneArt(sceneArt.vesuvio, 640, 416)) {
+    // Waitress circulates between tables; Artie fusses near the oven.
+    const wx = 320 + Math.sin(state.time * .35) * 110;
+    const wy = 240 + Math.cos(state.time * .22) * 60;
+    drawPerson(ctx, wx, wy, 'womanD', Math.sin(state.time * .35) > 0 ? 'right' : 'left', state.frame * 2);
+    drawPerson(ctx, 492 + Math.sin(state.time * 1.3) * 2, 226, 'artie', 'left', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 180, 246, 'womanC', 'right', state.frame + 1, { pose: 'stand' });
+    // oven fire flicker
+    const f = Math.sin(state.time * 11) * 2;
+    px(ctx, 478, 96 + f * .4, 34, 22 + f, '#ff9b32');
+    px(ctx, 486, 102 + f * .5, 18, 14 + f, '#ffd23e');
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#7a2e22');
+  outlineText(ctx, 'VESUVIO', 320, 200, '#ffd872', 16, 'center');
+}
+
+function vesuvioInteractions() {
+  const list = [
+    { x: 470, y: 210, w: 48, h: 44, label: 'Artie', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'You ever pretend to own a restaurant to impress a waitress? Asking for a friend.' },
+        { speaker: 'artie', text: 'I actually own the restaurant. It impresses nobody. Less than nobody.' },
+        { speaker: 'george', text: 'See, that’s your problem. No mystique. You need an alias. Art Vandelay, importer-exporter.' }
+      ]);
+      else startDialog([
+        { speaker: 'artie', text: 'Tony! You see the new waitress? She refilled my water twice. Twice, Tony.' },
+        { speaker: 'tony', text: 'She’s a waitress, Artie. That’s the job.' },
+        { speaker: 'artie', text: 'Charmaine says the same thing. But there was eye contact. Very meaningful. Very moist.' },
+        { speaker: 'tony', text: 'Moist eye contact. That’s a new one. Eat something, you’re getting lightheaded.' }
+      ]);
+    } },
+    { x: 160, y: 232, w: 46, h: 44, label: 'Charmaine', action: () => {
+      if (state.player.kind === 'george') startDialog([
+        { speaker: 'george', text: 'If a man — hypothetically — wanted a free meal, what would be the policy here?' },
+        { speaker: 'charmaine', text: 'The policy is you pay, hypothetically.' }
+      ]);
+      else startDialog([
+        { speaker: 'charmaine', text: 'Tony. Tell my husband the waitress is not in love with him.' },
+        { speaker: 'tony', text: 'Artie’s a romantic. It’s his worst quality. Also the veal’s good.' },
+        { speaker: 'charmaine', text: 'He wrote her initials in the risotto special. In balsamic.' }
+      ]);
+    } },
+    { x: 430, y: 30, w: 130, h: 130, label: 'Brick oven', action: () => startDialog([
+      { speaker: 'tony', text: 'Real fire. Real crust. This place beats that pie joint across town.' },
+      { speaker: 'artie', text: 'Careful. I almost cried hearing that.' }
+    ]) }
+  ];
+  return list;
+}
+
 function satrialeInteractions() {
   if (state.flags.freeRoam) {
     return [
-      { x: 46, y: 318, w: 110, h: 50, label: 'Produce crate', action: () => startDialog([
+      { x: 46, y: 320, w: 96, h: 44, label: 'Produce crate', action: () => startDialog([
         { speaker: 'tony', text: 'After what Junior did, this stuff should be registered as ammunition.' },
         { speaker: 'bobby', text: 'We keep the dangerous tomatoes in the back now.' }
       ]) },
-      { x: 244, y: 236, w: 152, h: 58, label: 'Meat table', action: () => startDialog([
+      { x: 262, y: 238, w: 116, h: 42, label: 'Meat table', action: () => startDialog([
         { speaker: 'artie', text: 'Tony! I’m working on a Thanksgiving special: turkey-stuffed capicola.' },
         { speaker: 'tony', text: 'That sounds illegal in at least three states.' }
       ]) }
@@ -1377,7 +1509,8 @@ function travelHub(place) {
     satriale: ['satriale', 318, 354, 'Satriale’s smells like cured meat and unresolved grudges.'],
     rome: ['rome', 430, 330, 'The marble arch hums with imperial nonsense.'],
     club: ['club', 320, 330, 'The Bing is quiet again — suspiciously quiet.'],
-    apartment: ['apartment', 316, 370, 'The purple door is somehow still unlocked.']
+    apartment: ['apartment', 498, 150, 'The purple door is somehow still unlocked.'],
+    vesuvio: ['vesuvio', 320, 360, 'Vesuvio smells like garlic, woodsmoke, and Artie’s bad judgment.']
   };
   const d = destinations[place];
   if (!d) return;
@@ -1394,6 +1527,7 @@ function hubInteractions() {
     { x: 38, y: 284, w: 104, h: 66, label: 'Roman arch', action: () => travelHub('rome') },
     { x: 500, y: 386, w: 108, h: 22, radius: 44, label: 'Bada Bing', action: () => travelHub('club') },
     { x: 260, y: 292, w: 120, h: 68, label: 'Jerry’s ride', action: () => travelHub('apartment') },
+    { x: 176, y: 248, w: 84, h: 56, label: 'Vesuvio', action: () => travelHub('vesuvio') },
     { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
       initDrive();
       state.mode = 'drive';
@@ -1418,6 +1552,12 @@ function drawHub() {
     ctx.ellipse(92, 318, 44 + pulse * 8, 54 + pulse * 8, 0, 0, Math.PI * 2);
     ctx.fill();
     outlineText(ctx, 'ROME', 92, 360, '#ffe28a', 7, 'center');
+    const vpulse = (Math.sin(state.time * 4 + 2) + 1) / 2;
+    ctx.fillStyle = `rgba(255,120,72,${.1 + vpulse * .14})`;
+    ctx.beginPath();
+    ctx.ellipse(218, 276, 30 + vpulse * 5, 24 + vpulse * 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    outlineText(ctx, 'VESUVIO', 218, 288, '#ffb98a', 7, 'center');
     // geese wandering near Tony's lawn
     for (let i = 0; i < 3; i++) {
       const gx = 72 + i * 24 + Math.sin(state.time * 1.4 + i) * 4;
@@ -2247,25 +2387,21 @@ function drawChamber() {
 
 function drawApartment() {
   if (drawSceneArt(sceneArt.apartment, 640, 416)) {
-    if (!state.flags.hasBat) drawBat(ctx, 288, 230, -0.7);
-    // The apartment group is staged in poses instead of a standing line-up.
-    drawPerson(ctx, 108 + Math.sin(state.time * .9) * 2, 226, 'jerry', 'right', state.frame, { pose: 'sit' });
-    if (state.flags.aptStep >= 2 || state.flags.hasBat) drawPerson(ctx, 350 + Math.sin(state.time * 3.2) * 3, 282, 'george', 'up', state.frame * 1.3, { pose: 'sit' });
-    if (state.flags.kramerIn) drawPerson(ctx, 500 + Math.sin(state.time * 5) * 2, 116, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
-    if (state.flags.elaineIn) drawPerson(ctx, 146 + Math.sin(state.time * 1.1) * 3, 230, 'elaine', 'left', state.frame + 1, { pose: 'sit' });
-    // Recognizable apartment details: cereal shelf, Superman figurine, and the bike by the entry.
-    for (let i = 0; i < 5; i++) {
-      px(ctx, 52 + i * 16, 106, 11, 17, ['#d94b35','#f0c84d','#4d88c9','#65a848','#c65ca2'][i]);
-      px(ctx, 54 + i * 16, 109, 7, 3, '#fff2c8');
+    if (!state.flags.hasBat) {
+      const pulse = (Math.sin(state.time * 5) + 1) / 2;
+      ctx.fillStyle = `rgba(255,216,92,${.18 + pulse * .2})`;
+      ctx.beginPath();
+      ctx.ellipse(410, 318, 22 + pulse * 5, 10 + pulse * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawBat(ctx, 410, 312, -1.1);
     }
-    px(ctx, 174, 82, 5, 10, '#2457a8');
-    px(ctx, 174, 78, 5, 5, '#d8a077');
-    px(ctx, 171, 84, 11, 3, '#c73432');
-    // bicycle silhouette near the purple door
-    ctx.strokeStyle = '#263b4d'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(548, 126, 9, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(574, 126, 9, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(548,126); ctx.lineTo(560,108); ctx.lineTo(574,126); ctx.lineTo(558,126); ctx.lineTo(548,126); ctx.moveTo(560,108); ctx.lineTo(566,100); ctx.stroke();
+    const j = state.npcs.jerryApt || { x: 266, y: 212, dir: 'right', pose: 'sit' };
+    const g = state.npcs.georgeApt || { x: 42, y: 122, dir: 'down', pose: 'stand' };
+    const jiggle = Math.sin(state.time * .9) * 1.5;
+    drawPerson(ctx, j.x, j.y + (j.pose === 'sit' ? 0 : jiggle), 'jerry', j.dir || 'right', state.frame, { pose: j.pose || 'sit' });
+    drawPerson(ctx, g.x, g.y, 'george', g.dir || 'down', state.frame * 1.3, { pose: g.pose || 'stand' });
+    if (state.flags.kramerIn) drawPerson(ctx, 490 + Math.sin(state.time * 5) * 2, 118, 'kramer', 'down', state.frame + 2, { pose: 'burst' });
+    if (state.flags.elaineIn) drawPerson(ctx, 466 + Math.sin(state.time * 1.1) * 2, 158, 'elaine', 'left', state.frame + 1, { pose: 'stand' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#c5ad86');
@@ -2318,9 +2454,9 @@ function drawClub() {
   if (drawSceneArt(sceneArt.club, 640, 416)) {
     drawTurkey(ctx, 320, 204, 1.6, true);
     // Crew members sit around the private table with individual idle motion.
-    drawPerson(ctx, 250 + Math.sin(state.time * .9) * 3, 156, 'christopher', 'down', state.frame, { pose: 'sit' });
-    drawPerson(ctx, 390 + Math.sin(state.time * 1.2) * 3, 156, 'paulie', 'down', state.frame + 1, { pose: 'sit' });
-    drawPerson(ctx, 320 + Math.sin(state.time * .7) * 2, 126, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
+    drawPerson(ctx, 218 + Math.sin(state.time * .9) * 1.5, 192, 'christopher', 'right', state.frame, { pose: 'sit' });
+    drawPerson(ctx, 408 + Math.sin(state.time * 1.2) * 1.5, 192, 'paulie', 'left', state.frame + 1, { pose: 'sit' });
+    drawPerson(ctx, 320 + Math.sin(state.time * .7) * 1.5, 142, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#160e1e');
@@ -2405,6 +2541,11 @@ function drawWorld() {
   if (state.flags.freeRoam) {
     drawPanel(W - 104, 42, 96, 25, '#182448', '#8ffff2');
     outlineText(ctx, state.player.kind === 'george' ? 'GEORGE' : 'TONY', W - 56, 50, '#8ffff2', 8, 'center');
+    const blink = (Math.sin(state.time * 3) + 1) / 2;
+    drawPanel(W - 172, H - 26, 164, 20, '#182448', '#8ffff2');
+    ctx.globalAlpha = .75 + blink * .25;
+    outlineText(ctx, `${usingTouchControls ? 'B' : 'B'}: switch to ${state.player.kind === 'george' ? 'Tony' : 'George'}`, W - 90, H - 20, '#8ffff2', 7, 'center');
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -2675,9 +2816,13 @@ function drawEnding() {
   outlineText(ctx, `Driving incidents: ${state.stats.crashes} (mostly gabagool)`, 320, 230, '#c8d7ff', 8, 'center');
   outlineText(ctx, 'THE END', 320, 258, '#ff8ebc', 13, 'center');
   outlineText(ctx, 'BONUS LEVELS UNLOCKED', 320, 284, '#ff8ebc', 10, 'center');
-  outlineText(ctx, 'A/E: Paulie on The Bachelor   ·   B: Augustus in New Jersey', 320, 302, '#ffe78a', 8, 'center');
-  outlineText(ctx, 'F: FREE ROAM North Caldwell', 320, 316, '#8ffff2', 9, 'center');
-  if (Math.sin(state.time * 5) > 0) outlineText(ctx, 'R replays the story', 320, 334, '#aeb8d8', 8, 'center');
+  drawPanel(112, 290, 200, 21, '#2c2344', '#ffe78a');
+  outlineText(ctx, 'Paulie on The Bachelor', 212, 296, '#ffe78a', 8, 'center');
+  drawPanel(328, 290, 200, 21, '#2c2344', '#ffe78a');
+  outlineText(ctx, 'Augustus in New Jersey', 428, 296, '#ffe78a', 8, 'center');
+  drawPanel(180, 314, 280, 21, '#1d3a44', '#8ffff2');
+  outlineText(ctx, 'FREE ROAM North Caldwell', 320, 320, '#8ffff2', 9, 'center');
+  if (Math.sin(state.time * 5) > 0) outlineText(ctx, 'tap a bonus · R replays the story', 320, 346, '#aeb8d8', 8, 'center');
 }
 
 function drawAtmosphere() {
@@ -2744,6 +2889,7 @@ function startGame() {
 
 function update(dt) {
   state.time += dt;
+  updateMovers(dt);
   for (const e of state.effects) e.t += dt;
   state.effects = state.effects.filter((e) => e.t < e.life);
   if (consume(['KeyM'])) {
