@@ -1003,6 +1003,11 @@ function shoveNearest() {
     const d = Math.hypot(n.x - p.x, n.y - p.y);
     if (d < bd) { best = n; bd = d; }
   }
+  // determine what the punch connects with before touching the combo —
+  // a whiffed punch at empty air must not build one
+  const bw = state.brawler;
+  const hitsBrawler = bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34;
+  if (!hitsBrawler && !best) return false;
   // combo tracking: consecutive hits within 1.4s build a combo
   const now = state.time;
   if (!state.combo || now - (state.comboT || 0) > 1.4) state.combo = 0;
@@ -1011,8 +1016,7 @@ function shoveNearest() {
   const combo = state.combo;
   const comboMul = Math.min(3, 1 + (combo - 1) * .5);
   // a hostile brawler in range takes the hit instead
-  const bw = state.brawler;
-  if (bw && bw.hp > 0 && Math.hypot(bw.x - state.player.x, bw.y - state.player.y) < 34) {
+  if (hitsBrawler) {
     bw.hp -= 1;
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
@@ -1342,14 +1346,17 @@ function updateHubEvents(dt) {
       if (pd < 20 && c.brakeT <= 0) {
         p.inCar = false;
         spawnEffect(p.x + 8, p.y - 14, 'CLIP!', '#ff6a6a');
-        p.x += c.dir * 30;
+        // knockback must not shove the player through walls — step out as far as collision allows
+        let knock = 30;
+        while (knock > 0 && blockedAt(p.x + c.dir * knock, p.y)) knock -= 6;
+        if (knock > 0) p.x += c.dir * knock;
         state.flags.hp = Math.max(1, (state.flags.hp || 3) - 1);
         audio.sfx('crash');
       }
     }
     // player driving into traffic: fender bender
+    const cd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 10) - (c.y + 7));
     if (p.inCar) {
-      const cd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 10) - (c.y + 7));
       if (cd < 26 && c.crashT === undefined) {
         c.crashT = 0;
         c.brakeT = 2.5;
@@ -1364,7 +1371,9 @@ function updateHubEvents(dt) {
     }
     if (c.crashT !== undefined) {
       c.crashT += dt;
-      if (c.crashT > 3) delete c.crashT;
+      // cooldown only clears once the cars have actually separated,
+      // so one sustained contact can never count as two crashes
+      if (c.crashT > 2.5 && cd > 32) delete c.crashT;
     }
     if (!braking && c.brakeT <= 0) {
       c.x += c.dir * c.speed * dt;
