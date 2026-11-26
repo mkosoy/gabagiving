@@ -1212,7 +1212,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || (state.scene !== 'hub' && state.scene !== 'nyc')) { state.cop = null; state.cop2 = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -1342,7 +1342,7 @@ function drawRussian() {
 }
 
 function drawCop() {
-  if (state.scene !== 'hub' && state.scene !== 'nyc') return;
+  if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2].filter(Boolean)) {
     drawCar(c.x, c.y, '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
