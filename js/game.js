@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero'];
 function saveWorld() {
   try {
     const out = {};
@@ -5387,6 +5387,27 @@ function shoreInteractions() {
         { speaker: 'narrator', text: 'The machine whirs. Zoltar’s eyes light up. His painted mustache has seen a thousand boardwalk summers and judged every one of them.' },
         { speaker: 'narrator', text: fortunes[Math.floor(Math.random() * fortunes.length)] }
       ]);
+    } },
+    { x: 450, y: 280, w: 40, h: 30, radius: 42, label: 'The beached whale crowd', action: () => {
+      if (state.player.kind === 'george') {
+        if (!state.flags.whaleHero) {
+          state.flags.whaleHero = true;
+          state.money += 45;
+          audio.sfx('cash');
+          startDialog([
+            { speaker: 'narrator', text: 'A crowd gathers around driftwood that could — at a certain angle, in fog — be a small whale. Someone shouts IS ANYONE HERE A MARINE BIOLOGIST? George’s hand rises before his brain can stop it.' },
+            { speaker: 'george', text: 'I — yes! Yes I am! A marine biologist! The sea was angry that day, my friends — like an old man trying to send back soup at a deli!' },
+            { speaker: 'narrator', text: 'George waves his arms at the driftwood until the crowd loses interest and disperses. A woman presses $45 into his hand “for the whales.” The whales are fine. The whales were never in danger. There are no whales.' }
+          ]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'The crowd is gone. The driftwood remains, silent, unmoved, whale-adjacent. George salutes it anyway.' }]);
+        }
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'A small crowd argues about whether driftwood is a beached whale. It is not. Tony knows because he once asked a guy who knows about these things. The guy owed him money.' },
+          { speaker: 'tony', text: 'It’s a LOG. It’s a log, people. Go home. It’s the off-season, even the whales know that.' }
+        ]);
+      }
     } },
     { x: 250, y: 260, w: 44, h: 30, radius: 40, label: 'Borrow golf cart', action: () => {
       if (state.player.inCar) return;
