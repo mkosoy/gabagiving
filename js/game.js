@@ -1035,7 +1035,7 @@ function talkAJ() {
       { speaker: 'paulie', text: 'Ton’, I’d really love to have you sit for a portrait with my mother and I. I got the painter coming, all the way from Buffalo. Can you be there?' },
       { speaker: 'tony', text: 'A portrait? Paulie, I’m trying to get through Thanksgiving here.' },
       { speaker: 'paulie', text: 'He’s very reasonable. For Buffalo.' },
-      { speaker: 'tony', text: 'I’ll circle back. Don’t let the guy paint my mother-in-law into the background.' }
+      { speaker: 'tony', text: 'I’ll circle back. Don’t let the painter paint my mother into the background.' }
     ], () => {
       state.flags.houseStep = 4;
       objective(houseObjective());
