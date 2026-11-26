@@ -1142,10 +1142,10 @@ function shoveNearest() {
   }
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + (combo >= 3 ? 1.5 : 1));
   // witnesses: other pedestrians nearby see it and somebody always knows a cop
-  const witnesses = (state.pedestrians || []).filter(w => w !== best && Math.hypot(w.x - best.x, w.y - best.y) < 130).length;
+  const witnesses = ambientFor(state.scene).filter(w => w !== best && Math.hypot(w.x - best.x, w.y - best.y) < 130).length;
   if (witnesses >= 2) {
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
-    const w = (state.pedestrians || []).find(w => w !== best && Math.hypot(w.x - best.x, w.y - best.y) < 130);
+    const w = ambientFor(state.scene).find(w => w !== best && Math.hypot(w.x - best.x, w.y - best.y) < 130);
     if (w) { w.bark = state.scene === 'nyc' ? 'I’M CALLING THE COPS!' : 'I know a guy who knows a cop!'; w.barkT = 1.8; }
   }
   if (p.kind === 'george' && Math.random() < .3) {
