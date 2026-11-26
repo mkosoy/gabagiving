@@ -1883,6 +1883,32 @@ function monksInteractions() {
         { speaker: 'tony', text: 'That’s how it starts, Georgie boy. One favor.' }
       ]);
     } },
+    { x: 90, y: 320, w: 60, h: 60, radius: 40, label: 'Trash éclair', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'tony', text: 'There’s a perfectly good éclair sitting on top of that trash can. And I mean ON TOP. Like it’s on a little pedestal of garbage.' }]);
+      } else if (!state.flags.trashEclair) {
+        state.flags.trashEclair = true;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .5);
+        spawnEffect(state.player.x, state.player.y - 16, 'SHAME +1', '#ff8e8e');
+        moveActor(state.player, 110, 330, 60);
+        startDialog([
+          { speaker: 'narrator', text: 'George spots the éclair. It is ON TOP of the trash. Technically not IN the trash. Important distinction.' },
+          { speaker: 'george', text: 'It’s adjacent to refuse! Adjacency is not contact! I’m eating it.' },
+          { speaker: 'jerry', text: 'You know I saw you eat that out of the garbage, right? There was a witness. There are always witnesses.' },
+          { speaker: 'george', text: 'The chocolate wasn’t even smudged! Do you understand how rare that is?!' }
+        ]);
+      } else startDialog([{ speaker: 'george', text: 'No more trash pastries. I have a system now. I look for smudging.' }]);
+    } },
+    { x: 300, y: 236, w: 40, h: 40, radius: 40, label: 'Chip bowl', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'jerry', text: 'Careful with that dip, Tony. There are rules. Unwritten, inviolable rules.' }]);
+      } else startDialog([
+        { speaker: 'george', text: 'You dip the chip, you take a bite, you dip again. That’s how chips work.' },
+        { speaker: 'jerry', text: 'You can’t double-dip, George! It’s like putting your whole mouth in the dip!' },
+        { speaker: 'elaine', text: 'Honestly? He’s got a point about the structural integrity of the second bite.' },
+        { speaker: 'george', text: 'FINALLY! Science vindicates me!' }
+      ]);
+    } },
     { x: 240, y: 30, w: 160, h: 60, radius: 40, label: 'Order coffee', action: () => {
       audio.sfx('pickup');
       state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
