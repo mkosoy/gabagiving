@@ -274,7 +274,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -921,6 +921,8 @@ const ambientSpecs = {
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
   nyc: [
+    { kind: 'kramer', x: 300, y: 244, region: { x: 560, y: 236, w: 150, h: 36 }, speed: 44, npc: 'kramer' },
+    { kind: 'elaine', x: 460, y: 254, region: { x: 90, y: 238, w: 300, h: 36 }, speed: 36 },
     { kind: 'womanA', x: 200, y: 250, region: { x: 60, y: 236, w: 640, h: 40 }, speed: 38 },
     { kind: 'jerry', x: 500, y: 246, region: { x: 420, y: 236, w: 300, h: 36 }, speed: 30 },
     { kind: 'womanD', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
@@ -2969,7 +2971,7 @@ function enterHub(first = false) {
   }
 }
 
-const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid','latexExport'];
+const SCHEME_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','derekPaid','latexExport','oilBladder'];
 
 function schemeCount() {
   return SCHEME_FLAGS.filter((k) => state.flags[k]).length;
@@ -3353,6 +3355,25 @@ function nycInteractions() {
           objective('Scheme complete: the latex that never existed');
         });
       }
+    } },
+    { x: 560, y: 236, w: 150, h: 36, radius: 40, label: 'Kramer', hidden: () => !!state.flags.oilBladder, action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'kramer', text: 'George! Perfect timing. Kramerica Industries is THIS close to cracking the oil bladder. Ships full of oil, George, floating on giant rubber bladders!' },
+        { speaker: 'george', text: 'And you need what, exactly?' },
+        { speaker: 'kramer', text: 'Venture capital. Sixty bucks. In return — I name a bladder after you. THE COSTANZA. Imagine it sailing into harbor!' },
+        { speaker: 'narrator', text: 'George hands over $60. Somewhere, a rubber bladder with his name on it does not exist.', action: () => audio.sfx('cash') }
+      ] : [
+        { speaker: 'kramer', text: 'Tone! Tony Soprano in the flesh! Kramerica Industries — ever hear of it? Oil bladders, my friend. The future of maritime petroleum transport!' },
+        { speaker: 'tony', text: 'The future of what now? …Alright, here’s sixty. But this is an INVESTMENT. Weekly points. Friday.' },
+        { speaker: 'kramer', text: 'Friday! Absolutely! Totally doable! …What’s today?', action: () => audio.sfx('cash') },
+        { speaker: 'narrator', text: 'Tony invests $60 in a man he just met. It is somehow still not his worst business decision this year.' }
+      ], () => {
+        state.flags.oilBladder = true;
+        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 60);
+        spawnEffect(state.player.x + 8, state.player.y - 8, 'SCHEME +1 · KRAMERICA', '#ffe78a');
+        audio.sfx('success');
+        objective('Scheme complete: Kramerica oil bladder');
+      });
     } },
     { x: 4, y: 270, w: 30, h: 90, radius: 46, label: '← Drive to New Jersey', action: () => {
       audio.sfx('honk');
