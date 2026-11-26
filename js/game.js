@@ -1269,6 +1269,12 @@ function updateCop(dt) {
 }
 
 function drawHubEventProps() {
+  // Newman loiters by the park fence awaiting couriers
+  if (state.flags.freeRoam) {
+    drawPerson(ctx, 552, 206, 'newman', 'down', state.frame * .5, {});
+    if (typeof nextMission === 'function' && nextMission() && !state.mission && Math.sin(state.time * 3) > 0) outlineText(ctx, '!', 560, 192, '#ffe78a', 10, 'center');
+  }
+
   if (state.scene !== 'hub') return;
   if (state.flags.derekMission && !state.flags.derekPaid) {
     drawPerson(ctx, 972, 148, 'derek', 'down', state.frame * .5, {});
@@ -4489,6 +4495,9 @@ function drawNyc() {
     if (c.brakeT > 0) { px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 3, 3, 4, '#ff3b2e'); px(ctx, tx + (c.dir > 0 ? -3 : 28), cy + 7, 3, 3, '#ff3b2e'); }
     if (c.honkT > .4) outlineText(ctx, 'HONK!', tx + 15, cy - 8, '#ffe78a', 6, 'center');
   }
+  // Kramer holding court at his mission spot
+  drawPerson(ctx, 310, 238, 'kramer', 'down', state.frame * .5, {});
+  if (nextKramerMission() && !state.mission && Math.sin(state.time * 3) > 0) outlineText(ctx, '!', 320, 224, '#ffe78a', 10, 'center');
   // parked stealable taxi
   if (!state.player.inCar) {
     px(ctx, 380, 356, 30, 11, '#c9a015');
