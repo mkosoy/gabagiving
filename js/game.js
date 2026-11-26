@@ -272,7 +272,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','tribute'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','tribute'];
 function saveWorld() {
   try {
     const out = {};
@@ -384,7 +384,8 @@ function menuEntries() {
       ['fedGeese', 'Feed the geese', 'Gabagool Park'],
       ['pawnedWatch', 'Fence goods at the pawn shop', 'east side'],
       ['elaineDance', 'Elaine’s little kicks', 'Monk’s jukebox'],
-      ['therapyDone', 'Therapy session', 'Melfi’s office']
+      ['therapyDone', 'Therapy session', 'Melfi’s office'],
+      ['marineBiologist', 'Marine biologist', 'Monk’s payphone']
     ];
     for (const [flag, label, where] of schemes) {
       const done = !!state.flags[flag];
@@ -853,7 +854,9 @@ const ambientSpecs = {
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
-    { kind: 'christopher', x: 500, y: 270, region: { x: 440, y: 250, w: 130, h: 80 }, speed: 34 }
+    { kind: 'christopher', x: 500, y: 270, region: { x: 440, y: 250, w: 130, h: 80 }, speed: 34 },
+    { kind: 'womanB', x: 240, y: 250, region: { x: 200, y: 240, w: 120, h: 70 }, speed: 38 },
+    { kind: 'womanC', x: 400, y: 260, region: { x: 340, y: 245, w: 100, h: 60 }, speed: 36 }
   ],
   vesuvio: [
     { kind: 'womanB', x: 250, y: 330, region: { x: 220, y: 300, w: 120, h: 70 }, speed: 26 },
@@ -2302,6 +2305,20 @@ function monksInteractions() {
         { speaker: 'elaine', text: 'Honestly? He’s got a point about the structural integrity of the second bite.' },
         { speaker: 'george', text: 'FINALLY! Science vindicates me!' }
       ]);
+    } },
+    { x: 460, y: 320, w: 80, h: 60, radius: 42, label: 'Payphone', action: () => {
+      if (state.player.kind !== 'george') {
+        startDialog([{ speaker: 'tony', text: 'A payphone. In a café. Next thing you’ll tell me there’s a horse in the hospital.' }]);
+      } else if (!state.flags.marineBiologist) {
+        state.flags.marineBiologist = true;
+        audio.sfx('phone');
+        startDialog([
+          { speaker: 'narrator', text: 'George picks up the payphone and immediately begins lying to a woman about being a marine biologist.' },
+          { speaker: 'george', text: 'Yes — a MARINE BIOLOGIST. I just got back from saving a whale! There was a hole in it. Somebody threw a golf ball into it! NOT ME.' },
+          { speaker: 'jerry', text: 'The sea was angry that day, George. Like an old man trying to send back soup at a deli.' },
+          { speaker: 'george', text: 'THE TITLEIST, JERRY! IT WAS ONE IN A MILLION!' }
+        ]);
+      } else startDialog([{ speaker: 'george', text: 'The lie is self-sustaining now. I get whale updates. I own a wetsuit.' }]);
     } },
     { x: 40, y: 130, w: 50, h: 50, radius: 38, label: 'Jukebox', action: () => {
       if (!state.flags.elaineDance) {
