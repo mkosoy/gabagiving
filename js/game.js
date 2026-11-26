@@ -1249,6 +1249,7 @@ function initDrive() {
     x: 320,
     y: 292,
     progress: 0,
+    score: 0,
     health: 3,
     road: 0,
     spawn: .2,
@@ -1273,20 +1274,22 @@ function updateDrive(dt) {
   if (d.spawn <= 0) {
     d.spawn = Math.max(.45, .88 - d.progress * .004);
     const typeRoll = Math.random();
-    const type = typeRoll < .12 ? 'money' : typeRoll < .48 ? 'gabagool' : typeRoll < .72 ? 'janice' : 'paulie';
+    const type = typeRoll < .14 ? 'money' : typeRoll < .42 ? 'gabagool' : typeRoll < .58 ? 'nycrew' : typeRoll < .78 ? 'janice' : 'paulie';
     const lanes = [220, 275, 330, 385, 430];
     d.obstacles.push({
       type,
       x: lanes[Math.floor(Math.random() * lanes.length)],
       y: -45,
-      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : 0,
+      vx: type === 'janice' ? (Math.random() > .5 ? 70 : -70) : type === 'paulie' ? (Math.random() - .5) * 55 : type === 'nycrew' ? (Math.random() - .5) * 90 : 0,
       hit: false,
+      sprite: Math.random() < .5 ? 'silvio' : 'christopher',
       wobble: Math.random() * 10
     });
   }
   for (const o of d.obstacles) {
     o.y += dt * (150 + d.progress * .8);
     o.x += o.vx * dt;
+    if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
     if (o.x < 190 || o.x > 450) o.vx *= -1;
     const ox = o.x - 13, oy = o.y - 12;
     const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
@@ -1296,6 +1299,14 @@ function updateDrive(dt) {
         d.boost = 2.7;
         d.progress = Math.min(100, d.progress + 4);
         audio.sfx('pickup');
+      } else if (o.type === 'nycrew') {
+        d.score += 250;
+        d.progress = Math.min(100, d.progress + 2.5);
+        d.boost = Math.max(d.boost, 1.1);
+        o.spin = 1;
+        spawnEffect(o.x, o.y - 8, '+250 NY CREW', '#ffe78a');
+        audio.sfx('smash');
+        audio.voice('junior');
       } else {
         d.health -= 1;
         d.progress = Math.max(0, d.progress - 3);
@@ -3025,6 +3036,16 @@ function drawDrive() {
       px(ctx, o.x - 4, o.y - 2, 4, 3, '#f0d19a');
     } else if (o.type === 'janice') {
       drawPerson(ctx, o.x - 8, o.y - 14, 'janice', o.vx > 0 ? 'right' : 'left', state.frame);
+    } else if (o.type === 'nycrew') {
+      ctx.save();
+      if (o.spin) {
+        ctx.translate(o.x, o.y);
+        ctx.rotate((1 - o.spin) * 9);
+        ctx.translate(-o.x, -o.y);
+      }
+      drawPerson(ctx, o.x - 8, o.y - 14, o.sprite, o.vx > 0 ? 'right' : 'left', state.frame * 1.4);
+      ctx.restore();
+      if (!o.hit) outlineText(ctx, 'NY', o.x, o.y - 22, '#ff8e8e', 6, 'center');
     } else {
       drawCar(o.x, o.y, '#59624a');
       drawPerson(ctx, o.x - 7, o.y - 16, 'paulie', 'down', state.frame);
@@ -3032,6 +3053,12 @@ function drawDrive() {
   }
   if (d.boost > 0) {
     for (let i = 0; i < 4; i++) px(ctx, d.x - 10 + i * 6, d.y + 22 + i * 5, 3, 12, i % 2 ? '#ffb13e' : '#f4e27a');
+    ctx.fillStyle = 'rgba(255,255,255,.16)';
+    for (let i = 0; i < 7; i++) {
+      const lx = 190 + ((i * 53 + d.road * 2.2) % 260);
+      const ly = ((i * 97 + d.road * 3.2) % 360) - 20;
+      ctx.fillRect(lx, ly, 2, 26);
+    }
   }
   drawCar(d.x, d.y, d.boost > 0 ? '#b82835' : '#8f1f2e');
   ctx.restore();
@@ -3041,12 +3068,13 @@ function drawDrive() {
   px(ctx, 20, 38, 180, 7, '#30384d');
   px(ctx, 20, 38, Math.min(180, d.progress * 1.8), 7, '#e45445');
   outlineText(ctx, `♥ ${d.health}`, 216, 31, '#ff8e8e', 10);
+  outlineText(ctx, `$${d.score || 0}`, 216, 19, '#9be59b', 9);
   if (d.boost > 0) {
     px(ctx, 306, 18, 110, 14, '#173521');
     px(ctx, 308, 20, Math.min(106, d.boost / 2.7 * 106), 10, '#69e26e');
     outlineText(ctx, 'MONEY BOOST', 361, 21, '#102415', 7, 'center');
   }
-  outlineText(ctx, 'Grab money envelopes for speed · dodge gabagool, Janice, and Paulie', 320, 340, '#fff', 8, 'center');
+  outlineText(ctx, 'Money = speed boost · run down NY crew for cash · dodge gabagool and family', 320, 340, '#fff', 8, 'center');
 }
 
 function drawTitle() {
