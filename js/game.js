@@ -414,8 +414,7 @@ const scenes = {
     w: 640, h: 416, label: 'New Jersey · Augustus Dream', music: 'house',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(28,28,150,98), r(470,28,142,98), r(204,28,150,76),
-      r(54,304,90,44), r(498,304,86,44)
+      r(28,28,150,98), r(470,28,142,98), r(204,28,150,76)
     ],
     draw: drawNjStreet,
     interactions: njInteractions
@@ -449,11 +448,20 @@ function rectsOverlap(a, b) {
 function playerRect(x = state.player.x, y = state.player.y) {
   return { x: x + 3, y: y + 7, w: 11, h: 13 };
 }
+function movingCarRect(i, time = state.time) {
+  const cx = ((time * (50 + i * 18) + i * 280) % 760) - 70;
+  const x = i ? 690 - cx : cx;
+  return { x, y: 304 + i * 18, w: 78, h: 32 };
+}
+
 function blockedAt(x, y) {
   const scene = scenes[state.scene];
   if (!scene) return false;
   const pr = playerRect(x, y);
-  return scene.colliders.some((c) => rectsOverlap(pr, c));
+  const colliders = state.scene === 'njstreet'
+    ? scene.colliders.concat([movingCarRect(0), movingCarRect(1)])
+    : scene.colliders;
+  return colliders.some((c) => rectsOverlap(pr, c));
 }
 
 function setScene(name, x, y) {
@@ -1407,7 +1415,8 @@ function drawNjStreet() {
     const cx = ((state.time * (50 + i * 18) + i * 280) % 760) - 70;
     const x = i ? 690 - cx : cx;
     const y = 304 + i * 18;
-    px(ctx,x,y,78,32,'#161920'); px(ctx,x+6,y+6,66,20,i?'#7e2733':'#31445e');
+    const car = movingCarRect(i);
+    px(ctx,car.x,car.y,78,32,'#161920'); px(ctx,car.x+6,car.y+6,66,20,i?'#7e2733':'#31445e');
   }
   // AJ with glowing phone showing tiny Plav
   drawPerson(ctx, 454, 166, 'aj', 'left', state.frame);
@@ -1430,7 +1439,7 @@ function drawSatriale() {
     drawPerson(ctx, ajX, ajY, 'aj', 'up', state.frame, { pose: 'phone' });
     drawPerson(ctx, bobbyX, 150, 'bobby', 'down', state.frame, { pose: 'lean' });
     drawPerson(ctx, artieX, 148, 'artie', 'down', state.frame + 1, { pose: 'work' });
-    drawPerson(ctx, irinaX, 314, irinaX > 524 ? 'left' : 'right', state.frame + 2, { pose: 'lean' });
+    drawPerson(ctx, irinaX, 314, 'irina', irinaX > 524 ? 'left' : 'right', state.frame + 2, { pose: 'lean' });
     drawPerson(ctx, juniorX, 140, 'junior', 'down', state.frame + 3, { pose: 'angry' });
     return;
   }
@@ -1470,7 +1479,7 @@ function drawSatriale() {
   // characters pace and react rather than standing frozen
   drawPerson(ctx, bobbyX, 150, 'bobby', 'down', state.frame);
   drawPerson(ctx, artieX, 148, 'artie', 'down', state.frame + 1);
-  drawPerson(ctx, irinaX, 314, irinaX > 524 ? 'left' : 'right', state.frame + 2);
+  drawPerson(ctx, irinaX, 314, 'irina', irinaX > 524 ? 'left' : 'right', state.frame + 2);
   drawPerson(ctx, juniorX, 140, 'junior', 'down', state.frame + 3);
 }
 
