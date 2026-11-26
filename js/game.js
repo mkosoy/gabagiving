@@ -980,7 +980,7 @@ function houseInteractions() {
       list.push({ x: 300, y: 370, w: 90, h: 40, label: 'Marble Rye Heist', action: startRyeHeist });
     }
     if (state.rye && state.rye.active && !state.rye.hasRye) {
-      list.push({ x: 380, y: 90, w: 70, h: 50, label: 'Grab the rye', action: grabRye });
+      list.push({ x: 440, y: 268, w: 90, h: 56, label: 'Grab the rye', action: grabRye });
     }
     if (state.rye && state.rye.active && state.rye.hasRye) {
       list.push({ x: 300, y: 370, w: 90, h: 40, label: 'Escape with rye', action: escapeRye });
@@ -995,8 +995,8 @@ function startRyeHeist() {
     hasRye: false,
     caughtT: 0,
     guards: [
-      { kind: 'carmela', x: 200, y: 200, wp: [[200, 200], [420, 200], [420, 290], [200, 290]], wi: 0, dir: 'down' },
-      { kind: 'womanA', x: 480, y: 130, wp: [[480, 130], [140, 130]], wi: 0, dir: 'left' }
+      { kind: 'carmela', x: 440, y: 240, wp: [[440, 230], [560, 230], [560, 330], [440, 330]], wi: 0, dir: 'down' },
+      { kind: 'womanA', x: 300, y: 260, wp: [[140, 250], [330, 250], [330, 350], [140, 350]], wi: 0, dir: 'left' }
     ]
   };
   objective('Steal the marble rye — don’t get spotted!');
@@ -1065,13 +1065,13 @@ function drawSchemeProps() {
   if (!r.hasRye) {
     // marble rye on the kitchen table
     const bob = Math.sin(state.time * 3) * 1.5;
-    px(ctx, 404, 108 + bob, 26, 12, '#8a5a2e');
-    px(ctx, 406, 110 + bob, 22, 8, '#a86f3c');
-    for (let i = 0; i < 4; i++) px(ctx, 408 + i * 5, 111 + bob + (i % 2), 2, 4, '#5e3a1c');
+    px(ctx, 470, 290 + bob, 26, 12, '#8a5a2e');
+    px(ctx, 472, 292 + bob, 22, 8, '#a86f3c');
+    for (let i = 0; i < 4; i++) px(ctx, 474 + i * 5, 293 + bob + (i % 2), 2, 4, '#5e3a1c');
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     ctx.fillStyle = `rgba(255,216,92,${.12 + pulse * .18})`;
     ctx.beginPath();
-    ctx.ellipse(417, 114, 26 + pulse * 5, 16 + pulse * 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(483, 296, 26 + pulse * 5, 16 + pulse * 4, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   for (const g of r.guards) {
@@ -3179,7 +3179,7 @@ function drawObjectiveArrow() {
   ctx.closePath();
   ctx.fill();
   ctx.restore();
-  outlineText(ctx, `${Math.round(dist / 10) * 10}m`, ax, ay + 12, '#ffe78a', 6, 'center');
+  outlineText(ctx, `${Math.max(1, Math.round(dist / 40)) * 5}m`, ax, ay + 12, '#ffe78a', 6, 'center');
 }
 
 function drawWorld() {
