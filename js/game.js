@@ -276,7 +276,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught'];
 function saveWorld() {
   try {
     const out = {};
@@ -3267,6 +3267,12 @@ function hubInteractions() {
         { speaker: 'tony', text: 'Christopher’s cousin leaves the keys in every car. He’s either stupid or very generous. Either way — mine now.' }
       ]);
     } },
+    { x: 1060, y: 300, w: 80, h: 50, radius: 52, label: 'Chase the loose goose', hidden: () => !!state.flags.gooseCaught, action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'A park ranger flags you down, out of breath. A goose has escaped the petting enclosure. It is, quote, “the mean one.” $60 reward. He hands you a pair of very small gloves.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Sixty dollars for a goose? What’s the goose’s side of this arrangement, economically? …Fine. I’m in. I was BORN for poultry pursuit!' : 'Sixty bucks to grab a bird. In my day the birds grabbed YOU. Times change. I’m in.' }
+      ], () => initGooseChase());
+    } },
     { x: 990, y: 250, w: 100, h: 40, radius: 58, label: 'Gabagool Park', action: () => {
       if (!state.flags.fedGeese) {
         state.flags.fedGeese = true;
@@ -3398,6 +3404,114 @@ function drawHubEast() {
   // parked stealable coupe at the gas station
   if (!state.player.inCar) drawCar(1058, 132, '#7e2733');
   outlineText(ctx, '← WEST SIDE', 656, 220, '#ffe78a', 7, 'left');
+}
+
+function initGooseChase() {
+  state.goosechase = {
+    gx: 320, gy: 200, gvx: 0, gvy: 0,
+    px: 320, py: 340,
+    t: 0, duration: 25, done: false, resultT: 0, won: false, panic: 0
+  };
+  state.mode = 'goosechase';
+  audio.sfx('turkey');
+}
+
+function updateGooseChase(dt) {
+  const g = state.goosechase;
+  if (!g) { state.mode = 'explore'; return; }
+  if (g.done) {
+    g.resultT += dt;
+    if (g.resultT > 2.2) {
+      const won = g.won;
+      state.mode = 'explore';
+      state.goosechase = null;
+      if (won) {
+        state.flags.tribute = (state.flags.tribute || 0) + 60;
+        state.flags.gooseCaught = true;
+        audio.sfx('cash');
+        spawnEffect(state.player.x + 8, state.player.y - 8, '+$60 · GOOSE CAUGHT', '#8ffff2');
+        startDialog([
+          { speaker: 'narrator', text: 'CAUGHT! The goose is returned to the grateful park ranger, who pays a small reward and asks no questions about the wrenches.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I caught a goose! With my HANDS! Nobody can ever take this away from me!' : 'Tell the ranger the goose is lucky I respect wildlife. Also tell him the goose started it.' }
+        ]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'Time. The goose stands at the far end of the park, breathing evenly, making direct eye contact. It knows.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It CHEATED! It used the pond! Waterfowl home advantage!' : 'I got respect for that goose. I also got a hat full of nothin’. We’re done here.' }
+        ]);
+      }
+    }
+    return;
+  }
+  g.t += dt;
+  // player control
+  const inp = moveInput();
+  const spd = 130;
+  if (inp.x || inp.y) {
+    g.px = Math.max(40, Math.min(600, g.px + inp.x * spd * dt));
+    g.py = Math.max(90, Math.min(360, g.py + inp.y * spd * dt));
+  }
+  // goose flees the player, panics harder when close; slight random wobble
+  const dx = g.gx - g.px, dy = g.gy - g.py;
+  const d = Math.hypot(dx, dy) || 1;
+  const fear = d < 130 ? (130 - d) / 130 : 0;
+  g.panic = Math.max(g.panic - dt, fear > 0 ? .8 : 0);
+  const fleeSpd = fear > 0 ? (90 + fear * 95) : 26;
+  if (fear > 0) {
+    g.gvx = (dx / d) * fleeSpd + Math.sin(state.time * 5) * 30;
+    g.gvy = (dy / d) * fleeSpd + Math.cos(state.time * 4.3) * 26;
+  } else {
+    g.gvx = Math.sin(state.time * .9) * 26;
+    g.gvy = Math.cos(state.time * .7) * 20;
+  }
+  g.gx = Math.max(40, Math.min(600, g.gx + g.gvx * dt));
+  g.gy = Math.max(90, Math.min(360, g.gy + g.gvy * dt));
+  if (d < 22) {
+    g.done = true;
+    g.won = true;
+    audio.sfx('success');
+    audio.sfx('turkey');
+  }
+  if (g.t >= g.duration) { g.done = true; g.won = false; audio.sfx('denied'); }
+}
+
+function drawGoose(gx, gy, panic) {
+  const flap = panic > 0 ? Math.sin(state.time * 24) * 3 : 0;
+  px(ctx, gx - 7, gy - 2 + flap, 5, 4, '#f4f0dc');
+  px(ctx, gx + 2, gy - 2 - flap, 5, 4, '#f4f0dc');
+  px(ctx, gx - 4, gy, 9, 6, '#fffbe8');
+  px(ctx, gx + 3, gy - 5, 3, 5, '#fffbe8');
+  px(ctx, gx + 4, gy - 6, 2, 2, '#222');
+  px(ctx, gx + 6, gy - 4, 3, 2, '#e8a020');
+  px(ctx, gx - 2, gy + 6, 2, 3, '#e8a020');
+  px(ctx, gx + 1, gy + 6, 2, 3, '#e8a020');
+}
+
+function drawGooseChase() {
+  const g = state.goosechase;
+  px(ctx, 0, 0, 640, 416, '#3d6b35');
+  // park detail
+  for (let i = 0; i < 30; i++) px(ctx, (i * 97) % 640, 80 + (i * 61) % 300, 3, 2, '#2e5428');
+  ctx.fillStyle = '#4a7a40';
+  ctx.beginPath();
+  ctx.ellipse(320, 420, 380, 100, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // pond corner
+  ctx.fillStyle = '#3a6a8f';
+  ctx.beginPath();
+  ctx.ellipse(590, 100, 80, 46, 0, 0, Math.PI * 2);
+  ctx.fill();
+  outlineText(ctx, 'GABAGOOL PARK · CATCH THE GOOSE', 320, 40, '#ffe78a', 11, 'center');
+  if (!g) return;
+  if (!g.done) outlineText(ctx, `${Math.max(0, g.duration - g.t).toFixed(1)}s`, 320, 62, '#fffbe8', 10, 'center');
+  drawGoose(g.gx, g.gy, g.panic);
+  if (g.panic > .2 && Math.floor(state.time * 4) % 2 === 0) outlineText(ctx, 'HONK!', g.gx + 10, g.gy - 12, '#ffe78a', 6, 'left');
+  drawPerson(ctx, g.px, g.py, state.player.kind === 'george' ? 'george' : 'tonyMax', state.time % .8 < .4 ? 'down' : 'up', state.frame * 2, {});
+  if (!g.done) {
+    outlineText(ctx, 'arrows to run — touch the goose to catch it', 320, 390, '#e8e2d0', 8, 'center');
+  } else {
+    outlineText(ctx, g.won ? 'CAUGHT! +$60' : 'THE GOOSE ENDURES.', 320, 390, g.won ? '#8ffff2' : '#ff8a7a', 10, 'center');
+  }
 }
 
 function initBlackjack() {
@@ -5893,6 +6007,7 @@ function render() {
   else if (state.mode === 'armwrestle') drawArmWrestle();
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
+  else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
@@ -6026,6 +6141,8 @@ function update(dt) {
     updateTransit(dt);
   } else if (state.mode === 'blackjack') {
     updateBlackjack(dt);
+  } else if (state.mode === 'goosechase') {
+    updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
     updateBonus(dt);
   } else if (state.mode === 'produce') {
