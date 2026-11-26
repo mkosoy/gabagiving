@@ -4396,6 +4396,28 @@ function hubInteractions() {
         ]);
       }
     } },
+    { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
+      if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
+      state.money -= 8;
+      const roll = Math.random();
+      audio.sfx('pickup');
+      if (roll < .15) {
+        state.money += 120;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'You buy a dusty painting of a boat for $8. Inside the frame: a savings bond worth $120. The old man running the sale watches you leave with the serene smile of someone who already knows and does not care. It was his brother-in-law’s painting. He hated that guy.' }]);
+      } else if (roll < .5) {
+        state.money += 14;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'You buy a lamp shaped like a mallard. Its value is debatable but its resale is certain: a guy at the end of the driveway hands you $14 for it immediately. Commerce!' }]);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'george', text: 'Eight dollars for a ceramic frog! A STEAL! It holds pens! …It doesn’t hold pens. Why did I buy this?' },
+          { speaker: 'narrator', text: 'George now owns a ceramic frog. The frog is named Ribbit. This was not George’s decision; it was the price tag’s.' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony buys a box of old records for $8. One of them is signed by Frankie Valli. You can’t prove it and neither can he, which makes it authentic.' }
+        ]);
+      }
+    } },
     { x: 380, y: 300, w: 34, h: 30, radius: 38, label: 'Quick change', action: () => {
       const toGeorge = state.player.kind !== 'george';
       state.player.kind = toGeorge ? 'george' : 'tony';
