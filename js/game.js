@@ -1330,6 +1330,7 @@ function updateHubEvents(dt) {
   for (const c of state.hubCars) {
     if (c.honkT > 0) c.honkT -= dt;
     if (c.brakeT > 0) c.brakeT -= dt;
+    if (c.clipT > 0) c.clipT -= dt;
     // is the player in the road ahead of this car?
     const aheadX = c.x + c.dir * 40;
     const playerInPath = Math.abs(p.y - c.y) < 18 && ((c.dir > 0 && p.x > c.x - 10 && p.x < aheadX + 55) || (c.dir < 0 && p.x < c.x + 34 && p.x > aheadX - 55));
@@ -1343,7 +1344,8 @@ function updateHubEvents(dt) {
       }
       // run-down at speed if the car isn't yet braking much
       const pd = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
-      if (pd < 20 && c.brakeT <= 0) {
+      if (pd < 20 && c.brakeT <= 0 && (c.clipT || 0) <= 0) {
+        c.clipT = 1.2;
         p.inCar = false;
         spawnEffect(p.x + 8, p.y - 14, 'CLIP!', '#ff6a6a');
         // knockback must not shove the player through walls — step out as far as collision allows
