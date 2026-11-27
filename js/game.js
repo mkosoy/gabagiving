@@ -7813,7 +7813,7 @@ function casinoInteractions() {
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: leaveOutside },
     { x: 130, y: 130, w: 80, h: 30, radius: 46, label: 'The slots — $5 a pull', action: () => initSlots() },
     { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
-    { x: 520, y: 130, w: 46, h: 30, radius: 40, label: 'Rob the cashier cage', action: () => {
+    { x: 540, y: 118, w: 30, h: 22, radius: 34, label: 'Rob the cashier cage', action: () => {
       const key = 'registerCd_casino';
       if ((state[key] || 0) > state.time) { toast('The cage is already light. Security remembers your face — come back in a few minutes.'); return; }
       state[key] = state.time + 150;
