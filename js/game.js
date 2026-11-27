@@ -1640,7 +1640,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -2043,7 +2043,7 @@ function drawTailCourier() {
 }
 
 function drawCop() {
-  if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
+  if (!['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2, state.copCar].filter(Boolean)) {
     drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
@@ -9616,7 +9616,7 @@ function drawBeacon() {
 }
 
 function drawMinimap() {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac'].includes(state.scene) || state.mode !== 'explore') return;
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene) || state.mode !== 'explore') return;
   const mx = 8, my = H - 46, mw = 110, mh = 34;
   const sceneW = state.scene === 'hub' ? 1280 : 768;
   const sx = mw / sceneW, sy = mh / 416;
