@@ -7867,7 +7867,7 @@ function drawSlots() {
 
 // ---------- Vesuvio kitchen rush ----------
 const KITCHEN_ING = [
-  { key: 'KeyE', label: 'A', name: 'sauce', color: '#c23a2a' },
+  { key: 'KeyE', key2: 'KeyA', label: 'A', name: 'sauce', color: '#c23a2a' },
   { key: 'KeyB', label: 'B', name: 'cheese', color: '#f0e6c8' },
   { key: 'KeyR', label: 'R', name: 'basil', color: '#4a8a3a' },
   { key: 'KeyF', label: 'F', name: 'fire', color: '#e8862a' }
@@ -7921,7 +7921,7 @@ function updateKitchen(dt) {
     k.order = kitchenOrder();
   } else {
     for (let i = 0; i < 4; i++) {
-      if (consume([KITCHEN_ING[i].key])) {
+      if (consume(KITCHEN_ING[i].key2 ? [KITCHEN_ING[i].key, KITCHEN_ING[i].key2] : [KITCHEN_ING[i].key])) {
         if (o.seq[o.done] === i) {
           o.done++;
           k.flash = .25;
@@ -7945,7 +7945,11 @@ function updateKitchen(dt) {
       }
     }
   }
-  if (consume(['Escape', 'KeyM']) && !k.earned) { state.kitchen = null; state.mode = 'explore'; return; }
+  if (consume(['Escape', 'KeyM'])) {
+    state.kitchen = null; state.mode = 'explore';
+    startDialog([{ speaker: 'artie', text: 'Walking out mid-shift! In the middle of the RUSH! …Honestly? Respect. Most of my dishwashers just ghost. The unpaid tickets are the restaurant’s problem now, which is to say: my problem, which is to say: please never do this again.' }]);
+    return;
+  }
   if (k.timer <= 0) { k.over = true; k.overT = 0; audio.sfx('cash'); }
 }
 function drawKitchen() {
@@ -13034,7 +13038,7 @@ function update(dt) {
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   }
   if (state.help && consume(cancelCodes)) state.help = false;
-  if (consume(['Escape', 'KeyP', 'KeyM'])) {
+  if (state.mode !== 'kitchen' && consume(['Escape', 'KeyP', 'KeyM'])) {
     if (state.mode === 'menu') closeMenu();
     else openMenu();
   }
