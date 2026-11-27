@@ -33,7 +33,7 @@ const CAR_SPRITE_MAP = {
 };
 const animalArt = {}; for (const n of ['horse', 'turkey', 'seagull', 'deer']) animalArt[n] = loadArt('./assets/sprites/' + n + '.webp');
 const objArt = {}; for (const n of ['pinballcab', 'jukebox', 'pooltable', 'slotmachine', 'arcade']) objArt[n] = loadArt('./assets/sprites/obj-' + n + '.webp');
-for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
+for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2', 'icetruck']) {
   carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
 }
 
@@ -2053,7 +2053,15 @@ function drawWildTurkey() {
 function drawIceCream() {
   const ic = state.iceCream;
   if (!ic || state.scene !== 'hub' || isNight() || ic.t > 0) return;
-  drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
+  const itArt = carSprites.icetruck;
+  if (itArt && itArt.complete && itArt.naturalWidth) {
+    ctx.save();
+    ctx.translate(ic.x, ic.y);
+    ctx.rotate(Math.PI / 2);
+    const asp = itArt.naturalHeight / itArt.naturalWidth;
+    ctx.drawImage(itArt, -15, -15 * asp, 30, 30 * asp);
+    ctx.restore();
+  } else drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
