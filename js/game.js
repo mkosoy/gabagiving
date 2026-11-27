@@ -768,7 +768,7 @@ function drawHelp() {
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
   outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
-  outlineText(ctx, 'T: fast travel between regions', 174, 186, '#fff', 9);
+  outlineText(ctx, 'T: fast travel · G: slip a cop \$100 when close', 174, 186, '#fff', 9);
   outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
   const st = state.stats;
   outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 214, '#8fb8ff', 8, 'center');
@@ -1484,6 +1484,19 @@ function updateCop(dt) {
   // either unit close enough counts toward the bust
   const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
   // GTA rules: they can't cuff a moving car — you have to stop or be on foot
+  // a cop within arm's reach can be reasoned with — Jersey reasoning, $100 a dose
+  if (Math.min(d, d2) < 44 && consume(['KeyG']) && (state.money || 0) >= 100 && !state.bribeCd) {
+    state.money -= 100;
+    state.flags.heat = 0;
+    state.cop = null;
+    state.cop2 = null;
+    state.copCar = null;
+    state.bribeCd = true;
+    setTimeout(() => { state.bribeCd = false; }, 4000);
+    audio.sfx('cash');
+    spawnEffect(p.x, p.y - 20, 'CONTRIBUTION ACCEPTED', '#ffd23e');
+    startDialog([{ speaker: 'narrator', text: 'A hundred dollars changes hands with the practiced smoothness of a transaction older than the republic. The officer remembers a pressing appointment elsewhere. “Nice neighborhood,” he says, meaning it sincerely for the first time.' }]);
+  }
   const evading = p.inCar && (p.carV || 0) > .45;
   if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
