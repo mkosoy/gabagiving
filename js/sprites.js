@@ -87,7 +87,7 @@ function canonicalSpriteKind(kind) { return spriteAliases[kind] || kind; }
 function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   const pose = options.pose || 'stand';
   const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45, newman: 40, steinbrenner: 42, soupNazi: 45 };
-  let h = (heights[kind] || 43) * (options.scale ? options.scale / 1.18 : 1);
+  let h = (heights[kind] || 43) * 1.3 * (options.scale ? options.scale / 1.18 : 1);
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
   if (sitting) {
@@ -183,7 +183,7 @@ export function drawPerson(ctx, x, y, kind = 'tony', dir = 'down', frame = 0, op
   const cx = x + lean;
 
   // Slightly oversized RPG sprites read better against the detailed illustrated rooms.
-  const spriteScale = options.scale || 1.18;
+  const spriteScale = options.scale || 1.5;
   ctx.save();
   ctx.translate(x + 10, y + 31);
   ctx.scale(spriteScale, spriteScale);

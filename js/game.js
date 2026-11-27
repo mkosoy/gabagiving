@@ -83,6 +83,20 @@ window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('pointerdown', () => audio.unlock(), { passive: true });
 canvas.addEventListener('pointerdown', (e) => {
   if (e.pointerType === 'touch') usingTouchControls = true;
+  if (state.mode === 'fasttravel') {
+    const rect = canvas.getBoundingClientRect();
+    const vx = (e.clientX - rect.left) / rect.width * W;
+    const vy = (e.clientY - rect.top) / rect.height * H;
+    for (let ni = 0; ni < FT_NODES.length; ni++) {
+      const n = FT_NODES[ni];
+      if (Math.hypot(vx - n.x, vy - n.y) < 24) {
+        if (state.ftSel === ni) pressed.add('KeyE');
+        else { state.ftSel = ni; audio.sfx('pickup'); }
+        return;
+      }
+    }
+    return;
+  }
   if (state.mode === 'title') {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
@@ -739,38 +753,98 @@ function drawTrivia() {
   ctx.textAlign = 'left';
 }
 
+const FT_NODES = [
+  { id: 'hub', x: 245, y: 122, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale’s, Vesuvio' },
+  { id: 'nyc', x: 432, y: 118, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk’s, the soup stand, Jerry’s, Kramer' },
+  { id: 'pines', x: 218, y: 210, dx: 384, dy: 210, name: 'The Pine Barrens', flavor: 'GARDEN STATE PARKWAY · SOUTH', desc: 'snow, mist, and the Russian' },
+  { id: 'shore', x: 335, y: 262, dx: 384, dy: 220, name: 'Jersey Shore', flavor: 'GARDEN STATE PARKWAY · EXIT 88', desc: 'boardwalk, gulls, skeeball' },
+  { id: 'ac', x: 280, y: 312, dx: 380, dy: 220, name: 'Atlantic City', flavor: 'ATLANTIC CITY EXPRESSWAY', desc: 'neon, slots, rolling chairs' }
+];
+
 function drawFastTravel() {
-  const regions = [
-    ['hub', 'North Caldwell', 'the neighborhood — Newman, Satriale’s, Vesuvio'],
-    ['nyc', 'Manhattan', 'Monk’s, the soup stand, Jerry’s, Kramer'],
-    ['pines', 'The Pine Barrens', 'snow, mist, and the Russian'],
-    ['shore', 'Jersey Shore', 'boardwalk, gulls, high striker'],
-    ['ac', 'Atlantic City', 'neon, slots, rolling chairs']
-  ];
-  ctx.fillStyle = 'rgba(8,6,12,.92)';
-  ctx.fillRect(150, 80, 340, 240);
+  // backdrop
+  ctx.fillStyle = 'rgba(6,10,18,.94)';
+  ctx.fillRect(60, 34, 520, 306);
   ctx.strokeStyle = '#d4a017';
-  ctx.strokeRect(150, 80, 340, 240);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(60, 34, 520, 306);
   ctx.fillStyle = '#ffd23e';
-  ctx.font = 'bold 14px monospace';
+  ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('FAST TRAVEL', 320, 104);
-  ctx.textAlign = 'left';
-  regions.forEach((r, i) => {
+  ctx.fillText('THE GARDEN STATE — click a destination', 320, 62);
+
+  // water: the Hudson + the Atlantic
+  ctx.fillStyle = '#12283d';
+  ctx.fillRect(388, 74, 60, 224);
+  ctx.fillRect(360, 270, 190, 60);
+  ctx.fillStyle = '#1a3a55';
+  for (let wy = 80; wy < 290; wy += 18) {
+    ctx.fillRect(392 + (wy % 36 === 0 ? 6 : 0), wy, 30, 2);
+  }
+  ctx.fillStyle = '#7fb8dd';
+  ctx.font = '8px monospace';
+  ctx.fillText('HUDSON', 418, 200);
+  ctx.fillText('ATLANTIC', 460, 306);
+
+  // landmasses: jersey + manhattan
+  ctx.fillStyle = '#1d2b1a';
+  ctx.fillRect(80, 74, 300, 224);
+  ctx.fillRect(455, 74, 42, 180);
+  // redraw water over jersey edges (river + ocean overlap fix)
+  ctx.fillStyle = '#12283d';
+  ctx.fillRect(388, 74, 60, 224);
+  ctx.fillRect(80, 290, 470, 40);
+  ctx.fillStyle = '#1d2b1a';
+  ctx.fillRect(80, 250, 180, 40);
+
+  // the Parkway — spine of the state
+  ctx.strokeStyle = '#caa53d';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath();
+  ctx.moveTo(245, 122);
+  ctx.lineTo(218, 210);
+  ctx.lineTo(335, 262);
+  ctx.lineTo(280, 312);
+  ctx.stroke();
+  // the tunnel — through the Hudson
+  ctx.strokeStyle = '#e8722a';
+  ctx.beginPath();
+  ctx.moveTo(245, 122);
+  ctx.lineTo(432, 118);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // region nodes
+  FT_NODES.forEach((n, i) => {
     const sel = i === (state.ftSel || 0);
-    ctx.fillStyle = sel ? '#ffd23e' : '#f5efdc';
-    ctx.font = (sel ? 'bold ' : '') + '11px monospace';
-    ctx.fillText((sel ? '▶ ' : '  ') + r[1] + (r[0] === state.scene ? '  (here)' : ''), 168, 134 + i * 24);
-    if (sel) {
-      ctx.fillStyle = '#888';
-      ctx.font = '9px monospace';
-      ctx.fillText('   ' + r[2], 168, 146 + i * 24);
-    }
+    const here = n.id === state.scene;
+    const pulse = (Math.sin(state.time * 4) + 1) / 2;
+    ctx.fillStyle = here ? '#3a6' : sel ? '#ffd23e' : '#c33';
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, sel ? 8 + pulse * 2 : 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = sel || here ? '#fff3c4' : '#ddd';
+    ctx.font = (sel ? 'bold ' : '') + '9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.name + (here ? '  (here)' : ''), n.x, n.y - 12);
   });
-  ctx.fillStyle = '#888';
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('↑↓ choose · E travel · T close', 320, 308);
+
+  // selected flavor text
+  const cur = FT_NODES[state.ftSel || 0];
+  if (cur) {
+    ctx.fillStyle = '#9ab';
+    ctx.font = '9px monospace';
+    ctx.fillText(cur.desc, 320, 309);
+    ctx.fillStyle = '#e8722a';
+    ctx.fillText('route: ' + cur.flavor, 320, 321);
+  }
+  ctx.fillStyle = '#666';
+  ctx.font = '8px monospace';
+  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 320, 332);
   ctx.textAlign = 'left';
 }
 
@@ -7387,6 +7461,23 @@ function drawHub() {
     outlineText(ctx, 'HOLLAND TUNNEL', px0 + 27, py0 + 10, '#ffe78a', 5, 'center');
     outlineText(ctx, 'NEW YORK →', px0 + 27, py0 + 130, '#9fd4ec', 5, 'center');
   }
+  // big green jersey highway signs — nobody reads them, everybody needs them
+  drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
+  drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
+}
+
+function drawHighwaySign(x, y, lines) {
+  const w = 96, h = 12 + lines.length * 11;
+  px(ctx, x + 3, y + h, 4, 26, '#6a6a5a'); // post
+  px(ctx, x, y, w, h, '#0d5c2e');
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x + 2, y + 2, w - 4, h - 4);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  lines.forEach((l, i) => ctx.fillText(l, x + w / 2, y + 13 + i * 11));
+  ctx.textAlign = 'left';
 }
 
 function drawNjStreet() {
@@ -9294,26 +9385,19 @@ function update(dt) {
     pressed.clear();
     return;
   }
-  if (state.mode === 'explore' && state.flags.freeRoam && consume(['KeyT']) && !state.player.inCar) {
+  if (state.mode === 'explore' && state.flags.freeRoam && consume(['KeyT'])) {
     state.mode = 'fasttravel';
     state.ftSel = 0;
     pressed.clear();
     return;
   }
   if (state.mode === 'fasttravel') {
-    const regions = [
-      ['hub', 320, 250, 'North Caldwell', 'GARDEN STATE PARKWAY'],
-      ['nyc', 300, 250, 'Manhattan', 'HOLLAND TUNNEL'],
-      ['pines', 384, 210, 'The Pine Barrens', 'GARDEN STATE PARKWAY · SOUTH'],
-      ['shore', 384, 220, 'Jersey Shore', 'GARDEN STATE PARKWAY · EXIT 88'],
-      ['ac', 380, 220, 'Atlantic City', 'ATLANTIC CITY EXPRESSWAY']
-    ];
-    if (consume(['ArrowUp', 'KeyW'])) { state.ftSel = (state.ftSel - 1 + regions.length) % regions.length; audio.sfx('pickup'); }
-    if (consume(['ArrowDown', 'KeyS'])) { state.ftSel = (state.ftSel + 1) % regions.length; audio.sfx('pickup'); }
+    if (consume(['ArrowUp', 'KeyW'])) { state.ftSel = (state.ftSel - 1 + FT_NODES.length) % FT_NODES.length; audio.sfx('pickup'); }
+    if (consume(['ArrowDown', 'KeyS'])) { state.ftSel = (state.ftSel + 1) % FT_NODES.length; audio.sfx('pickup'); }
     if (consume(['KeyE', 'Space', 'Enter'])) {
-      const [dest, x, y, , flavor] = regions[state.ftSel];
-      if (dest === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
-      else startTransit(dest, x, y, flavor);
+      const n = FT_NODES[state.ftSel];
+      if (n.id === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
+      else startTransit(n.id, n.dx, n.dy, n.flavor);
       pressed.clear();
       return;
     }
