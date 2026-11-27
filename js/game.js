@@ -2213,6 +2213,7 @@ function advanceMission() {
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
     audio.sfx('cash');
     audio.sfx('success');
+    for (let ei = 0; ei < 6; ei++) spawnEffect(state.player.x + (ei - 2.5) * 14, state.player.y - 24 - (ei % 2) * 10, '★', '#ffd23e');
     const endings = {
       packageJob: state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
