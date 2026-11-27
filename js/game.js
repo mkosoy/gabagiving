@@ -3005,7 +3005,20 @@ function nearestInteraction() {
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
-    list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
+    list.push({ x: 560, y: 100, w: 40, h: 30, radius: 40, label: 'The intercom', action: () => {
+    audio.sfx('denied');
+    const rants = [
+      'WHO TOUCHED THE INTERCOM?! COSTANZA?! IS THAT YOU?! GET IN HERE! Actually — DON’T! I’m in a meeting with myself!',
+      'This is Steinbrenner! Whoever pressed this button — I admire the initiative! You’re fired! The initiative doesn’t matter!',
+      'INTERCOMS are for EMERGENCIES! Is the mustard spicy brown yet?! THEN IT’S NOT AN EMERGENCY!',
+      'I was in the middle of a very important nap— MEETING! A very important MEETING about naps— NAPS OF BUSINESS!'
+    ];
+    startDialog([
+      { speaker: 'narrator', text: 'You press the intercom. Every speaker in the stadium clears its throat at once.' },
+      { speaker: 'steinbrenner', text: rants[Math.floor(Math.random() * rants.length)] }
+    ]);
+  } });
+  list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
     if (state.player.kind === 'george') {
       if (!state.flags.deskNap) {
         state.flags.deskNap = true;
