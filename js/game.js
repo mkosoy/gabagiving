@@ -1189,6 +1189,15 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  cabin: {
+    w: 640, h: 416, label: 'Hunting Cabin · Deep in the Barrens', music: 'dream',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,120,80), r(480,20,140,90), r(60,240,100,60), r(400,250,120,50)
+    ],
+    draw: drawCabin,
+    interactions: cabinInteractions
+  },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
     colliders: [
@@ -6806,6 +6815,81 @@ function meadowInteractions() {
   ];
 }
 
+function drawCabin() {
+  px(ctx, 0, 0, 640, 416, '#2a2018');
+  // plank floor
+  for (let fy = 0; fy < 416; fy += 16) px(ctx, 0, fy, 640, 1, '#241b13');
+  // stone fireplace, lit
+  px(ctx, 20, 20, 120, 80, '#4a4440');
+  px(ctx, 50, 46, 60, 44, '#1a1512');
+  const fl = Math.sin(state.time * 9) * 4;
+  px(ctx, 66, 66 - fl, 12, 18 + fl, '#e8722a');
+  px(ctx, 78, 60 - fl, 10, 24 + fl, '#ffd23e');
+  ctx.save();
+  ctx.globalAlpha = .18 + Math.sin(state.time * 9) * .05;
+  ctx.fillStyle = '#e8a54a';
+  ctx.beginPath();
+  ctx.arc(80, 130, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // mounted bass + deer head
+  px(ctx, 300, 30, 46, 14, '#4a6a8a');
+  px(ctx, 344, 34, 8, 8, '#3a5a78');
+  px(ctx, 400, 26, 26, 30, '#6a543a');
+  px(ctx, 394, 20, 4, 10, '#8a7a5a');
+  px(ctx, 428, 20, 4, 10, '#8a7a5a');
+  // bunk bed
+  px(ctx, 480, 20, 140, 90, '#5a4a35');
+  px(ctx, 490, 30, 120, 30, '#7a6a9a');
+  px(ctx, 490, 70, 120, 30, '#6a5a8a');
+  // checkerboard table
+  px(ctx, 60, 240, 100, 60, '#6a543a');
+  for (let cxx = 0; cxx < 8; cxx++) for (let cyy = 0; cyy < 4; cyy++) {
+    if ((cxx + cyy) % 2 === 0) px(ctx, 76 + cxx * 9, 252 + cyy * 9, 9, 9, '#1a1a1a');
+  }
+  // canned goods shelf
+  px(ctx, 400, 250, 120, 50, '#4a3a28');
+  for (let c = 0; c < 6; c++) px(ctx, 410 + c * 18, 262, 10, 22, ['#8a3a2a','#3a6a3a','#8a7a2a'][c % 3]);
+  ctx.fillStyle = '#d8c9a8';
+  ctx.font = '7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BEANS · BEANS · BEANS', 460, 292);
+  ctx.textAlign = 'left';
+}
+
+function cabinInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the clearing', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'You step out of the cabin. The pines are exactly where you left them. The pines are always exactly where you left them. That’s what’s unsettling.' }], () => setScene('pines', 430, 240));
+    } },
+    { x: 100, y: 130, w: 60, h: 40, radius: 44, label: 'Warm up by the fire', action: () => {
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George stands close to the fire. Too close. There is a smell of singeing. He does not step back, because stepping back would mean admitting he was too close. The warmth is worth it. The heat of the world, for a moment, lets go. (−1 heat)' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony holds his hands out to the fire like guys in this family have done in this exact cabin for thirty years. The quiet out here — real quiet, no wires, no eyes — that’s worth more than the heat. Speaking of heat: gone a little. (−1 heat)' }
+      ]);
+    } },
+    { x: 460, y: 290, w: 60, h: 30, radius: 40, label: 'Canned beans — dinner', action: () => {
+      if (state.flags.cabinBeans) { toast('The shelf is down to dust and one label-less can nobody will ever be brave enough to open.'); return; }
+      state.flags.cabinBeans = true;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You eat beans out of the can, cold, with a spoon somebody left in 1987. On Thanksgiving. There is a version of your life where this is a low point. In this version, honestly, it’s not bad.' }]);
+    } },
+    { x: 100, y: 270, w: 60, h: 30, radius: 40, label: 'Play checkers against yourself', action: () => {
+      audio.sfx('pickup');
+      const won = Math.random() < .5;
+      startDialog([{ speaker: 'narrator', text: won ? 'You play checkers against yourself and win. You also lose. Somewhere in the Barrens, a balance is maintained. You feel smarter and dumber at the same time.' : 'You play checkers against yourself and lose. To yourself. You demand a rematch. You lose that too. The Barrens does this to people.' }]);
+    } },
+    { x: 550, y: 130, w: 60, h: 40, radius: 40, label: 'Take the top bunk', action: () => {
+      state.time += 20;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You climb into the top bunk and listen to the woods settle. Something out there is walking in a circle. You decide, very consciously, not to think about it. You sleep. Time passes.' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7130,6 +7214,14 @@ function pinesInteractions() {
         { speaker: 'narrator', text: f.text },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging in a HAUNTED FOREST! For QUARTERS! This is what my life is now!' : 'Ground keeps secrets. That’s the business model. Always has been.' }
       ]);
+    } },
+    { x: 490, y: 250, w: 40, h: 30, radius: 42, label: 'Hunting cabin', action: () => {
+      if (!state.flags.cabinFound) {
+        state.flags.cabinFound = true;
+        startDialog([{ speaker: 'narrator', text: 'Half hidden in the treeline: a hunting cabin, smoke curling from the chimney. Somebody keeps it warm. Somebody who does not want visitors, but keeps it warm anyway. Family rules: it’s yours too.' }], () => setScene('cabin', 320, 360));
+        return;
+      }
+      setScene('cabin', 320, 360);
     } },
     { x: 730, y: 200, w: 36, h: 100, radius: 46, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
