@@ -1189,6 +1189,24 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  taffy: {
+    w: 640, h: 416, label: 'Salty’s Taffy · Boardwalk', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,30,200,90), r(420,30,190,90), r(240,300,180,70)
+    ],
+    draw: drawTaffy,
+    interactions: taffyInteractions
+  },
+  cabin: {
+    w: 640, h: 416, label: 'Hunting Cabin · Deep in the Barrens', music: 'dream',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,120,80), r(480,20,140,90), r(60,240,100,60), r(400,250,120,50)
+    ],
+    draw: drawCabin,
+    interactions: cabinInteractions
+  },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
     colliders: [
@@ -3200,7 +3218,8 @@ function updateExplore(dt) {
       { scene: 'nyc', x: 60, y: 350 }, { scene: 'nyc', x: 700, y: 340 },
       { scene: 'pines', x: 270, y: 320 }, { scene: 'pines', x: 330, y: 200 },
       { scene: 'shore', x: 150, y: 300 }, { scene: 'shore', x: 600, y: 160 },
-      { scene: 'ac', x: 210, y: 240 }, { scene: 'ac', x: 540, y: 240 }
+      { scene: 'ac', x: 210, y: 240 }, { scene: 'ac', x: 540, y: 240 },
+      { scene: 'meadow', x: 400, y: 340 }, { scene: 'cabin', x: 590, y: 330 }
     ];
   }
   for (let pi = 0; pi < state.pkgSpots.length; pi++) {
@@ -3211,12 +3230,12 @@ function updateExplore(dt) {
       const found = state.pkgSpots.filter((s2, i2) => state.flags['pkg' + i2]).length;
       state.money += 25;
       audio.sfx('cash');
-      spawnEffect(spot.x, spot.y - 16, 'GABAGOOL! +$25 — ' + found + '/10', '#ffd23e');
-      if (found >= 10) {
+      spawnEffect(spot.x, spot.y - 16, 'GABAGOOL! +$25 — ' + found + '/' + state.pkgSpots.length, '#ffd23e');
+      if (found >= state.pkgSpots.length) {
         state.money += 250;
         startDialog([
-          { speaker: 'narrator', text: 'ALL TEN. The complete tri-state gabagool sweep. Somewhere, a cured meat sommelier sheds a single proud tear. $250 completion bonus — the meat provides.' },
-          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I found them ALL! Every meat! I am a MEAT EXPLORER!' : 'Ten for ten. That’s a lotta gabagool. Don’t tell the doctor.' }
+          { speaker: 'narrator', text: 'EVERY SINGLE ONE. The complete tri-state gabagool sweep. Somewhere, a cured meat sommelier sheds a single proud tear. $250 completion bonus — the meat provides.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I found them ALL! Every meat! I am a MEAT EXPLORER!' : 'Every last one. That’s a lotta gabagool. Don’t tell the doctor.' }
         ]);
       }
     }
@@ -6806,6 +6825,149 @@ function meadowInteractions() {
   ];
 }
 
+function drawCabin() {
+  px(ctx, 0, 0, 640, 416, '#2a2018');
+  // plank floor
+  for (let fy = 0; fy < 416; fy += 16) px(ctx, 0, fy, 640, 1, '#241b13');
+  // stone fireplace, lit
+  px(ctx, 20, 20, 120, 80, '#4a4440');
+  px(ctx, 50, 46, 60, 44, '#1a1512');
+  const fl = Math.sin(state.time * 9) * 4;
+  px(ctx, 66, 66 - fl, 12, 18 + fl, '#e8722a');
+  px(ctx, 78, 60 - fl, 10, 24 + fl, '#ffd23e');
+  ctx.save();
+  ctx.globalAlpha = .18 + Math.sin(state.time * 9) * .05;
+  ctx.fillStyle = '#e8a54a';
+  ctx.beginPath();
+  ctx.arc(80, 130, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // mounted bass + deer head
+  px(ctx, 300, 30, 46, 14, '#4a6a8a');
+  px(ctx, 344, 34, 8, 8, '#3a5a78');
+  px(ctx, 400, 26, 26, 30, '#6a543a');
+  px(ctx, 394, 20, 4, 10, '#8a7a5a');
+  px(ctx, 428, 20, 4, 10, '#8a7a5a');
+  // bunk bed
+  px(ctx, 480, 20, 140, 90, '#5a4a35');
+  px(ctx, 490, 30, 120, 30, '#7a6a9a');
+  px(ctx, 490, 70, 120, 30, '#6a5a8a');
+  // checkerboard table
+  px(ctx, 60, 240, 100, 60, '#6a543a');
+  for (let cxx = 0; cxx < 8; cxx++) for (let cyy = 0; cyy < 4; cyy++) {
+    if ((cxx + cyy) % 2 === 0) px(ctx, 76 + cxx * 9, 252 + cyy * 9, 9, 9, '#1a1a1a');
+  }
+  // canned goods shelf
+  px(ctx, 400, 250, 120, 50, '#4a3a28');
+  for (let c = 0; c < 6; c++) px(ctx, 410 + c * 18, 262, 10, 22, ['#8a3a2a','#3a6a3a','#8a7a2a'][c % 3]);
+  ctx.fillStyle = '#d8c9a8';
+  ctx.font = '7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('BEANS · BEANS · BEANS', 460, 292);
+  ctx.textAlign = 'left';
+}
+
+function cabinInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the clearing', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'You step out of the cabin. The pines are exactly where you left them. The pines are always exactly where you left them. That’s what’s unsettling.' }], () => setScene('pines', 430, 240));
+    } },
+    { x: 100, y: 130, w: 60, h: 40, radius: 44, label: 'Warm up by the fire', action: () => {
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George stands close to the fire. Too close. There is a smell of singeing. He does not step back, because stepping back would mean admitting he was too close. The warmth is worth it. The heat of the world, for a moment, lets go. (−1 heat)' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony holds his hands out to the fire like guys in this family have done in this exact cabin for thirty years. The quiet out here — real quiet, no wires, no eyes — that’s worth more than the heat. Speaking of heat: gone a little. (−1 heat)' }
+      ]);
+    } },
+    { x: 460, y: 290, w: 60, h: 30, radius: 40, label: 'Canned beans — dinner', action: () => {
+      if (state.flags.cabinBeans) { toast('The shelf is down to dust and one label-less can nobody will ever be brave enough to open.'); return; }
+      state.flags.cabinBeans = true;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You eat beans out of the can, cold, with a spoon somebody left in 1987. On Thanksgiving. There is a version of your life where this is a low point. In this version, honestly, it’s not bad.' }]);
+    } },
+    { x: 100, y: 270, w: 60, h: 30, radius: 40, label: 'Play checkers against yourself', action: () => {
+      audio.sfx('pickup');
+      const won = Math.random() < .5;
+      startDialog([{ speaker: 'narrator', text: won ? 'You play checkers against yourself and win. You also lose. Somewhere in the Barrens, a balance is maintained. You feel smarter and dumber at the same time.' : 'You play checkers against yourself and lose. To yourself. You demand a rematch. You lose that too. The Barrens does this to people.' }]);
+    } },
+    { x: 550, y: 130, w: 60, h: 40, radius: 40, label: 'Take the top bunk', action: () => {
+      state.time += 20;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You climb into the top bunk and listen to the woods settle. Something out there is walking in a circle. You decide, very consciously, not to think about it. You sleep. Time passes.' }]);
+    } }
+  ];
+}
+
+function drawTaffy() {
+  px(ctx, 0, 0, 640, 416, '#c9b8a0');
+  // checkered floor
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx + fy) % 2 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#b8a78f');
+  }
+  // taffy pulling machine — the hypnotist
+  px(ctx, 30, 30, 200, 90, '#7a6a8a');
+  px(ctx, 42, 42, 176, 66, '#8a7a9a');
+  const pull = Math.sin(state.time * 2.4) * 30;
+  px(ctx, 80 + pull, 60, 60, 10, '#e8c9d8');
+  px(ctx, 60, 52, 10, 26, '#5a4a6a');
+  px(ctx, 190, 52, 10, 26, '#5a4a6a');
+  // display case rows of pastel taffy
+  px(ctx, 420, 30, 190, 90, '#8a6a4a');
+  for (let ty = 0; ty < 3; ty++) for (let tx = 0; tx < 8; tx++) {
+    px(ctx, 434 + tx * 21, 42 + ty * 24, 16, 10, ['#e8a0b8','#a0d8e8','#e8d8a0','#b8e8a0'][ (tx + ty) % 4 ]);
+  }
+  // counter
+  px(ctx, 240, 300, 180, 70, '#6a5a48');
+  px(ctx, 250, 310, 160, 20, '#8a7a68');
+  // the seagull that got inside — it circles, forever
+  const ga = state.time * 1.4;
+  const gx = 320 + Math.cos(ga) * 130 - state.camera.x;
+  const gy = 200 + Math.sin(ga) * 60 - state.camera.y;
+  px(ctx, gx, gy, 7, 4, '#e8e8e8');
+  px(ctx, gx + 5, gy - 2, 3, 3, '#e8c93e');
+  ctx.fillStyle = '#6a4a3a';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('SALTY’S — EST. 1921', 320, 40);
+  ctx.textAlign = 'left';
+}
+
+function taffyInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: () => {
+      setScene('shore', 400, 250);
+    } },
+    { x: 320, y: 290, w: 60, h: 20, radius: 42, label: 'Buy a box of taffy — $6', action: () => {
+      if (state.money < 6) { toast('Six dollars. It’s taffy, not a casino.'); return; }
+      state.money -= 6;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George buys the assorted box and immediately begins ranking the flavors out loud to nobody. Vanilla, undeserving of its reputation. Molasses, a dark horse. The green one — whatever it is — a miracle.' },
+        { speaker: 'george', text: 'You know what I’m doing? I’m rationing. One piece an hour. …I’ve had eleven.' }
+      ] : [
+        { speaker: 'narrator', text: 'A box of saltwater taffy for the road. Tony eats three pieces before the door closes behind him. The dentist is a problem for a man with fewer enemies.' }
+      ]);
+    } },
+    { x: 130, y: 140, w: 70, h: 30, radius: 44, label: 'Watch the pulling machine', action: () => {
+      audio.sfx('pickup');
+      state.time += 5;
+      startDialog([{ speaker: 'narrator', text: 'The machine pulls and folds, pulls and folds. It does not hurry. It does not stop. It has been doing this since 1921 and it will be doing it long after all of us. Five minutes pass like they’re nothing. You understand the machine a little too well now.' }]);
+    } },
+    { x: 510, y: 140, w: 70, h: 30, radius: 44, label: 'Free fudge sample', action: () => {
+      if (state.flags.fudgeSample) { toast('One sample per customer. The woman behind the case has a memory like a courthouse.'); return; }
+      state.flags.fudgeSample = true;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'A free fudge sample, cut with the precision of a woman who has cut ten thousand of them and resents maybe six thousand. It’s incredible. You briefly understand why people retire here.' }]);
+    } },
+    { x: 320, y: 160, w: 50, h: 30, radius: 40, label: 'Shoo the seagull', action: () => {
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+      startDialog([{ speaker: 'narrator', text: 'You shoo the seagull. The seagull relocates exactly four feet to the left and screams at you with its whole body. The other customers are now watching YOU like you’re the problem. (+0.2 heat, somehow)' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -6958,6 +7120,9 @@ function drawShore() {
 function shoreInteractions() {
   return [
     { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
+    { x: 340, y: 130, w: 60, h: 40, radius: 44, label: "Salty's Taffy", action: () => {
+      startDialog([{ speaker: 'narrator', text: 'Inside it smells like sugar and 1921. The pulling machine never stops. Neither, apparently, does the seagull that got in here in June.' }], () => setScene('taffy', 320, 360));
+    } },
     { x: 752, y: 210, w: 20, h: 90, radius: 44, label: 'AC →', action: () => startTransit('ac', 40, 220, 'ATLANTIC CITY EXPRESSWAY') },
     { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
       if ((state.flags.tribute || 0) < 5) {
@@ -7130,6 +7295,14 @@ function pinesInteractions() {
         { speaker: 'narrator', text: f.text },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m digging in a HAUNTED FOREST! For QUARTERS! This is what my life is now!' : 'Ground keeps secrets. That’s the business model. Always has been.' }
       ]);
+    } },
+    { x: 490, y: 250, w: 40, h: 30, radius: 42, label: 'Hunting cabin', action: () => {
+      if (!state.flags.cabinFound) {
+        state.flags.cabinFound = true;
+        startDialog([{ speaker: 'narrator', text: 'Half hidden in the treeline: a hunting cabin, smoke curling from the chimney. Somebody keeps it warm. Somebody who does not want visitors, but keeps it warm anyway. Family rules: it’s yours too.' }], () => setScene('cabin', 320, 360));
+        return;
+      }
+      setScene('cabin', 320, 360);
     } },
     { x: 730, y: 200, w: 36, h: 100, radius: 46, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 4, y: 270, w: 30, h: 100, radius: 48, label: '← Drive back north', action: () => {
@@ -7870,6 +8043,7 @@ function drawHub() {
   // big green jersey highway signs — nobody reads them, everybody needs them
   drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
   drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
+  drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
 }
 
 function drawHighwaySign(x, y, lines) {
