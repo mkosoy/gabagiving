@@ -3826,7 +3826,7 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
-    { x: 100, y: 100, w: 44, h: 34, radius: 40, label: 'Grappa for the kitchen', action: () => {
+    { x: 300, y: 120, w: 44, h: 34, radius: 44, label: 'Grappa for the kitchen', action: () => {
       if (state.money < 30) { toast('Grappa for the whole kitchen runs $30.'); return; }
       state.money -= 30;
       state.flags.heat = Math.max(0, (state.flags.heat || 0) - .75);
