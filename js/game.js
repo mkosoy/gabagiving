@@ -74,6 +74,7 @@ const sceneArt = {
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
   cabin: loadArt('./assets/bg-cabin.webp'),
+  poolside: loadArt('./assets/bg-poolside.webp'),
   meadow: loadArt('./assets/bg-meadow.webp'),
   queens: loadArt('./assets/bg-queens.webp'),
   taffy: loadArt('./assets/bg-taffy.webp'),
@@ -1345,6 +1346,15 @@ const scenes = {
     ],
     draw: drawCabin,
     interactions: cabinInteractions
+  },
+  poolside: {
+    w: 640, h: 416, label: 'The Backyard · Poolside', music: 'dream',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(135,168,378,104), r(250,100,140,52), r(30,30,80,60)
+    ],
+    draw: drawPoolside,
+    interactions: poolsideInteractions
   },
   dmv: {
     w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
@@ -4410,6 +4420,10 @@ function houseInteractions() {
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
   if (s === 5) list.push({ x: 78, y: 240, w: 112, h: 46, label: 'Sit on couch', action: sitCouch });
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
+  if (state.flags.freeRoam) list.push({ x: 556, y: 330, w: 64, h: 60, radius: 46, label: 'Sliding door — the backyard', action: () => {
+    audio.sfx('door');
+    startDialog([{ speaker: 'narrator', text: 'The sliding door sticks the way it has since 1998 — you lift, you pull, it yields with a sound like a man clearing his throat. November air. The pool. And the ducks — because of course there are ducks. There have always been ducks.' }], () => setScene('poolside', 60, 330));
+  } });
   if (state.flags.freeRoam) list.push({ x: 500, y: 60, w: 44, h: 50, radius: 46, label: 'Mattress — stash cash', action: () => {
     if (state.money < 20) { startDialog([{ speaker: 'narrator', text: 'The mattress. King size, queen problems. You need at least $20 on you to make a deposit worth hiding. Every dollar you carry is a dollar the cops can fine — what’s in the mattress, they never find.' }]); return; }
     const amt = Math.max(20, Math.floor(state.money * .6));
@@ -8777,6 +8791,15 @@ function updateBlackjack(dt) {
       bj.t = 0;
     }
     if (!hitDir && !standDir) bj.stickLock = false;
+    // double down — exactly two cards, one more in the hole, double or nothing
+    if (!bj.doubled && bj.player.length === 2 && (state.flags.tribute || 0) >= 50 && consume(['KeyF'])) {
+      state.flags.tribute -= 50;
+      bj.doubled = true;
+      bj.player.push(bjCard());
+      audio.sfx('smash');
+      if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
+      else { bj.phase = 'dealer'; bj.t = 0; }
+    }
   } else if (bj.phase === 'dealer') {
     if (bj.t > .7) {
       bj.t = 0;
@@ -8790,17 +8813,18 @@ function updateBlackjack(dt) {
     }
   } else if (bj.phase === 'done' && bj.t > 1.8) {
     const r = bj.result;
+    const dbl = bj.doubled ? 2 : 1;
     state.mode = 'explore';
     state.blackjack = null;
     if (r === 'win') {
-      state.flags.tribute = (state.flags.tribute || 0) + 100;
+      state.flags.tribute = (state.flags.tribute || 0) + 100 * dbl;
       audio.sfx('cash');
-      spawnEffect(state.player.x + 8, state.player.y - 8, '+$100 · BLACKJACK PAYS', '#8ffff2');
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$' + 100 * dbl + ' · BLACKJACK PAYS', '#8ffff2');
       startDialog([
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'George wins! He immediately asks the dealer about the surrender rule, the insurance rule, and whether tips are mandatory.' : 'Tony wins. The dealer slides the chips over. He has been instructed, at length, to be very fast about it.' }
       ]);
     } else if (r === 'push') {
-      state.flags.tribute = (state.flags.tribute || 0) + 50;
+      state.flags.tribute = (state.flags.tribute || 0) + 50 * dbl;
       startDialog([{ speaker: 'narrator', text: 'Push. Nobody wins. Somehow the least satisfying outcome in all of gambling.' }]);
     } else {
       startDialog([
@@ -8847,7 +8871,8 @@ function drawBlackjack() {
   bjDrawHand(bj.player, 290, 300, false);
   outlineText(ctx, `YOU · ${bjTotal(bj.player)}`, 320, 344, '#fffbe8', 8, 'center');
   if (bj.phase === 'player') {
-    outlineText(ctx, 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
+    const canDbl = state.blackjack && !state.blackjack.doubled && state.blackjack.player.length === 2 && (state.flags.tribute || 0) >= 50;
+    outlineText(ctx, canDbl ? 'A / E = HIT · D / S = STAND · F = DOUBLE DOWN' : 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
   } else if (bj.phase === 'done') {
     const msg = { win: 'YOU WIN! +$100', bust: 'BUST — HOUSE TAKES IT', lose: 'DEALER WINS', push: 'PUSH — BET RETURNED' }[bj.result];
     outlineText(ctx, msg, 320, 386, bj.result === 'win' ? '#8ffff2' : bj.result === 'push' ? '#ffe78a' : '#ff8a7a', 10, 'center');
@@ -9701,6 +9726,99 @@ function dinerInteractions() {
   ];
 }
 
+function drawDuck(x, y, t2, phase) {
+  // a small duck, serene as you like, riding the pool water with a gentle bob
+  const bob = Math.sin(t2 * 2 + phase) * 1.5;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  // reflection shadow on the water
+  ctx.fillStyle = 'rgba(0,40,60,.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // body
+  ctx.fillStyle = '#b8a888';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 9, 5.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // chest
+  ctx.fillStyle = '#6b4a2f';
+  ctx.beginPath();
+  ctx.ellipse(4, -1, 4, 3.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // head — mallard green
+  ctx.fillStyle = '#2f6b3a';
+  ctx.beginPath();
+  ctx.arc(7, -5, 3.4, 0, Math.PI * 2);
+  ctx.fill();
+  // bill
+  ctx.fillStyle = '#e8c832';
+  ctx.fillRect(9.5, -6, 4, 2);
+  // tail
+  ctx.fillStyle = '#8a7a5a';
+  ctx.fillRect(-10, -2, 4, 3);
+  ctx.restore();
+}
+
+function drawPoolside() {
+  if (drawSceneArt(sceneArt.poolside, 640, 416)) {
+    // the ducks — they land, they paddle, they regard you as a god when the bread comes out
+    if (!state.duckSeeds) state.duckSeeds = [0, 2.1, 4.4];
+    const eating = (state.flags.duckFedT || 0) > state.time - 30;
+    state.duckSeeds.forEach((sd, i) => {
+      const drift = eating ? Math.sin(sd) * 10 : Math.sin(state.time * .12 + sd) * 150;
+      const cx = eating ? 320 + Math.sin(sd * 3) * 60 : 320 + Math.max(-150, Math.min(150, drift));
+      const cy = eating ? 218 + Math.cos(sd * 2) * 22 : 222 + Math.sin(state.time * .3 + sd * 2) * 26;
+      drawDuck(cx - state.camera.x, cy - state.camera.y, state.time + sd, sd + i);
+    });
+    if (eating) {
+      // crumbs on the water
+      for (let c = 0; c < 6; c++) px(ctx, 300 + Math.sin(c * 2.3) * 70 - state.camera.x, 216 + Math.cos(c * 1.7) * 26 - state.camera.y, 2, 1, '#d8c890');
+    }
+    // fallen leaves drifting on the pool
+    for (let l = 0; l < 3; l++) {
+      const lx = 200 + ((state.time * 3 + l * 130) % 240);
+      px(ctx, lx - state.camera.x, 190 + l * 28 + Math.sin(state.time + l) * 8 - state.camera.y, 4, 3, ['#c86d31', '#d79531', '#a85a28'][l]);
+    }
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#5a6b42');
+  px(ctx, 120, 96, 400, 150, '#2a7a8a');
+  px(ctx, 124, 100, 392, 142, '#3a9ab0');
+}
+
+function poolsideInteractions() {
+  return [
+    { x: 30, y: 330, w: 80, h: 76, radius: 44, label: 'Back inside', action: () => {
+      audio.sfx('door');
+      setScene('house', 540, 330);
+    } },
+    { x: 320, y: 96, w: 120, h: 30, radius: 52, label: 'Feed the ducks (bread end)', action: () => {
+      audio.sfx('pickup');
+      state.flags.duckFedT = state.time;
+      state.stats.ducksFed = (state.stats.ducksFed || 0) + 1;
+      const george = state.player.kind === 'george';
+      startDialog(george ? [
+        { speaker: 'narrator', text: 'George tears the bread end into pieces, exactly equal, because ducks can tell. The ducks paddle over with the focus of small feathered creditors. He feels, for one shining moment, respected.' },
+        { speaker: 'george', text: 'Look at them! They TRUST me! You know who else trusted me? NOBODY. This is the purest relationship of my life! I would die for these ducks! …would they visit? In the hospital? Hypothetically?' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony tosses the bread end onto the water and the ducks come — unhurried, like they know he will wait. They always come. That first morning, in the pool, right there. The whole thing started right there.' },
+        { speaker: 'tony', text: 'Yeah. Eat up. You’re fat, you’re happy, you don’t know nothin’ about nothin’. …Don’t look at me like that. It’s bread, not a therapy session. …You want the crust too? Take the crust. Take it.' }
+      ]);
+    } },
+    { x: 545, y: 60, w: 70, h: 40, radius: 48, label: 'The patio chair — sit a while', action: () => {
+      state.player.x = 545; state.player.y = 100; state.player.dir = 'down'; state.playerPose = 'sit';
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'George sits. The chair creaks. The ducks ignore him, the pool ripples, a leaf blower mourns two yards over. It is the most peace he has felt since the calzone incident.' : 'Tony sits and the yard goes quiet in the way only HIS yard goes quiet. The ducks paddle their small clockwise circuits. Somewhere a neighbor is power-washing something that was already clean. November in Essex County. You could almost call it peace.' }
+      ]);
+    } },
+    { x: 320, y: 250, w: 200, h: 30, radius: 54, label: 'The pool — November water', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'You touch the water. It is approximately the temperature of a loan shark’s heart. The pool stays open because closing it would mean admitting winter exists, and in this house we do not admit things. The ducks do not mind. The ducks are professionals.' }]);
+    } }
+  ];
+}
+
 function drawCabin() {
   if (drawSceneArt(sceneArt.cabin, 640, 416)) {
     ctx.save();
@@ -10486,6 +10604,15 @@ function drawShore() {
       else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
     }
   }
+  // boardwalk life — off-season but never empty
+  drawPerson(ctx, 465 - state.camera.x, 218 - state.camera.y, 'manB', 'down', 0, { pose: 'sit', sitClip: .55 });
+  drawPerson(ctx, 448 - state.camera.x, 218 - state.camera.y, 'womanF', 'down', 0, { pose: 'sit', sitClip: .55 });
+  const swx = 120 + ((state.time * 11) % 520);
+  drawPerson(ctx, swx - state.camera.x, 262 - state.camera.y, 'womanE', 'right', state.frame, { pose: 'walk' });
+  const swx2 = 640 - ((state.time * 9) % 500);
+  drawPerson(ctx, swx2 - state.camera.x, 276 - state.camera.y, 'manC', 'left', state.frame + 2, { pose: 'walk' });
+  // a kid hypnotized by the arcade cabinet glow, going nowhere
+  drawPerson(ctx, 172 - state.camera.x, 128 - state.camera.y, 'manC', 'up', Math.floor(state.time * .6) % 2, { pose: 'stand' });
   outlineText(ctx, '← north', 24, 200, '#ffe78a', 7, 'left');
 }
 
