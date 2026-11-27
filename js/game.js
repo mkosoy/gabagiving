@@ -4594,6 +4594,14 @@ function clubInteractions() {
       { speaker: 'tony', text: 'What? A guy can’t enjoy music? It’s Thanksgiving. Even the Bing has a heart.' }
     ], () => initDanceOff());
   } });
+  list.push({ x: 150, y: 380, w: 40, h: 28, radius: 40, label: 'Janice', action: () => {
+    startDialog([
+      { speaker: 'narrator', text: 'The laugh hits you before the person does — a sound like a seagull being interrogated. Janice. OH. MY. GOD.' },
+      { speaker: 'janice', text: 'Oh my GOD! Look at you! Out on Thanksgiving eve! Living your LIFE! I love that! I LOVE that for you!' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The laugh. THE LAUGH! It’s in my bones now! It lives there! I’ll hear it in the SHOWER!' : 'Janice. Always a pleasure. …I gotta go check on a thing. In the back. Permanently.' },
+      { speaker: 'janice', text: 'You know who needs a man with YOUR energy? Everybody! EVERYBODY NEEDS THAT! Oh my god — is that the buffet?! Later, handsome!' }
+    ]);
+  } });
   list.push({ x: 240, y: 380, w: 60, h: 28, radius: 40, label: 'Buy a round', action: () => {
     if (state.money < 100) { toast('A round for the house is $100.'); return; }
     state.money -= 100;
