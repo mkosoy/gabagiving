@@ -9141,6 +9141,21 @@ function drawDiner() {
     drawPerson(ctx, 165 - state.camera.x, 185 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit' });
     drawPerson(ctx, 330 - state.camera.x, 58 - state.camera.y, 'womanC', 'down', state.frame * .5, {});
     drawPerson(ctx, 100 - state.camera.x, 322 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'stand' });
+    // the GABAGOOL WIZARD itself
+    const pc = objArt.pinballcab;
+    if (pc && pc.complete && pc.naturalWidth) {
+      const asp = pc.naturalHeight / pc.naturalWidth;
+      const pw = 46;
+      ctx.drawImage(pc, 536 - state.camera.x, 288 - state.camera.y - pw * asp, pw, pw * asp);
+      const gl = .12 + Math.sin(state.time * 4) * .05;
+      ctx.save();
+      ctx.globalAlpha = gl;
+      ctx.fillStyle = '#ffd23e';
+      ctx.beginPath();
+      ctx.arc(559 - state.camera.x, 250 - state.camera.y, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     return;
   }
   // checkered floor
