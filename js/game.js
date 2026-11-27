@@ -3117,6 +3117,15 @@ function updateExplore(dt) {
           audio.sfx('pickup');
           spawnEffect(state.player.x, state.player.y - 20, '+$50 — leftovers money', '#ffe78a');
           state.cheatBuf = '';
+        } else if (state.cheatBuf.endsWith('TURKEYDAY')) {
+          state.money += 100;
+          if (!state.turkey) state.turkey = { x: state.player.x + 30, y: state.player.y, wx: state.player.x, wy: state.player.y, t: 0 };
+          state.turkey.friend = true;
+          state.turkey.enraged = 0;
+          audio.sfx('turkey');
+          spawnEffect(state.player.x, state.player.y - 20, '+$100 — HAPPY THANKSGIVING. the turkey knows you now', '#ffb35e');
+          startDialog([{ speaker: 'narrator', text: 'Somewhere in North Caldwell, a wild turkey looks up from absolutely nothing and understands, in the hollowed-out center of its dinosaur heart, that it has a family now. It is already walking toward you.' }]);
+          state.cheatBuf = '';
         } else if (state.cheatBuf.endsWith('BIZARRO')) {
           state.money = Math.max(0, state.money - 50);
           audio.sfx('success');
