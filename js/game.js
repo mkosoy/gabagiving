@@ -8378,16 +8378,17 @@ function drawPoker() {
   ctx.fillText('five-card draw · ante $20 · winner takes the pot', 320, 34);
   const suits = ['♠', '♥', '♦', '♣'];
   const suitCol = (s) => s === 1 || s === 2 ? '#d84040' : '#222';
-  const oppX = [150, 320, 490];
+  const oppX = [200, 320, 440];
   p.ai.forEach((ai, k) => {
     const x = oppX[k];
-    drawPortrait(ctx, x - 16, 48, ai.kind);
+    // the man himself, sunk into the back-room chair
+    drawPerson(ctx, x - 10, 78, ai.kind, 'down', 0, { pose: 'sit', sitClip: .48 });
     ctx.fillStyle = '#e8dcc8';
     ctx.font = '9px monospace';
-    ctx.fillText(ai.name, x, 96);
+    ctx.fillText(ai.name, x, 118);
     const show = p.phase === 'done';
     ai.hand.forEach((c, i) => {
-      const cx = x - 34 + i * 15, cy = 102;
+      const cx = x - 34 + i * 15, cy = 124;
       ctx.fillStyle = show ? '#f5efdd' : '#8a2a2a';
       ctx.fillRect(cx, cy, 13, 18);
       ctx.strokeStyle = '#333';
@@ -10518,14 +10519,15 @@ function drawArmWrestle() {
   px(ctx, 220, 200, 200, 16, '#6b4f2a');
   px(ctx, 220, 216, 200, 8, '#4a3520');
   drawPerson(ctx, 250, 185, state.player.kind === 'george' ? 'george' : 'tonyMax', 'right', state.frame * .5, {});
-  drawPerson(ctx, 390, 185, 'silvio', 'left', state.frame * .5, {});
+  const oppKind = { trucker: 'trucker', bouncer: 'cop', silvio: 'silvio' }[a.opp] || 'silvio';
+  drawPerson(ctx, 390, 185, oppKind, 'left', state.frame * .5, {});
   const hx = 320 + (a.power - .5) * 90;
   px(ctx, hx - 8, 176, 16, 14, '#d5a075');
   px(ctx, hx - 8, 176, 16, 14, '#c08a60');
   px(ctx, 120, 290, 400, 22, '#1a1020');
   px(ctx, 122, 292, 396 * a.power, 18, a.power > .62 ? '#4a8f3d' : a.power > .38 ? '#e8b822' : '#c02828');
   outlineText(ctx, 'YOU', 112, 304, '#8ffff2', 7, 'right');
-  outlineText(ctx, 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
+  outlineText(ctx, { trucker: 'THE TRUCKER', bouncer: 'SLIPPERY PETE', silvio: 'SILVIO' }[a.opp] || 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
   if (!a.done) {
     outlineText(ctx, 'MASH E TO WIN', 320, 340, '#ffe78a', 10, 'center');
     outlineText(ctx, `${Math.max(0, a.duration - a.t).toFixed(1)}`, 320, 258, '#fffbe8', 10, 'center');
