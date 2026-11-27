@@ -1327,7 +1327,10 @@ const scenes = {
     w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(30,30,580,64), r(80,170,200,54), r(360,170,200,54), r(240,300,160,44)
+      r(8,8,624,142), r(160,148,130,10), r(330,148,130,10),
+      r(48,208,155,52), r(238,208,165,52), r(428,208,155,52),
+      r(38,296,220,74), r(338,296,245,74),
+      r(8,148,44,130), r(58,122,52,30)
     ],
     draw: drawDmv,
     interactions: dmvInteractions
@@ -8863,6 +8866,17 @@ function meadowInteractions() {
 }
 
 function drawDmv() {
+  if (drawSceneArt(sceneArt.dmv, 640, 416)) {
+    // live NOW SERVING number over the painted display
+    const serving0 = state.flags.dmvServing || 41;
+    px(ctx, 470, 32, 78, 24, '#2a2a26');
+    outlineText(ctx, 'B-' + String(serving0).padStart(3, '0'), 509, 40, '#e8862a', 12, 'center');
+    // the clerk in the one open window, medically incapable of urgency
+    if (typeof drawPortrait === 'function') drawPortrait(ctx, 408, 58, 'manB');
+    // fluorescent flicker
+    if (Math.sin(state.time * 17) > .92) { ctx.save(); ctx.globalAlpha = .1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 640, 416); ctx.restore(); }
+    return;
+  }
   // procedural institutional despair — no painted art could capture it more cheaply
   px(ctx, 0, 0, 640, 416, '#8a8a80');
   px(ctx, 0, 96, 640, 320, '#a8a898'); // linoleum
@@ -8929,10 +8943,10 @@ function drawDmv() {
 
 function dmvInteractions() {
   return [
-    { x: 320, y: 380, w: 90, h: 26, radius: 46, label: 'Back to Manhattan', action: () => {
+    { x: 610, y: 262, w: 26, h: 60, radius: 48, label: 'Back to Manhattan', action: () => {
       setScene('nyc', 420, 250);
     } },
-    { x: 568, y: 252, w: 24, h: 30, radius: 40, label: 'Take a number', action: () => {
+    { x: 498, y: 138, w: 26, h: 34, radius: 44, label: 'Take a number', action: () => {
       if (state.flags.dmvTicket) { toast('You already have a number — B-' + state.flags.dmvTicket + '. It is not being served. It may never be served.'); return; }
       const serving = state.flags.dmvServing || 41;
       const ticket = serving + 3 + Math.floor(Math.random() * 4);
@@ -8944,7 +8958,7 @@ function dmvInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'THREE numbers away! That’s nothing! That’s — wait, how long is a number? …HOW LONG IS A NUMBER?!' : 'Yeah, I don’t do lines. We’ll see how this plays out.' }
       ]);
     } },
-    { x: 270, y: 74, w: 120, h: 26, radius: 44, label: 'The clerk window', action: () => {
+    { x: 420, y: 116, w: 90, h: 26, radius: 54, label: 'The clerk window', action: () => {
       const serving = state.flags.dmvServing || 41;
       const ticket = state.flags.dmvTicket;
       if (ticket && ticket <= serving) {
@@ -8962,7 +8976,7 @@ function dmvInteractions() {
         ]);
       }
     } },
-    { x: 300, y: 266, w: 60, h: 20, radius: 40, label: 'Slip the clerk $40', action: () => {
+    { x: 478, y: 122, w: 50, h: 20, radius: 48, label: 'Slip the clerk $40', action: () => {
       if (!state.flags.dmvTicket) { toast('Corruption requires paperwork. Get a number first.'); return; }
       if (state.money < 40) { toast('Forty bucks. Even graft has a price floor.'); return; }
       state.money -= 40;
@@ -8976,7 +8990,7 @@ function dmvInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I beat the system! I PAID the system, but it FEELS like beating! …This is how the world works, isn’t it. I’m going to be sick.' : 'Forty bucks to skip a line. Cheapest favor in Jersey. Uh — New York. Wherever we are.' }
       ]);
     } },
-    { x: 180, y: 190, w: 40, h: 22, radius: 36, label: 'Sit and wait', action: () => {
+    { x: 150, y: 272, w: 40, h: 22, radius: 40, label: 'Sit and wait', action: () => {
       if (!state.flags.dmvTicket) { toast('The chairs are for ticket-holders. Even the chairs have rules here.'); return; }
       const serving = state.flags.dmvServing || 41;
       if (state.flags.dmvTicket <= serving) { toast('Your number is UP — get to the window before the clerk notices joy.'); return; }
@@ -8987,10 +9001,10 @@ function dmvInteractions() {
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'An elderly man two chairs down has a sandwich in a foil wrapper older than your car.' : 'A wiseguy never waits. And yet. The things we do for vanity plates.' }
       ]);
     } },
-    { x: 40, y: 146, w: 40, h: 30, radius: 34, label: 'Organ donor poster', action: () => {
+    { x: 600, y: 142, w: 34, h: 40, radius: 38, label: 'The poster wall', action: () => {
       startDialog([{ speaker: 'narrator', text: '"BE AN ORGAN DONOR — SOMEONE IS WAITING." Someone is also waiting for their license renewal, and has been since Tuesday, and frankly their organs are starting to feel like a renewable resource.' }]);
     } },
-    { x: 320, y: 320, w: 160, h: 26, radius: 40, label: 'The forms', action: () => {
+    { x: 26, y: 214, w: 34, h: 60, radius: 42, label: 'The forms', action: () => {
       startDialog([
         { speaker: 'narrator', text: 'Form MV-82. Form MV-44. Form MV-37C, which is a form explaining that you have completed the wrong forms. A pen is chained to the table. The chain is the most secure object in the state of New York.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'There’s a form for the forms! It’s PERFECT! It’s the perfect system — nothing can ever go wrong because nothing can ever HAPPEN!' : 'This is why the family uses fixers. God bless the fixers.' }
