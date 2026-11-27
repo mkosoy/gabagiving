@@ -4270,6 +4270,19 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 60, y: 120, w: 40, h: 34, radius: 40, label: 'Jukebox — $1 a song', action: () => {
+    if (state.money < 1) { toast('A dollar. The jukebox is the cheapest vice in this building.'); return; }
+    state.money -= 1;
+    audio.sfx('pickup');
+    const picks = [
+      { m: 'club', t: 'Woke Up This Morning — the house standard. Silvio nods once, the highest honor the Bing bestows.' },
+      { m: 'house', t: 'The Godfather waltz. Half the room goes quiet out of pure instinct. The other half out of respect.' },
+      { m: 'dream', t: 'A slow one. The dancers hold still, unsure. Somewhere in the back, Paulie starts telling the same story for the fourth time.' }
+    ];
+    const pick = picks[Math.floor(Math.random() * picks.length)];
+    audio.setMusic(pick.m);
+    startDialog([{ speaker: 'narrator', text: 'Your dollar clunks down. ' + pick.t }]);
+  } });
   list.push({ x: 590, y: 120, w: 40, h: 34, radius: 40, label: 'Back office safe', action: () => {
     if ((state.money || 0) < 50) { toast('Silvio doesn’t hold less than $50. It’s a dignity thing.'); return; }
     const deposit = Math.min(state.money, Math.floor(state.money / 2));
