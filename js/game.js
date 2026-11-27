@@ -31,6 +31,8 @@ const CAR_SPRITE_MAP = {
   '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon',
   '#e8e4d8': 'mailtruck', '#dcd8cc': 'mailtruck', '#c03838': 'corvette', '#31445e': 'sedan-bluegray'
 };
+const animalArt = {}; for (const n of ['horse', 'turkey', 'seagull', 'deer']) animalArt[n] = loadArt('./assets/sprites/' + n + '.webp');
+const objArt = {}; for (const n of ['pinballcab', 'jukebox', 'pooltable', 'slotmachine', 'arcade']) objArt[n] = loadArt('./assets/sprites/obj-' + n + '.webp');
 for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
   carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
 }
@@ -2024,6 +2026,13 @@ function drawWildTurkey() {
   const tk = state.turkey;
   if (!tk || state.scene !== 'hub') return;
   const bob = Math.sin(state.time * 6) * 1;
+  const tArt = animalArt.turkey;
+  if (tArt && tArt.complete && tArt.naturalWidth) {
+    const asp = tArt.naturalHeight / tArt.naturalWidth;
+    const tw = 30;
+    ctx.drawImage(tArt, tk.x - state.camera.x - tw / 2, tk.y - state.camera.y - tw * asp + 4 + bob, tw, tw * asp);
+    return;
+  }
   px(ctx, tk.x - 4 - state.camera.x, tk.y - 8 + bob - state.camera.y, 9, 8, '#5a3a20');
   px(ctx, tk.x - 6 - state.camera.x, tk.y - 12 + bob - state.camera.y, 12, 5, '#7a5230');
   px(ctx, tk.x + 3 - state.camera.x, tk.y - 13 + bob - state.camera.y, 3, 4, '#c03838');
@@ -7110,11 +7119,18 @@ function drawRacing() {
     ctx.fillStyle = 'rgba(255,255,255,.5)';
     ctx.fillRect(70 + 480, y, 2, 40);
     // horse
-    ctx.fillStyle = h.color;
     const hx = 70 + Math.min(480, h.x);
-    ctx.fillRect(hx, y + 18, 18, 12);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(hx + 12, y + 20, 4, 4);
+    const hArt = animalArt.horse;
+    if (hArt && hArt.complete && hArt.naturalWidth) {
+      const asp = hArt.naturalHeight / hArt.naturalWidth;
+      const hw = 34;
+      ctx.drawImage(hArt, hx - 4, y + 34 - hw * asp, hw, hw * asp);
+    } else {
+      ctx.fillStyle = h.color;
+      ctx.fillRect(hx, y + 18, 18, 12);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(hx + 12, y + 20, 4, 4);
+    }
     // bet marker
     if (r.phase === 'pick' && r.bet === i) {
       ctx.fillStyle = '#ffd23e';
@@ -7379,6 +7395,18 @@ function updatePinball(dt) {
   }
 }
 
+function drawPinballCabinetArt() {
+  const cArt = objArt.pinballcab;
+  if (cArt && cArt.complete && cArt.naturalWidth) {
+    const asp = cArt.naturalHeight / cArt.naturalWidth;
+    for (const fx of [96, 470]) {
+      ctx.save();
+      ctx.globalAlpha = .8;
+      ctx.drawImage(cArt, fx, 130, 74, 74 * asp);
+      ctx.restore();
+    }
+  }
+}
 function drawPinball() {
   const g = state.pin;
   px(ctx, 0, 0, 640, 360, '#14101c');
@@ -7391,7 +7419,8 @@ function drawPinball() {
   outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
   // playfield
   if (sceneArt.mgPinball && sceneArt.mgPinball.complete && sceneArt.mgPinball.naturalWidth) {
-    ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
+    drawPinballCabinetArt();
+  ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
   } else {
     px(ctx, 232, 62, 160, 286, '#2a1a3a');
   }
@@ -7903,9 +7932,18 @@ function drawSlots() {
     px(ctx, 0, 0, 640, 416, '#16101e');
   }
   outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
-  // machine body
-  px(ctx, 170, 90, 300, 210, '#3a2a4a');
-  px(ctx, 178, 98, 284, 130, '#241a30');
+  // machine body — painted cabinet when art is up
+  const sArt = objArt.slotmachine;
+  if (sArt && sArt.complete && sArt.naturalWidth) {
+    const asp = sArt.naturalHeight / sArt.naturalWidth;
+    const mw = 340;
+    ctx.save();
+    ctx.globalAlpha = .55;
+    ctx.drawImage(sArt, 150, 78, mw, mw * asp);
+    ctx.restore();
+  }
+  px(ctx, 170, 90, 300, 210, 'rgba(30,20,42,.82)');
+  px(ctx, 178, 98, 284, 130, 'rgba(20,14,28,.9)');
   px(ctx, 178, 96, 284, 4, '#c8a040');
   // reels
   for (let i = 0; i < 3; i++) {
@@ -9103,6 +9141,21 @@ function drawDiner() {
     drawPerson(ctx, 165 - state.camera.x, 185 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit' });
     drawPerson(ctx, 330 - state.camera.x, 58 - state.camera.y, 'womanC', 'down', state.frame * .5, {});
     drawPerson(ctx, 100 - state.camera.x, 322 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'stand' });
+    // the GABAGOOL WIZARD itself
+    const pc = objArt.pinballcab;
+    if (pc && pc.complete && pc.naturalWidth) {
+      const asp = pc.naturalHeight / pc.naturalWidth;
+      const pw = 46;
+      ctx.drawImage(pc, 536 - state.camera.x, 288 - state.camera.y - pw * asp, pw, pw * asp);
+      const gl = .12 + Math.sin(state.time * 4) * .05;
+      ctx.save();
+      ctx.globalAlpha = gl;
+      ctx.fillStyle = '#ffd23e';
+      ctx.beginPath();
+      ctx.arc(559 - state.camera.x, 250 - state.camera.y, 26, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     return;
   }
   // checkered floor
@@ -12133,9 +12186,16 @@ function drawPlayer() {
     // a befriended turkey rides shotgun. no further questions.
     if (state.scene === 'hub' && state.turkey && state.turkey.friend) {
       const bob = Math.sin(state.time * 7) * 1.5;
-      px(ctx, state.player.x - 6, state.player.y - 14 + bob, 7, 6, '#5a3a20');
-      px(ctx, state.player.x - 8, state.player.y - 18 + bob, 4, 4, '#7a5230');
-      px(ctx, state.player.x - 4, state.player.y - 17 + bob, 2, 2, '#c03838');
+      const tArt = animalArt.turkey;
+      if (tArt && tArt.complete && tArt.naturalWidth) {
+        const asp = tArt.naturalHeight / tArt.naturalWidth;
+        const tw = 18;
+        ctx.drawImage(tArt, state.player.x - 16, state.player.y - 20 + bob - tw * asp * .4, tw, tw * asp);
+      } else {
+        px(ctx, state.player.x - 6, state.player.y - 14 + bob, 7, 6, '#5a3a20');
+        px(ctx, state.player.x - 8, state.player.y - 18 + bob, 4, 4, '#7a5230');
+        px(ctx, state.player.x - 4, state.player.y - 17 + bob, 2, 2, '#c03838');
+      }
     }
     return;
   }
