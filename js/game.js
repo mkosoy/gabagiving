@@ -7916,7 +7916,6 @@ function drawDiner() {
     ctx.arc(590 - state.camera.x, 210 - state.camera.y, 60, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    // the regulars — a diner is its people
     drawPerson(ctx, 200 - state.camera.x, 92 - state.camera.y, 'manB', 'down', Math.floor(state.time * .5) % 2, { pose: 'sit' });
     drawPerson(ctx, 470 - state.camera.x, 92 - state.camera.y, 'womanA', 'down', Math.floor(state.time * .4) % 2, { pose: 'sit' });
     drawPerson(ctx, 165 - state.camera.x, 185 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit' });
@@ -7988,6 +7987,18 @@ function drawDiner() {
     ctx.fill();
     ctx.restore();
   }
+  drawDinerRegulars();
+}
+
+function drawDinerRegulars() {
+  // the regulars — a diner is its people. camera is already translated in drawWorld,
+  // but the art path runs pre-translate, so this is only called on the fallback path…
+  // except drawDiner is ALWAYS inside the translated context — plain scene coords.
+  drawPerson(ctx, 200, 92, 'manB', 'down', Math.floor(state.time * .5) % 2, { pose: 'sit' });
+  drawPerson(ctx, 470, 92, 'womanA', 'down', Math.floor(state.time * .4) % 2, { pose: 'sit' });
+  drawPerson(ctx, 165, 185, 'womanB', 'down', 0, { pose: 'sit' });
+  drawPerson(ctx, 330, 58, 'womanC', 'down', state.frame * .5, {});
+  drawPerson(ctx, 100, 322, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'stand' });
 }
 
 function dinerInteractions() {
