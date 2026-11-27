@@ -11776,7 +11776,8 @@ const PARKED_CARS = {
     { id: 'nyc1', x: 300, y: 240, color: '#2848a0', speed: 205, name: 'an ex-cop cruiser', desc: 'A blue cruiser-ish sedan with a spotlight bracket and a thinly veiled past.', line: 'Ex-cop car. Still smells like authority and stale coffee.' }
   ],
   queens: [
-    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' }
+    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' },
+    { id: 'q2', x: 150, y: 242, color: '#e8e4da', speed: 150, name: 'a mail truck', desc: 'A United States postal truck, driver\u2019s door open, engine ticking. Bundles of mail in the back — catalogues, mostly, and something that is definitely a jury summons.', line: 'A mail truck. FEDERAL vehicle. Newman is going to have a complete meltdown and honestly that alone is worth the gas.' }
   ]
 };
 const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
