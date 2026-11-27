@@ -6124,6 +6124,18 @@ function nycInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
+    { x: 690, y: 260, w: 40, h: 34, radius: 42, label: 'Pretzel cart', action: () => {
+      if (state.money < 3) { toast('The pretzel man does not extend credit. He has been hurt before.'); return; }
+      state.money -= 3;
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .1);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The pretzel is the size of a steering wheel and roughly as chewy. George inhales half of it standing up, which in New York counts as dining out.' },
+        { speaker: 'george', text: 'THESE PRETZELS… are making me THIRSTY! …I don’t know why I yelled that. I don’t know what’s wrong with me. Where’s a water fountain?' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony eats a pretzel the way he does everything: completely, without ceremony, while walking. The pretzel man nods with respect. Nobody eats like that anymore. Nobody.' }
+      ]);
+    } },
     { x: 60, y: 240, w: 40, h: 34, radius: 42, label: 'Saxophone guy', action: () => {
       if (state.money < 1) { toast('You haven’t even a dollar for the arts.'); return; }
       state.money -= 1;
