@@ -1260,7 +1260,9 @@ function updateAmbient(dt) {
         continue;
       }
       const idle = state.scene === 'nyc'
-        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
+        ? (state.flags.heat || 0) >= 4.5
+          ? ['that’s HIM!', 'it’s the poster guy!', 'somebody call — actually don’t', 'I saw him first!']
+          : ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
         : state.scene === 'shore' || state.scene === 'ac'
           ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
           : state.scene === 'pines'
