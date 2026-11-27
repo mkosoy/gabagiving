@@ -3739,7 +3739,16 @@ function drawEffects() {
   }
 }
 
+let _niKey = '';
 function nearestInteraction() {
+  const key = state.frameCount + '|' + state.scene;
+  if (key === _niKey && nearestInteraction._cache !== undefined) return nearestInteraction._cache;
+  const v = nearestInteractionImpl();
+  nearestInteraction._cache = v;
+  _niKey = key;
+  return v;
+}
+function nearestInteractionImpl() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
@@ -10919,6 +10928,7 @@ function checkMissionHeatBreach() {
 }
 
 function update(dt) {
+  state.frameCount = (state.frameCount || 0) + 1;
   state.time += dt;
   checkMissionHeatBreach();
   updateMovers(dt);
