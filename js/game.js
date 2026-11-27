@@ -1764,11 +1764,13 @@ function updateCop(dt) {
       p.inCar = false;
       p.speed = p.kind === 'george' ? 96 : 88;
       audio.sfx('denied');
+      const fine = Math.min(state.money, Math.max(12, Math.round(state.money * .15)));
+      state.money -= fine;
       startDialog(p.kind === 'george' ? [
-        { speaker: 'narrator', text: 'A very unimpressed officer escorts George to the curb. The fine is twelve dollars and a lecture about civic responsibility.' },
+        { speaker: 'narrator', text: `A very unimpressed officer escorts George to the curb. The fine is $${fine} — “processing fees” — and a lecture about civic responsibility.` },
         { speaker: 'george', text: 'Twelve dollars! You know what the Human Fund would say about this? Nothing, because it doesn’t exist!' }
       ] : [
-        { speaker: 'narrator', text: 'The officer takes one look at Tony, decides this is above his pay grade, and writes a parking ticket instead.' },
+        { speaker: 'narrator', text: `The officer takes one look at Tony, decides this is above his pay grade, and writes a $${fine} parking ticket instead. The ticket is, somehow, exactly as expensive as justice.` },
         { speaker: 'tony', text: 'Smart kid. Here — for the policeman’s ball. Tell ‘em I said hi. Actually, don’t.' }
       ]);
     }
