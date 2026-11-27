@@ -3660,6 +3660,7 @@ function updateExplore(dt) {
 
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
+  if (moving && state.playerPose && !state.dialog) state.playerPose = null;
   state.idleT = moving || state.dialog ? 0 : (state.idleT || 0) + dt;
   if (state.flags.pendingSurprise && !state.dialog && !state.phone) {
     state.flags.pendingSurprise = false;
@@ -5818,7 +5819,7 @@ function monksInteractions() {
 function drawSoup() {
   if (drawSceneArt(sceneArt.soup, 640, 416)) {
     // the Soup Man glares from behind the counter
-    drawPerson(ctx, 180 + Math.sin(state.time * .5) * 18, 120, 'artie', 'right', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 180 + Math.sin(state.time * .5) * 18, 112, 'soupNazi', 'right', state.frame, { pose: 'stand' });
     // steam rises off the pots
     for (let i = 0; i < 3; i++) {
       const sy = (state.time * 26 + i * 40) % 70;
@@ -9169,6 +9170,7 @@ function dmvInteractions() {
       if (state.flags.dmvTicket <= serving) { toast('Your number is UP — get to the window before the clerk notices joy.'); return; }
       state.flags.dmvServing = serving + 1;
       audio.sfx('door');
+      state.player.x = 148; state.player.y = 290; state.player.dir = 'up'; state.playerPose = 'sit';
       startDialog([
         { speaker: 'narrator', text: 'You wait. Time passes the way it does here — geologically. A number is called. The display advances by exactly one. Someone’s legend ends at the window in silence.' },
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'An elderly man two chairs down has a sandwich in a foil wrapper older than your car.' : 'A wiseguy never waits. And yet. The things we do for vanity plates.' }
@@ -12289,7 +12291,7 @@ function drawPlayer() {
     }
     return;
   }
-  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
+  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose, sitClip: .55 } : {});
   if (state.flags.hasBat && state.scene === 'apartment') drawBat(ctx, state.player.x + 17, state.player.y + 11, -0.7);
 }
 
