@@ -848,6 +848,28 @@ function drawFastTravel() {
   ctx.textAlign = 'left';
 }
 
+const EXIT_HINTS = {
+  hub: '→ EAST: Holland Tunnel to Manhattan · ↓ SOUTH: Parkway to the Pines, Shore & AC · T: map',
+  nyc: '← WEST: tunnel home to Jersey · T: map',
+  pines: '↑ NORTH: back to the neighborhood · → EAST: the Shore · T: map',
+  shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
+  ac: '← WEST: the Shore · T: map',
+  njstreet: 'T: map · the neighborhood hub is the center of everything'
+};
+
+function drawExitHints() {
+  const hint = EXIT_HINTS[state.scene];
+  if (!hint || !state.flags.freeRoam) return;
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  const w = ctx.measureText(hint).width + 16;
+  ctx.fillStyle = 'rgba(8,10,16,.55)';
+  ctx.fillRect(320 - w / 2, 344, w, 14);
+  ctx.fillStyle = '#cfe3ff';
+  ctx.fillText(hint, 320, 354);
+  ctx.textAlign = 'left';
+}
+
 function drawHelp() {
   if (!state.help) return;
   drawPanel(150, 64, 340, 196, '#121a35', '#e8e2c8');
@@ -9289,6 +9311,7 @@ function render() {
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
+  if (state.mode === 'explore') drawExitHints();
   else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'claw') drawClaw();
   else if (state.mode === 'fishing') drawFishing();
