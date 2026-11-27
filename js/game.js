@@ -52,6 +52,7 @@ const sceneArt = {
   mgPoker: loadArt('./assets/mg-poker.webp'),
   mgKitchen: loadArt('./assets/mg-kitchen.webp'),
   mgBlackjack: loadArt('./assets/mg-blackjack.webp'),
+  mgPinball: loadArt('./assets/mg-pinball.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -7368,7 +7369,11 @@ function drawPinball() {
   outlineText(ctx, 'GABAGOOL WIZARD', 322, 40, '#ffd23e', 10, 'center');
   outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
   // playfield
-  px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  if (sceneArt.mgPinball && sceneArt.mgPinball.complete && sceneArt.mgPinball.naturalWidth) {
+    ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
+  } else {
+    px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  }
   // lane divider + lane
   px(ctx, 392, 62, 4, 286, '#4a3040');
   px(ctx, 396, 62, 20, 286, '#1a1020');
@@ -7386,13 +7391,26 @@ function drawPinball() {
     ctx.arc(bx, by, br + 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    px(ctx, bx - br, by - br, br * 2, br * 2, col);
-    px(ctx, bx - br + 4, by - br + 4, br * 2 - 8, br * 2 - 8, '#fff8');
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath();
+    ctx.arc(bx - 3, by - 3, br * .45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.5)';
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.stroke();
   }
   // rollovers
   for (const [rx, ry, id] of [[250, 200, 'L'], [368, 200, 'R']]) {
     const lit = g.rollHit && g.rollHit[id];
-    px(ctx, rx - 4, ry - 4, 8, 8, lit ? '#9be59b' : '#4a6a4a');
+    ctx.fillStyle = lit ? '#9be59b' : '#4a6a4a';
+    ctx.beginPath();
+    ctx.arc(rx, ry, 5, 0, Math.PI * 2);
+    ctx.fill();
   }
   // flippers
   const la = g.lf ? -0.7 : 0.3;
