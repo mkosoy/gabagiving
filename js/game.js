@@ -2827,6 +2827,17 @@ function updateExplore(dt) {
     const dx = tk.wx - tk.x, dy = tk.wy - tk.y;
     const dd = Math.hypot(dx, dy);
     if (dd > 4) { tk.x += (dx / dd) * 22 * dt; tk.y += (dy / dd) * 22 * dt; }
+    if (tk.friend && !tk.enraged) {
+      // a befriended turkey escorts you through the neighborhood. this is normal here.
+      const fdx = state.player.x - tk.x, fdy = state.player.y - tk.y;
+      const fd = Math.hypot(fdx, fdy) || 1;
+      if (fd > 46) {
+        const sp = state.player.inCar ? 85 : 55;
+        tk.x += (fdx / fd) * sp * dt;
+        tk.y += (fdy / fd) * sp * dt;
+      }
+      if (Math.random() < dt * .25) spawnEffect(tk.x, tk.y - 16, '♥', '#ff8fb0');
+    }
     if (tk.enraged) {
       tk.enraged -= dt;
       const dxp = state.player.x - tk.x, dyp = state.player.y - tk.y;
@@ -4932,6 +4943,19 @@ function hubInteractions() {
         { speaker: 'narrator', text: 'Tony pays $4 for lemonade without blinking, tips another four, and tells the kid to keep the lemonade.' },
         { speaker: 'tony', text: 'It’s not about the lemonade, AJ. It’s never about the lemonade. You’re learning. That’s good. That’s the whole thing right there.' },
         { speaker: 'aj', text: '…This is the best day of my life and I don’t know why.' }
+      ]);
+    } },
+    { x: 420, y: 230, w: 40, h: 30, radius: 34, label: 'Feed the turkey ($2)', action: () => {
+      if (!state.turkey) { toast('The turkey is out there. Somewhere. Watching.'); return; }
+      if (state.turkey.friend) { toast('The turkey already considers you kin.'); return; }
+      if (state.money < 2) { toast('Breadcrumbs cost $2. The turkey accepts nothing else.'); return; }
+      state.money = Math.max(0, state.money - 2);
+      state.turkey.friend = true;
+      state.turkey.enraged = 0;
+      audio.sfx('turkey');
+      startDialog([
+        { speaker: 'narrator', text: 'You scatter breadcrumbs. The wild turkey of North Caldwell approaches with the gravity of a made man accepting tribute. It has decided you are family now. There is no ceremony. There is only following.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s following me! Why is it following me?! …Actually this is the most loyal relationship I’ve ever had. I’m naming him CERTIFIED.' : 'The turkey eats, the turkey follows. That’s the whole arrangement. Honestly? Best partner I’ve ever had. Never once asked about the money.' }
       ]);
     } },
     ...(isNight() ? [] : [{ x: 420, y: 170, w: 60, h: 30, radius: 40, label: 'Ice cream truck', action: () => {
