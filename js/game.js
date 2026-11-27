@@ -4041,6 +4041,16 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
+    { x: 400, y: 120, w: 50, h: 34, radius: 42, label: 'The private room', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Vesuvio’s private party room: red leather, low light, a table for twelve that has hosted more “legitimate business” than any courthouse in Essex County. George sits at the head chair for exactly four seconds before fear removes him.' },
+        { speaker: 'george', text: 'I sat in the chair! Did anyone see?! Was that the boss chair?! I don’t want to be a boss! I barely want to be a middle manager! IS THERE A MIDDLE-MANAGER CHAIR?' }
+      ] : [
+        { speaker: 'narrator', text: 'The private room at Vesuvio. Tony runs a hand along the table — same scratches, same wine ring from 1987, same everything. Some things hold. He sits for a moment in the quiet, and the restaurant noise dims like the room itself is being respectful.' },
+        { speaker: 'tony', text: 'Artie keeps this room perfect. You know how rare that is? Perfect? You eat the meal, you drink the wine, you don’t ask what the table heard. That’s the deal.' }
+      ]);
+    } },
     { x: 300, y: 120, w: 44, h: 34, radius: 44, label: 'Grappa for the kitchen', action: () => {
       if (state.money < 30) { toast('Grappa for the whole kitchen runs $30.'); return; }
       state.money -= 30;
