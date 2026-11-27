@@ -3705,10 +3705,18 @@ function updateExplore(dt) {
     spawnEffect(p.x + 8, p.y - 10, 'HONK!', '#ffe78a');
   }
   if (state.flags.freeRoam && p.inCar && consume(['KeyR'])) {
-    const stations = ['drive', 'nyc', 'club', 'rome', 'dream'];
+    const stations = ['drive', 'nyc', 'club', 'rome', 'dream', 'scanner'];
     state.carRadio = ((state.carRadio ?? -1) + 1) % stations.length;
     audio.setMusic(stations[state.carRadio]);
-    const names = ['WBPM 88.1 — the drive mix', 'WNYC — traffic & smooth', 'WBING — club classics', 'WROME — amore hour', 'WPINE — late night static'];
+    const names = ['WBPM 88.1 — the drive mix', 'WNYC — traffic & smooth', 'WBING — club classics', 'WROME — amore hour', 'WPINE — late night static', 'WSCAN — police band (illegal receiver)'];
+    if (state.carRadio === 5) {
+      const h = state.flags.heat || 0;
+      const scan = h >= 4 ? '“…ALL UNITS — suspect described as ‘a fella in a borrowed car’…”'
+        : h >= 2.5 ? '“…increased patrols holiday weekend, report of a man yelling SERENITY…”'
+        : h >= 1 ? '“…minor disturbance, probable gull-related. all units resume normal…”'
+        : '“…quiet night out there. too quiet. happy thanksgiving, dispatch out.”';
+      spawnEffect(p.x + 8, p.y - 46, scan, '#ff9a7a');
+    }
     if (state.carRadio === 2) spawnEffect(p.x + 8, p.y - 34, '“…all Thanksgiving weekend, NONSTOP club classics…”', '#8ffff2');
     spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
   }
