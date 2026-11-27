@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap'];
 function saveWorld() {
   try {
     const out = {};
@@ -2804,7 +2804,25 @@ function nearestInteraction() {
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
-    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
+    list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
+    if (state.player.kind === 'george') {
+      if (!state.flags.deskNap) {
+        state.flags.deskNap = true;
+        state.money += 60;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'George’s desk: a monument to appearing busy. The drawer contains a nap mat, a sandwich from March, and $60 in per diem George never reported. It’s yours now. It was always yours.' },
+          { speaker: 'george', text: 'The nap mat! My sweet nap mat! I wondered where — I mean, I’ve never seen this desk before in my life!' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'The desk sits quiet, its nap mat undisturbed, its sandwich unaged beyond what science can explain.' }]);
+    } else {
+      startDialog([
+        { speaker: 'narrator', text: 'Tony studies the desk of a man who is paid to do nothing and does it poorly. Somewhere deep in his soul, a respect forms — the purest grift he has ever witnessed, and the man doesn’t even know he’s running it.' },
+        { speaker: 'tony', text: 'This Costanza. He’s got the safest job in America and he complains about it. That’s not a worker. That’s an artist.' }
+      ]);
+    }
+  } });
+  list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
       if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
       else enterHub(false);
     } });
