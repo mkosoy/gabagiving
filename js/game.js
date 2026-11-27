@@ -4659,7 +4659,7 @@ function apartmentInteractions() {
   if (s === 3) list.push({ x: 240, y: 300, w: 110, h: 40, label: 'Sit for dinner', action: sitDinner });
   if (state.flags.freeRoam) {
     if (state.player.kind === 'george' && !state.flags.humanFund) list.push({ x: 232, y: 306, w: 164, h: 52, label: 'Human Fund', action: humanFundScheme });
-    list.push({ x: 200, y: 60, w: 40, h: 30, radius: 40, label: 'The Superman figurine', action: () => {
+    list.push({ x: 242, y: 60, w: 30, h: 24, radius: 30, label: 'The Superman figurine', action: () => {
       audio.sfx('pickup');
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'The Superman figurine stands on the shelf, mid-stride, eternal. George regards it with the reverence of a man who once tried to get into a shootout over a parking space because — and this is documented — Superman would never back down from a spot.' },
