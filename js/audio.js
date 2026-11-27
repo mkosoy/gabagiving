@@ -264,7 +264,8 @@ export class AudioSys {
         vesuvio: [262, 330, 392, 330, 349, 392, 523, 392],
         satriale: [147, 0, 175, 147, 196, 175, 147, 131],
         yankees: [196, 196, 262, 196, 294, 262, 330, 262],
-        ending: [262, 330, 392, 523, 392, 330, 262, 0]
+        ending: [262, 330, 392, 523, 392, 330, 262, 0],
+        scanner: [0, 0, 0, 0, 0, 0, 0, 0]
       };
       const seq = modes[this.musicMode] || modes.house;
       const root = seq[s % seq.length];
@@ -298,6 +299,11 @@ export class AudioSys {
       if (this.musicMode === 'monks' && Math.random() < .015) this.tone(1900, .05, 'sine', .004, 0, -200); // espresso steam
       if (this.musicMode === 'soup' && Math.random() < .02) this.noise(.05, .005, 0, 500); // ladle on steel
       if (this.musicMode === 'satriale' && Math.random() < .03) this.noise(.04, .006, 0, 700 + Math.random() * 400); // the bandsaw hum
+      if (this.musicMode === 'scanner') {
+        this.noise(.09, .004, 0, 1800); // constant squelch hiss
+        if (Math.random() < .05) this.tone(900 + Math.random() * 400, .05, 'square', .003, 0, -100); // voice bursts, unintelligible
+        if (Math.random() < .02) { const f = 500 + Math.random() * 200; this.tone(f, .08, 'square', .003, 0, 60); } // dispatch tones
+      }
       if (this.musicMode === 'satriale' && Math.random() < .015) this.sfx('honk'); // Pork Store traffic
       if (this.musicMode === 'vesuvio' && Math.random() < .04) this.noise(.03, .005, 0, 2000); // cutlery and quiet opera
       if (this.musicMode === 'vesuvio' && Math.random() < .02) this.tone(520, .3, 'sine', .003, 0, 60); // a violin somewhere
