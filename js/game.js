@@ -3724,6 +3724,18 @@ function updateExplore(dt) {
     if (state.carRadio === 2) spawnEffect(p.x + 8, p.y - 34, '“…all Thanksgiving weekend, NONSTOP club classics…”', '#8ffff2');
     spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
   }
+  // WSCAN ambient chatter — the scanner mutters about you when you're hot
+  if (state.player.inCar && state.carRadio === 5 && !state.dialog) {
+    state.scanT = (state.scanT || 14) - dt;
+    if (state.scanT <= 0) {
+      state.scanT = 16 + Math.random() * 14;
+      const h = state.flags.heat || 0;
+      const p = state.player;
+      if (h >= 4) spawnEffect(p.x + 8, p.y - 46, '“…unit 12 in pursuit — suspect vehicle is DEFINITELY borrowed…”', '#ff9a7a');
+      else if (h >= 2) spawnEffect(p.x + 8, p.y - 46, '“…reports of a disturbance — holiday weekend, use discretion…”', '#ffcf9a');
+      else if (Math.random() < .4) spawnEffect(p.x + 8, p.y - 46, '“…dispatch to nothing. quiet night. too quiet.”', '#9ac8ff');
+    }
+  }
   // leaving a borrowed car takes priority over other interactions
   if (p.inCar && !(nearestInteraction() && nearestInteraction().inCarOk) && interactPressed()) {
     p.inCar = false;
