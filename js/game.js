@@ -1640,6 +1640,18 @@ function drawParadeBalloon() {
   }
 }
 
+function drawRaccoons() {
+  if (state.scene !== 'hub' || !isNight()) return;
+  const t = state.time;
+  for (let i = 0; i < 2; i++) {
+    const rx = 240 + i * 130 + Math.sin(t * .5 + i * 2) * 30;
+    const ry = 350 + Math.cos(t * .7 + i) * 8;
+    px(ctx, rx - 5, ry - 4, 10, 7, '#5a5a62');
+    px(ctx, rx + 3, ry - 7, 5, 5, '#6a6a72');
+    px(ctx, rx - 8, ry - 3, 4, 3, '#3a3a42'); // striped tail, allegedly
+  }
+}
+
 function drawWantedPoster() {
   if (state.scene !== 'hub' || (state.flags.heat || 0) < 4) return;
   const wx = 620, wy = 108;
@@ -7748,6 +7760,7 @@ function drawWorld() {
   drawLawnmower();
   drawUmbrellaGuy();
   drawWantedPoster();
+  drawRaccoons();
   drawParadeBalloon();
   drawIceCream();
   drawWildTurkey();
