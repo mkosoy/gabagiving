@@ -8329,6 +8329,25 @@ function taffyInteractions() {
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: () => {
       setScene('shore', 400, 250);
     } },
+    { x: 480, y: 300, w: 80, h: 30, radius: 42, label: 'Watch the taffy pull', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The machine pulls. The taffy folds. The machine pulls. You could watch this for hours. You DO watch this for hours. Somewhere, your afternoon evaporates.' },
+        { speaker: 'george', text: 'It’s HYPNOTIC. The pulling! The folding! Why is that not a job — professional taffy watcher. I would be GREAT at it.' }
+      ] : [
+        { speaker: 'narrator', text: 'The machine pulls the taffy in long gleaming loops. Same motion, forever. Hypnotic. Like therapy, but it smells like molasses.' },
+        { speaker: 'tony', text: 'Guy who invented this machine — genius. Everybody else in this operation is just feedin’ it sugar.' }
+      ]);
+    } },
+    { x: 150, y: 150, w: 60, h: 24, radius: 40, label: 'Buy the fudge — $5', action: () => {
+      if (state.money < 5) { toast('The fudge is five dollars. Worth every cent, but five.'); return; }
+      state.money -= 5;
+      if ((state.flags.hp || 3) < 3) { state.flags.hp = (state.flags.hp || 3) + 1; spawnEffect(state.player.x + 8, state.player.y - 20, '+1 HEALTH', '#9be59b'); }
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'One slice of boardwalk fudge, cut with a wire. Dense as a cinderblock, sweet as a confession. The woman behind the counter says they make it in the back, the way her grandmother did, except her grandmother used a bigger knife.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'This fudge has STRUCTURE. Integrity. You could build a house on this fudge!' : 'That’s real fudge. Not the mall stuff. Tell nobody I ate it before noon.' }
+      ]);
+    } },
     { x: 320, y: 290, w: 60, h: 20, radius: 42, label: 'Buy a box of taffy — $6', action: () => {
       if (state.money < 6) { toast('Six dollars. It’s taffy, not a casino.'); return; }
       state.money -= 6;
@@ -9872,6 +9891,27 @@ function drawHubWayfinding() {
   drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
   drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
   drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
+  // the Endgame Diner storefront — a stainless stripe in the north-edge gap, neon and everything
+  if (state.scene === 'hub') {
+    px(ctx, 852, 62, 68, 88, '#8a8a92');
+    px(ctx, 852, 62, 68, 6, '#c8c8d0');
+    for (let rib = 0; rib < 6; rib++) px(ctx, 852, 74 + rib * 12, 68, 2, '#7a7a84');
+    px(ctx, 876, 108, 20, 42, '#2a2a30'); // door
+    px(ctx, 878, 112, 16, 14, '#9fd4ec');
+    px(ctx, 856, 100, 16, 20, '#e8dfc8'); // window, warm inside
+    px(ctx, 902, 100, 14, 20, '#e8dfc8');
+    // the neon sign — ENDGAME in red, buzzes like a real one
+    const neon = Math.sin(state.time * 6) > -.85;
+    if (neon) outlineText(ctx, 'ENDGAME', 886, 78, '#ff5a4a', 6, 'center');
+    outlineText(ctx, 'DINER', 886, 90, neon ? '#ffd24a' : '#8a7a4a', 5, 'center');
+    ctx.save();
+    ctx.globalAlpha = neon ? .14 + Math.sin(state.time * 6) * .04 : .05;
+    ctx.fillStyle = '#ff5a4a';
+    ctx.beginPath();
+    ctx.arc(886, 96, 44, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
 }
 
