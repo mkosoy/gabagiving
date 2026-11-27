@@ -1517,15 +1517,14 @@ function drawKite() {
   const t = state.time;
   const kx = 350 + Math.sin(t * .4) * 90 + Math.sin(t * 1.1) * 20;
   const ky = 100 + Math.cos(t * .7) * 22;
-  const hx = 350 - state.camera.x, hy = 290 - state.camera.y;
-  // string
+    // string
   ctx.strokeStyle = 'rgba(240,240,240,.5)';
   ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(kx - state.camera.x, ky - state.camera.y);
+  ctx.moveTo(350, 290);
+  ctx.lineTo(kx, ky);
   ctx.stroke();
-  px(ctx, kx - state.camera.x - 4, ky - state.camera.y - 3, 9, 6, '#ff6a8a');
-  px(ctx, kx - state.camera.x - 4, ky - state.camera.y - 3, 4, 6, '#ffd23e');
+  px(ctx, kx - 4, ky - 3, 9, 6, '#ff6a8a');
+  px(ctx, kx - 4, ky - 3, 4, 6, '#ffd23e');
   // the kid holding it
   if (!state.kiteKid) state.kiteKid = true;
 }
@@ -7250,7 +7249,7 @@ function drawPlayer() {
         const sy = state.player.y - 6 - ph * 26;
         ctx.fillStyle = `rgba(90,90,95,${(1 - ph) * .4})`;
         ctx.beginPath();
-        ctx.arc(sx - state.camera.x, sy - state.camera.y, 3 + ph * 6, 0, Math.PI * 2);
+        ctx.arc(sx, sy, 3 + ph * 6, 0, Math.PI * 2);
         ctx.fill();
       }
     }
