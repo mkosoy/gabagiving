@@ -7691,6 +7691,30 @@ function drawMeadow() {
 
 function meadowInteractions() {
   return [
+    { x: 400, y: 330, w: 90, h: 40, radius: 52, inCarOk: true, label: 'The chop shop — cash for cars', action: () => {
+      if (!state.player.inCar) { toast('The chop shop only talks to people who arrive IN something. With four wheels. That they don’t plan to leave with.'); return; }
+      if ((state.chopCd || 0) > state.time) { toast('The chop shop is hot right now — literally, there’s smoke. Come back in a couple minutes.'); return; }
+      const sp = state.player.speed || 160;
+      const tier = sp >= 220 ? ['the Vette', 110] : sp >= 195 ? ['the cruiser', 85] : sp >= 175 ? ['the sedan', 60] : ['the wagon', 45];
+      const pay = tier[1] + Math.floor(Math.random() * 20);
+      state.money += pay;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+      state.chopCd = state.time + 150;
+      state.player.inCar = false;
+      state.player.carColor = null;
+      state.player.carV = 0;
+      state.player.speed = state.player.kind === 'george' ? 96 : 88;
+      audio.sfx('cash');
+      audio.sfx('door');
+      const sc = scenes[state.scene];
+      if (sc) audio.setMusic(sc.music);
+      spawnEffect(state.player.x + 8, state.player.y - 12, `+$${pay}`, '#9fe89a');
+      startDialog([
+        { speaker: 'narrator', text: `The garage door is open exactly enough. A man in a welding mask looks at ${tier[0]}, looks at you, looks at the Meadowlands beyond you both, and names a number without a single word being exchanged about provenance. $${pay}. The car will be seventeen cars by Tuesday. The welding mask does not care about your feelings.` },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? `They took it apart WHILE I WATCHED! It was someone’s car! It was MY car! It was — whose car was it? Should I feel bad? I feel a little bad. I feel worse that I got lowballed.` : 'Fair price, no paperwork, no eye contact. This is how commerce is SUPPOSED to work. The reeds keep secrets better than people do.' },
+        { speaker: 'system', text: `+$${pay} · +1 heat. The shop needs a few minutes before the next one.` }
+      ]);
+    } },
     { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← West: the neighborhood', action: () => {
       startDialog([{ speaker: 'narrator', text: 'West on Route 3, past the reeds and the things the reeds keep secret. The neighborhood is ten minutes and a world away.' }], () => startTransit('hub', 60, 250, 'ROUTE 3 · WEST'));
     } },
