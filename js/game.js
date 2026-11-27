@@ -12511,8 +12511,7 @@ function drawParkedCars() {
   if (!spots) return;
   for (const s of spots) {
     if ((state['parkedCd' + s.id] || 0) > state.time) continue;
-    px(ctx, s.x - 2, s.y + 12, 40, 8, 'rgba(0,0,0,.25)');
-    drawCar(s.x, s.y, s.color);
+    drawCar(s.x, s.y, s.color, false, Math.PI / 2, null, s.scale || 1.3);
   }
 }
 
@@ -12757,7 +12756,7 @@ function drawPeptides() {
   outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
-function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = null) {
+function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = null, scale = 1) {
   const mapped = CAR_SPRITE_MAP[color];
   const spriteName = model || mapped || 'sedan';
   const needsTint = !!(model && color && mapped !== model);
@@ -12769,7 +12768,7 @@ function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = nul
     // shadow
     ctx.fillStyle = 'rgba(0,0,0,.35)';
     ctx.beginPath();
-    ctx.ellipse(1, 2, 15, 21, 0, 0, Math.PI * 2);
+    ctx.ellipse(1, 2, 15 * scale, 21 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
     // night headlight beams ahead of the hood
     if (typeof isNight === 'function' && isNight()) {
@@ -12782,7 +12781,7 @@ function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = nul
       ctx.closePath();
       ctx.fill();
     }
-    const w = 30;
+    const w = 30 * scale;
     const h = Math.round(w * img.naturalHeight / img.naturalWidth);
     if (needsTint) {
       // resprayed: draw onto a scratch canvas and tint, so the body shape stays the stolen model
@@ -13204,8 +13203,8 @@ const PARKED_CARS = {
     { id: 'nyc1', x: 300, y: 240, color: '#2848a0', speed: 205, name: 'an ex-cop cruiser', desc: 'A blue cruiser-ish sedan with a spotlight bracket and a thinly veiled past.', line: 'Ex-cop car. Still smells like authority and stale coffee.' }
   ],
   queens: [
-    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' },
-    { id: 'q2', x: 150, y: 242, color: '#e8e4da', speed: 150, name: 'a mail truck', desc: 'A United States postal truck, driver\u2019s door open, engine ticking. Bundles of mail in the back — catalogues, mostly, and something that is definitely a jury summons.', line: 'A mail truck. FEDERAL vehicle. Newman is going to have a complete meltdown and honestly that alone is worth the gas.' }
+    { id: 'q1', x: 435, y: 288, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' },
+    { id: 'q2', x: 240, y: 288, color: '#e8e4da', speed: 150, name: 'a mail truck', desc: 'A United States postal truck, driver\u2019s door open, engine ticking. Bundles of mail in the back — catalogues, mostly, and something that is definitely a jury summons.', line: 'A mail truck. FEDERAL vehicle. Newman is going to have a complete meltdown and honestly that alone is worth the gas.' }
   ]
 };
 const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
