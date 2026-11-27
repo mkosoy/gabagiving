@@ -5651,6 +5651,106 @@ function drawDarts() {
   ctx.textAlign = 'left';
 }
 
+function initSkeeball() {
+  if ((state.flags.tribute || 0) < 5) { startDialog([{ speaker: 'narrator', text: 'Skeeball is five dollars for three balls. The machine has not awarded the big prize since the Clinton administration. It remembers.' }]); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+  state.skee = { balls: [], power: 0, dir: 1, charging: false, phase: 'aim', total: 0, t: 0 };
+  state.mode = 'skeeball';
+  audio.sfx('pickup');
+}
+
+function updateSkeeball(dt) {
+  const s = state.skee;
+  if (!s) { state.mode = 'explore'; return; }
+  s.t += dt;
+  if (s.phase === 'aim') {
+    if (!s.charging) {
+      if (consume(['Space', 'Enter', 'KeyE'])) s.charging = true;
+      if (consume(['Escape', 'KeyM']) && !s.balls.length) { state.skee = null; state.mode = 'explore'; }
+    } else {
+      s.power += dt * 1.6 * s.dir;
+      if (s.power > 1) { s.power = 1; s.dir = -1; }
+      if (s.power < 0) { s.power = 0; s.dir = 1; }
+      if (!down(['Space', 'Enter', 'KeyE'])) {
+        // release: the throw
+        const p = s.power + (Math.random() - .5) * .06;
+        let score = 0, ring = 'GUTTER';
+        if (p > .92) { score = 0; ring = 'OVER!'; }
+        else if (p > .78) { score = 100; ring = '100!!'; }
+        else if (p > .62) { score = 50; ring = '50'; }
+        else if (p > .45) { score = 30; ring = '30'; }
+        else if (p > .28) { score = 20; ring = '20'; }
+        else { score = 10; ring = '10'; }
+        s.balls.push({ power: p, score, ring });
+        s.total += score;
+        audio.sfx(score >= 50 ? 'cash' : 'punch');
+        s.charging = false; s.power = 0; s.dir = 1;
+        if (s.balls.length >= 3) {
+          s.phase = 'done';
+          if (s.total >= 120) { state.flags.tribute = (state.flags.tribute || 0) + 40; audio.sfx('cash'); }
+        }
+      }
+    }
+    return;
+  }
+  if (s.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape'])) { state.skee = null; state.mode = 'explore'; }
+}
+
+function drawSkeeball() {
+  const s = state.skee;
+  if (!s) return;
+  ctx.fillStyle = '#101426';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('SKEEBALL — three balls, 120+ pays $40', 320, 36);
+  // rings target at top of ramp
+  const cx = 320, cy = 110;
+  const rings = [[46, '#5a2a2a', '10'], [36, '#2a4a5a', '20'], [27, '#2a5a34', '30'], [18, '#6a5a20', '50'], [9, '#8b2233', '100']];
+  for (const [r, col, label] of rings) {
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(cx, cy, r + 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '8px monospace';
+    ctx.fillText(label, cx, cy - r - 2 + 10);
+  }
+  // ramp
+  ctx.strokeStyle = 'rgba(255,255,255,.25)';
+  ctx.strokeRect(cx - 40, cy + 20, 80, 150);
+  // thrown balls markers
+  s.balls.forEach((ball, bi) => {
+    ctx.fillStyle = '#fff';
+    const bx = cx - 120 + bi * 30;
+    ctx.fillRect(bx, 300, 18, 8);
+    ctx.fillStyle = '#ffd23e';
+    ctx.font = '8px monospace';
+    ctx.fillText(ball.ring, bx + 9, 296);
+  });
+  // power meter
+  ctx.fillStyle = '#333';
+  ctx.fillRect(cx + 120, 80, 18, 200);
+  ctx.fillStyle = s.power > .92 ? '#f66' : s.power > .78 ? '#ffd23e' : '#4a4';
+  const ph = s.power * 200;
+  ctx.fillRect(cx + 120, 280 - ph, 18, ph);
+  ctx.strokeStyle = '#fff';
+  ctx.strokeRect(cx + 120, 80, 18, 200);
+  // sweet spot marker
+  ctx.strokeStyle = '#ffd23e';
+  ctx.strokeRect(cx + 118, 280 - (.92 * 200), 22, (.92 - .78) * 200);
+  ctx.fillStyle = '#fff';
+  ctx.font = '10px monospace';
+  if (s.phase === 'aim') {
+    ctx.fillText(s.charging ? 'release to throw!' : 'HOLD space to charge — the gold band is the sweet spot', 320, 336);
+    ctx.fillText('ball ' + (s.balls.length + 1) + ' of 3 · total ' + s.total, 320, 60);
+  } else {
+    ctx.fillStyle = s.total >= 120 ? '#6f6' : '#f66';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('TOTAL ' + s.total + (s.total >= 120 ? ' — the machine pays! +$40. SPACE' : ' — the machine remembers. SPACE'), 320, 336);
+  }
+  ctx.textAlign = 'left';
+}
+
 function initSlots() {
   state.slots = { reels: ['7', '7', '7'], spinning: false, spinT: 0, result: null, resultT: 0, pulls: 0 };
   state.mode = 'slots';
@@ -6436,6 +6536,15 @@ function shoreInteractions() {
       state.mode = 'claw';
       state.claw = { x: .5, prize: .15 + Math.random() * .7, t: 8, phase: 'aim', dropT: 0 };
       audio.sfx('pickup');
+    } },
+    { x: 470, y: 130, w: 44, h: 40, radius: 40, label: 'Skeeball', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The skeeball machine. The 100 ring has a single ball-sized dent, as if it happened once, in 1994, and the machine still flinches.' },
+        { speaker: 'george', text: 'Skeeball! The sport of kings! I have a theory — it’s all in the ARC. Physics! Angles! I once scored a 40 with my eyes closed. Open, I averaged 20. I play better blind!' }
+      ] : [
+        { speaker: 'narrator', text: 'The skeeball machine. Five bucks, three balls, and the chance to beat a machine older than most of the crew.' },
+        { speaker: 'tony', text: 'My uncle ran one of these on the boardwalk in the sixties. The trick is the machine decides. Like everything else in Jersey.' }
+      ], () => initSkeeball());
     } },
     { x: 640, y: 240, w: 44, h: 44, radius: 44, label: 'High striker', action: () => {
       if (state.money < 5) { toast('High striker is $5 a swing.'); return; }
@@ -9001,6 +9110,7 @@ function render() {
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
+  else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
@@ -9390,6 +9500,8 @@ function update(dt) {
     updateRacing(dt);
   } else if (state.mode === 'darts') {
     updateDarts(dt);
+  } else if (state.mode === 'skeeball') {
+    updateSkeeball(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
