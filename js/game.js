@@ -754,70 +754,144 @@ function drawTrivia() {
 }
 
 const FT_NODES = [
-  { id: 'hub', x: 245, y: 122, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale’s, Vesuvio' },
-  { id: 'nyc', x: 432, y: 118, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk’s, the soup stand, Jerry’s, Kramer' },
-  { id: 'pines', x: 218, y: 210, dx: 384, dy: 210, name: 'The Pine Barrens', flavor: 'GARDEN STATE PARKWAY · SOUTH', desc: 'snow, mist, and the Russian' },
-  { id: 'shore', x: 335, y: 262, dx: 384, dy: 220, name: 'Jersey Shore', flavor: 'GARDEN STATE PARKWAY · EXIT 88', desc: 'boardwalk, gulls, skeeball' },
-  { id: 'ac', x: 280, y: 312, dx: 380, dy: 220, name: 'Atlantic City', flavor: 'ATLANTIC CITY EXPRESSWAY', desc: 'neon, slots, rolling chairs' }
+  { id: 'hub', x: 258, y: 108, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale\'s, Vesuvio' },
+  { id: 'nyc', x: 552, y: 102, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk\'s, the soup stand, Jerry\'s, the bodega' },
+  { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
+  { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
+  { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' }
 ];
 
 function drawFastTravel() {
-  // backdrop
-  ctx.fillStyle = 'rgba(6,10,18,.94)';
-  ctx.fillRect(60, 34, 520, 306);
+  // full-screen road map — the state of New Jersey, Thanksgiving eve
+  ctx.fillStyle = '#0a0f16';
+  ctx.fillRect(0, 0, 640, 360);
+  // paper
+  ctx.fillStyle = '#0e1a12';
+  ctx.fillRect(14, 8, 612, 344);
   ctx.strokeStyle = '#d4a017';
   ctx.lineWidth = 2;
-  ctx.strokeRect(60, 34, 520, 306);
-  ctx.fillStyle = '#ffd23e';
-  ctx.font = 'bold 13px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('THE GARDEN STATE — click a destination', 320, 62);
+  ctx.strokeRect(14, 8, 612, 344);
 
-  // water: the Hudson + the Atlantic
+  // water: the Hudson river + the Atlantic
   ctx.fillStyle = '#12283d';
-  ctx.fillRect(388, 74, 60, 224);
-  ctx.fillRect(360, 270, 190, 60);
+  ctx.fillRect(448, 16, 88, 240);
+  ctx.fillRect(380, 288, 246, 64);
+  ctx.fillRect(536, 16, 90, 336);
   ctx.fillStyle = '#1a3a55';
-  for (let wy = 80; wy < 290; wy += 18) {
-    ctx.fillRect(392 + (wy % 36 === 0 ? 6 : 0), wy, 30, 2);
+  for (let wy = 24; wy < 340; wy += 16) {
+    ctx.fillRect(452 + (wy % 32 === 0 ? 8 : 0), wy, 34, 2);
+    if (wy > 280) ctx.fillRect(388 + (wy % 32 === 0 ? 10 : 0), wy, 60, 2);
   }
   ctx.fillStyle = '#7fb8dd';
   ctx.font = '8px monospace';
-  ctx.fillText('HUDSON', 418, 200);
-  ctx.fillText('ATLANTIC', 460, 306);
+  ctx.textAlign = 'center';
+  ctx.save();
+  ctx.translate(474, 140);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('H U D S O N   R I V E R', 0, 0);
+  ctx.restore();
+  ctx.fillText('A T L A N T I C   O C E A N', 500, 330);
 
-  // landmasses: jersey mainland + the manhattan strip
-  ctx.fillStyle = '#1d2b1a';
-  ctx.fillRect(80, 74, 300, 200);
-  ctx.fillRect(80, 250, 180, 40);
-  ctx.fillRect(462, 84, 26, 150);
+  // jersey landmass — rough silhouette
+  ctx.fillStyle = '#16281a';
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(446, 20);
+  ctx.lineTo(446, 150);
+  ctx.lineTo(440, 210);
+  ctx.lineTo(420, 250);
+  ctx.lineTo(390, 280);
+  ctx.lineTo(350, 300);
+  ctx.lineTo(300, 320);
+  ctx.lineTo(240, 330);
+  ctx.lineTo(120, 336);
+  ctx.lineTo(60, 330);
+  ctx.closePath();
+  ctx.fill();
+  // sandy hook + shore strip
+  ctx.fillRect(410, 180, 14, 80);
+  // manhattan strip
+  ctx.fillStyle = '#241f14';
+  ctx.fillRect(538, 40, 34, 150);
+  ctx.fillStyle = '#c9a86a';
+  ctx.font = '7px monospace';
+  ctx.save();
+  ctx.translate(528, 120);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('M A N H A T T A N', 0, 0);
+  ctx.restore();
 
-  // the Parkway — spine of the state
-  ctx.strokeStyle = '#caa53d';
+  // decorative roads: turnpike (I-95) + parkway spine
+  ctx.strokeStyle = 'rgba(150,150,140,.35)';
   ctx.lineWidth = 2;
-  ctx.setLineDash([5, 4]);
+  ctx.setLineDash([]);
   ctx.beginPath();
-  ctx.moveTo(245, 122);
-  ctx.lineTo(218, 210);
-  ctx.lineTo(335, 262);
-  ctx.lineTo(280, 312);
+  ctx.moveTo(150, 20);
+  ctx.lineTo(200, 120);
+  ctx.lineTo(230, 220);
+  ctx.lineTo(260, 330);
   ctx.stroke();
-  // the tunnel — through the Hudson
-  ctx.strokeStyle = '#e8722a';
+  ctx.fillStyle = 'rgba(180,180,170,.5)';
+  ctx.font = '7px monospace';
+  ctx.fillText('NJ TURNPIKE', 178, 120);
+
+  // the Garden State Parkway — spine of the state
+  ctx.strokeStyle = '#caa53d';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
   ctx.beginPath();
-  ctx.moveTo(245, 122);
-  ctx.lineTo(432, 118);
+  ctx.moveTo(258, 108);
+  ctx.lineTo(222, 196);
+  ctx.lineTo(310, 230);
+  ctx.lineTo(400, 248);
+  ctx.stroke();
+  // AC expressway
+  ctx.strokeStyle = '#8ab';
+  ctx.beginPath();
+  ctx.moveTo(400, 248);
+  ctx.lineTo(322, 318);
+  ctx.stroke();
+  // the tunnel — under the Hudson
+  ctx.strokeStyle = '#e8722a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(258, 108);
+  ctx.lineTo(446, 100);
+  ctx.setLineDash([3, 5]);
+  ctx.lineTo(552, 102);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.fillStyle = '#e8722a';
+  ctx.font = '7px monospace';
+  ctx.fillText('HOLLAND TUNNEL', 350, 92);
+
+  // towns/landmarks
+  ctx.fillStyle = '#6f8f6f';
+  ctx.font = '7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Newark', 320, 62);
+  ctx.fillText('Jersey City', 390, 80);
+  ctx.fillText('Sandy Hook', 424, 178);
+  ctx.fillText('EXIT 13', 296, 118);
+  ctx.fillStyle = '#4a5';
+  ctx.fillRect(316, 58, 3, 3);
+  ctx.fillRect(386, 76, 3, 3);
 
   // region nodes
   FT_NODES.forEach((n, i) => {
     const sel = i === (state.ftSel || 0);
     const here = n.id === state.scene;
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
+    if (sel) {
+      ctx.strokeStyle = `rgba(255,210,62,${.4 + pulse * .5})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 13 + pulse * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.fillStyle = here ? '#3a6' : sel ? '#ffd23e' : '#c33';
     ctx.beginPath();
-    ctx.arc(n.x, n.y, sel ? 8 + pulse * 2 : 6, 0, Math.PI * 2);
+    ctx.arc(n.x, n.y, sel ? 7 : 5.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 1;
@@ -825,21 +899,34 @@ function drawFastTravel() {
     ctx.fillStyle = sel || here ? '#fff3c4' : '#ddd';
     ctx.font = (sel ? 'bold ' : '') + '9px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(n.name + (here ? '  (here)' : ''), n.x, n.y - 12);
+    ctx.fillText(n.name + (here ? '  ★ you are here' : ''), n.x, n.y - 12);
   });
 
-  // selected flavor text
+  // header + footer
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE GARDEN STATE — THANKSGIVING EVE', 320, 28);
   const cur = FT_NODES[state.ftSel || 0];
   if (cur) {
     ctx.fillStyle = '#9ab';
     ctx.font = '9px monospace';
-    ctx.fillText(cur.desc, 320, 309);
+    ctx.fillText(cur.desc, 320, 330);
     ctx.fillStyle = '#e8722a';
-    ctx.fillText('route: ' + cur.flavor, 320, 321);
+    ctx.fillText('route: ' + cur.flavor, 320, 341);
   }
   ctx.fillStyle = '#666';
   ctx.font = '8px monospace';
-  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 320, 332);
+  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 108, 341);
+  // legend
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'left';
+  ctx.font = '7px monospace';
+  ctx.fillText('— — GSP', 30, 306);
+  ctx.fillStyle = '#e8722a';
+  ctx.fillText('—— tunnel', 30, 316);
+  ctx.fillStyle = '#8ab';
+  ctx.fillText('— — expressway', 30, 326);
   ctx.textAlign = 'left';
 }
 
