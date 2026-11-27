@@ -6334,6 +6334,22 @@ function melfiInteractions() {
     { speaker: 'narrator', text: 'Degrees in psychiatry, psychoanalysis, and — framed identically, suspiciously — a certificate for a rye bread of the month club.' }
   ]) });
   list.push({ x: 560, y: 150, w: 72, h: 190, radius: 42, label: 'Chaise', action: () => {
+    list.push({ x: 330, y: 320, w: 46, h: 26, radius: 34, label: 'The tissue box', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The tissue box on the coffee table. George eyes it with the caution of a man who knows that in this room, the tissues are both a product and a diagnosis. He does not need one. He takes three anyway, because they’re — they’re right there, they’re just SITTING there.' },
+        { speaker: 'george', text: 'You never know! Allergies! Emotions! Various moisture events! They’re complimentary, presumably — there’s no sign — DO YOU CHARGE FOR THESE?' }
+      ] : [
+        { speaker: 'narrator', text: 'A box of tissues, positioned exactly equidistant from the patient chair and the doctor — close enough to reach, far enough to make reaching it a decision. Tony has sat in this room for years. He has never once touched the box. He regards it as a personal record. Melfi regards it as data.' }
+      ]);
+    } });
+    list.push({ x: 110, y: 345, w: 40, h: 26, radius: 32, label: 'The clock', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'The wall clock. Round, quiet, merciless. In this room it is not a clock — it is a referee. When the minute hand reaches the appointed spot, the session is over, whether or not the breakthrough has clocked in. Tony has been beaten by bigger enemies. Few as punctual.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fifty minutes! It should be sixty! Everyone knows an hour is sixty minutes! The therapy hour is fifty! Where does the other ten minutes GO? Somebody is SKIMMING!' : 'Time’s up means time’s up. Even here. Especially here.' }
+      ]);
+    } });
     if (state.player.kind === 'george') startDialog([
       { speaker: 'george', text: 'A recliner you can nap on during a session you’re paying for? Finally — a healthcare model that works.' }
     ]);
