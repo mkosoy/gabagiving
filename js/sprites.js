@@ -43,6 +43,9 @@ function loadSprite(src) {
 }
 
 const illustratedSprites = {
+  womanE: loadSprite('./assets/sprites/womanE.webp'),
+  womanF: loadSprite('./assets/sprites/womanF.webp'),
+  womanG: loadSprite('./assets/sprites/womanG.webp'),
   tony: loadSprite('./assets/sprites/tony.webp'),
   aj: loadSprite('./assets/sprites/aj.webp'),
   carmela: loadSprite('./assets/sprites/carmela.webp'),
@@ -82,17 +85,17 @@ const illustratedSprites = {
 
 const spriteAliases = {
   tonyMax: 'tony',
-  womanA: 'carmela',
-  womanB: 'meadow',
-  womanC: 'janice',
-  womanD: 'irina',
+  womanA: 'womanE',
+  womanB: 'womanF',
+  womanC: 'womanG',
+  womanD: 'womanF',
   guard: 'romanGuard'
 };
 function canonicalSpriteKind(kind) { return spriteAliases[kind] || kind; }
 
 function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   const pose = options.pose || 'stand';
-  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45, newman: 40, steinbrenner: 42, soupNazi: 45, manA: 45, manB: 43, manC: 42, cop: 46, trucker: 47, waitress: 43 };
+  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45, newman: 40, steinbrenner: 42, soupNazi: 45, manA: 45, manB: 43, manC: 42, cop: 46, trucker: 47, waitress: 43, womanE: 43, womanF: 41, womanG: 43 };
   let h = (heights[kind] || 43) * 1.3 * (options.scale ? options.scale / 1.18 : 1);
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';
