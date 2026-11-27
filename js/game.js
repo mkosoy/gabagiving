@@ -5464,7 +5464,7 @@ function yankeesInteractions() {
         { speaker: 'system', text: 'A piece of Yankees history. Polyester never had a chance.' }
       ]);
     } },
-    { x: 330, y: 386, w: 60, h: 22, radius: 30, label: 'The stadium seats view', action: () => {
+    { x: 480, y: 386, w: 60, h: 22, radius: 28, label: 'The stadium seats view', action: () => {
       audio.sfx('pickup');
       startDialog([
         { speaker: 'narrator', text: 'Through the office window: the stadium seats in the rain, empty, row on row. Somewhere down there a tarp crew is losing a fight with geometry. It’s the off-season. Even the hot dogs are asleep. You stand there a while. It’s not a bad view for an office that smells faintly of calzone.' },
