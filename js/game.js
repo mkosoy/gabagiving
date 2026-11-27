@@ -212,6 +212,7 @@ bindButton('btnA', 'KeyE');
 bindButton('btnB', 'KeyB');
 bindButton('btnR', 'KeyR');
 bindButton('btnF', 'KeyF');
+bindButton('btnS', 'ShiftLeft');
 
 document.getElementById('muteBtn').addEventListener('click', (e) => {
   audio.unlock();
