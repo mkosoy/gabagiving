@@ -434,7 +434,7 @@ function menuEntries() {
         else lines.push({ speaker: 'system', text: 'Nothing repeatable yet — finish story jobs and the phone fills up with work.' });
       }
       const doneCnt = ['packageJobDone','bigSaladDone','ryeExpressDone','turkeyTaxDone','bigMouthDone','gravyChainDone','fixedRaceDone','serenityTapesDone','featsOfStrengthDone','saunaSerenityDone','calzoneProtocolDone','cottonUniformsDone','kramericaBookDone','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','jerrysFavorDone','trackSystemDone'].filter(f => state.flags[f]).length;
-      lines.push({ speaker: 'system', text: `Career: ${doneCnt} jobs finished, ${state.stats.carsStolen || 0} cars borrowed, $${state.money} on hand, heat ${(state.flags.heat || 0).toFixed(1)}/5.` });
+      lines.push({ speaker: 'system', text: `Career: ${doneCnt} jobs finished, ${state.stats.carsStolen || 0} cars borrowed, $${state.money} on hand${state.flags.stash ? ` (+$${state.flags.stash} in the mattress)` : ''}, heat ${(state.flags.heat || 0).toFixed(1)}/5.` });
       lines.push({ speaker: 'narrator', text: 'The phone is a 2004 flip phone. It has one game. The game is Snake. You do not have time for Snake. You are IN Snake.' });
       startDialog(lines);
     }, open: true
