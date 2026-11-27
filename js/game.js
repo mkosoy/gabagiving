@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2633,6 +2633,14 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
     ]
   },
+  jerrysFavor: {
+    title: 'THE FAVOR',
+    payout: 20, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'bodega', x: 320, y: 200, radius: 60, objective: 'Acquire the cereal — the GOOD cereal, the one with the toy', label: 'the cereal' },
+      { scene: 'nyc', x: 620, y: 236, radius: 52, objective: 'Deliver it to Jerry. Say nothing. This never happened', label: 'Jerry' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2787,6 +2795,11 @@ function advanceMission() {
       collection: [
         { speaker: 'silvio', text: 'Moist envelope, correct amount, no discussion. You know what that is? That’s a dying art, kid. Half the guys today would’ve opened it. You didn’t open it. …You didn’t, right? Don’t answer. That’s the other half of the art.' },
         { speaker: 'system', text: 'THE COLLECTION COMPLETE. The tribute flows.' }
+      ],
+      jerrysFavor: [
+        { speaker: 'jerry', text: 'You got it. You actually — did anyone see you? Doesn’t matter. Here. Twenty bucks. And before you say anything — YES, I know twenty dollars is an absurd amount to pay a man for cereal. It’s called being appreciative. It’s a quality!' },
+        { speaker: 'narrator', text: 'No laws were broken. No heat was generated. Somewhere, Silvio senses a job completed with zero felony content and feels physically ill without knowing why.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE FAVOR. The cleanest $20 in the tri-state area. It feels wrong.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2977,6 +2990,10 @@ function updateMission(dt) {
         collection: [
           { speaker: 'narrator', text: 'The envelope is handed over with both hands and zero eye contact. It is damp. It is always damp. Nobody knows why. Nobody asks why. That’s the business.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is it damp?! WHY is it always damp?!' : 'Count it later. You never count in front of them. That’s respect.' }
+        ],
+        jerrysFavor: [
+          { speaker: 'narrator', text: 'The cereal. Box in hand, toy inside — the good one, the submarine, not the whistle. You carry it like contraband out of pure habit. The clerk does not care. Nobody has ever cared less.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why am I nervous?! It’s CEREAL! There’s no victim! My hands are shaking!' : 'First job I ever done with zero felonies. Feels unnatural. Like jogging.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -8671,6 +8688,14 @@ function nycInteractions() {
       startDialog([{ speaker: 'narrator', text: 'You scatter crumbs. The flock descends with military precision. For one shining moment, you are the most important creature in Manhattan. Then the crumbs are gone, and so is their respect.' }]);
     } },
     { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
+      if (!state.mission && state.flags.freeRoam && state.flags.kramericaBookDone && !state.flags.jerrysFavorDone) {
+        startMission('jerrysFavor');
+        startDialog([
+          { speaker: 'jerry', text: 'Okay — don’t make it weird — I need a favor. The cereal. The good one, with the toy. The bodega has ONE box left and if I buy it myself I have to have a whole conversation about it. Just — get it. Don’t tell anyone. I’m begging you in a way that is legally not begging. Twenty bucks.' },
+          { speaker: 'system', text: 'Mission accepted: THE FAVOR. The most legitimate job you will ever run.' }
+        ]);
+        return;
+      }
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'jerry', text: 'George. Please tell me you’re not doing crimes with the mailman again. The last time, my super got a subpoena. A SUBPOENA, George!' },
         { speaker: 'george', text: 'That was ONE time! And technically it was Newman’s scheme! I was a passenger! A very well-compensated passenger!' }
