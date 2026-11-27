@@ -1189,6 +1189,15 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  taffy: {
+    w: 640, h: 416, label: 'Salty’s Taffy · Boardwalk', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,30,200,90), r(420,30,190,90), r(240,300,180,70)
+    ],
+    draw: drawTaffy,
+    interactions: taffyInteractions
+  },
   cabin: {
     w: 640, h: 416, label: 'Hunting Cabin · Deep in the Barrens', music: 'dream',
     colliders: [
@@ -6891,6 +6900,74 @@ function cabinInteractions() {
   ];
 }
 
+function drawTaffy() {
+  px(ctx, 0, 0, 640, 416, '#c9b8a0');
+  // checkered floor
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx + fy) % 2 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#b8a78f');
+  }
+  // taffy pulling machine — the hypnotist
+  px(ctx, 30, 30, 200, 90, '#7a6a8a');
+  px(ctx, 42, 42, 176, 66, '#8a7a9a');
+  const pull = Math.sin(state.time * 2.4) * 30;
+  px(ctx, 80 + pull, 60, 60, 10, '#e8c9d8');
+  px(ctx, 60, 52, 10, 26, '#5a4a6a');
+  px(ctx, 190, 52, 10, 26, '#5a4a6a');
+  // display case rows of pastel taffy
+  px(ctx, 420, 30, 190, 90, '#8a6a4a');
+  for (let ty = 0; ty < 3; ty++) for (let tx = 0; tx < 8; tx++) {
+    px(ctx, 434 + tx * 21, 42 + ty * 24, 16, 10, ['#e8a0b8','#a0d8e8','#e8d8a0','#b8e8a0'][ (tx + ty) % 4 ]);
+  }
+  // counter
+  px(ctx, 240, 300, 180, 70, '#6a5a48');
+  px(ctx, 250, 310, 160, 20, '#8a7a68');
+  // the seagull that got inside — it circles, forever
+  const ga = state.time * 1.4;
+  const gx = 320 + Math.cos(ga) * 130 - state.camera.x;
+  const gy = 200 + Math.sin(ga) * 60 - state.camera.y;
+  px(ctx, gx, gy, 7, 4, '#e8e8e8');
+  px(ctx, gx + 5, gy - 2, 3, 3, '#e8c93e');
+  ctx.fillStyle = '#6a4a3a';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('SALTY’S — EST. 1921', 320, 40);
+  ctx.textAlign = 'left';
+}
+
+function taffyInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: () => {
+      setScene('shore', 400, 250);
+    } },
+    { x: 320, y: 290, w: 60, h: 20, radius: 42, label: 'Buy a box of taffy — $6', action: () => {
+      if (state.money < 6) { toast('Six dollars. It’s taffy, not a casino.'); return; }
+      state.money -= 6;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George buys the assorted box and immediately begins ranking the flavors out loud to nobody. Vanilla, undeserving of its reputation. Molasses, a dark horse. The green one — whatever it is — a miracle.' },
+        { speaker: 'george', text: 'You know what I’m doing? I’m rationing. One piece an hour. …I’ve had eleven.' }
+      ] : [
+        { speaker: 'narrator', text: 'A box of saltwater taffy for the road. Tony eats three pieces before the door closes behind him. The dentist is a problem for a man with fewer enemies.' }
+      ]);
+    } },
+    { x: 130, y: 140, w: 70, h: 30, radius: 44, label: 'Watch the pulling machine', action: () => {
+      audio.sfx('pickup');
+      state.time += 5;
+      startDialog([{ speaker: 'narrator', text: 'The machine pulls and folds, pulls and folds. It does not hurry. It does not stop. It has been doing this since 1921 and it will be doing it long after all of us. Five minutes pass like they’re nothing. You understand the machine a little too well now.' }]);
+    } },
+    { x: 510, y: 140, w: 70, h: 30, radius: 44, label: 'Free fudge sample', action: () => {
+      if (state.flags.fudgeSample) { toast('One sample per customer. The woman behind the case has a memory like a courthouse.'); return; }
+      state.flags.fudgeSample = true;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'A free fudge sample, cut with the precision of a woman who has cut ten thousand of them and resents maybe six thousand. It’s incredible. You briefly understand why people retire here.' }]);
+    } },
+    { x: 320, y: 160, w: 50, h: 30, radius: 40, label: 'Shoo the seagull', action: () => {
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+      startDialog([{ speaker: 'narrator', text: 'You shoo the seagull. The seagull relocates exactly four feet to the left and screams at you with its whole body. The other customers are now watching YOU like you’re the problem. (+0.2 heat, somehow)' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7043,6 +7120,9 @@ function drawShore() {
 function shoreInteractions() {
   return [
     { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
+    { x: 340, y: 130, w: 60, h: 40, radius: 44, label: "Salty's Taffy", action: () => {
+      startDialog([{ speaker: 'narrator', text: 'Inside it smells like sugar and 1921. The pulling machine never stops. Neither, apparently, does the seagull that got in here in June.' }], () => setScene('taffy', 320, 360));
+    } },
     { x: 752, y: 210, w: 20, h: 90, radius: 44, label: 'AC →', action: () => startTransit('ac', 40, 220, 'ATLANTIC CITY EXPRESSWAY') },
     { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
       if ((state.flags.tribute || 0) < 5) {
