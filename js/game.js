@@ -3209,7 +3209,8 @@ function updateExplore(dt) {
       { scene: 'nyc', x: 60, y: 350 }, { scene: 'nyc', x: 700, y: 340 },
       { scene: 'pines', x: 270, y: 320 }, { scene: 'pines', x: 330, y: 200 },
       { scene: 'shore', x: 150, y: 300 }, { scene: 'shore', x: 600, y: 160 },
-      { scene: 'ac', x: 210, y: 240 }, { scene: 'ac', x: 540, y: 240 }
+      { scene: 'ac', x: 210, y: 240 }, { scene: 'ac', x: 540, y: 240 },
+      { scene: 'meadow', x: 400, y: 340 }, { scene: 'cabin', x: 590, y: 330 }
     ];
   }
   for (let pi = 0; pi < state.pkgSpots.length; pi++) {
@@ -3220,12 +3221,12 @@ function updateExplore(dt) {
       const found = state.pkgSpots.filter((s2, i2) => state.flags['pkg' + i2]).length;
       state.money += 25;
       audio.sfx('cash');
-      spawnEffect(spot.x, spot.y - 16, 'GABAGOOL! +$25 — ' + found + '/10', '#ffd23e');
-      if (found >= 10) {
+      spawnEffect(spot.x, spot.y - 16, 'GABAGOOL! +$25 — ' + found + '/' + state.pkgSpots.length, '#ffd23e');
+      if (found >= state.pkgSpots.length) {
         state.money += 250;
         startDialog([
-          { speaker: 'narrator', text: 'ALL TEN. The complete tri-state gabagool sweep. Somewhere, a cured meat sommelier sheds a single proud tear. $250 completion bonus — the meat provides.' },
-          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I found them ALL! Every meat! I am a MEAT EXPLORER!' : 'Ten for ten. That’s a lotta gabagool. Don’t tell the doctor.' }
+          { speaker: 'narrator', text: 'EVERY SINGLE ONE. The complete tri-state gabagool sweep. Somewhere, a cured meat sommelier sheds a single proud tear. $250 completion bonus — the meat provides.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I found them ALL! Every meat! I am a MEAT EXPLORER!' : 'Every last one. That’s a lotta gabagool. Don’t tell the doctor.' }
         ]);
       }
     }
