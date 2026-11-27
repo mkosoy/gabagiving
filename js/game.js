@@ -10306,7 +10306,7 @@ function nycInteractions() {
       spawnEffect(state.player.x, state.player.y - 16, 'the flock approves', '#b8d0e0');
       startDialog([{ speaker: 'narrator', text: 'You scatter crumbs. The flock descends with military precision. For one shining moment, you are the most important creature in Manhattan. Then the crumbs are gone, and so is their respect.' }]);
     } },
-    { x: 700, y: 130, w: 60, h: 30, radius: 44, label: 'DMV', action: () => {
+    { x: 700, y: 210, w: 60, h: 30, radius: 46, label: 'DMV', action: () => {
       if (!state.flags.dmvSeen) {
         state.flags.dmvSeen = true;
         startDialog([
