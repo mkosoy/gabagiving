@@ -5663,6 +5663,9 @@ function drawMonks() {
     // waitress with coffee pot
     const wob = Math.sin(state.time * .8);
     drawPerson(ctx, 320 + wob * 170, 82, 'womanC', wob > 0 ? 'right' : 'left', state.frame * 1.8);
+    // regulars at the counter stools
+    drawPerson(ctx, 262, 148, 'manA', 'up', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 412, 148, 'manC', 'up', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
     // pie carousel glint
     const glint = (Math.sin(state.time * 2.4) + 1) / 2;
     px(ctx, 210, 44, 26, 3, `rgba(255,240,180,${.25 + glint * .5})`);
@@ -5936,13 +5939,13 @@ function drawYankees() {
   if (drawSceneArt(sceneArt.yankees, 640, 416)) {
     // Steinbrenner paces in front of the big desk, trembling with fury
     const pace = Math.sin(state.time * .7);
-    const sx2 = 322 + pace * 70;
+    const sx2 = 322 + pace * 38;
     const shake = Math.sin(state.time * 13) * 1.2;
-    drawPerson(ctx, sx2 + shake, 152, 'steinbrenner', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
+    drawPerson(ctx, sx2 + shake, 196, 'steinbrenner', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
     // steam of rage
     if (Math.sin(state.time * 2) > .6) {
-      px(ctx, sx2 - 5, 150, 3, 6, 'rgba(255,120,90,.5)');
-      px(ctx, sx2 + 9, 150, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 - 5, 181, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 + 9, 181, 3, 6, 'rgba(255,120,90,.5)');
     }
     // George sleeping under his desk when scheme active
     if (state.flags.deskNap) {
@@ -8725,6 +8728,10 @@ function drawBodega() {
   px(ctx, cx + 12, 56, 1, 1, '#e8b822');
   px(ctx, cx + 14, 56, 1, 1, '#e8b822');
   if (Math.floor(state.time * 2) % 4 === 0) px(ctx, cx + 2, 68, 10, 2, '#3a3430'); // tail twitch
+  // the clerk behind the register, watching the aisle like a hawk
+  drawPerson(ctx, 372, 118, 'manC', 'down', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
+  // a neighbor browsing the cereals, forever undecided
+  drawPerson(ctx, 270 + Math.sin(state.time * .4) * 5, 240, 'womanD', 'left', state.frame * .5, {});
   outlineText(ctx, 'Exit', 24, 380, '#ffe78a', 7, 'left');
 }
 
