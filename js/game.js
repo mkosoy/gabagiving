@@ -6527,6 +6527,18 @@ function nycInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
     } },
+    { x: 230, y: 255, w: 40, h: 30, radius: 42, label: 'Buzz Jerry’s building', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'You buzz 5A. Silence. Then the intercom crackles with the sound of a man mid-stride through a door.' },
+        { speaker: 'kramer', text: 'Yeah?! Who is it — oh, George. Jerry’s out. I’m watering his plants. The plants are fine. One of them is… resting. Come back never— I mean later!' },
+        { speaker: 'george', text: 'He’s eating the cereal. I KNOW he’s eating the cereal! It’s a vintage box! It’s appreciating!' }
+      ] : [
+        { speaker: 'narrator', text: 'You buzz 5A. The intercom produces a man who sounds like he has never once been entirely indoors.' },
+        { speaker: 'kramer', text: 'Yeah? Whaddaya want? You selling something? ’Cause I’m buying. What is it? Is it meat? It’s meat, isn’t it. Giddy up!' },
+        { speaker: 'tony', text: '…I like this guy. Wrong neighborhood, but I like him.' }
+      ]);
+    } },
     { x: 690, y: 260, w: 40, h: 34, radius: 42, label: 'Pretzel cart', action: () => {
       if (state.money < 3) { toast('The pretzel man does not extend credit. He has been hurt before.'); return; }
       state.money -= 3;
