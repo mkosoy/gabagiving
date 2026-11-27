@@ -7376,6 +7376,17 @@ function robRegister(place, flavor) {
 
 function bodegaInteractions() {
   return [
+    { x: 90, y: 320, w: 50, h: 40, radius: 42, label: 'The bottle-return machine', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George feeds the machine a bag of empties he has absolutely been carrying around for exactly this occasion. It eats six, rejects one — “NON-REFUNDABLE” — and George argues with it out loud for ninety seconds about jurisdiction. Total payout: 30¢ and a deeper resentment of Michigan.' },
+        { speaker: 'george', text: 'TEN cents in Michigan! TEN! We live in the wrong state, Jerry! We have ALWAYS lived in the wrong state!' },
+        { speaker: 'system', text: '+$1 in sticky quarters. The machine keeps the dignity.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony watches a guy feed cans into the machine for eleven minutes. The machine pays out a dollar-fifty. The guy is thrilled. Tony does the math on the hourly rate and feels something close to grief.' }
+      ]);
+      if (state.player.kind === 'george') { state.money += 1; }
+    } },
     { x: 340, y: 130, w: 40, h: 30, radius: 40, label: 'Rob the register', action: () => robRegister('bodega', 'You empty the register into a bodega bag in four seconds flat. The clerk doesn’t even look up — New York’s most unimpressed man. The cat, however, witnesses everything and will judge you forever.') },
     { x: 500, y: 150, w: 60, h: 40, radius: 42, label: 'Pocket a candy bar', action: () => {
       if ((state.shopliftCd || 0) > state.time) { toast('The clerk is watching the candy aisle now. He KNOWS.'); return; }
