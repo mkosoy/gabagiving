@@ -7623,7 +7623,7 @@ function bodegaInteractions() {
       }
     } },
     { x: 4, y: 330, w: 60, h: 76, radius: 42, label: 'Leave', action: leaveOutside },
-    { x: 258, y: 8, w: 124, h: 90, radius: 52, label: 'Deli counter', action: () => {
+    { x: 258, y: 8, w: 84, h: 86, radius: 34, label: 'Deli counter', action: () => {
       if (!state.flags.gotCoffee) {
         state.flags.gotCoffee = true;
         state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
