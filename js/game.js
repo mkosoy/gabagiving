@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -2169,6 +2169,15 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'RACE BACK to Newman — clock is running', label: 'Win the bet' }
     ]
   },
+  libraryRun: {
+    title: 'THE LIBRARY RUN',
+    payout: 190, heat: 1, timeLimit: 200,
+    steps: [
+      { scene: 'nyc', x: 320, y: 300, radius: 80, objective: 'NEWMAN: grab the overdue books — 23 YEARS overdue', label: 'books acquired — they smell like 1971' },
+      { scene: 'monks', x: 300, y: 250, radius: 70, objective: 'NEWMAN: the library cop is at Monk’s — do NOT be seen reading', label: 'cop avoided' },
+      { scene: 'hub', x: 560, y: 210, radius: 80, objective: 'NEWMAN: return the books to the drop — the fines are HIS problem', label: 'books returned' }
+    ]
+  },
   bigOne: {
     title: 'THE BIG ONE',
     payout: 500, heat: 2.5,
@@ -2236,7 +2245,7 @@ const MISSION_DEFS = {
     ]
   }
 };
-const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'bigOne'];
+const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'libraryRun', 'bigOne'];
 const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'kramericaBook'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
@@ -2278,6 +2287,10 @@ function advanceMission() {
       bottleRun: [
         { speaker: 'kramer', text: 'TEN CENTS A BOTTLE! In Michigan, Jerry — er, boss — TEN CENTS! The math is UNBEATABLE! Sure, the gas costs more than the refund, and the tunnel tolls, and the truck rental — but the VOLUME! We make it up in volume!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove glass bottles through the Holland Tunnel for a net LOSS and I’d do it again! That’s the Kramerica difference!' : 'Hauled empty bottles across state lines for a guy who doesn’t know what a margin is. I’ve laundered money with less risk. Here’s your cut — don’t spend it all in Michigan.' }
+      ],
+      libraryRun: [
+        { speaker: 'newman', text: 'Twenty-three years! “Tropic of Cancer,” overdue since before you were born! The library cop — Mr. Bookman — has been WAITING. And now the trail goes cold. HEE hee hee! You have no idea what you’ve done for the postal community!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I handled library contraband! HOT BOOKS! I’m in the literary underground now! Does the library cop have a gun?!' : 'Moved books for a mailman. Books. That’s a new low and a new high at the same time. Whatever — cash is cash, and Bookman ain’t got nothin’.' }
       ],
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
