@@ -759,7 +759,8 @@ const FT_NODES = [
   { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
   { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
   { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' },
-  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' }
+  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' },
+  { id: 'queens', x: 555, y: 210, dx: 300, dy: 250, name: 'Queens', flavor: 'THE 7 TRAIN', desc: 'the Costanzas, the sauna, the shampoo factory' }
 ];
 
 function drawFastTravel() {
@@ -938,6 +939,7 @@ const EXIT_HINTS = {
   shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
   ac: '← WEST: the Shore · T: map',
   meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · T: map',
+  queens: '← WEST: subway to Manhattan · T: map',
   njstreet: 'T: map · the neighborhood hub is the center of everything'
 };
 
@@ -1189,6 +1191,34 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  queens: {
+    w: 768, h: 416, label: 'Queens · The Costanzas’ Turf', music: 'house',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      r(40,30,180,110), r(300,30,180,110), r(560,30,170,110),
+      r(8,300,752,116)
+    ],
+    draw: drawQueens,
+    interactions: queensInteractions
+  },
+  casino: {
+    w: 640, h: 416, label: 'The Dunes Casino · Atlantic City', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,240,80), r(380,20,240,80), r(140,240,140,80), r(400,240,140,80)
+    ],
+    draw: drawCasino,
+    interactions: casinoInteractions
+  },
+  slice: {
+    w: 640, h: 416, label: 'Famous Original Ray’s · Manhattan', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,600,110), r(480,220,130,90)
+    ],
+    draw: drawSlice,
+    interactions: sliceInteractions
+  },
   taffy: {
     w: 640, h: 416, label: 'Salty’s Taffy · Boardwalk', music: 'house',
     colliders: [
@@ -1389,6 +1419,11 @@ const ambientSpecs = {
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
+  ],
+  queens: [
+    { kind: 'womanA', x: 200, y: 270, region: { x: 60, y: 250, w: 640, h: 40 }, speed: 30 },
+    { kind: 'bobby', x: 500, y: 280, region: { x: 80, y: 255, w: 600, h: 40 }, speed: 26 },
+    { kind: 'womanD', x: 350, y: 264, region: { x: 100, y: 250, w: 560, h: 40 }, speed: 34 }
   ],
   meadow: [
     { kind: 'bobby', x: 200, y: 300, region: { x: 100, y: 260, w: 300, h: 90 }, speed: 26 },
@@ -5189,7 +5224,8 @@ function leaveOutside() {
 
 function travelHub(place) {
   // remember which outdoor region we came from so interior exits return correctly
-  if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
+  const outdoors = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
+  if (outdoors.includes(state.scene) && !outdoors.includes(place)) {
     state.returnTo = null;
     const bx = Math.max(20, state.player.x);
     const by = state.player.y;
@@ -5215,6 +5251,8 @@ function travelHub(place) {
     yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
     melfi: ['melfi', 320, 380, 'Dr. Melfi’s office. It smells like leather, tissues, and carefully withheld judgment.'],
     costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
+    casino: ['casino', 320, 360, 'The Dunes. Oxygen-pumped air, no clocks, no mercy.'],
+    slice: ['slice', 320, 360, 'Inside: heat, grease, glory. The real Ray’s — probably.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -7007,6 +7045,204 @@ function taffyInteractions() {
   ];
 }
 
+function drawSlice() {
+  px(ctx, 0, 0, 640, 416, '#3a2a22');
+  // tile floor
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx + fy) % 2 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#44332a');
+  }
+  // counter + ovens along the north wall
+  px(ctx, 20, 20, 600, 110, '#6a5544');
+  px(ctx, 30, 30, 580, 40, '#8a7560');
+  // pizza ovens with fire glow
+  px(ctx, 420, 34, 180, 60, '#4a3a30');
+  const fl = Math.sin(state.time * 8) * 3;
+  px(ctx, 450, 52 - fl, 40, 26 + fl, '#e8722a');
+  px(ctx, 500, 56 - fl, 34, 22 + fl, '#ffd23e');
+  // pies on the counter
+  for (let pi2 = 0; pi2 < 4; pi2++) {
+    const pxp = 60 + pi2 * 80;
+    px(ctx, pxp, 42, 34, 34, '#d8a858');
+    px(ctx, pxp + 6, 48, 22, 22, '#c94030');
+    for (let pep = 0; pep < 4; pep++) px(ctx, pxp + 8 + (pep * 7) % 18, 52 + (pep * 11) % 14, 4, 4, '#8a2015');
+  }
+  // red vinyl booths east
+  px(ctx, 480, 220, 130, 90, '#8a2a2a');
+  px(ctx, 490, 230, 110, 30, '#a83a3a');
+  // the folding chairs + napkin dispenser vibe
+  px(ctx, 200, 240, 40, 30, '#5a6a7a');
+  // pizza guy behind the counter, sliding pies
+  const gx = 300 + Math.sin(state.time * .7) * 60;
+  drawPerson(ctx, gx - state.camera.x, 100 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'walk' });
+  ctx.fillStyle = '#e8c93e';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FAMOUS ORIGINAL RAY’S — NOT AFFILIATED WITH ANY OTHER RAY', 320, 20);
+  ctx.textAlign = 'left';
+}
+
+function sliceInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the street', action: leaveOutside },
+    { x: 200, y: 130, w: 70, h: 30, radius: 44, label: 'A slice — $3', action: () => {
+      if (state.money < 3) { toast('Three bucks. It’s the cheapest dignity in Manhattan.'); return; }
+      state.money -= 3;
+      audio.sfx('pickup');
+      state.time += 2;
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George folds the slice lengthwise — the correct way, the only way — and eats it in four bites while walking nowhere in particular. Grease runs down his wrist. He has never been more of a New Yorker and he knows it.' },
+        { speaker: 'george', text: 'This is the food. This is THE food. Everything else is a rumor.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony eats the slice standing at the counter like the counter owes him money. It’s not Jersey pizza — he’d never say it is — but at 1am in Manhattan, it does the job and then some.' }
+      ]);
+    } },
+    { x: 490, y: 130, w: 80, h: 30, radius: 44, label: 'Watch the oven', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The pie goes in pale and comes out blistered in ninety seconds. The oven guy does it with a long peel and zero wasted motion, like a card sharp. You watch three rotations. It never stops being a little bit magic.' }]);
+    } },
+    { x: 540, y: 280, w: 60, h: 30, radius: 42, label: 'Take the booth', action: () => {
+      state.time += 4;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You slide into the red vinyl booth and do nothing at all for a few minutes. Outside, the city does its impression of a city that never sleeps. In here it’s just you, the heat lamps, and the faint hiss of a pie becoming a legend.' }]);
+    } }
+  ];
+}
+
+function drawCasino() {
+  px(ctx, 0, 0, 640, 416, '#2a1a2e');
+  // gaudy carpet
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx * 3 + fy * 7) % 5 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#33203a');
+  }
+  // chandelier glow
+  ctx.save();
+  ctx.globalAlpha = .1 + Math.sin(state.time * 2) * .03;
+  ctx.fillStyle = '#ffd76a';
+  ctx.beginPath();
+  ctx.arc(320, 40, 200, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // slots row west
+  for (let s = 0; s < 4; s++) {
+    const sx = 30 + s * 58;
+    px(ctx, sx, 20, 48, 80, '#6a2a3a');
+    px(ctx, sx + 8, 30, 32, 26, '#1a1a2a');
+    const spin = Math.floor(state.time * 3 + s) % 3;
+    px(ctx, sx + 10, 36 + spin * 3, 8, 8, '#ffd23e');
+    px(ctx, sx + 20, 36, 8, 8, '#e83a5a');
+    px(ctx, sx + 30, 36 + ((spin + 1) % 3) * 3, 8, 8, '#3ae85a');
+    px(ctx, sx + 36, 64, 6, 20, '#c9a86a');
+  }
+  // cashier cage east
+  px(ctx, 380, 20, 240, 80, '#4a3a28');
+  for (let bar = 0; bar < 12; bar++) px(ctx, 392 + bar * 18, 30, 3, 60, '#c9a86a');
+  // blackjack tables — green felt
+  px(ctx, 140, 240, 140, 80, '#2a6a3a');
+  px(ctx, 150, 250, 120, 60, '#35884a');
+  px(ctx, 400, 240, 140, 80, '#2a6a3a');
+  px(ctx, 410, 250, 120, 60, '#35884a');
+  // dealers + a lonely gambler
+  drawPerson(ctx, 210 - state.camera.x, 235 - state.camera.y, 'manA', 'down', 0, {});
+  drawPerson(ctx, 470 - state.camera.x, 235 - state.camera.y, 'womanB', 'down', 0, {});
+  const gx = 180 + Math.sin(state.time * .4) * 20;
+  drawPerson(ctx, gx - state.camera.x, 330 - state.camera.y, 'bobby', 'up', 0, {});
+  ctx.fillStyle = '#ffd76a';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('★ THE DUNES — WHERE THE BUFFET NEVER CLOSES ★', 320, 130);
+  ctx.textAlign = 'left';
+}
+
+function casinoInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: leaveOutside },
+    { x: 130, y: 130, w: 80, h: 30, radius: 46, label: 'The slots — $5 a pull', action: () => initSlots() },
+    { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 470, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 500, y: 130, w: 70, h: 30, radius: 44, label: 'Cashier cage — count your sins', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The cashier counts your chips with the neutral face of a person who has watched ten thousand men have the best and worst nights of their lives in the same chair. Behind her, the vault hums. Everything here is somebody’s fault.' }]);
+    } },
+    { x: 320, y: 170, w: 80, h: 30, radius: 44, label: 'The buffet — $12, all you can regret', action: () => {
+      if (state.money < 12) { toast('Twelve dollars. The shrimp alone is worth it, allegedly.'); return; }
+      state.money -= 12;
+      audio.sfx('pickup');
+      state.time += 6;
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George approaches the buffet with a strategy document he wrote on a napkin in the car. Proteins first — maximum value density. The shrimp. THE SHRIMP. A man in a visor tries to share the ladle. It does not go well for the man in the visor.' },
+        { speaker: 'george', text: 'Twelve dollars! I’m eating forty dollars of shrimp MINIMUM. This is arithmetic, not gluttony!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony does the buffet the way he does everything: like he owns it, which — through three shell companies and a favor — he technically does. The carving station guy knows him. The carving station guy is smart enough not to say so.' }
+      ]);
+    } }
+  ];
+}
+
+function drawQueens() {
+  px(ctx, 0, 0, 768, 416, '#3d3830');
+  // row houses — brick, aluminum siding, ambition
+  const houses = [[40, '#7a4a3a'], [300, '#6a5a4a'], [560, '#5a6a7a']];
+  for (const [hx, hc] of houses) {
+    px(ctx, hx, 30, 180, 110, hc);
+    px(ctx, hx + 10, 40, 160, 20, '#4a3a30');
+    px(ctx, hx + 70, 90, 40, 50, '#3a2a20');
+    for (let wx = 0; wx < 3; wx++) {
+      px(ctx, hx + 16 + wx * 56, 66, 24, 18, '#c9b86a');
+      px(ctx, hx + 16 + wx * 56, 66, 24, 3, '#e8d89a');
+    }
+  }
+  // the Costanza house gets a lawn ornament
+  px(ctx, 130, 150, 10, 14, '#e8e8e8');
+  px(ctx, 132, 146, 6, 6, '#d8d8d8');
+  // the street — double parked as god intended
+  px(ctx, 0, 180, 768, 70, '#333');
+  for (let c = 0; c < 5; c++) {
+    px(ctx, 90 + c * 140, 196, 44, 18, ['#7a2a2a','#2a4a7a','#b8a888','#4a4a4a','#6a5a2a'][c]);
+    if (c % 2 === 0) px(ctx, 100 + c * 140, 222, 44, 18, ['#2848a0','#5a5a5a','#8a3a5a'][c % 3]);
+  }
+  // power lines, always
+  for (let pl = 0; pl < 4; pl++) px(ctx, 0, 20 + pl * 6, 768, 1, '#1a1a1a');
+  // pedestrians hauling dry cleaning and grievances
+  const gx = 200 + Math.sin(state.time * .25) * 140;
+  drawPerson(ctx, gx - state.camera.x, 290 - state.camera.y, 'womanC', Math.sin(state.time * .25) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
+  const gx2 = 600 - Math.sin(state.time * .31) * 120;
+  drawPerson(ctx, gx2 - state.camera.x, 270 - state.camera.y, 'manA', Math.sin(state.time * .31) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
+  drawHighwaySign(620, 250, ['SUBWAY →', 'MANHATTAN']);
+  ctx.fillStyle = '#d8c9a8';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('QUEENS — where the Costanzas hold court', 384, 24);
+  ctx.textAlign = 'left';
+}
+
+function queensInteractions() {
+  return [
+    { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← Subway: Manhattan', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The 7 train rattles toward Manhattan. A man is eating soup out of a thermos in direct violation of several unwritten rules. Nobody stops him. This is Queens’ gift to the world: the absence of rules nobody wrote down.' }], () => startTransit('nyc', 60, 250, 'THE 7 TRAIN · WESTBOUND'));
+    } },
+    { x: 130, y: 150, w: 60, h: 40, radius: 46, label: 'The Costanza house', action: () => {
+      travelHub('costanza');
+    } },
+    { x: 390, y: 150, w: 60, h: 40, radius: 44, label: 'The sauna', action: () => {
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      state.time += 3;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'Ten minutes in the sauna next to a man who speaks no English and sweats like it’s a competitive sport. You emerge lighter, dumber, and slightly less wanted. (−0.5 heat)' }]);
+    } },
+    { x: 640, y: 150, w: 60, h: 40, radius: 44, label: 'The shampoo factory', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The shampoo factory where George once almost had a job, or did have a job, or was fired from a job — the records are unclear because George may have set fire to the records. The smell of ten thousand gallons of industrial conditioner hangs over the block like a haunted meadow.' },
+        { speaker: 'george', text: 'I could have been somebody here. I WAS somebody here. Briefly. Then the incident. …I don’t want to talk about the incident.' }
+      ] : [
+        { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
+      ]);
+    } },
+    { x: 300, y: 290, w: 60, h: 30, radius: 42, label: 'Double-parked Buick', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'A Buick double-parked so perfectly perpendicular to reality it can only belong to a man with nothing left to lose. There is a bumper sticker. It says SERENITY NOW. The irony is load-bearing.' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7028,6 +7264,9 @@ function drawAC() {
 function acInteractions() {
   return [
     { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 384, y: 130, w: 80, h: 40, radius: 46, label: 'The Dunes casino', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The doors part with a breath of cold, oxygen-enriched air. No clocks. No windows. The carpet pattern was designed by a man who hated you personally. Welcome to the Dunes.' }], () => travelHub('casino'));
+    } },
     { x: 640, y: 150, w: 40, h: 34, radius: 40, label: 'Psychic — $10 readings', action: () => {
       if (state.money < 10) { toast('Madame Zelda sees poverty in your future. The reading is still $10.'); return; }
       state.money -= 10;
@@ -7721,6 +7960,12 @@ function nycInteractions() {
       ] : [
         { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
       ]);
+    } },
+    { x: 200, y: 120, w: 60, h: 40, radius: 44, label: 'Famous Original Ray’s', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'Which Ray’s is the real Ray’s is a question that has ended friendships. This one has the good oven. Inside: heat, grease, glory.' }], () => travelHub('slice'));
+    } },
+    { x: 730, y: 210, w: 34, h: 90, radius: 46, label: 'Subway → Queens', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The 7 train east. The skyline slides backward and the rent drops a thousand dollars a mile. Somewhere out there, Frank Costanza is already angry about something. You can feel it, like thunder.' }], () => startTransit('queens', 60, 250, 'THE 7 TRAIN · EASTBOUND'));
     } },
     { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
