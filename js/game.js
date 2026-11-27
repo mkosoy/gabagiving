@@ -8329,6 +8329,25 @@ function taffyInteractions() {
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: () => {
       setScene('shore', 400, 250);
     } },
+    { x: 480, y: 300, w: 80, h: 30, radius: 42, label: 'Watch the taffy pull', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The machine pulls. The taffy folds. The machine pulls. You could watch this for hours. You DO watch this for hours. Somewhere, your afternoon evaporates.' },
+        { speaker: 'george', text: 'It’s HYPNOTIC. The pulling! The folding! Why is that not a job — professional taffy watcher. I would be GREAT at it.' }
+      ] : [
+        { speaker: 'narrator', text: 'The machine pulls the taffy in long gleaming loops. Same motion, forever. Hypnotic. Like therapy, but it smells like molasses.' },
+        { speaker: 'tony', text: 'Guy who invented this machine — genius. Everybody else in this operation is just feedin’ it sugar.' }
+      ]);
+    } },
+    { x: 150, y: 150, w: 60, h: 24, radius: 40, label: 'Buy the fudge — $5', action: () => {
+      if (state.money < 5) { toast('The fudge is five dollars. Worth every cent, but five.'); return; }
+      state.money -= 5;
+      if ((state.flags.hp || 3) < 3) { state.flags.hp = (state.flags.hp || 3) + 1; spawnEffect(state.player.x + 8, state.player.y - 20, '+1 HEALTH', '#9be59b'); }
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'One slice of boardwalk fudge, cut with a wire. Dense as a cinderblock, sweet as a confession. The woman behind the counter says they make it in the back, the way her grandmother did, except her grandmother used a bigger knife.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'This fudge has STRUCTURE. Integrity. You could build a house on this fudge!' : 'That’s real fudge. Not the mall stuff. Tell nobody I ate it before noon.' }
+      ]);
+    } },
     { x: 320, y: 290, w: 60, h: 20, radius: 42, label: 'Buy a box of taffy — $6', action: () => {
       if (state.money < 6) { toast('Six dollars. It’s taffy, not a casino.'); return; }
       state.money -= 6;
