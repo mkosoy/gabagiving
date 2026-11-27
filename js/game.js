@@ -10944,7 +10944,7 @@ function render() {
 
   if (state.mode === 'menu') drawMenu();
   drawAtmosphere();
-  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu', 'transit', 'monte', 'armwrestle'].includes(state.mode)) drawObjective();
+  if (!['title', 'ending', 'dream', 'bone', 'peptides', 'drive', 'bonus', 'produce', 'menu', 'transit', 'monte', 'armwrestle', 'fasttravel'].includes(state.mode)) drawObjective();
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
   if (state.mode !== 'menu') drawDialog();
@@ -11076,12 +11076,12 @@ function update(dt) {
     if (state.ftSel === undefined) state.ftSel = 0;
     if (consume(['KeyE', 'Space', 'Enter'])) {
       const n = FT_NODES[state.ftSel];
-      if (n.id === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
+      if (n.id === state.scene) { state.mode = state.dialog ? 'dialogue' : 'explore'; toast('You’re already here.'); }
       else { state.flags.freeRoam = true; startTransit(n.id, n.dx, n.dy, n.flavor); }
       pressed.clear();
       return;
     }
-    if (consume(['Escape', 'KeyT'])) { state.mode = 'explore'; pressed.clear(); }
+    if (consume(['Escape', 'KeyT'])) { state.mode = state.dialog ? 'dialogue' : 'explore'; pressed.clear(); }
     return;
   }
   if (consume(['KeyH']) && state.mode === 'explore') {
