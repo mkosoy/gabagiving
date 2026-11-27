@@ -48,6 +48,7 @@ const sceneArt = {
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
   diner: loadArt('./assets/bg-diner.webp'),
+  dmv: loadArt('./assets/bg-dmv.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -4916,9 +4917,11 @@ function updateDrive(dt) {
     o.x += o.vx * dt;
     if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
     if (o.x < 178 || o.x > 462) o.vx *= -1;
-    const ox = o.x - 12, oy = o.y - 20;
+    const small = o.type === 'money' || o.type === 'gabagool';
+    const ow = small ? 18 : 24, oh = small ? 14 : 40;
+    const ox = o.x - ow / 2, oy = o.y - oh / 2;
     const car = { x: d.x - 12, y: d.y - 24, w: 24, h: 46 };
-    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 24, h: 40 })) {
+    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: ow, h: oh })) {
       o.hit = true;
       if (o.type === 'money') {
         d.boost = 2.7;
