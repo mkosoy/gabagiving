@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune'];
 function saveWorld() {
   try {
     const out = {};
@@ -3597,7 +3597,7 @@ function updateExplore(dt) {
     state.interactCooldown = .8;
     state.hubCars.splice(state.hubCars.indexOf(jack), 1);
     p.inCar = true;
-    p.speed = 185 + Math.random() * 40;
+    p.speed = Math.round((185 + Math.random() * 40) * (state.flags.engineTune ? 1.15 : 1));
     p.carColor = jack.color;
     p.carDamage = 0; p.carV = 0;
     if (!blockedAt(jack.x + 9, jack.y - 2)) { p.x = jack.x + 9; p.y = jack.y - 2; }
@@ -5479,7 +5479,7 @@ function stealRandomCar() {
   ];
   const car = fleet[Math.floor(Math.random() * fleet.length)];
   state.player.inCar = true;
-  state.player.speed = car.speed;
+  state.player.speed = Math.round(car.speed * (state.flags.engineTune ? 1.15 : 1));
   state.player.carColor = car.color;
   state.player.carDamage = 0;
   state.player.carV = 0;
@@ -5511,6 +5511,18 @@ function hubInteractions() {
       if (state.cop2) state.cop2 = null;
       audio.sfx('cash');
       startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
+    { x: 420, y: 300, w: 60, h: 30, radius: 40, label: 'Engine tune', action: () => {
+      if (state.flags.engineTune) { toast('Already tuned. She purrs. Don’t push your luck.'); return; }
+      if (state.money < 200) { toast('The tune-up is $200. Parts fall off trucks; labor doesn’t.'); return; }
+      state.money -= 200;
+      state.flags.engineTune = true;
+      audio.sfx('cash');
+      audio.sfx('success');
+      startDialog([
+        { speaker: 'narrator', text: 'Two hours, three cigarettes, one torch-lit manifold. Every car you “borrow” from now on runs fifteen percent faster. The mechanic wipes his hands and says, with total sincerity, that you never came here.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Faster! In every car I don’t own! Finally — an investment with no traceable paper trail!' : 'Fifteen percent. That’s the difference between goodbye and goodbye forever. Money well spent.' }
+      ]);
     } },
     { x: 210, y: 330, w: 30, h: 24, radius: 40, label: 'Mailbox', action: () => {
       if ((state.mailboxCd || 0) > state.time) { toast('Empty. You already… checked. Yeah. Checked.'); return; }
