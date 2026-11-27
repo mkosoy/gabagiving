@@ -5046,6 +5046,23 @@ function startAugustusBonus() {
 function njInteractions() {
   if (!state.flags.augustusAJ) return [{ x: 448, y: 154, w: 44, h: 44, label: 'Talk to AJ', action: meetAugustusAJ }];
   return [];
+    { x: 200, y: 60, w: 40, h: 30, radius: 40, label: 'The Superman figurine', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The Superman figurine stands on the shelf, mid-stride, eternal. George regards it with the reverence of a man who once tried to get into a shootout over a parking space because — and this is documented — Superman would never back down from a spot.' },
+        { speaker: 'george', text: 'You know what Superman’s greatest power is? Restraint. The man could END you, but no. Flight is second. Restraint is first. I have flight.' },
+        { speaker: 'narrator', text: 'He does not have flight.' }
+      ] : [
+        { speaker: 'narrator', text: 'A Superman figurine on the shelf. Jerry’s whole deal in one object: the strongest guy in the world, permanently walking nowhere, dusted twice a week. Tony doesn’t get it, then gets it completely, then stops getting it out of respect.' }
+      ]);
+    } },
+    { x: 500, y: 200, w: 40, h: 30, radius: 34, label: 'The stereo', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'Jerry’s stereo: tuner, tape deck, turntable, and a CD rack alphabetized by a mind that has nothing — NOTHING — more urgent to do. The record currently on the turntable is a comedy album. The comic is nobody you’ve heard of. The comic is somebody Jerry opened for once, a fact now etched into the vinyl itself.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He alphabetized VINYL. You can’t alphabetize vinyl! The genre IS the alphabet! I’m not even mad. I’m impressed, and I hate that I’m impressed.' : 'Guy alphabetizes records but can’t remember to lock his door. Priorities. Honestly? I respect it a little. Don’t tell him.' }
+      ]);
+    } },
 }
 
 function meetAugustusAJ() {
