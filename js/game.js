@@ -31,6 +31,7 @@ const CAR_SPRITE_MAP = {
   '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon',
   '#e8e4d8': 'mailtruck', '#dcd8cc': 'mailtruck', '#c03838': 'corvette', '#31445e': 'sedan-bluegray'
 };
+const animalArt = {}; for (const n of ['horse', 'turkey', 'seagull', 'deer']) animalArt[n] = loadArt('./assets/sprites/' + n + '.webp');
 for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
   carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
 }
@@ -2024,6 +2025,13 @@ function drawWildTurkey() {
   const tk = state.turkey;
   if (!tk || state.scene !== 'hub') return;
   const bob = Math.sin(state.time * 6) * 1;
+  const tArt = animalArt.turkey;
+  if (tArt && tArt.complete && tArt.naturalWidth) {
+    const asp = tArt.naturalHeight / tArt.naturalWidth;
+    const tw = 30;
+    ctx.drawImage(tArt, tk.x - state.camera.x - tw / 2, tk.y - state.camera.y - tw * asp + 4 + bob, tw, tw * asp);
+    return;
+  }
   px(ctx, tk.x - 4 - state.camera.x, tk.y - 8 + bob - state.camera.y, 9, 8, '#5a3a20');
   px(ctx, tk.x - 6 - state.camera.x, tk.y - 12 + bob - state.camera.y, 12, 5, '#7a5230');
   px(ctx, tk.x + 3 - state.camera.x, tk.y - 13 + bob - state.camera.y, 3, 4, '#c03838');
@@ -7110,11 +7118,18 @@ function drawRacing() {
     ctx.fillStyle = 'rgba(255,255,255,.5)';
     ctx.fillRect(70 + 480, y, 2, 40);
     // horse
-    ctx.fillStyle = h.color;
     const hx = 70 + Math.min(480, h.x);
-    ctx.fillRect(hx, y + 18, 18, 12);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(hx + 12, y + 20, 4, 4);
+    const hArt = animalArt.horse;
+    if (hArt && hArt.complete && hArt.naturalWidth) {
+      const asp = hArt.naturalHeight / hArt.naturalWidth;
+      const hw = 34;
+      ctx.drawImage(hArt, hx - 4, y + 34 - hw * asp, hw, hw * asp);
+    } else {
+      ctx.fillStyle = h.color;
+      ctx.fillRect(hx, y + 18, 18, 12);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(hx + 12, y + 20, 4, 4);
+    }
     // bet marker
     if (r.phase === 'pick' && r.bet === i) {
       ctx.fillStyle = '#ffd23e';
@@ -12133,9 +12148,16 @@ function drawPlayer() {
     // a befriended turkey rides shotgun. no further questions.
     if (state.scene === 'hub' && state.turkey && state.turkey.friend) {
       const bob = Math.sin(state.time * 7) * 1.5;
-      px(ctx, state.player.x - 6, state.player.y - 14 + bob, 7, 6, '#5a3a20');
-      px(ctx, state.player.x - 8, state.player.y - 18 + bob, 4, 4, '#7a5230');
-      px(ctx, state.player.x - 4, state.player.y - 17 + bob, 2, 2, '#c03838');
+      const tArt = animalArt.turkey;
+      if (tArt && tArt.complete && tArt.naturalWidth) {
+        const asp = tArt.naturalHeight / tArt.naturalWidth;
+        const tw = 18;
+        ctx.drawImage(tArt, state.player.x - 16, state.player.y - 20 + bob - tw * asp * .4, tw, tw * asp);
+      } else {
+        px(ctx, state.player.x - 6, state.player.y - 14 + bob, 7, 6, '#5a3a20');
+        px(ctx, state.player.x - 8, state.player.y - 18 + bob, 4, 4, '#7a5230');
+        px(ctx, state.player.x - 4, state.player.y - 17 + bob, 2, 2, '#c03838');
+      }
     }
     return;
   }
