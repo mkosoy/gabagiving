@@ -1995,6 +1995,8 @@ function updateCop(dt) {
 }
 
 function drawHubEventProps() {
+  // Green Grove signpost — the brick building set back on the east end
+  drawHighwaySign(1120, 108, ['GREEN GROVE', 'RETIREMENT COMMUNITY']);
   // Newman loiters by the park fence awaiting couriers
   if (state.flags.freeRoam) {
     drawPerson(ctx, 552, 206, 'newman', 'down', state.frame * .5, {});
