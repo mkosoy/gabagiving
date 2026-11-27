@@ -392,7 +392,7 @@ function menuEntries() {
       }, open: true
     });
   }
-  entries.push({
+  if (state.flags.freeRoam) entries.push({
     label: 'Criminal record', hint: 'your career in numbers — the feds wish they had this',
     act: () => {
       closeMenu();
@@ -2669,7 +2669,7 @@ function nextMission() {
 
 function startMission(id) {
   const def = MISSION_DEFS[id];
-  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null, surviveT: def.survive || 0 };
+  state.mission = { id, step: 0, deadline: def.timeLimit ? state.time + def.timeLimit : null, surviveT: def.survive || 0, steps: def.steps.map(s => ({ ...s })), payout: def.payout };
   audio.sfx('success');
   if (def.survive) state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
 }
@@ -2679,11 +2679,12 @@ function advanceMission() {
   if (!m) return;
   const def = MISSION_DEFS[m.id];
   m.step += 1;
-  if (m.step >= def.steps.length) {
+  const msteps = m.steps || def.steps;
+  if (m.step >= msteps.length) {
     // mission complete
     state.mission = null;
     state.flags[m.id + 'Done'] = true; state.stats.missions = (state.stats.missions || 0) + 1;;
-    state.flags.tribute = (state.flags.tribute || 0) + def.payout;
+    state.flags.tribute = (state.flags.tribute || 0) + (m.payout || def.payout);
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
     audio.sfx('cash');
     audio.sfx('success');
@@ -2835,7 +2836,8 @@ function advanceMission() {
 
 function missionStep() {
   if (!state.mission) return null;
-  return MISSION_DEFS[state.mission.id].steps[state.mission.step];
+  const steps = state.mission.steps || MISSION_DEFS[state.mission.id].steps;
+  return steps[state.mission.step];
 }
 
 function updateHeatDecay(dt) {
@@ -4580,14 +4582,14 @@ function clubInteractions() {
         { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop on the boardwalk — even the shore pays tribute in season. it’s ALWAYS season' }
       ];
       const drop = drops[Math.floor(Math.random() * drops.length)];
-      MISSION_DEFS.collection.payout = 90 + Math.floor(Math.random() * 50);
+      const rolledPayC = 90 + Math.floor(Math.random() * 50);
       MISSION_DEFS.collection.steps = [
         { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Collect the envelope — ${drop.name.split('—')[0].trim()}`, label: 'the envelope' },
         { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
       ];
       startMission('collection');
       startDialog([
-        { speaker: 'silvio', text: `Collections, kid. ${drop.name}. Don’t count it in front of them — that’s respect. $${MISSION_DEFS.collection.payout} for the walk.` },
+        { speaker: 'silvio', text: `Collections, kid. ${drop.name}. Don’t count it in front of them — that’s respect. $${rolledPayC} for the walk.` },
         { speaker: 'system', text: 'Mission accepted: THE COLLECTION. Repeatable — the tribute never sleeps.' }
       ]);
     } else if (!state.mission && state.flags.gravyChainDone && !state.flags.fixedRaceDone && state.flags.freeRoam) {
@@ -5855,14 +5857,15 @@ function hubInteractions() {
           { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop — it smells like sugar and secrets' }
         ];
         const drop = drops[Math.floor(Math.random() * drops.length)];
-        MISSION_DEFS.oddJob.payout = 60 + Math.floor(Math.random() * 50);
-        MISSION_DEFS.oddJob.steps = [
+        const rolledPay = 60 + Math.floor(Math.random() * 50);
+        startMission('oddJob');
+        state.mission.payout = rolledPay;
+        state.mission.steps = [
           { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Deliver the parcel — ${drop.name.split('—')[0].trim()}`, label: 'the drop' },
           { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
         ];
-        startMission('oddJob');
         startDialog([
-          { speaker: 'newman', text: `The legend returns! Perfect timing — a parcel needs legs. ${drop.name}. $${MISSION_DEFS.oddJob.payout}. The mail never ends, my friend. It NEVER. ENDS.` },
+          { speaker: 'newman', text: `The legend returns! Perfect timing — a parcel needs legs. ${drop.name}. $${rolledPay}. The mail never ends, my friend. It NEVER. ENDS.` },
           { speaker: 'system', text: 'Mission accepted: ODD JOB. Repeatable work — the mail is eternal.' }
         ]);
       }
@@ -7901,7 +7904,7 @@ function shoreInteractions() {
   return [
     { x: 4, y: 150, w: 50, h: 120, radius: 46, label: '← Drive north', action: () => startTransit('pines', 384, 210, 'shore') },
     { x: 340, y: 130, w: 60, h: 40, radius: 44, label: "Salty's Taffy", action: () => {
-      startDialog([{ speaker: 'narrator', text: 'Inside it smells like sugar and 1921. The pulling machine never stops. Neither, apparently, does the seagull that got in here in June.' }], () => setScene('taffy', 320, 360));
+      startDialog([{ speaker: 'narrator', text: 'Inside it smells like sugar and 1921. The pulling machine never stops. Neither, apparently, does the seagull that got in here in June.' }], () => setScene('taffy', 320, 385));
     } },
     { x: 752, y: 210, w: 20, h: 90, radius: 44, label: 'AC →', action: () => startTransit('ac', 40, 220, 'ATLANTIC CITY EXPRESSWAY') },
     { x: 248, y: 8, w: 272, h: 110, radius: 52, label: 'Saltwater taffy', action: () => {
@@ -8680,14 +8683,15 @@ function nycInteractions() {
           { scene: 'queens', x: 390, y: 160, radius: 60, name: 'the sauna in Queens — steam it. don’t ask. it’s a process' }
         ];
         const drop = drops[Math.floor(Math.random() * drops.length)];
-        MISSION_DEFS.kramerJob.payout = 60 + Math.floor(Math.random() * 60);
-        MISSION_DEFS.kramerJob.steps = [
+        const rolledPayK = 60 + Math.floor(Math.random() * 60);
+        startMission('kramerJob');
+        state.mission.payout = rolledPayK;
+        state.mission.steps = [
           { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Kramerica errand — ${drop.name.split('—')[0].trim()}`, label: 'the pickup' },
           { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
         ];
-        startMission('kramerJob');
         startDialog([
-          { speaker: 'kramer', text: `Buddy! Kramerica Industries has a situation — a GOOD situation. ${drop.name}. $${MISSION_DEFS.kramerJob.payout}. Giddy up!` },
+          { speaker: 'kramer', text: `Buddy! Kramerica Industries has a situation — a GOOD situation. ${drop.name}. $${rolledPayK}. Giddy up!` },
           { speaker: 'system', text: 'Mission accepted: KRAMERICA ERRAND. Repeatable — the empire never sleeps.' }
         ]);
       } else startDialog([
