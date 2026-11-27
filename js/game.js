@@ -7795,6 +7795,18 @@ function queensInteractions() {
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
     } },
+    { x: 560, y: 210, w: 30, h: 40, radius: 42, label: 'Uncle Leo', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Uncle Leo spots you from forty yards. There is no escape. There has never been an escape. “GEORGIE! HELLO!” The eyebrows are doing most of the waving.' },
+        { speaker: 'george', text: 'Uncle Leo! What — how — I have to go, I have a thing! A big thing! Vandelay business!' },
+        { speaker: 'narrator', text: 'Leo grabs your arm with the grip strength of a man who has held grudges since 1962. “Your mother — rest her soul — wait, she’s alive. Tell her I say hello. And Jerry! Tell Jerry his cousin is a very big deal now! VERY big!” He presses $2 into your hand. It is somehow damp. +$2' },
+      ] : [
+        { speaker: 'narrator', text: 'An elderly man with prominent eyebrows waves at you like you owe him money. “HELLO! You look like a man of IMPORTANCE! My nephew — Jerry Seinfeld — you know him? BIG star! VERY big!”' },
+        { speaker: 'tony', text: 'Yeah, I know Jerry. Tell him… actually, tell him nothing. You never saw me. Here’s twenty for the trouble — buy yourself a spray tan or whatever you people do.' },
+        { speaker: 'narrator', text: 'Leo takes the $20 with both hands and the expression of a man who has never once questioned money. “You’re a good boy! I can tell! The eyebrows never lie!” +$20 …wait, you gave him $20. −$20. You’re not sure how that happened either. He’s GOOD.' }
+      ]);
+      if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20);
+    } },
     { x: 330, y: 245, w: 50, h: 26, radius: 44, inCarOk: true, label: 'The contested parking space', action: () => {
       if (!state.player.inCar) {
         startDialog([
