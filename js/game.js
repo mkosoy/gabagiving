@@ -7041,6 +7041,16 @@ function meadowInteractions() {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'You lean on the rail as the horses pound past, close enough to feel it in your sternum. One of them — the dark one, third out — runs like it personally owes somebody money. You make a mental note. The mental note is worth exactly nothing.' }]);
     } },
+    { x: 640, y: 200, w: 60, h: 30, radius: 42, label: 'Binoculars — quarter a look', action: () => {
+      if (state.money < 1) { toast('The binoculars demand a dollar. Everything out here has a price.'); return; }
+      state.money -= 1;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'Through the binoculars: the backstretch, the railbirds, a man tearing up tickets with the practiced grief of a daily ritual, and — far beyond the fence — the reeds. The reeds keep their own counsel. The reeds have seen things no binocular will ever confirm.' }]);
+    } },
+    { x: 200, y: 220, w: 70, h: 30, radius: 42, label: 'The railbirds', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The railbirds lean in with their racing forms folded into squares, speaking a dialect of pure numbers and grievances. “The four horse? The four horse is a criminal. That horse owes ME money.” One of them sizes you up, decides you’re alright, and tells you a tip so bad it loops back around to wisdom.' }]);
+    } },
     { x: 60, y: 300, w: 110, h: 60, radius: 40, label: 'Sleep in the car', action: () => {
       if (!state.player.inCar) { toast('You need to drive a car in here first.'); return; }
       state.time += 30;
@@ -7360,6 +7370,18 @@ function casinoInteractions() {
     { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
     { x: 470, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
     { x: 320, y: 210, w: 70, h: 30, radius: 44, label: 'Roulette — red or black', action: () => initRoulette() },
+    { x: 60, y: 380, w: 80, h: 26, radius: 42, label: 'ATM of doom', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The casino ATM charges a $6 fee and dispenses twenties with the reluctance of a machine that knows exactly what you’re about to do with them. A small printed receipt says GOOD LUCK. It is lying. It has never meant it.' }]);
+    } },
+    { x: 570, y: 380, w: 60, h: 26, radius: 42, label: 'Cocktail waitress', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The cocktail waitress asks George if he wants a drink. George asks if it’s free. It is, if he’s playing. George picks up a nickel slot token from the carpet and presents it as evidence of play. She walks away. The system, once again, is undefeated.' },
+        { speaker: 'george', text: 'I AM playing! I’m playing the LONG game! The longest game there is — watching other people lose!' }
+      ] : [
+        { speaker: 'narrator', text: 'The waitress brings Tony a drink he didn’t order, calls him sir like she means it, and glides away. On the house. Everything for certain people is always, somehow, on the house — and that is its own kind of debt.' }
+      ]);
+    } },
     { x: 500, y: 130, w: 70, h: 30, radius: 44, label: 'Cashier cage — count your sins', action: () => {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'The cashier counts your chips with the neutral face of a person who has watched ten thousand men have the best and worst nights of their lives in the same chair. Behind her, the vault hums. Everything here is somebody’s fault.' }]);
@@ -7454,6 +7476,15 @@ function queensInteractions() {
     } },
     { x: 230, y: 210, w: 60, h: 30, radius: 44, label: 'Borrow a street car', hidden: () => !!state.player.inCar, action: () => {
       stealRandomCar();
+    } },
+    { x: 80, y: 150, w: 60, h: 40, radius: 42, label: 'Sit on the stoop', action: () => {
+      state.time += 3;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You sit on somebody’s stoop in Queens. A woman across the street watches you from behind a curtain with the focus of a surveillance professional. In Queens, the curtain is always watching. You wave. The curtain closes. You have been logged.' }]);
+    } },
+    { x: 480, y: 290, w: 60, h: 30, radius: 42, label: 'Honking standoff', action: () => {
+      audio.sfx('honk');
+      startDialog([{ speaker: 'narrator', text: 'Two drivers are locked in a honking standoff over a parking spot neither of them fits into. It has been going eleven minutes. A small crowd has formed. One elderly man is keeping score. You watch two full rounds. It ends in a draw, which in Queens means both men believe they won forever.' }]);
     } },
     { x: 300, y: 290, w: 60, h: 30, radius: 42, label: 'Double-parked Buick', action: () => {
       startDialog([{ speaker: 'narrator', text: 'A Buick double-parked so perfectly perpendicular to reality it can only belong to a man with nothing left to lose. There is a bumper sticker. It says SERENITY NOW. The irony is load-bearing.' }]);
