@@ -7786,6 +7786,27 @@ function queensInteractions() {
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
     } },
+    { x: 330, y: 245, w: 50, h: 26, radius: 44, label: 'The contested parking space', action: () => {
+      if (!state.player.inCar) {
+        startDialog([
+          { speaker: 'narrator', text: 'A single open parking space, defended by a man standing in it. LEGALLY, he cannot do this. PHYSICALLY, he is doing this. He has been doing it since October.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'That’s MY space! I mean — it COULD be my space! If I had a car! Which I’m borrowing! PERMANENTLY!' : 'Guy thinks he’s a fire hydrant. Adorable.' }
+        ]);
+        return;
+      }
+      if (Math.random() < .5) {
+        state.money += 5;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'You back in. A Buick noses in behind you — the classic Queens standoff. Ten minutes of honking later, the Buick capitulates. A passerby hands you $5. “I had money on you. I ALWAYS bet the guy in reverse.”' }]);
+      } else {
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+        audio.sfx('denied');
+        startDialog([
+          { speaker: 'narrator', text: 'The standoff goes long. A traffic enforcement officer arrives to mediate, tickets BOTH cars out of principle, and writes your plate in a small book. (+heat)' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I was BACKING IN! BACKING IN IS THE LAW OF CIVILIZATION!' : 'I’ll give him a space. In the HOSPITAL. …Nah. He’s not worth the paperwork.' }
+        ]);
+      }
+    } },
     { x: 250, y: 245, w: 60, h: 30, radius: 48, label: 'Borrow a street car', hidden: () => !!state.player.inCar, action: () => {
       stealRandomCar();
     } },
