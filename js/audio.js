@@ -289,6 +289,15 @@ export class AudioSys {
       if (this.musicMode === 'dream' && Math.random() < .12) this.noise(.3 + Math.random() * .25, .006, 0, 500 + Math.random() * 300); // waves rolling in
       if (this.musicMode === 'dream' && Math.random() < .008) this.tone(1400 + Math.random() * 600, .16, 'sine', .004, 0, -300); // gull cry
       if (this.musicMode === 'dream' && Math.random() < .03) this.noise(.5, .004, 0, 900); // wind
+      if (this.musicMode === 'monks' && Math.random() < .05) this.noise(.02, .006, 0, 2600 + Math.random() * 800); // coffee shop murmur
+      if (this.musicMode === 'monks' && Math.random() < .015) this.tone(1900, .05, 'sine', .004, 0, -200); // espresso steam
+      if (this.musicMode === 'soup' && Math.random() < .02) this.noise(.05, .005, 0, 500); // ladle on steel
+      if (this.musicMode === 'satriale' && Math.random() < .03) this.noise(.04, .006, 0, 700 + Math.random() * 400); // the bandsaw hum
+      if (this.musicMode === 'satriale' && Math.random() < .015) this.sfx('honk'); // Pork Store traffic
+      if (this.musicMode === 'vesuvio' && Math.random() < .04) this.noise(.03, .005, 0, 2000); // cutlery and quiet opera
+      if (this.musicMode === 'vesuvio' && Math.random() < .02) this.tone(520, .3, 'sine', .003, 0, 60); // a violin somewhere
+      if (this.musicMode === 'yankees' && Math.random() < .02) this.noise(.06, .005, 0, 1200); // stadium crowd memory
+      if (this.musicMode === 'yankees' && Math.random() < .012) this.tone(880, .1, 'sine', .004, 0, 220); // a bat crack, somewhere in the past
     }, 180);
   }
 }

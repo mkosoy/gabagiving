@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive'];
 function saveWorld() {
   try {
     const out = {};
@@ -1510,6 +1510,41 @@ function drawIceCream() {
   drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawLawnmower() {
+  if (state.scene !== 'hub' || isNight()) return;
+  const t = state.time * .5;
+  const lane = Math.floor(t / 4) % 4;
+  const dir = Math.floor(t / 4) % 2 === 0 ? 1 : -1;
+  const prog = (t % 4) / 4;
+  const mx = dir === 1 ? 90 + prog * 130 : 220 - prog * 130;
+  const my = 70 + lane * 14;
+  // freshly mowed stripes behind
+  for (let i = 0; i < lane; i++) px(ctx, 90, 70 + i * 14, 130, 12, 'rgba(70,130,50,.35)');
+  px(ctx, 90, 70 + lane * 14, dir === 1 ? (prog * 130) : 130 - (prog * 130), 12, 'rgba(70,130,50,.35)');
+  // the mower man
+  px(ctx, mx - 4, my - 12, 8, 9, '#d8c9a0');
+  px(ctx, mx - 3, my - 16, 6, 5, '#caa07a');
+  px(ctx, mx + (dir === 1 ? 3 : -8), my - 8, 6, 5, '#c0392b');
+  if (Math.random() < .02) audio.sfx && null;
+}
+
+function drawKite() {
+  if (!['shore', 'ac'].includes(state.scene) || isNight()) return;
+  const t = state.time;
+  const kx = 350 + Math.sin(t * .4) * 90 + Math.sin(t * 1.1) * 20;
+  const ky = 100 + Math.cos(t * .7) * 22;
+    // string
+  ctx.strokeStyle = 'rgba(240,240,240,.5)';
+  ctx.beginPath();
+  ctx.moveTo(350, 290);
+  ctx.lineTo(kx, ky);
+  ctx.stroke();
+  px(ctx, kx - 4, ky - 3, 9, 6, '#ff6a8a');
+  px(ctx, kx - 4, ky - 3, 4, 6, '#ffd23e');
+  // the kid holding it
+  if (!state.kiteKid) state.kiteKid = true;
 }
 
 function drawFireworks() {
@@ -3523,6 +3558,16 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
+    audio.sfx('pickup');
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'narrator', text: 'George hits the dance floor with the confidence of a man who has never once been filmed dancing. The little kicks! The thumbs! Somewhere, Elaine feels a disturbance, as if a million happy feet cried out at once.' },
+      { speaker: 'george', text: 'This is it! This is the move! …Why is everyone looking at me? LOOK AWAY!' }
+    ] : [
+      { speaker: 'narrator', text: 'Tony Soprano does not dance. Tony stands on the dance floor moving with the gravity of a glacier that has decided, tonight only, to slightly groove. The floor clears around him out of respect. Or fear. Same thing.' },
+      { speaker: 'tony', text: 'What? A guy can’t enjoy music? It’s Thanksgiving. Even the Bing has a heart.' }
+    ]);
+  } });
   list.push({ x: 240, y: 380, w: 60, h: 28, radius: 40, label: 'Buy a round', action: () => {
     if (state.money < 100) { toast('A round for the house is $100.'); return; }
     state.money -= 100;
@@ -4365,6 +4410,28 @@ function hubInteractions() {
         startDialog([
           { speaker: 'newman', text: 'WHAT— you! I saw that! MY route! MY mail! That is a FEDERAL offense, committed by a rank AMATEUR! …Technique was decent though. A little hunched. Heh heh.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s a federal offense?! It’s MAIL! Who reads mail! I was BORROWING the mail!' : 'Relax, mailman. I was checking for anthrax. Community service. You’re welcome.' }
+        ]);
+      }
+    } },
+    { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
+      if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
+      state.money -= 8;
+      const roll = Math.random();
+      audio.sfx('pickup');
+      if (roll < .15) {
+        state.money += 120;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'You buy a dusty painting of a boat for $8. Inside the frame: a savings bond worth $120. The old man running the sale watches you leave with the serene smile of someone who already knows and does not care. It was his brother-in-law’s painting. He hated that guy.' }]);
+      } else if (roll < .5) {
+        state.money += 14;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'You buy a lamp shaped like a mallard. Its value is debatable but its resale is certain: a guy at the end of the driveway hands you $14 for it immediately. Commerce!' }]);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'george', text: 'Eight dollars for a ceramic frog! A STEAL! It holds pens! …It doesn’t hold pens. Why did I buy this?' },
+          { speaker: 'narrator', text: 'George now owns a ceramic frog. The frog is named Ribbit. This was not George’s decision; it was the price tag’s.' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony buys a box of old records for $8. One of them is signed by Frankie Valli. You can’t prove it and neither can he, which makes it authentic.' }
         ]);
       }
     } },
@@ -5343,6 +5410,14 @@ function acInteractions() {
       ]);
     } },
     { x: 620, y: 230, w: 50, h: 44, radius: 44, label: 'The fountain', action: () => {
+      if (!state.flags.fountainDive) {
+        state.flags.fountainDive = true;
+        state.money += 23;
+        audio.sfx('cash');
+        spawnEffect(384, 180, '+$23 in wishes', '#ffd23e');
+      } else {
+        toast('The fountain is coinless. You took the wishes. All of them.');
+      }
       audio.sfx('pickup');
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'Coins glitter at the bottom of the fountain. Hundreds of wishes, layered like sediment. George counts them with his eyes. Somebody’s wish is about a knish.' },
@@ -7185,6 +7260,17 @@ function drawPlayer() {
   if (state.player.inCar) {
     const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
     drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
+    if ((state.player.carDamage || 0) >= 2) {
+      for (let i = 0; i < 3; i++) {
+        const ph = (state.time * .9 + i * .33) % 1;
+        const sx = state.player.x - 2 + Math.sin(ph * 9 + i) * 5;
+        const sy = state.player.y - 6 - ph * 26;
+        ctx.fillStyle = `rgba(90,90,95,${(1 - ph) * .4})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3 + ph * 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     return;
   }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
@@ -7335,6 +7421,8 @@ function drawWorld() {
   drawSnatcher();
   drawPackages();
   drawFireworks();
+  drawKite();
+  drawLawnmower();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
