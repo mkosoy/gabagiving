@@ -1628,7 +1628,8 @@ function shoveNearest() {
   spawnEffect(best.x + 8, best.y - 10, combo >= 3 ? 'LAUNCHED' : combo === 2 ? 'SHOVED x2' : 'SHOVED', '#ff9a7a');
   if (combo >= 2) spawnEffect(best.x + 8, best.y - 22, `COMBO x${combo}`, '#ff9a3e');
   // combo finishers drop extra cash
-  const cashChance = p.kind === 'george' ? 0 : Math.min(.8, .45 + (combo - 1) * .2);
+  const cashChance = p.kind === 'george' ? .3 : Math.min(.8, .45 + (combo - 1) * .2);
+  if (p.kind === 'george' && Math.random() < .3) best.bark = 'MY WALLET! …wait, I don’t carry a wallet. HA!';
   if (Math.random() < cashChance) {
     if (!state.cash) state.cash = [];
     state.cash.push({ x: best.x + 6, y: best.y + 14, t: 0 });
@@ -3741,7 +3742,7 @@ function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
-  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
+  if (state.flags.freeRoam && state.scene === 'yankees') {
     list.push({ x: 560, y: 100, w: 40, h: 30, radius: 40, label: 'The intercom', action: () => {
     audio.sfx('denied');
     const rants = [
