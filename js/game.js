@@ -7256,7 +7256,7 @@ function robRegister(place, flavor) {
 
 function bodegaInteractions() {
   return [
-    { x: 320, y: 130, w: 80, h: 40, radius: 44, label: 'Rob the register', action: () => robRegister('bodega', 'You empty the register into a bodega bag in four seconds flat. The clerk doesn’t even look up — New York’s most unimpressed man. The cat, however, witnesses everything and will judge you forever.') },
+    { x: 340, y: 130, w: 40, h: 30, radius: 40, label: 'Rob the register', action: () => robRegister('bodega', 'You empty the register into a bodega bag in four seconds flat. The clerk doesn’t even look up — New York’s most unimpressed man. The cat, however, witnesses everything and will judge you forever.') },
     { x: 500, y: 150, w: 60, h: 40, radius: 42, label: 'Pocket a candy bar', action: () => {
       if ((state.shopliftCd || 0) > state.time) { toast('The clerk is watching the candy aisle now. He KNOWS.'); return; }
       state.shopliftCd = state.time + 40;
@@ -7624,7 +7624,7 @@ function drawTaffy() {
 
 function taffyInteractions() {
   return [
-    { x: 430, y: 130, w: 70, h: 34, radius: 44, label: 'Rob the register', action: () => robRegister('taffy', 'You empty the taffy shop till. The register drawer is sticky — everything here is sticky — and for one terrible moment you and the drawer are one. The take includes $6 in pennies and a button. You keep the button.') },
+    { x: 450, y: 130, w: 40, h: 28, radius: 40, label: 'Rob the register', action: () => robRegister('taffy', 'You empty the taffy shop till. The register drawer is sticky — everything here is sticky — and for one terrible moment you and the drawer are one. The take includes $6 in pennies and a button. You keep the button.') },
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: () => {
       setScene('shore', 400, 250);
     } },
@@ -7712,7 +7712,7 @@ function drawSlice() {
 function sliceInteractions() {
   return [
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the street', action: leaveOutside },
-    { x: 520, y: 130, w: 60, h: 34, radius: 44, label: 'Rob the register', action: () => robRegister('slice', 'You hit Ray’s register during the oven rush. Nobody stops you — the oven guy is the only employee who cares, and the oven guy is FLAMES. Behind you, a heated argument about which Ray this even is provides perfect cover.') },
+    { x: 540, y: 130, w: 40, h: 28, radius: 40, label: 'Rob the register', action: () => robRegister('slice', 'You hit Ray’s register during the oven rush. Nobody stops you — the oven guy is the only employee who cares, and the oven guy is FLAMES. Behind you, a heated argument about which Ray this even is provides perfect cover.') },
     { x: 200, y: 130, w: 70, h: 30, radius: 44, label: 'A slice — $3', action: () => {
       if (state.money < 3) { toast('Three bucks. It’s the cheapest dignity in Manhattan.'); return; }
       state.money -= 3;
