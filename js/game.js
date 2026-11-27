@@ -2610,6 +2610,14 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
     ]
   },
+  kramerJob: {
+    title: 'KRAMERICA ERRAND',
+    payout: 70, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'monks', x: 320, y: 250, radius: 60, objective: 'Kramerica business — make the pickup', label: 'the pickup' },
+      { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2755,6 +2763,10 @@ function advanceMission() {
       oddJob: [
         { speaker: 'newman', text: 'Delivered. On time. Undamaged. Unopened — mostly certain. The mail machine grinds on, and you, my friend, are a very small but very reliable cog. Hee hee.' },
         { speaker: 'system', text: 'ODD JOB COMPLETE. There will always be another parcel. The mail is eternal.' }
+      ],
+      kramerJob: [
+        { speaker: 'kramer', text: 'GIDDY UP! Another successful Kramerica transaction. You know what that makes this quarter? Positive. In SOME columns. The important columns are confidential, buddy.' },
+        { speaker: 'system', text: 'KRAMERICA ERRAND COMPLETE. Kramerica Industries endures.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2936,6 +2948,10 @@ function updateMission(dt) {
         oddJob: [
           { speaker: 'narrator', text: 'The parcel changes hands. No names. No questions. Somewhere, a sorting machine hums with approval.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Delivered! I’m a machine! A very tired, underpaid machine!' : 'Yeah, yeah. Next one. The mail’s eternal — so’s my cut.' }
+        ],
+        kramerJob: [
+          { speaker: 'narrator', text: 'The Kramerica cargo changes hands. Legally ambiguous, structurally unsound, somehow profitable. The Kramerica way.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a Kramerica VP now! Of logistics! There’s no pay but the TITLE, Jerry, the TITLE!' : 'Guy runs an empire outta his neighbor’s apartment. I seen worse organizational structures. Mine, for instance.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -8620,6 +8636,25 @@ function nycInteractions() {
         startDialog([
           offers[mid],
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      } else if (!state.mission && state.flags.kramericaBookDone && state.flags.freeRoam) {
+        const drops = [
+          { scene: 'monks', x: 320, y: 250, radius: 60, name: 'Monk’s — a business lunch. The business is confidential. The lunch is soup' },
+          { scene: 'bodega', x: 320, y: 200, radius: 60, name: 'the bodega — they take anything, buddy. ANYTHING' },
+          { scene: 'yankees', x: 320, y: 300, radius: 62, name: 'the Yankees office — tell them Kramerica sends regards. They don’t know us yet. They will' },
+          { scene: 'soup', x: 320, y: 200, radius: 60, name: 'the Soup Man — follow the rules. Kramerica cannot afford another ban' },
+          { scene: 'queens', x: 390, y: 160, radius: 60, name: 'the sauna in Queens — steam it. don’t ask. it’s a process' }
+        ];
+        const drop = drops[Math.floor(Math.random() * drops.length)];
+        MISSION_DEFS.kramerJob.payout = 60 + Math.floor(Math.random() * 60);
+        MISSION_DEFS.kramerJob.steps = [
+          { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Kramerica errand — ${drop.name.split('—')[0].trim()}`, label: 'the pickup' },
+          { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
+        ];
+        startMission('kramerJob');
+        startDialog([
+          { speaker: 'kramer', text: `Buddy! Kramerica Industries has a situation — a GOOD situation. ${drop.name}. $${MISSION_DEFS.kramerJob.payout}. Giddy up!` },
+          { speaker: 'system', text: 'Mission accepted: KRAMERICA ERRAND. Repeatable — the empire never sleeps.' }
         ]);
       } else startDialog([
         { speaker: 'kramer', text: state.player.kind === 'george' ? 'Georgie! You look tired. Kramerica Industries is hiring, you know. No benefits, no salary, but the adrenaline — top shelf.' : 'You got the look, buddy. Waste management, huh? I can smell opportunity. And other things. It’s the bladder, don’t ask.' }
