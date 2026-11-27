@@ -3750,7 +3750,7 @@ function nearestInteraction() {
     const cx = Math.max(it.x, Math.min(pc.x, it.x + it.w));
     const cy = Math.max(it.y, Math.min(pc.y, it.y + it.h));
     const d = Math.hypot(pc.x - cx, pc.y - cy);
-    if (d < (it.radius || 32) && d < bestD) {
+    if (d < (it.radius || 32) && (d < bestD - .01 || (Math.abs(d - bestD) <= .01 && best && it.w * it.h < best.w * best.h))) {
       best = it;
       bestD = d;
     }
