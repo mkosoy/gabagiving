@@ -2784,16 +2784,6 @@ function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
   const m0 = state.mission;
-  if (MISSION_DEFS[m0.id].maxHeat && (state.flags.heat || 0) >= MISSION_DEFS[m0.id].maxHeat) {
-    state.mission = null;
-    audio.sfx('denied');
-    startDialog([
-      { speaker: 'narrator', text: 'Heat. You generated HEAT. The whole point — the ONE point — was no heat. Somewhere across the river, Dr. Melfi crosses out today’s date in her appointment book, twice, angrily.' },
-      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The heat GENERATED ITSELF! I’m heat-adjacent at worst!' : 'Ah, maronn’. She’s gonna use the disappointed voice. I HATE the disappointed voice.' },
-      { speaker: 'system', text: 'MISSION FAILED — the exercise was impulse control. Talk to Dr. Melfi to retry.' }
-    ]);
-    return;
-  }
   if (m0.deadline && state.time > m0.deadline) {
     const id = m0.id;
     state.mission = null;
@@ -10633,8 +10623,23 @@ function startGame() {
   ]);
 }
 
+function checkMissionHeatBreach() {
+  const m = state.mission;
+  if (!m || !MISSION_DEFS[m.id] || !MISSION_DEFS[m.id].maxHeat) return;
+  if ((state.flags.heat || 0) >= MISSION_DEFS[m.id].maxHeat) {
+    state.mission = null;
+    audio.sfx('denied');
+    startDialog([
+      { speaker: 'narrator', text: 'Heat. You generated HEAT. The whole point — the ONE point — was no heat. Somewhere across the river, Dr. Melfi crosses out today’s date in her appointment book, twice, angrily.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The heat GENERATED ITSELF! I’m heat-adjacent at worst!' : 'Ah, maronn’. She’s gonna use the disappointed voice. I HATE the disappointed voice.' },
+      { speaker: 'system', text: 'MISSION FAILED — the exercise was impulse control. Talk to Dr. Melfi to retry.' }
+    ]);
+  }
+}
+
 function update(dt) {
   state.time += dt;
+  checkMissionHeatBreach();
   updateMovers(dt);
   for (const e of state.effects) e.t += dt;
   if (state.toastMsg) { state.toastMsg.t -= dt; if (state.toastMsg.t <= 0) state.toastMsg = null; }
