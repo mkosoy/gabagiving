@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat'];
 function saveWorld() {
   try {
     const out = {};
@@ -5922,6 +5922,18 @@ function shoreInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
+    } },
+    { x: 250, y: 110, w: 44, h: 34, radius: 40, label: 'Metal detector guy', action: () => {
+      audio.sfx('pickup');
+      if (!state.flags.metalChat) {
+        state.flags.metalChat = true;
+        state.money += 12;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'The metal detector guy — forty years on this beach, knees like a seabird — shows you today’s haul: eleven bottle caps, a hoop earring, and one very suspicious washer. He pays you $12 for “that thing you’re standing on.” You were standing on a quarter. He’s that good.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A CAREER! A man with a metal detector has a CAREER! What do I have?! A nap mat under a desk!' : 'Forty years walking in circles. No boss, no crew, no sit-downs. This guy figured it all out. Don’t tell nobody he exists.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'The detector hums its patient song. Somewhere under the sand: bottle caps, always and forever, mostly bottle caps. He keeps walking. The dream is the point.' }]);
     } },
     { x: 380, y: 140, w: 44, h: 34, radius: 42, label: 'Fish off the pier', action: () => {
       if (state.mode === 'fishing') return;
