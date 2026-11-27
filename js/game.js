@@ -5160,7 +5160,13 @@ function clubInteractions() {
     audio.sfx('cash');
     startDialog([{ speaker: 'narrator', text: `Silvio opens the safe and hands you $${amt} in bills that have never met a serial number database. “Spend it in good health. Or bad health. Health is your business.”` }]);
   } });
-  list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
+  list.push({ x: 300, y: 320, w: 60, h: 34, radius: 42, label: 'Executive game — $20 ante', action: () => {
+      if (!state.flags.freeRoam) return;
+      startDialog([
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A card game! With CRIMINALS! …I mean — what criminals. These are businessmen. I’m also a businessman. Vandelay. You may have heard.' : 'The executive game. Silvio’s been running it since before the floods. Twenty in, cards don’t lie — people do, constantly, but the cards are straight.' }
+      ], () => initPoker());
+    } },
+    { x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
     audio.sfx('pickup');
     startDialog(state.player.kind === 'george' ? [
       { speaker: 'narrator', text: 'George hits the dance floor with the confidence of a man who has never once been filmed dancing. The little kicks! The thumbs! Somewhere, Elaine feels a disturbance, as if a million happy feet cried out at once.' },
@@ -7850,6 +7856,228 @@ function drawSlots() {
     outlineText(ctx, 'E = PULL · move to walk away', 320, 316, '#ffe78a', 9, 'center');
   }
   px(ctx, 170, 236, 300, 4, '#c8a040');
+}
+
+// ---------- The Executive Game (five-card draw) ----------
+function pkDeck() {
+  const d = [];
+  for (let s = 0; s < 4; s++) for (let v = 2; v <= 14; v++) d.push({ v, s });
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; }
+  return d;
+}
+function pkRank(hand) {
+  const vs = hand.map(c => c.v).sort((a, b) => b - a);
+  const ss = hand.map(c => c.s);
+  const flush = ss.every(s => s === ss[0]);
+  const uniq = [...new Set(vs)].sort((a, b) => a - b);
+  let straight = 0;
+  if (uniq.length === 5 && uniq[4] - uniq[0] === 4) straight = uniq[4];
+  else if (uniq.join(',') === '2,3,4,5,14') straight = 5;
+  const counts = {};
+  vs.forEach(v => counts[v] = (counts[v] || 0) + 1);
+  const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c })).sort((a, b) => b.c - a.c || b.v - a.v);
+  const flat = groups.flatMap(g => Array(g.c).fill(g.v));
+  let rank = 0;
+  if (straight && flush) rank = 8;
+  else if (groups[0].c === 4) rank = 7;
+  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) rank = 6;
+  else if (flush) rank = 5;
+  else if (straight) rank = 4;
+  else if (groups[0].c === 3) rank = 3;
+  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) rank = 2;
+  else if (groups[0].c === 2) rank = 1;
+  return [rank, ...flat];
+}
+function pkName(rank) {
+  return ['high card', 'a pair', 'two pair', 'three of a kind', 'a straight', 'a flush', 'a full house', 'four of a kind', 'a STRAIGHT FLUSH'][rank] || 'high card';
+}
+function pkCompare(a, b) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const d = (a[i] || 0) - (b[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+function pkAiDiscard(hand) {
+  const r = pkRank(hand);
+  if (r[0] >= 4) return [];
+  const counts = {};
+  hand.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+  return hand.map((c, i) => counts[c.v] === 1 && c.v < 12 ? i : -1).filter(i => i >= 0).slice(0, 3);
+}
+
+function initPoker() {
+  if ((state.flags.tribute || 0) < 20) {
+    startDialog([{ speaker: 'narrator', text: 'The buy-in is twenty dollars. You have less than that. The table observes this in silence, which is worse than any comment.' }]);
+    return;
+  }
+  state.flags.tribute -= 20;
+  const deck = pkDeck();
+  const mk = (name, kind) => ({ name, kind, hand: deck.splice(0, 5), discards: [], folded: false });
+  state.poker = {
+    deck,
+    player: mk('You', state.player.kind),
+    ai: [mk('Silvio', 'silvio'), mk('Paulie', 'paulie'), mk('Christopher', 'christopher')],
+    pot: 80, cur: 0, sel: [false, false, false, false, false],
+    phase: 'select', t: 0, ax: 0, result: null
+  };
+  state.mode = 'poker';
+  audio.sfx('pickup');
+}
+
+function updatePoker(dt) {
+  const p = state.poker;
+  if (!p) { state.mode = 'explore'; return; }
+  p.t += dt;
+  if (p.phase === 'select') {
+    let mv = 0;
+    if (consume(['ArrowLeft'])) mv = -1;
+    if (consume(['ArrowRight'])) mv = 1;
+    if (Math.abs(axis.x) > .6 && Math.abs(p.ax) <= .6) mv = axis.x > 0 ? 1 : -1;
+    p.ax = axis.x;
+    if (mv) { p.cur = (p.cur + mv + 5) % 5; audio.sfx('blip'); }
+    if (consume(['KeyE'])) { p.sel[p.cur] = !p.sel[p.cur]; audio.sfx('blip'); }
+    if (consume(['KeyB', 'Space'])) {
+      const deck = p.deck;
+      for (let i = 0; i < 5; i++) if (p.sel[i]) p.player.hand[i] = deck.pop();
+      for (const ai of p.ai) {
+        const di = pkAiDiscard(ai.hand);
+        ai.discards = di;
+        for (const i2 of di) ai.hand[i2] = deck.pop();
+      }
+      p.phase = 'reveal'; p.t = 0;
+      audio.sfx('smash');
+    }
+    if (consume(['Escape', 'KeyM'])) {
+      state.poker = null; state.mode = 'explore';
+      startDialog([{ speaker: 'narrator', text: 'You fold before the draw. Silvio nods slowly, filing this away. The twenty dollars stays on the felt, where it will live now.' }]);
+    }
+  } else if (p.phase === 'reveal') {
+    if (p.t > 2.2 || consume(['KeyE', 'KeyB'])) {
+      const pr = pkRank(p.player.hand);
+      const ranked = p.ai.map(ai => ({ ai, r: pkRank(ai.hand) }));
+      let best = pr, winner = 'player';
+      for (const e of ranked) if (pkCompare(e.r, best) > 0) { best = e.r; winner = e.ai.name; }
+      p.playerRank = pr;
+      p.result = winner;
+      p.phase = 'done'; p.t = 0;
+      if (winner === 'player') {
+        state.flags.tribute = (state.flags.tribute || 0) + p.pot;
+        state.stats.pokerWins = (state.stats.pokerWins || 0) + 1;
+        audio.sfx('cash');
+      } else audio.sfx('buzzer');
+    }
+  } else if (p.phase === 'done') {
+    if (p.t > .8 && consume(['KeyE', 'KeyB', 'Space'])) {
+      const won = p.result === 'player';
+      const pname = pkName(p.playerRank[0]);
+      state.poker = null; state.mode = 'explore';
+      if (won) {
+        startDialog([
+          { speaker: 'narrator', text: 'You rake the pot with ' + pname + '. $80 across the felt. Christopher throws his cards like they personally betrayed him, which, in a sense, they did.' },
+          { speaker: 'silvio', text: 'Nice hand. Don’t make a habit of it.' }
+        ]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: p.result + ' takes it. You had ' + pname + ', which in this room is a rumor, not a hand. Paulie is doing a small seated celebration that he thinks is subtle.' },
+          { speaker: 'paulie', text: 'The secret is I never look at my cards. Can’t lose what you don’t acknowledge.' }
+        ]);
+      }
+    }
+  }
+}
+
+function drawPoker() {
+  const p = state.poker;
+  if (!p) return;
+  ctx.fillStyle = '#0d2417';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#1a4a2e';
+  ctx.beginPath();
+  ctx.ellipse(320, 210, 290, 130, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#6e5540';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#e8c25a';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE EXECUTIVE GAME', 320, 20);
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#b8a88a';
+  ctx.fillText('five-card draw · ante $20 · winner takes the pot', 320, 34);
+  const suits = ['♠', '♥', '♦', '♣'];
+  const suitCol = (s) => s === 1 || s === 2 ? '#d84040' : '#222';
+  const oppX = [150, 320, 490];
+  p.ai.forEach((ai, k) => {
+    const x = oppX[k];
+    drawPortrait(ctx, x - 16, 48, ai.kind);
+    ctx.fillStyle = '#e8dcc8';
+    ctx.font = '9px monospace';
+    ctx.fillText(ai.name, x, 96);
+    const show = p.phase === 'done';
+    ai.hand.forEach((c, i) => {
+      const cx = x - 34 + i * 15, cy = 102;
+      ctx.fillStyle = show ? '#f5efdd' : '#8a2a2a';
+      ctx.fillRect(cx, cy, 13, 18);
+      ctx.strokeStyle = '#333';
+      ctx.strokeRect(cx + .5, cy + .5, 12, 17);
+      if (show) {
+        ctx.fillStyle = suitCol(c.s);
+        ctx.font = '8px monospace';
+        ctx.fillText((c.v === 14 ? 'A' : c.v === 13 ? 'K' : c.v === 12 ? 'Q' : c.v === 11 ? 'J' : c.v) + suits[c.s], cx + 6, cy + 13);
+      }
+    });
+    if (p.phase === 'done') {
+      ctx.fillStyle = '#ffe78a';
+      ctx.fillText(pkName(pkRank(ai.hand)[0]), x, 132);
+    } else if (p.phase === 'reveal') {
+      ctx.fillStyle = '#b8a88a';
+      ctx.fillText('drew ' + ai.discards.length, x, 132);
+    }
+  });
+  ctx.fillStyle = '#ffe78a';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText('POT $' + p.pot, 320, 158);
+  const py = 240;
+  p.player.hand.forEach((c, i) => {
+    const cx = 220 + i * 42, cy = py + (p.sel[i] ? -12 : 0);
+    ctx.fillStyle = '#f5efdd';
+    ctx.fillRect(cx, cy, 34, 48);
+    ctx.strokeStyle = p.cur === i && p.phase === 'select' ? '#ffe78a' : '#333';
+    ctx.lineWidth = p.cur === i && p.phase === 'select' ? 3 : 1;
+    ctx.strokeRect(cx + .5, cy + .5, 33, 47);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = suitCol(c.s);
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText((c.v === 14 ? 'A' : c.v === 13 ? 'K' : c.v === 12 ? 'Q' : c.v === 11 ? 'J' : c.v), cx + 17, cy + 20);
+    ctx.font = '15px monospace';
+    ctx.fillText(suits[c.s], cx + 17, cy + 38);
+    if (p.sel[i]) {
+      ctx.fillStyle = '#ff9a4a';
+      ctx.font = '8px monospace';
+      ctx.fillText('DISCARD', cx + 17, cy - 4);
+    }
+  });
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = '10px monospace';
+  if (p.phase === 'select') {
+    ctx.fillText('◀ ▶ choose · E mark for discard · B draw · M fold', 320, 320);
+    ctx.fillStyle = '#b8a88a';
+    ctx.fillText('marked cards get replaced — the table is watching', 320, 334);
+  } else if (p.phase === 'reveal') {
+    ctx.fillText('the draw is in…', 320, 320);
+  } else {
+    const won = p.result === 'player';
+    ctx.fillStyle = won ? '#9be59b' : '#ff9a8a';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(won ? 'YOU TAKE THE POT — ' + pkName(p.playerRank[0]).toUpperCase() : p.result.toUpperCase() + ' TAKES IT — you had ' + pkName(p.playerRank[0]), 320, 318);
+    ctx.fillStyle = '#b8a88a';
+    ctx.font = '10px monospace';
+    ctx.fillText('E to leave the table', 320, 336);
+  }
+  ctx.textAlign = 'left';
 }
 
 function initBlackjack() {
@@ -12489,6 +12717,7 @@ function render() {
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'pinball') drawPinball();
+  else if (state.mode === 'poker') drawPoker();
   else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
@@ -12928,6 +13157,8 @@ function update(dt) {
     updateSkeeball(dt);
   } else if (state.mode === 'pinball') {
     updatePinball(dt);
+  } else if (state.mode === 'poker') {
+    updatePoker(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
   } else if (state.mode === 'roulette') {
