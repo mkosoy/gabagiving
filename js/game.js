@@ -36,6 +36,7 @@ const sceneArt = {
   vesuvio: loadArt('./assets/bg-vesuvio.webp'),
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
+  diner: loadArt('./assets/bg-diner.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -1297,6 +1298,16 @@ const scenes = {
     ],
     draw: drawCabin,
     interactions: cabinInteractions
+  },
+  diner: {
+    w: 640, h: 416, label: 'Endgame Diner · Route 46', music: 'monks',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,30,580,68), r(120,150,96,70), r(420,150,96,70),
+      r(120,280,96,70), r(420,280,96,70), r(560,200,60,140)
+    ],
+    draw: drawDiner,
+    interactions: dinerInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -5863,6 +5874,7 @@ function travelHub(place) {
     costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
     casino: ['casino', 320, 360, 'The Dunes. Oxygen-pumped air, no clocks, no mercy.'],
     slice: ['slice', 320, 360, 'Inside: heat, grease, glory. The real Ray’s — probably.'],
+    diner: ['diner', 320, 380, 'The Endgame Diner. Open 24 hours, because some decisions can’t wait for morning.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -5900,6 +5912,15 @@ function stealRandomCar() {
 
 function hubInteractions() {
   const list = [
+    { x: 885, y: 150, w: 50, h: 34, radius: 46, label: 'Endgame Diner', action: () => {
+      if (!state.flags.dinerSeen) {
+        state.flags.dinerSeen = true;
+        startDialog([
+          { speaker: 'narrator', text: 'A stainless-steel diner glowing against the Jersey sky. The sign says ENDGAME. Underneath: OPEN 24 HRS — BEST ONION RINGS IN THE STATE (SELF-REPORTED).' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A diner! A real Jersey diner! This is where civilization peaked and I will die on this hill!' : 'Twenty-four hours. Because trouble don’t keep a schedule.' }
+        ], () => travelHub('diner'));
+      } else travelHub('diner');
+    } },
     { x: 10, y: 210, w: 26, h: 90, radius: 46, label: '← West: the Meadowlands', action: () => {
       startDialog([{ speaker: 'narrator', text: 'West on Route 3. The reeds get taller, the lots get bigger, and suddenly you can hear hooves. The Meadowlands.' }], () => startTransit('meadow', 700, 250, 'ROUTE 3 · EAST'));
     } },
@@ -7764,6 +7785,123 @@ function meadowInteractions() {
       state.time += 30;
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'You crack the window, tilt the seat back, and sleep the parking-lot sleep of a person with nothing to prove. You wake up slightly later. The Meadowlands has not moved. Nothing has changed. It is perfect.' }]);
+    } }
+  ];
+}
+
+function drawDiner() {
+  if (drawSceneArt(sceneArt.diner, 640, 416)) {
+    // neon coffee sign flicker
+    const fl = Math.sin(state.time * 7) > .7 ? .5 : 1;
+    ctx.save();
+    ctx.globalAlpha = .3 * fl;
+    ctx.fillStyle = '#e85a4a';
+    ctx.beginPath();
+    ctx.arc(300 - state.camera.x, 60 - state.camera.y, 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    // jukebox glow pulse
+    ctx.save();
+    ctx.globalAlpha = .12 + Math.sin(state.time * 3) * .06;
+    ctx.fillStyle = '#7ab5e8';
+    ctx.beginPath();
+    ctx.arc(590 - state.camera.x, 210 - state.camera.y, 60, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#3a3230');
+  for (let fy = 0; fy < 416; fy += 16) px(ctx, 0, fy, 640, 1, '#332b29');
+  px(ctx, 30, 30, 580, 68, '#8a8a8e');
+  px(ctx, 30, 30, 580, 8, '#c8c8ce');
+  px(ctx, 120, 150, 96, 70, '#7a2e2e');
+  px(ctx, 420, 150, 96, 70, '#7a2e2e');
+  px(ctx, 120, 280, 96, 70, '#7a2e2e');
+  px(ctx, 420, 280, 96, 70, '#7a2e2e');
+  px(ctx, 560, 200, 60, 140, '#2e4a6b');
+}
+
+function dinerInteractions() {
+  return [
+    { x: 30, y: 350, w: 60, h: 60, radius: 44, label: 'Leave', action: leaveOutside },
+    { x: 200, y: 112, w: 56, h: 28, radius: 40, label: 'Coffee ($2)', action: () => {
+      if (state.money < 2) { toast('Coffee is $2. The bottomless kind. You’re bottomless out of cash.'); return; }
+      state.money -= 2;
+      if ((state.flags.hp || 3) < 3) {
+        state.flags.hp = (state.flags.hp || 3) + 1;
+        startDialog([{ speaker: 'narrator', text: 'Hot, bitter, bottomless. The coffee tastes like a truck stop miracle and — huh. You feel measurably more alive. (+1 health)' }]);
+      } else {
+        startDialog([{ speaker: 'narrator', text: ['Hot, bitter, bottomless. The way nature intended.', 'The coffee is somehow both terrible and essential. The Jersey paradox.', 'Refill number whatever. The waitress keeps them coming.'][Math.floor(Math.random() * 3)] }]);
+      }
+      audio.sfx('success');
+    } },
+    { x: 330, y: 112, w: 60, h: 28, radius: 40, label: 'Onion rings ($4)', action: () => {
+      if (state.money < 4) { toast('$4 for the rings. Best in the state, allegedly. You can’t even afford allegedly.'); return; }
+      state.money -= 4;
+      audio.sfx('success');
+      const lines = state.player.kind === 'george'
+        ? ['Golden. Crisp. The ratio of crunch to grease is a MASTERPIECE of the form!', 'You know what I love about onion rings? No pretense. Nobody orders onion rings to impress anybody!']
+        : ['Best in the state. I’m not saying it’s true. I’m saying I ain’t arguing.', 'Good rings. Carm could learn something. Don’t tell her I said that.'];
+      startDialog([
+        { speaker: 'narrator', text: 'A basket of onion rings arrives, golden and structural, like delicious little scaffolding.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: lines[Math.floor(Math.random() * lines.length)] }
+      ]);
+      state.flags.ringsEaten = (state.flags.ringsEaten || 0) + 1;
+    } },
+    { x: 460, y: 112, w: 56, h: 28, radius: 40, label: 'Pie case', action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'The pie case rotates slowly, eternally. Apple. Cherry. Lemon meringue with structural integrity issues. A coconut cream that has witnessed things.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The rotating case is genius. The pies can’t hide! Exposure! Total exposure!' : 'Pie’s been rotating since the Eisenhower administration, probably.' }
+      ]);
+    } },
+    { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
+      if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
+      state.money -= 1;
+      audio.sfx('coin');
+      if (!state.flags.jukeboxFinale) {
+        state.flags.jukeboxFinale = true;
+        startDialog([
+          { speaker: 'narrator', text: 'The jukebox arm swings. A little piano riff starts up. You know the one. EVERYBODY knows the one.' },
+          { speaker: 'narrator', text: 'Don’t stop—' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why did it cut off?! WHO CUT IT OFF?! I was emotionally invested!' : '...huh. Song just — stops. Weird. Anyway.' },
+          { speaker: 'narrator', text: 'In the corner booth, a man in a members-only jacket does not look up. He never looks up. That’s the thing about him.' }
+        ]);
+      } else {
+        startDialog([{ speaker: 'narrator', text: ['The jukebox plays something Sinatra-adjacent. Nobody objects.', 'Deep Purple this time. The truckers approve.', 'The little piano riff again. The whole diner goes quiet for exactly one bar, out of respect.'][Math.floor(Math.random() * 3)] }]);
+      }
+    } },
+    { x: 100, y: 330, w: 40, h: 34, radius: 42, label: 'The guy in the members-only jacket', action: () => {
+      const lines = [
+        'He stares at the bathroom door like it owes him money. You decide not to ask.',
+        'He stirs his coffee counterclockwise. Always counterclockwise. Nobody knows why. Nobody asks.',
+        'For a second you think he’s looking at you. He isn’t. He’s never looking at anybody. That’s worse.',
+        'He orders the same thing every night. Nobody remembers what it is. Including, possibly, him.'
+      ];
+      startDialog([{ speaker: 'narrator', text: lines[Math.floor(Math.random() * lines.length)] }]);
+      if (!state.flags.membersOnlyMet) {
+        state.flags.membersOnlyMet = true;
+        setTimeout(() => {}, 0);
+      }
+    } },
+    { x: 270, y: 240, w: 70, h: 40, radius: 44, label: 'Slide into a booth', action: () => {
+      if ((state.flags.boothCd || 0) > state.time) { toast('You just got up. Even sitting has a cooldown.'); return; }
+      state.flags.boothCd = state.time + 60;
+      const hadHeat = (state.flags.heat || 0) > 0;
+      if (hadHeat) state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      audio.sfx('success');
+      startDialog([
+        { speaker: 'narrator', text: 'You slide into the booth. Vinyl squeaks. Somewhere a trucker is explaining the government to nobody.' + (hadHeat ? ' Twenty minutes of coffee later, the heat on you fades a little. Nobody looks for anybody in a diner. It’s a law of physics.' : '') },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A booth! See, a booth is a little apartment you rent by the hour. With pie access!' : 'Every important conversation I ever had happened in a booth. There’s a reason for that.' }
+      ]);
+    } },
+    { x: 380, y: 120, w: 40, h: 26, radius: 40, label: 'The waitress', action: () => {
+      const lines = [
+        '"More coffee, hon?" She’s already pouring. It was never a question.',
+        '"You look tired, hon." She says it to everyone. She’s never once been wrong.',
+        '"The rings are fresh." The rings are always fresh. The rings have always been fresh. It’s a closed system.',
+        '"Sit anywhere you like, hon." The diner is half empty. Somehow this is still essential information.'
+      ];
+      startDialog([{ speaker: 'narrator', text: lines[Math.floor(Math.random() * lines.length)] }]);
     } }
   ];
 }
