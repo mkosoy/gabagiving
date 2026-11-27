@@ -2340,6 +2340,10 @@ function updateWasted(dt) {
     state.money -= fine;
     state.flags.heat = 0;
     state.brawler = null;
+    if (state.mission) {
+      setTimeout(() => { if (!state.wasted) startDialog([{ speaker: 'narrator', text: 'The job you were on? Fell through. Whatever it was, it goes to someone else now — someone who doesn’t get knocked unconscious in the street. The neighborhood notices.' }]); }, 400);
+      state.mission = null;
+    }
     state.wasted = null;
     toast(state.player.kind === 'george' ? 'You wake up in a hospital gown. The nurse says you were very loud about the gown. -$' + fine : 'You wake up in a hospital gown and a bill. -$' + fine);
     saveProgress();
