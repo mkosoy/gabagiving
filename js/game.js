@@ -5534,6 +5534,12 @@ function vesuvioInteractions() {
         { speaker: 'system', text: 'THE FEAST — all mission chains complete. +$1000, heat cleared. The world stays open — the shore, the city, the Pines are all still out there.' }
       ]);
     } },
+    { x: 210, y: 140, w: 60, h: 34, radius: 42, label: 'Help in the kitchen', action: () => {
+      if (!state.flags.freeRoam) return;
+      startDialog([
+        { speaker: 'artie', text: 'You want to help? During the RUSH? …You know what, yes. God help me, yes. Tickets come up, you build the plate — sauce, cheese, basil, fire, in the order on the slip. Wrong ingredient and the plate is dead. You get paid per plate. Don’t burn anything that isn’t supposed to be burnt.' }
+      ], () => initKitchen());
+    } },
     { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
       if (!state.mission && !state.flags.artiesMenuDone && state.flags.turkeyTaxDone && state.flags.freeRoam) {
         startMission('artiesMenu');
@@ -7856,6 +7862,186 @@ function drawSlots() {
     outlineText(ctx, 'E = PULL · move to walk away', 320, 316, '#ffe78a', 9, 'center');
   }
   px(ctx, 170, 236, 300, 4, '#c8a040');
+}
+
+
+// ---------- Vesuvio kitchen rush ----------
+const KITCHEN_ING = [
+  { key: 'KeyE', label: 'A', name: 'sauce', color: '#c23a2a' },
+  { key: 'KeyB', label: 'B', name: 'cheese', color: '#f0e6c8' },
+  { key: 'KeyR', label: 'R', name: 'basil', color: '#4a8a3a' },
+  { key: 'KeyF', label: 'F', name: 'fire', color: '#e8862a' }
+];
+const KITCHEN_DISHES = [
+  { name: 'baked ziti', pay: 9, len: 3 },
+  { name: 'veal parm', pay: 12, len: 4 },
+  { name: 'calamari', pay: 14, len: 4 },
+  { name: 'the feast plate', pay: 18, len: 5 }
+];
+function kitchenOrder() {
+  const d = KITCHEN_DISHES[Math.floor(Math.random() * KITCHEN_DISHES.length)];
+  const seq = [];
+  for (let i = 0; i < d.len; i++) seq.push(Math.floor(Math.random() * 4));
+  if (seq[seq.length - 1] !== 3) seq[seq.length - 1] = 3; // always finish on the fire
+  return { name: d.name, pay: d.pay, seq, done: 0, t: 22 };
+}
+function initKitchen() {
+  state.kitchen = { order: kitchenOrder(), served: 0, ruined: 0, streak: 0, best: 0, timer: 75, flash: 0, flashBad: 0, over: false, overT: 0, earned: 0 };
+  state.mode = 'kitchen';
+  audio.sfx('pickup');
+}
+function updateKitchen(dt) {
+  const k = state.kitchen;
+  if (!k) { state.mode = 'explore'; return; }
+  if (k.over) {
+    k.overT += dt;
+    if (k.overT > 1 && consume(['KeyE', 'KeyB', 'Space'])) {
+      const earned = k.earned, served = k.served, ruined = k.ruined;
+      state.kitchen = null; state.mode = 'explore';
+      state.flags.tribute = (state.flags.tribute || 0) + earned;
+      if (earned > 0) audio.sfx('cash');
+      const lines = served >= 6
+        ? [{ speaker: 'artie', text: served + ' plates! The man’s a natural! Take the $' + earned + ' — and listen, the invitation to invest in this restaurant is STILL retracted, but warmly this time.' }]
+        : served >= 3
+          ? [{ speaker: 'artie', text: served + ' plates out the door, ' + ruined + ' in the bin. $' + earned + '. Not bad for a — what are you exactly? Don’t answer that. $' + earned + '.' }]
+          : [{ speaker: 'artie', text: 'That was… hmm. The health inspector would call it "an experience". $' + earned + ' for the effort. Please stop helping before the dinner rush.' }];
+      startDialog(lines);
+    }
+    return;
+  }
+  k.timer -= dt;
+  k.flash = Math.max(0, k.flash - dt);
+  k.flashBad = Math.max(0, k.flashBad - dt);
+  const o = k.order;
+  o.t -= dt;
+  if (o.t <= 0) {
+    // order walked
+    k.ruined++; k.streak = 0; k.flashBad = .5;
+    audio.sfx('buzzer');
+    k.order = kitchenOrder();
+  } else {
+    for (let i = 0; i < 4; i++) {
+      if (consume([KITCHEN_ING[i].key])) {
+        if (o.seq[o.done] === i) {
+          o.done++;
+          k.flash = .25;
+          audio.sfx('blip');
+          if (o.done >= o.seq.length) {
+            const bonus = k.streak >= 2 ? Math.round(o.pay * .5) : 0;
+            k.earned += o.pay + bonus;
+            k.served++; k.streak++;
+            k.best = Math.max(k.best, k.streak);
+            spawnEffect(320, 200, '+$' + (o.pay + bonus), '#9be59b');
+            audio.sfx('pickup');
+            k.order = kitchenOrder();
+          }
+        } else {
+          k.ruined++; k.streak = 0; k.flashBad = .5;
+          audio.sfx('buzzer');
+          spawnEffect(320, 200, 'RUINED', '#ff9a8a');
+          k.order = kitchenOrder();
+        }
+        break;
+      }
+    }
+  }
+  if (consume(['Escape', 'KeyM']) && !k.earned) { state.kitchen = null; state.mode = 'explore'; return; }
+  if (k.timer <= 0) { k.over = true; k.overT = 0; audio.sfx('cash'); }
+}
+function drawKitchen() {
+  const k = state.kitchen;
+  if (!k) return;
+  ctx.fillStyle = '#1c1410';
+  ctx.fillRect(0, 0, 640, 360);
+  // stove glow
+  ctx.fillStyle = '#2a1c12';
+  ctx.fillRect(60, 60, 520, 220);
+  ctx.fillStyle = '#c23a2a';
+  ctx.fillRect(60, 60, 520, 34);
+  ctx.fillStyle = '#f5efdd';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('VESUVIO — DINNER RUSH', 320, 82);
+  // flames
+  for (let i = 0; i < 5; i++) {
+    const fx = 140 + i * 90;
+    const h = 10 + Math.sin(state.time * 9 + i * 2) * 5;
+    ctx.fillStyle = '#e8862a';
+    ctx.fillRect(fx, 250 - h, 26, h);
+    ctx.fillStyle = '#ffd76e';
+    ctx.fillRect(fx + 8, 250 - h * .6, 10, h * .6);
+  }
+  ctx.fillStyle = '#1c1410';
+  ctx.fillRect(60, 250, 520, 30);
+  // current order ticket
+  const o = k.order;
+  ctx.fillStyle = '#f5efdd';
+  ctx.fillRect(190, 108, 260, 118);
+  ctx.strokeStyle = '#6e5540';
+  ctx.strokeRect(190.5, 108.5, 259, 117);
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(o.name.toUpperCase(), 320, 128);
+  // time bar
+  ctx.fillStyle = o.t < 7 ? '#c23a2a' : '#4a8a3a';
+  ctx.fillRect(200, 134, 240 * Math.max(0, o.t / 22), 5);
+  // sequence
+  for (let i = 0; i < o.seq.length; i++) {
+    const ing = KITCHEN_ING[o.seq[i]];
+    const sx = 320 - (o.seq.length - 1) * 24 + i * 48;
+    const sy = 172;
+    ctx.fillStyle = i < o.done ? '#4a8a3a' : ing.color;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = i === o.done ? '#ffe78a' : '#333';
+    ctx.lineWidth = i === o.done ? 3 : 1;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(ing.label, sx, sy + 5);
+    if (i < o.seq.length - 1) {
+      ctx.fillStyle = '#999';
+      ctx.font = '10px monospace';
+      ctx.fillText('→', sx + 24, sy + 4);
+    }
+  }
+  ctx.fillStyle = '#666';
+  ctx.font = '9px monospace';
+  ctx.fillText('A sauce · B cheese · R basil · F fire — wrong ingredient ruins the plate', 320, 214);
+  // hud
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = 'bold 12px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('SHIFT ' + Math.max(0, Math.ceil(k.timer)) + 's', 70, 312);
+  ctx.fillText('served ' + k.served, 70, 330);
+  ctx.fillStyle = '#ffe78a';
+  ctx.fillText('earned $' + k.earned, 480, 312);
+  ctx.fillStyle = k.streak >= 2 ? '#ffd76e' : '#b8a88a';
+  ctx.fillText('streak x' + k.streak + (k.streak >= 2 ? ' (+50%)' : ''), 480, 330);
+  ctx.textAlign = 'center';
+  if (k.flashBad > 0) {
+    ctx.fillStyle = 'rgba(194,58,42,' + (k.flashBad * .5) + ')';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  if (k.over) {
+    ctx.fillStyle = 'rgba(10,8,6,.82)';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#e8c25a';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('SHIFT OVER', 320, 150);
+    ctx.fillStyle = '#e8dcc8';
+    ctx.font = '11px monospace';
+    ctx.fillText('plates out: ' + k.served + ' · ruined: ' + k.ruined + ' · best streak x' + k.best, 320, 176);
+    ctx.fillStyle = '#ffe78a';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('EARNED $' + k.earned, 320, 202);
+    ctx.fillStyle = '#b8a88a';
+    ctx.font = '10px monospace';
+    ctx.fillText('E to wipe your hands', 320, 232);
+  }
+  ctx.textAlign = 'left';
 }
 
 // ---------- The Executive Game (five-card draw) ----------
@@ -12732,6 +12918,7 @@ function render() {
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'pinball') drawPinball();
   else if (state.mode === 'poker') drawPoker();
+  else if (state.mode === 'kitchen') drawKitchen();
   else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
@@ -12903,7 +13090,7 @@ function update(dt) {
     state.help = !state.help;
     pressed.clear();
   }
-  if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
+  if (!['title', 'ending', 'kitchen'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     const nowT = performance.now();
     if (state._resetArmT && nowT - state._resetArmT < 1500) {
       state._resetArmT = 0;
@@ -13173,6 +13360,8 @@ function update(dt) {
     updatePinball(dt);
   } else if (state.mode === 'poker') {
     updatePoker(dt);
+  } else if (state.mode === 'kitchen') {
+    updateKitchen(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
   } else if (state.mode === 'roulette') {
