@@ -5544,6 +5544,30 @@ function yankeesInteractions() {
 function satrialeInteractions() {
   if (state.flags.freeRoam) {
     return [
+    { x: 60, y: 110, w: 40, h: 30, radius: 30, label: 'The espresso machine', action: () => {
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The espresso machine at Satriale’s hisses like it knows what happens in the back room and disapproves. George orders a decaf. The room — somehow — notices. A man at the corner table slowly turns a newspaper page with unusual emphasis.' },
+        { speaker: 'george', text: 'What? WHAT? I have a heart condition! …I don’t have a heart condition. I have a FEAR of a heart condition. It’s completely different and much worse!' }
+      ] : [
+        { speaker: 'narrator', text: 'The espresso machine is older than most of the made guys in North Jersey and better maintained than any of them. Tony takes his standing up, in three sips, like his grandfather did, like the machine expects. It never burns him. That’s respect, in both directions.' },
+        { speaker: 'tony', text: 'Machine like this, you don’t lean on it. You VISIT it.' }
+      ]);
+    } },
+    { x: 500, y: 110, w: 40, h: 30, radius: 30, label: 'The meat case', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'Behind the glass: capicola, soppressata, prosciutto hanging like a meat chandelier. The gabagool glistens under the deli lights with a confidence most people never achieve. A small sign says YOU BREAK IT YOU BOUGHT IT, and the “it” is doing a lot of work in that sentence.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Look at it glisten. WHY is it glistening? Meat shouldn’t glisten! …I’d still eat it. I’d eat it right now. I’d eat it off the FLOOR.' : 'That’s the stuff. You can tell a place by the case. This case? This case never lies to you. Rare quality in anything.' }
+      ]);
+    } },
+    { x: 450, y: 388, w: 40, h: 20, radius: 28, label: 'The framed photo', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'A framed photo by the door: the original Satriale, 1962, standing in front of the same counter with the same cleaver and the same expression, which is the expression of a man deciding something about you. Some things in this neighborhood change. The important things get framed.' },
+        { speaker: 'system', text: 'The pork store has been the pork store since before the highway. It will be the pork store after.' }
+      ]);
+    } },
       { x: 262, y: 200, w: 60, h: 30, radius: 40, label: 'Order a sandwich', action: () => {
         if (state.money < 12) { toast('The gabagool special is $12.'); return; }
         state.money -= 12;
