@@ -1753,6 +1753,31 @@ function drawIceCream() {
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
 
+function drawParadeCrowd() {
+  if (state.scene !== 'nyc') return;
+  if (typeof isNight === 'function' && isNight()) return;
+  // spectators lined up for the parade — they’re not moving, they’re NEVER moving, the good spots were taken at 5am
+  const coats = ['#8a3a3a', '#3a5a8a', '#5a8a3a', '#8a6a2a', '#6a3a7a', '#4a6a6a'];
+  for (let i = 0; i < 9; i++) {
+    const cx = 90 + i * 68;
+    const cy = 218 + (i % 3) * 5;
+    const bob = Math.sin(state.time * 1.4 + i * 1.7) * 1.2;
+    px(ctx, cx, cy - 8 + bob, 8, 7, '#d8a980');
+    px(ctx, cx - 2, cy - 2 + bob, 12, 14, coats[i % coats.length]);
+    px(ctx, cx - 1, cy - 11 + bob, 10, 3, '#e23e3e'); // scarf/hat
+    if (i % 4 === 0) outlineText(ctx, 'GOBBLE!', cx + 4, cy - 16 + bob, '#ffe78a', 5, 'center');
+  }
+  // the marching band — eternal, tuneless, deeply sincere
+  for (let i = 0; i < 4; i++) {
+    const bx = 140 + ((state.time * 14 + i * 40) % 460);
+    const by = 238;
+    px(ctx, bx, by - 8, 8, 7, '#d8a980');
+    px(ctx, bx - 2, by - 2, 12, 13, '#7a1f2e');
+    px(ctx, bx + 6, by - 10, 8, 4, '#c9a227'); // brass
+    px(ctx, bx + 12, by - 12, 4, 3, '#e8d98a');
+  }
+}
+
 function drawParadeBalloon() {
   if (state.scene !== 'nyc') return;
   const t = state.time * .12;
@@ -3004,7 +3029,11 @@ function updateExplore(dt) {
   if (state.scene !== 'hub') state.vanHere = undefined;
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
-  if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
+  if (state.flags.heat > 0 && state.mode === 'explore') {
+    // the wagon is invisible to law enforcement. the ex-cop car is the opposite.
+    const carMul = !state.player.inCar ? 1 : state.player.carColor === '#b8a888' ? 2.2 : state.player.carColor === '#2848a0' ? .5 : 1;
+    state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03) * carMul);
+  }
   const input = moveInput();
   const p = state.player;
   // the wild turkey of North Caldwell — unbothered, unhurried, unarmed
@@ -8681,6 +8710,7 @@ function drawWorld() {
   drawWantedPoster();
   drawRaccoons();
   drawParadeBalloon();
+  drawParadeCrowd();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
@@ -9362,7 +9392,6 @@ function render() {
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
-  if (state.mode === 'explore') drawExitHints();
   else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'claw') drawClaw();
   else if (state.mode === 'fishing') drawFishing();
@@ -9373,6 +9402,7 @@ function render() {
   else if (state.mode === 'produce') drawProduce();
   else if (state.mode === 'ending') drawEnding();
   else drawWorld();
+  if (state.mode === 'explore') drawExitHints();
 
   if (state.mode === 'menu') drawMenu();
   drawAtmosphere();
