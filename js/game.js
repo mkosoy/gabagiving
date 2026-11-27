@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -610,6 +610,29 @@ function drawDialog() {
   }
 }
 
+function drawTrot() {
+  const tr = state.trot;
+  if (!tr) return;
+  const wps = [[250, 200], [600, 200], [600, 370], [250, 370]];
+  if (tr.wp < wps.length) {
+    const wp = wps[tr.wp % wps.length];
+    const pulse = 3 + Math.sin(state.time * 5) * 2;
+    ctx.strokeStyle = '#ffd23e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(wp[0], wp[1], 16 + pulse, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+  ctx.fillStyle = 'rgba(8,10,16,.85)';
+  ctx.fillRect(240, 8, 160, 26);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TROT ' + Math.min(tr.wp, 4) + '/4 — ' + Math.max(0, tr.limit - tr.t).toFixed(0) + 's', 320, 25);
+  ctx.textAlign = 'left';
+}
+
 function drawFishing() {
   const f = state.fishing;
   if (!f) return;
@@ -756,6 +779,13 @@ function drawHelp() {
 function r(x, y, w, h) { return { x, y, w, h }; }
 function costanzaInteractions() {
   return [
+  { x: 480, y: 90, w: 44, h: 34, radius: 40, label: 'Frank’s computer', action: () => {
+    audio.sfx('pickup');
+    startDialog([
+      { speaker: 'narrator', text: 'Frank Costanza’s computer: a 1997 desktop running a solitaire win streak of 41 games and a document titled SERENITY NOW — VOLUME 2 (LOUDER). The mouse is taped to the desk. For control.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He’s been writing the sequel! “Serenity now, insanity later” was just VOLUME ONE! I’m in the acknowledgments! WHY AM I IN THE ACKNOWLEDGMENTS?' : 'Guy’s got a system for solitaire, rage issues, and a son who lives at home. Frank Costanza is three bad breaks from being in my crew.' }
+    ]);
+  } },
   { x: 40, y: 140, w: 60, h: 130, radius: 44, label: 'Festivus pole', action: () => {
     if (!state.flags.festivus) {
       state.flags.festivus = true;
@@ -1556,6 +1586,27 @@ function drawIceCream() {
   drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawWantedPoster() {
+  if (state.scene !== 'hub' || (state.flags.heat || 0) < 4) return;
+  const wx = 620, wy = 108;
+  px(ctx, wx - 14, wy - 18, 28, 36, '#e8ddc0');
+  px(ctx, wx - 14, wy - 18, 28, 3, '#c9b98a');
+  ctx.fillStyle = '#3a2c1c';
+  ctx.font = 'bold 5px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('WANTED', wx, wy - 12);
+  // crude sketch of the player — spitting image, unfortunately
+  const kind = state.player.kind;
+  px(ctx, wx - 5, wy - 8, 10, 8, kind === 'george' ? '#caa07a' : '#d8b08a');
+  px(ctx, wx - 5, wy - 9, 10, 2, kind === 'george' ? '#6b4a2f' : '#2c2018');
+  px(ctx, wx - 4, wy + 1, 8, 7, kind === 'george' ? '#7a8a5a' : '#3a3a44');
+  const flicker = Math.floor(state.time * 2) % 2;
+  ctx.fillStyle = flicker ? '#8a2020' : '#5a1414';
+  ctx.font = '4px monospace';
+  ctx.fillText('$5000 REWARD', wx, wy + 12);
+  ctx.textAlign = 'left';
 }
 
 function drawUmbrellaGuy() {
@@ -4548,6 +4599,15 @@ function hubInteractions() {
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s a federal offense?! It’s MAIL! Who reads mail! I was BORROWING the mail!' : 'Relax, mailman. I was checking for anthrax. Community service. You’re welcome.' }
         ]);
       }
+    } },
+    { x: 250, y: 370, w: 50, h: 30, radius: 42, label: 'Turkey Trot registration', action: () => {
+      if (state.mode === 'trot' || state.player.inCar) return;
+      if (state.flags.trotCd && state.time < state.flags.trotCd) { toast('The turkey is resting. The turkey earned it.'); return; }
+      state.mode = 'trot';
+      state.trot = { wp: 0, t: 0, limit: 24, done: false };
+      audio.sfx('turkey');
+      if (state.turkey) { state.turkey.racing = true; state.turkey.x = 250; state.turkey.y = 360; }
+      startDialog([{ speaker: 'narrator', text: 'The North Caldwell Turkey Trot: once around the block, you versus the turkey. The turkey did not train for this. The turkey did not need to. Follow the flares — beat the bird!' }]);
     } },
     { x: 400, y: 100, w: 56, h: 34, radius: 44, label: 'The idling armored car', action: () => {
       if (state.flags.armoredDone) { toast('The armored car route changed after the incident. Wonder whose fault that is.'); return; }
@@ -7616,6 +7676,7 @@ function drawWorld() {
   drawKite();
   drawLawnmower();
   drawUmbrellaGuy();
+  drawWantedPoster();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
@@ -8283,6 +8344,7 @@ function render() {
   else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'claw') drawClaw();
   else if (state.mode === 'fishing') drawFishing();
+  else if (state.mode === 'trot') drawTrot();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -8478,6 +8540,51 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'trot') {
+    const tr = state.trot;
+    if (!tr) { state.mode = 'explore'; return; }
+    const wps = [[250, 200], [600, 200], [600, 370], [250, 370]];
+    tr.t += dt;
+    if (!tr.done) {
+      const wp = wps[tr.wp % wps.length];
+      const pd = Math.hypot(state.player.x - wp[0], state.player.y - wp[1]);
+      if (pd < 30 && tr.wp < wps.length) { tr.wp += 1; audio.sfx('pickup'); }
+      // turkey runs its own pace — fast, unbothered, majestic
+      if (state.turkey) {
+        const tk = state.turkey;
+        const twp = wps[(tk.trotWp || 0) % wps.length];
+        const td = Math.hypot(tk.x - twp[0], tk.y - twp[1]);
+        if (td < 20) tk.trotWp = (tk.trotWp || 0) + 1;
+        else {
+          tk.x += (twp[0] - tk.x) / td * 95 * dt;
+          tk.y += (twp[1] - tk.y) / td * 95 * dt;
+        }
+        if ((tk.trotWp || 0) >= wps.length && !tr.turkeyDone) tr.turkeyDone = true;
+      }
+      if (tr.wp >= wps.length) {
+        tr.done = true;
+        state.mode = 'explore';
+        state.flags.trotCd = state.time + 60;
+        if (state.turkey) state.turkey.racing = false;
+        const won = !tr.turkeyDone;
+        if (won) {
+          state.money += 75;
+          audio.sfx('cash');
+          startDialog([{ speaker: 'narrator', text: 'YOU BEAT THE TURKEY. The crowd — three neighbors and a dog — goes mild. $75 in prize money, because North Caldwell takes its turkey racing seriously. The turkey regards you with new respect, which for a turkey looks identical to contempt.' }]);
+        } else {
+          startDialog(state.player.kind === 'george' ? [
+            { speaker: 'narrator', text: 'The turkey wins. It isn’t close. George walks off the course with the dignity of a man who has lost to poultry before and will again.' },
+            { speaker: 'george', text: 'It TOOK the INSIDE LINE! That bird has racing instincts! I want a rematch! I want a drug test! ON THE BIRD!' }
+          ] : [{ speaker: 'narrator', text: 'The turkey wins wire to wire. Tony nods once. “Bird wanted it more,” he tells a neighbor, and means it as a compliment to the bird, which is somehow worse.' }]);
+        }
+      } else if (tr.t > tr.limit) {
+        tr.done = true;
+        state.mode = 'explore';
+        state.flags.trotCd = state.time + 60;
+        if (state.turkey) state.turkey.racing = false;
+        startDialog([{ speaker: 'narrator', text: 'Time expires mid-block. The turkey finished minutes ago and is now doing whatever turkeys do with victory. The registration table has packed up. Even the dog left.' }]);
       }
     }
   } else if (state.mode === 'fishing') {
