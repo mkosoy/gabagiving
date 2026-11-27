@@ -2858,7 +2858,7 @@ function updateExplore(dt) {
       const fdx = state.player.x - tk.x, fdy = state.player.y - tk.y;
       const fd = Math.hypot(fdx, fdy) || 1;
       if (fd > 46) {
-        const sp = state.player.inCar ? 85 : 55;
+        const sp = state.player.inCar ? 130 : 55;
         tk.x += (fdx / fd) * sp * dt;
         tk.y += (fdy / fd) * sp * dt;
       }
@@ -8288,6 +8288,13 @@ function drawPlayer() {
         ctx.arc(sx, sy, 3 + ph * 6, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+    // a befriended turkey rides shotgun. no further questions.
+    if (state.scene === 'hub' && state.turkey && state.turkey.friend) {
+      const bob = Math.sin(state.time * 7) * 1.5;
+      px(ctx, state.player.x - 6, state.player.y - 14 + bob, 7, 6, '#5a3a20');
+      px(ctx, state.player.x - 8, state.player.y - 18 + bob, 4, 4, '#7a5230');
+      px(ctx, state.player.x - 4, state.player.y - 17 + bob, 2, 2, '#c03838');
     }
     return;
   }
