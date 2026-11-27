@@ -8872,7 +8872,7 @@ function drawNyc() {
 
 function nycInteractions() {
   return [
-    { x: 320, y: 300, w: 16, h: 26, radius: 30, label: 'The parking meter', action: () => {
+    { x: 60, y: 310, w: 16, h: 26, radius: 28, label: 'The parking meter', action: () => {
       if (state.flags['meterCd'] > state.time) { toast('This one’s already been liberated. The city moves slow, but it moves.'); return; }
       state.flags.meterCd = state.time + 90;
       const take = 2 + Math.floor(Math.random() * 5);
