@@ -8077,6 +8077,7 @@ function dinerInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The rotating case is genius. The pies can’t hide! Exposure! Total exposure!' : 'Pie’s been rotating since the Eisenhower administration, probably.' }
       ]);
     } },
+    { x: 520, y: 110, w: 40, h: 28, radius: 38, label: 'Rob the register', action: () => robRegister('diner', 'You empty the diner’s register into a napkin dispenser in six seconds flat. The truckers do not look up. Truckers never look up — it’s in the union contract. The waitress sighs the sigh of a woman restocking a pie case for the third time tonight.') },
     { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
       if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
       state.money -= 1;
