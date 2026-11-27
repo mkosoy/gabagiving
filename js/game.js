@@ -1512,6 +1512,18 @@ function drawIceCream() {
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
 
+function drawUmbrellaGuy() {
+  if (state.scene !== 'nyc' || !weatherRain()) return;
+  const t = state.time * .8;
+  const ux = 640 - (t * 60 % 700);
+  const uy = 330 + Math.sin(t * 2) * 3;
+  px(ctx, ux - 3, uy - 14, 6, 10, '#4a4a52');
+  px(ctx, ux - 3, uy - 18, 6, 5, '#caa07a');
+  // inside-out umbrella, tragic and proud
+  px(ctx, ux - 8, uy - 26, 16, 4, '#222');
+  px(ctx, ux - 2, uy - 24, 4, 8, '#666');
+}
+
 function drawLawnmower() {
   if (state.scene !== 'hub' || isNight()) return;
   const t = state.time * .5;
@@ -7514,6 +7526,7 @@ function drawWorld() {
   drawFireworks();
   drawKite();
   drawLawnmower();
+  drawUmbrellaGuy();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
