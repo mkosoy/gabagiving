@@ -316,7 +316,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone','dmvSeen','dmvTicket','dmvServing','interventionDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1310,6 +1310,15 @@ const scenes = {
     ],
     draw: drawCabin,
     interactions: cabinInteractions
+  },
+  dmv: {
+    w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,30,580,64), r(80,170,200,54), r(360,170,200,54), r(240,300,160,44)
+    ],
+    draw: drawDmv,
+    interactions: dmvInteractions
   },
   diner: {
     w: 640, h: 416, label: 'Endgame Diner · Route 46', music: 'monks',
@@ -2906,6 +2915,16 @@ const MISSION_DEFS = {
       { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the truth to Kramer', label: 'Kramer' }
     ]
   },
+  intervention: {
+    title: 'THE INTERVENTION',
+    payout: 260, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'satriale', x: 320, y: 200, radius: 56, objective: 'Round up Paulie at Satriale’s — he’s “busy” with the cat', label: 'Paulie' },
+      { scene: 'vesuvio', x: 320, y: 176, radius: 52, objective: 'Get Artie — he’s crying into the sauce again but he’s coming', label: 'Artie' },
+      { scene: 'melfi', x: 170, y: 200, radius: 56, objective: 'Dr. Melfi must attend — professionally. Not socially. Professionally.', label: 'Dr. Melfi' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Everyone assembled — back to the Bing for the big talk', label: 'Silvio' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -3110,6 +3129,10 @@ function advanceMission() {
       truckerSystem: [
         { speaker: 'kramer', text: 'The service road! Of course! Trucks avoid the tolls, the tolls avoid the trucks, and Kramerica avoids BOTH — it’s the circle of freight, buddy! The logistics division is ALIVE! $190 — and I’m naming the route after you. Well — after the trucker. Well — it’s gonna have a name, that’s the point!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a logistics pioneer! They’ll write case studies! Bad ones! But still!' : 'Interviewed a trucker, drove a service road, got paid. Easiest money since the last time somebody paid me to drive around. Which is often. It’s a good racket.' }
+      ],
+      intervention: [
+        { speaker: 'silvio', text: 'Everybody sat down. Everybody talked. Christopher cried — don’t you DARE repeat that — and the vetting process for his new no-show job has been thoroughly discussed. $260. You do the Lord’s work, my friend. The very specific, highly regional Lord’s work.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'An intervention! I’ve always wanted to be in one! Well — not IN one. NEAR one. At a safe, supportive distance!' : 'You don’t intervene on people like Christopher. You just… circle closer. Anyway, he cried. Nobody saw anything.' }
       ],
       assman: [
         { speaker: 'kramer', text: 'You saw it?! With your own eyes! The DMV made those plates for ME, buddy — a clerical error, a beautiful mistake — and now they’re out there, on some other man’s car, living their best life. Some proctologist is driving around with MY destiny on his bumper. Well. Let him have it. I’ve moved on. I’m the ASSMAN of the mind now. $240.' },
@@ -3396,6 +3419,10 @@ function updateMission(dt) {
         truckerSystem: [
           { speaker: 'narrator', text: 'The trucker doesn’t look up from his coffee, but he talks. Forty years of roads in one monologue: the service road behind the Meadowlands — no tolls, no scales, no troopers, just reeds and the occasional smell of money being laundered. “You didn’t hear it from me,” he says, to nobody, because he never looked at you.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fascinating! The trucker economy! A shadow logistics network hiding in plain sight! I must document everything!' : 'Truckers and my crew got the same road-map, turns out. Small world. No — small TOLLS.' }
+        ],
+        intervention: [
+          { speaker: 'narrator', text: 'Paulie resists with the force of a man defending a lifetime of never processing anything. Then you mention there’s free food at the Bing and suddenly he’s helping you load the car.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He came willingly! Once food was involved! The system works!' : 'Paulie’s in. Guy’s a sucker for antipasto. Aren’t we all.' }
         ],
         assman: [
           { speaker: 'narrator', text: 'And there it is — parked plain as day. A cream-colored sedan wearing plates that read, in bold state-issue blue: ASSMAN. A man in a white coat gets out, locks it, and walks into a medical building with the serenity of someone who has made peace with his plates.' },
@@ -5216,6 +5243,12 @@ function clubInteractions() {
         { speaker: 'silvio', text: '$400 for the night’s work. You get busted, you never heard of me, and I DEFINITELY never heard of you. Clock starts now.' },
         { speaker: 'system', text: 'Mission accepted: THE BIG SCORE. Three hits before the window closes.' }
       ]);
+    } else if (!state.mission && state.flags.freeRoam && state.flags.soupSummitDone && !state.flags.interventionDone) {
+      startMission('intervention');
+      startDialog([
+        { speaker: 'silvio', text: 'It’s Christopher. He’s been… erratic. The screenplay thing was a cry for help. Possibly the noise he makes IS the cry, nobody’s sure. We’re doing an intervention — tonight, back room. I need bodies. Paulie, Artie, the doctor. Nobody volunteers for these things, which is why you’re volunteering. $260.' },
+        { speaker: 'system', text: 'Mission accepted: THE INTERVENTION. Supportive confrontation, Jersey style.' }
+      ]);
     } else if (!state.mission && state.flags.freeRoam && state.flags.screenplayDone && !state.flags.sitDownDone) {
       startMission('sitDown');
       startDialog([
@@ -6221,6 +6254,7 @@ function travelHub(place) {
     costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
     casino: ['casino', 320, 360, 'The Dunes. Oxygen-pumped air, no clocks, no mercy.'],
     slice: ['slice', 320, 360, 'Inside: heat, grease, glory. The real Ray’s — probably.'],
+    dmv: ['dmv', 320, 360, 'The DMV. Bring nothing. Expect less.'],
     diner: ['diner', 320, 380, 'The Endgame Diner. Open 24 hours, because some decisions can’t wait for morning.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
@@ -8381,6 +8415,143 @@ function meadowInteractions() {
   ];
 }
 
+function drawDmv() {
+  // procedural institutional despair — no painted art could capture it more cheaply
+  px(ctx, 0, 0, 640, 416, '#8a8a80');
+  px(ctx, 0, 96, 640, 320, '#a8a898'); // linoleum
+  for (let tx = 0; tx < 640; tx += 32) px(ctx, tx, 96, 1, 320, '#98988a');
+  for (let ty = 96; ty < 416; ty += 32) px(ctx, 0, ty, 640, 1, '#98988a');
+  // the wall of windows — three clerks, one open, as is tradition
+  px(ctx, 30, 30, 580, 64, '#6a6a60');
+  for (let wi = 0; wi < 3; wi++) {
+    const wx = 90 + wi * 180;
+    px(ctx, wx, 42, 120, 44, wi === 1 ? '#c8d8e0' : '#3a3a36');
+    px(ctx, wx, 78, 120, 8, '#4a4a44');
+    outlineText(ctx, wi === 1 ? 'OPEN' : 'CLOSED', wx + 60, 38, wi === 1 ? '#9be59b' : '#8a4a4a', 6, 'center');
+    if (wi === 1) {
+      px(ctx, wx + 52, 56, 16, 18, '#c8a880'); // the clerk, medically incapable of urgency
+      px(ctx, wx + 55, 48, 10, 9, '#e8c8a0');
+    }
+  }
+  // NOW SERVING display — the loneliest number in New York
+  px(ctx, 250, 102, 140, 26, '#2a2a26');
+  const serving = state.flags.dmvServing || 41;
+  const blink = Math.sin(state.time * 2) > -.7;
+  outlineText(ctx, 'NOW SERVING', 320, 112, '#8a8a80', 6, 'center');
+  outlineText(ctx, 'B-' + String(serving).padStart(3, '0'), 320, 125, blink ? '#ffb02a' : '#7a5a20', 11, 'center');
+  // seating rows — molded plastic in municipal orange
+  for (const [sx, sy] of [[80, 170], [360, 170]]) {
+    for (let ci = 0; ci < 5; ci++) {
+      px(ctx, sx + ci * 38, sy, 30, 22, '#c87830');
+      px(ctx, sx + ci * 38, sy + 22, 30, 6, '#a86028');
+    }
+  }
+  // the occupied chairs — people who have been here since various presidential administrations
+  const waiters = [[118, 176, 'manB'], [156, 176, 'womanA'], [398, 176, 'womanC'], [474, 176, 'manA']];
+  for (const [wx, wy, kind] of waiters) {
+    if (typeof drawPortrait === 'function') drawPortrait(ctx, wx - 11, wy - 22, kind);
+    else px(ctx, wx - 6, wy - 14, 12, 16, '#7a5a40');
+  }
+  // the queue maze — retractable belt barriers, empty, mocking
+  px(ctx, 120, 250, 400, 4, '#3a5a8a');
+  px(ctx, 120, 286, 400, 4, '#3a5a8a');
+  for (const px2 of [120, 320, 520]) { px(ctx, px2 - 3, 246, 6, 46, '#8a8a92'); px(ctx, px2 - 8, 288, 16, 4, '#555'); }
+  // ticket dispenser on a pole
+  px(ctx, 560, 240, 18, 26, '#b84030');
+  px(ctx, 565, 266, 8, 30, '#666');
+  outlineText(ctx, 'TICKETS', 569, 236, '#fff', 5, 'center');
+  // the poster wall — organ donation, defensive driving, a missing cat
+  px(ctx, 20, 120, 40, 52, '#d8d0b8');
+  px(ctx, 24, 124, 32, 20, '#8ab8d8');
+  outlineText(ctx, 'ORGAN', 40, 156, '#4a4a44', 5, 'center');
+  outlineText(ctx, 'DONOR?', 40, 164, '#4a4a44', 5, 'center');
+  px(ctx, 584, 120, 40, 52, '#d8d0b8');
+  px(ctx, 588, 124, 32, 20, '#e8a0a0');
+  outlineText(ctx, 'LOST', 604, 156, '#4a4a44', 5, 'center');
+  outlineText(ctx, 'MUFFLER', 604, 164, '#4a4a44', 5, 'center');
+  // fluorescent flicker
+  if (Math.sin(state.time * 17) > .92) { ctx.save(); ctx.globalAlpha = .12; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 640, 416); ctx.restore(); }
+  px(ctx, 150, 16, 120, 8, '#e8e8d8');
+  px(ctx, 390, 16, 120, 8, '#e8e8d8');
+  // the forms table
+  px(ctx, 240, 300, 160, 44, '#7a6a50');
+  px(ctx, 250, 306, 30, 20, '#e8e8e0');
+  px(ctx, 290, 308, 24, 16, '#d0d0c8');
+  outlineText(ctx, 'FORMS', 320, 296, '#4a4a44', 6, 'center');
+}
+
+function dmvInteractions() {
+  return [
+    { x: 320, y: 380, w: 90, h: 26, radius: 46, label: 'Back to Manhattan', action: () => {
+      setScene('nyc', 420, 250);
+    } },
+    { x: 568, y: 252, w: 24, h: 30, radius: 40, label: 'Take a number', action: () => {
+      if (state.flags.dmvTicket) { toast('You already have a number — B-' + state.flags.dmvTicket + '. It is not being served. It may never be served.'); return; }
+      const serving = state.flags.dmvServing || 41;
+      const ticket = serving + 3 + Math.floor(Math.random() * 4);
+      state.flags.dmvTicket = ticket;
+      if (!state.flags.dmvServing) state.flags.dmvServing = serving;
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'The dispenser coughs up a small pink slip: B-' + String(ticket).padStart(3, '0') + '. Now serving: B-' + String(serving).padStart(3, '0') + '. The arithmetic of despair is simple and exact. Take a seat. Take several.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'THREE numbers away! That’s nothing! That’s — wait, how long is a number? …HOW LONG IS A NUMBER?!' : 'Yeah, I don’t do lines. We’ll see how this plays out.' }
+      ]);
+    } },
+    { x: 270, y: 74, w: 120, h: 26, radius: 44, label: 'The clerk window', action: () => {
+      const serving = state.flags.dmvServing || 41;
+      const ticket = state.flags.dmvTicket;
+      if (ticket && ticket <= serving) {
+        startDialog([
+          { speaker: 'clerk', text: 'NUMBER B-' + String(ticket).padStart(3, '0') + '. State your business in eight words or less. The words must be exactly correct.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Vanity plates! I want — okay — the BEST plate! Money no object! …Some object. What do you have in the forty-to-sixty range?' : 'Plates. The ones with the letters. You know the ones.' },
+          { speaker: 'narrator', text: 'The clerk stamps your form with the last ounce of civic energy in the tri-state area. Your vanity plates will arrive in six-to-eight weeks. They will have exactly one letter wrong. This is guaranteed by the state. Your number is retired — the machine, impossibly, has served someone.', action: () => { state.flags.dmvTicket = 0; state.flags.dmvServing = (state.flags.dmvServing || 41) + 1; } }
+        ]);
+      } else if (ticket) {
+        startDialog([{ speaker: 'narrator', text: 'The clerk looks at your ticket. Then at the NOW SERVING display. Then at you. Nothing is said. Nothing needs to be. You are B-' + String(ticket).padStart(3, '0') + '. The display says B-' + String(serving).padStart(3, '0') + '. Time passes, but not here.' }]);
+      } else {
+        startDialog([
+          { speaker: 'clerk', text: 'No ticket, no service. That is not a policy. That is the load-bearing wall of civilization.' },
+          { speaker: 'narrator', text: 'Somewhere behind her, a second clerk eats a sandwich with the intensity of a man who has never once been hurried. The OPEN sign buzzes, perhaps sarcastically.' }
+        ]);
+      }
+    } },
+    { x: 300, y: 266, w: 60, h: 20, radius: 40, label: 'Slip the clerk $40', action: () => {
+      if (!state.flags.dmvTicket) { toast('Corruption requires paperwork. Get a number first.'); return; }
+      if (state.money < 40) { toast('Forty bucks. Even graft has a price floor.'); return; }
+      state.money -= 40;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+      const t = state.flags.dmvTicket;
+      state.flags.dmvServing = t;
+      audio.sfx('cash');
+      spawnEffect(300, 250, 'SERVING: B-' + String(t).padStart(3, '0'), '#ffd23e');
+      startDialog([
+        { speaker: 'narrator', text: 'The forty dollars vanish into the paperwork like they were never there — an act of civic magic. The NOW SERVING display flickers, thinks it over, and jumps directly to your number. The people in the orange chairs do not react. They have seen this before. They will see it again.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I beat the system! I PAID the system, but it FEELS like beating! …This is how the world works, isn’t it. I’m going to be sick.' : 'Forty bucks to skip a line. Cheapest favor in Jersey. Uh — New York. Wherever we are.' }
+      ]);
+    } },
+    { x: 180, y: 190, w: 40, h: 22, radius: 36, label: 'Sit and wait', action: () => {
+      if (!state.flags.dmvTicket) { toast('The chairs are for ticket-holders. Even the chairs have rules here.'); return; }
+      const serving = state.flags.dmvServing || 41;
+      if (state.flags.dmvTicket <= serving) { toast('Your number is UP — get to the window before the clerk notices joy.'); return; }
+      state.flags.dmvServing = serving + 1;
+      audio.sfx('door');
+      startDialog([
+        { speaker: 'narrator', text: 'You wait. Time passes the way it does here — geologically. A number is called. The display advances by exactly one. Someone’s legend ends at the window in silence.' },
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'An elderly man two chairs down has a sandwich in a foil wrapper older than your car.' : 'A wiseguy never waits. And yet. The things we do for vanity plates.' }
+      ]);
+    } },
+    { x: 40, y: 146, w: 40, h: 30, radius: 34, label: 'Organ donor poster', action: () => {
+      startDialog([{ speaker: 'narrator', text: '"BE AN ORGAN DONOR — SOMEONE IS WAITING." Someone is also waiting for their license renewal, and has been since Tuesday, and frankly their organs are starting to feel like a renewable resource.' }]);
+    } },
+    { x: 320, y: 320, w: 160, h: 26, radius: 40, label: 'The forms', action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'Form MV-82. Form MV-44. Form MV-37C, which is a form explaining that you have completed the wrong forms. A pen is chained to the table. The chain is the most secure object in the state of New York.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'There’s a form for the forms! It’s PERFECT! It’s the perfect system — nothing can ever go wrong because nothing can ever HAPPEN!' : 'This is why the family uses fixers. God bless the fixers.' }
+      ]);
+    } }
+  ];
+}
+
 function drawDiner() {
   if (drawSceneArt(sceneArt.diner, 640, 416)) {
     // neon coffee sign flicker
@@ -9806,6 +9977,28 @@ function drawNyc() {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
   drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
+  // the Manhattan-side tunnel portal — the hole New Jersey comes out of
+  px(ctx, 0, 150, 40, 96, '#6a5a4a');
+  px(ctx, 4, 158, 32, 80, '#1a1410');
+  px(ctx, 0, 150, 40, 8, '#8a7a6a');
+  for (let rib = 0; rib < 4; rib++) px(ctx, 4 + rib * 8, 158, 2, 80, '#4a3a2a');
+  const tl = .5 + Math.sin(state.time * 2) * .15;
+  ctx.save();
+  ctx.globalAlpha = tl;
+  px(ctx, 8, 166, 4, 4, '#ffd23e');
+  px(ctx, 28, 166, 4, 4, '#ffd23e');
+  ctx.restore();
+  // steam — Manhattan breathes
+  if (Math.sin(state.time * .7) > 0) {
+    ctx.save();
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = '#c8c8d0';
+    const sx = 250 + (state.time * 14) % 300;
+    ctx.beginPath();
+    ctx.arc(sx, 216 - (state.time * 20) % 40, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   // Kenny Roger's Roasters — the red neon chicken that never sleeps
   px(ctx, 560, 40, 90, 50, '#2a1a1a');
   const rglow = .55 + Math.sin(state.time * 3) * .2;
@@ -10112,6 +10305,15 @@ function nycInteractions() {
       audio.sfx('pickup');
       spawnEffect(state.player.x, state.player.y - 16, 'the flock approves', '#b8d0e0');
       startDialog([{ speaker: 'narrator', text: 'You scatter crumbs. The flock descends with military precision. For one shining moment, you are the most important creature in Manhattan. Then the crumbs are gone, and so is their respect.' }]);
+    } },
+    { x: 700, y: 210, w: 60, h: 30, radius: 46, label: 'DMV', action: () => {
+      if (!state.flags.dmvSeen) {
+        state.flags.dmvSeen = true;
+        startDialog([
+          { speaker: 'narrator', text: 'The Department of Motor Vehicles. A building where time goes to be measured, catalogued, and made to take a number. Inside: the exact opposite of the open road.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The DMV! I have no business here! I’m going in! This is how bad decisions FEEL — like errands!' : 'I got people who handle this. Today I’m handling it. Don’t tell anyone.' }
+        ], () => setScene('dmv', 320, 360));
+      } else setScene('dmv', 320, 360);
     } },
     { x: 620, y: 236, w: 40, h: 34, radius: 40, label: 'Jerry', action: () => {
       if (!state.mission && state.flags.freeRoam && state.flags.kramericaBookDone && !state.flags.jerrysFavorDone) {
