@@ -94,7 +94,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
-    if (vx >= W - 48 && vy <= 34) { pressed.add('Escape'); return; }
+    if (vx <= 52 && vy <= 34) { pressed.add('Escape'); return; }
     for (let ni = 0; ni < FT_NODES.length; ni++) {
       const n = FT_NODES[ni];
       if (Math.hypot(vx - n.x, vy - n.y) < 24) {
@@ -406,7 +406,7 @@ function menuEntries() {
     label: 'Cell phone — jobs & messages', hint: state.mission ? 'a job is ACTIVE — check it' : 'your mission tracker',
     act: () => {
       closeMenu();
-      if (state.dialogue) { toast('Finish the conversation first.'); return; }
+      if (state.dialog) { toast('Finish the conversation first.'); return; }
       const lines = [];
       if (state.mission) {
         const def = MISSION_DEFS[state.mission.id] || {};
@@ -924,13 +924,13 @@ function drawFastTravel() {
   ctx.fillText(usingTouchControls ? 'tap a place twice to drive there' : '↑↓ or CLICK choose · E travel · T close', 12, 344);
   // touch close button — top right
   ctx.fillStyle = 'rgba(180,40,40,.85)';
-  ctx.fillRect(W - 44, 8, 34, 22);
+  ctx.fillRect(10, 8, 34, 22);
   ctx.strokeStyle = '#fff';
-  ctx.strokeRect(W - 44, 8, 34, 22);
+  ctx.strokeRect(10, 8, 34, 22);
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 11px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('✕', W - 27, 23);
+  ctx.fillText('✕', 27, 23);
   ctx.textAlign = 'left';
   ctx.textAlign = 'left';
 }
@@ -5517,19 +5517,20 @@ function loseProduceGame() {
 
 function enterHub(first = false) {
   state.flags.freeRoam = true;
-  if (!state.flags.helpSeen) {
+  const firstTime = !state.flags.helpSeen;
+  if (firstTime) {
     state.flags.helpSeen = true;
     state.help = true;
-    startDialog([
-      { speaker: 'system', text: 'WELCOME TO THE OPEN WORLD. The F button PUNCHES people — some fight back, some drop wallets. A interacts. The stick moves. MENU has the world map, your cell phone (jobs), and your criminal record.' },
-      { speaker: 'system', text: 'People with a ! overhead are hiring. The pulsing beacon marks your current job. Everything else is yours to steal.' }
-    ]);
   }
   if (state.player.kind !== 'george') state.player.kind = 'tonyMax';
   state.player.speed = state.player.kind === 'george' ? 96 : 88;
   setScene('hub', 320, 214);
   state.mode = 'explore';
   objective('Free roam: choose a landmark');
+  if (firstTime) startDialog([
+    { speaker: 'system', text: 'WELCOME TO THE OPEN WORLD. The F button PUNCHES people — some fight back, some drop wallets. A interacts. The stick moves. MENU has the world map, your cell phone (jobs), and your criminal record.' },
+    { speaker: 'system', text: 'People with a ! overhead are hiring. The pulsing beacon marks your current job. Everything else is yours to steal.' }
+  ]);
   if (first) {
     startDialog([
       { speaker: 'narrator', text: 'Thanksgiving is saved — but North Caldwell is now open. Old places have new surprises.' },
