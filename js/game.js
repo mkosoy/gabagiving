@@ -5539,16 +5539,19 @@ function soupInteractions() {
       audio.sfx('denied');
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
       if (!state.flags.noSoup) {
-        state.flags.noSoup = true;
+        state.flags.noSoup = 1;
         startDialog([
           { speaker: 'narrator', text: 'You ask about the bread. The line goes silent. Somewhere in the back, a ladle stops mid-stir. The man looks at you the way a hanging judge looks at a vocabulary test.' },
-          { speaker: 'soupnazi', text: 'NO SOUP FOR YOU! Come back — NEVER. One year! You are BANNED. The bread is not for you. NOTHING is for you. NEXT!' },
+          { speaker: 'soupNazi', text: 'NO SOUP FOR YOU! Come back — NEVER. One year! You are BANNED. The bread is not for you. NOTHING is for you. NEXT!' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'BANNED?! For a bread INQUIRY?! This is a constitutional issue! There are amendments!' : 'I been thrown outta better places by worse people. You ain’t seen the last of me. …He’s right though. I seen the last of the bread.' }
         ]);
       } else {
+        state.flags.noSoup = (state.flags.noSoup || 1) + 1;
+        const yrs = ['ONE', 'TWO', 'THREE', 'FIVE', 'TEN'][Math.min(4, state.flags.noSoup - 1)];
         startDialog([
           { speaker: 'narrator', text: 'You ask about the bread AGAIN. The audacity hangs in the air like a violated prime directive.' },
-          { speaker: 'soupnazi', text: 'TWO YEARS! You want three? KEEP TALKING. NEXT!' }
+          { speaker: 'soupNazi', text: `${yrs} YEARS! You want MORE? KEEP TALKING. NEXT!` },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? `The escalation is EXPONENTIAL! At this rate I’m banned until the heat death of the universe!` : `${yrs} years. Guy runs bans like compound interest. I almost respect it. Almost.` }
         ]);
       }
     } },
@@ -5560,7 +5563,14 @@ function soupInteractions() {
       ]);
     } },
     { x: 300, y: 352, w: 46, h: 26, radius: 30, label: 'The eating counter — soup $6', action: () => {
-      if (state.flags.noSoup && Math.random() < .5) { startDialog([{ speaker: 'narrator', text: 'The man glares at you over the ladle. He remembers. He ALWAYS remembers. The soup tastes, if anything, more defiant.' }]); }
+      if (state.flags.noSoup) {
+        audio.sfx('denied');
+        startDialog([
+          { speaker: 'soupNazi', text: 'YOU! I KNOW YOUR FACE! The bread man! NO SOUP! The ban stands. The ban ALWAYS stands. NEXT!' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He remembers! Of course he remembers! Men like that never forget a bread violation!' : 'Yeah, yeah. I’ll send a guy for mine. Everybody’s got a guy. Even for soup.' }
+        ]);
+        return;
+      }
       if (state.money < 6) { toast('Soup is six dollars, exact change, move to the left.'); return; }
       state.money -= 6;
       audio.sfx('pickup');
