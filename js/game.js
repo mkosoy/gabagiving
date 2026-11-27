@@ -94,7 +94,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
-    if (vx <= 52 && vy <= 34) { pressed.add('Escape'); return; }
+    if (vx <= 52 && vy <= 34) { state.mode = state.dialog ? 'dialogue' : 'explore'; pressed.clear(); audio.sfx('denied'); return; }
     for (let ni = 0; ni < FT_NODES.length; ni++) {
       const n = FT_NODES[ni];
       if (Math.hypot(vx - n.x, vy - n.y) < 24) {
@@ -936,14 +936,14 @@ function drawFastTravel() {
 }
 
 const EXIT_HINTS = {
-  hub: '→ EAST: Holland Tunnel to Manhattan · ↓ SOUTH: Parkway to the Pines, Shore & AC · T: map',
-  nyc: '← WEST: tunnel home to Jersey · T: map',
-  pines: '↑ NORTH: back to the neighborhood · → EAST: the Shore · T: map',
-  shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
-  ac: '← WEST: the Shore · T: map',
-  meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · T: map',
-  queens: '← WEST: subway to Manhattan · T: map',
-  njstreet: 'T: map · the neighborhood hub is the center of everything'
+  hub: '→ EAST: Holland Tunnel to Manhattan · ↓ SOUTH: Parkway to the Pines, Shore & AC · map in MENU',
+  nyc: '← WEST: tunnel home to Jersey · map in MENU',
+  pines: '↑ NORTH: back to the neighborhood · → EAST: the Shore · map in MENU',
+  shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · map in MENU',
+  ac: '← WEST: the Shore · map in MENU',
+  meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · map in MENU',
+  queens: '← WEST: subway to Manhattan · map in MENU',
+  njstreet: 'map in MENU · the neighborhood hub is the center of everything'
 };
 
 function drawExitHints() {
@@ -3412,7 +3412,7 @@ function updateExplore(dt) {
   } else if (state.mugger) { state.mugger = null; state.muggerT = 40; }
   if (state.scene === 'hub' && state.flags.freeRoam && !state.flags.mapHintShown) {
     state.flags.mapHintShown = true;
-    toast('Press T for the Garden State map — click anywhere to drive there.');
+    toast(usingTouchControls ? 'MENU → World map — tap a place twice to drive there.' : 'Press T for the Garden State map — click anywhere to drive there.');
   }
   // the white van speaker guy — a New Jersey constant, like property taxes
   if (state.scene === 'hub' && state.vanHere === undefined) state.vanHere = Math.random() < .5;
@@ -11038,6 +11038,7 @@ function update(dt) {
     else openMenu();
   }
   if (state.mode === 'menu') {
+    if (!state.menu) { state.mode = 'explore'; return; }
     const entries = menuEntries();
     state.menuStickT = (state.menuStickT || 0) - dt;
     const mi = moveInput();
