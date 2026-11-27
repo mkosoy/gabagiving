@@ -2638,7 +2638,7 @@ const MISSION_DEFS = {
     payout: 20, heat: 0, timeLimit: 0,
     steps: [
       { scene: 'bodega', x: 320, y: 200, radius: 60, objective: 'Acquire the cereal — the GOOD cereal, the one with the toy', label: 'the cereal' },
-      { scene: 'nyc', x: 620, y: 236, radius: 52, objective: 'Deliver it to Jerry. Say nothing. This never happened', label: 'Jerry' }
+      { scene: 'apartment', x: 320, y: 250, radius: 80, objective: 'Bring the cereal up to Jerry’s apartment. Say nothing. This never happened', label: 'Jerry’s apartment' }
     ]
   },
   pineRunner: {
