@@ -3174,8 +3174,7 @@ function updateMission(dt) {
     const rob = (scenes[state.scene].interactions() || []).find(a => /Rob the (register|cashier cage)/.test(a.label || ''));
     if (rob) {
       state.interactCooldown = .8;
-      state['registerCd_' + state.scene] = 0; // a planned job — the heist window itself is the cooldown
-      rob.action();
+      rob.action(); // the register's own cooldown is the farm protection — the accept-time reset opens the window exactly once
     }
   } else if (!crimeGated && Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
     state.interactCooldown = .8;
