@@ -327,7 +327,7 @@ function loadWorld() {
       state.player.x = w.px;
       state.player.y = w.py;
     }
-    const isRepeatable = ['oddJob', 'kramerJob', 'collection'].includes(w.mission && w.mission.id);
+    const isRepeatable = ['oddJob', 'kramerJob', 'collection', 'frankJob'].includes(w.mission && w.mission.id);
     if (w.mission && MISSION_DEFS[w.mission.id] && (isRepeatable || !state.flags[w.mission.id + 'Done'])) {
       const def = MISSION_DEFS[w.mission.id];
       state.mission = {
@@ -964,6 +964,25 @@ function costanzaInteractions() {
         { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
         { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
         { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
+      ]);
+    } else if (!state.mission && state.flags.saunaSerenityDone && state.flags.freeRoam) {
+      const errands = [
+        { x: 390, y: 160, radius: 50, objective: 'Check the sauna — a man was WHISTLING in it. Confirm the acoustics', name: 'the sauna', line: 'That sauna is stealing my SERENITY and some maniac is WHISTLING in it! Go confirm the acoustics are criminal!' },
+        { x: 120, y: 300, radius: 50, objective: 'Inspect the neighbor’s new lawn gnome — measure it', name: 'the gnome', line: 'The Fudges got a LAWN GNOME. It faces OUR house. It faces our house, George! Go measure it! There are HEIGHT ORDINANCES!' },
+        { x: 500, y: 250, radius: 50, objective: 'Price aluminum poles at the hardware lot — IN WRITING', name: 'the poles', line: 'Festivus is coming and I need POLE PRICES in WRITING! Last year they gouged me! ALUMINUM! Very high strength-to-weight ratio!' }
+      ];
+      const err = errands[Math.floor(Math.random() * errands.length)];
+      const rolledPayF = 45 + Math.floor(Math.random() * 30);
+      startMission('frankJob');
+      state.mission.payout = rolledPayF;
+      state.mission.steps = [
+        { scene: 'queens', x: err.x, y: err.y, radius: err.radius, objective: err.objective, label: err.name },
+        { scene: 'costanza', x: 140, y: 140, radius: 60, objective: 'Report back to Frank', label: 'Frank' }
+      ];
+      startDialog([
+        { speaker: 'womanB', text: err.line },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I live thirty-seven years in this house and THIS is my inheritance — errands with VOLUME!' : 'This man’s a natural earner. Everything’s a scheme, everything’s an emergency.' },
+        { speaker: 'system', text: `Mission accepted: THE FESTIVUS ERRAND. Repeatable — serenity never lasts. $${rolledPayF}.` }
       ]);
     } else if (!state.mission && state.flags.featsOfStrengthDone && !state.flags.saunaSerenityDone && state.flags.freeRoam) {
       startMission('saunaSerenity');
@@ -2633,6 +2652,14 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
     ]
   },
+  frankJob: {
+    title: 'THE FESTIVUS ERRAND',
+    payout: 60, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'queens', x: 300, y: 200, radius: 60, objective: 'Run Frank’s errand', label: 'the errand' },
+      { scene: 'costanza', x: 140, y: 140, radius: 60, objective: 'Report back to Frank', label: 'Frank' }
+    ]
+  },
   jerrysFavor: {
     title: 'THE FAVOR',
     payout: 20, heat: 0, timeLimit: 0,
@@ -2791,6 +2818,10 @@ function advanceMission() {
       kramerJob: [
         { speaker: 'kramer', text: 'GIDDY UP! Another successful Kramerica transaction. You know what that makes this quarter? Positive. In SOME columns. The important columns are confidential, buddy.' },
         { speaker: 'system', text: 'KRAMERICA ERRAND COMPLETE. Kramerica Industries endures.' }
+      ],
+      frankJob: [
+        { speaker: 'womanB', text: 'You did it? Without incident? In THIS neighborhood? Frank, he did it without incident!' },
+        { speaker: 'system', text: 'THE FESTIVUS ERRAND COMPLETE. Serenity — temporarily — restored.' }
       ],
       collection: [
         { speaker: 'silvio', text: 'Moist envelope, correct amount, no discussion. You know what that is? That’s a dying art, kid. Half the guys today would’ve opened it. You didn’t open it. …You didn’t, right? Don’t answer. That’s the other half of the art.' },
@@ -2986,6 +3017,10 @@ function updateMission(dt) {
         kramerJob: [
           { speaker: 'narrator', text: 'The Kramerica cargo changes hands. Legally ambiguous, structurally unsound, somehow profitable. The Kramerica way.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a Kramerica VP now! Of logistics! There’s no pay but the TITLE, Jerry, the TITLE!' : 'Guy runs an empire outta his neighbor’s apartment. I seen worse organizational structures. Mine, for instance.' }
+        ],
+        frankJob: [
+          { speaker: 'narrator', text: 'Errand accomplished. Somewhere in Queens, a vein in a man’s neck relaxes by roughly four percent.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why am I the family courier?! I have a SYSTEM of my own! It involves napping!' : 'Guy yells at me from the porch and I do the errand anyway. Something wrong with ME? Don’t answer that.' }
         ],
         collection: [
           { speaker: 'narrator', text: 'The envelope is handed over with both hands and zero eye contact. It is damp. It is always damp. Nobody knows why. Nobody asks why. That’s the business.' },
