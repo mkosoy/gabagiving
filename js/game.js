@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -1490,6 +1490,8 @@ function updateAmbient(dt) {
     if (typeof weatherRain === 'function' && weatherRain()) {
       spd *= 1.6; // everyone hurries in the rain
       if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
+    } else if (typeof weatherSnow === 'function' && weatherSnow()) {
+      if (Math.random() < dt * .04 && !n.barkT) { n.bark = ['flurries!', 'it’s really coming down', 'not before the turkey…', 'roads’ll be murder'][Math.floor(Math.random() * 4)]; n.barkT = 1.4; }
     }
     n.x += (dx / d) * spd * dt;
     n.y += (dy / d) * spd * dt;
@@ -2105,7 +2107,7 @@ function updateKramerCycle(dt) {
 }
 
 function updateBrawler(dt) {
-  if ((state.scene !== 'hub' && state.scene !== 'nyc') || !state.flags.freeRoam) { state.brawler = null; return; }
+  if (!['hub', 'nyc', 'meadow', 'queens'].includes(state.scene) || !state.flags.freeRoam) { state.brawler = null; return; }
   const p = state.player;
   if (!state.brawler && Math.random() < dt * .02) {
     const inNyc = state.scene === 'nyc';
@@ -2547,6 +2549,24 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
     ]
   },
+  artiesMenu: {
+    title: 'THE LAST SUPPLY',
+    payout: 280, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'satriale', x: 320, y: 200, radius: 60, objective: 'Pick up the gabagool reserve at Satriale’s', label: 'the gabagool reserve' },
+      { scene: 'bodega', x: 320, y: 200, radius: 60, objective: 'Get the good bread from the bodega in Manhattan', label: 'the bread' },
+      { scene: 'shore', x: 380, y: 140, radius: 52, objective: 'Catch a fresh fish off the shore pier', label: 'the pier' },
+      { scene: 'vesuvio', x: 320, y: 176, radius: 52, objective: 'Deliver everything to Artie at Vesuvio — before the rush', label: 'Artie' }
+    ]
+  },
+  shrinkRap: {
+    title: 'THE SHRINK RAP',
+    payout: 220, heat: 0, timeLimit: 0, maxHeat: 3,
+    steps: [
+      { scene: 'nyc', x: 400, y: 250, radius: 80, objective: 'Return the “grateful patient” watch to a Manhattan shop — calmly', label: 'the return' },
+      { scene: 'melfi', x: 170, y: 200, radius: 60, objective: 'Report back to Dr. Melfi — heat under 3 the whole way', label: 'Dr. Melfi' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2669,6 +2689,16 @@ function advanceMission() {
         { speaker: 'silvio', text: 'It lost. THE FIXED HORSE LOST. You know what that means, right? The fix was fixed. Somebody fixed our fix. …Come here. The fifty you lost? You’re not paying it back. THAT’S how much I respect the audacity. $320 for the story. This one gets told at the Bing forever.' },
         { speaker: 'system', text: 'MISSION PASSED — THE FIXED RACE. The house always wins, except when a different house wins.' }
       ],
+      artiesMenu: [
+        { speaker: 'artie', text: 'The gabagool — the bread — is that FISH still moving? Tony, tonight’s menu writes itself! The rush is SAVED! Charmaine! CHARMAINE — cancel the emergency frozen calamari!' },
+        { speaker: 'narrator', text: 'Artie presses $280 into your hand with both of his, the way a man hands over gratitude when words have a health-code violation. The kitchen roars to life behind him.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE LAST SUPPLY. Vesuvio lives to feed another rush.' }
+      ],
+      shrinkRap: [
+        { speaker: 'melfi', text: 'You returned it. Without violence, without threats, without — and I want you to hear the significance of this — a SINGLE police interaction. Tony, this is what progress looks like. It’s boring and it’s progress.' },
+        { speaker: 'tony', text: 'Two hundred and twenty bucks to walk a watch across the river like a civilian. You know what the worst part is? …I feel GOOD about it. What’re you doing to me?' },
+        { speaker: 'system', text: 'MISSION PASSED — THE SHRINK RAP. Impulse control: one (1) time.' }
+      ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I transported gravy across two municipalities without a single spill! Put it on my resume! MAKE it my resume!' : 'Gravy’s here, Sil. And for the record — nobody touches the gravy. That’s always been the rule.' }
@@ -2754,6 +2784,16 @@ function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
   const m0 = state.mission;
+  if (MISSION_DEFS[m0.id].maxHeat && (state.flags.heat || 0) >= MISSION_DEFS[m0.id].maxHeat) {
+    state.mission = null;
+    audio.sfx('denied');
+    startDialog([
+      { speaker: 'narrator', text: 'Heat. You generated HEAT. The whole point — the ONE point — was no heat. Somewhere across the river, Dr. Melfi crosses out today’s date in her appointment book, twice, angrily.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The heat GENERATED ITSELF! I’m heat-adjacent at worst!' : 'Ah, maronn’. She’s gonna use the disappointed voice. I HATE the disappointed voice.' },
+      { speaker: 'system', text: 'MISSION FAILED — the exercise was impulse control. Talk to Dr. Melfi to retry.' }
+    ]);
+    return;
+  }
   if (m0.deadline && state.time > m0.deadline) {
     const id = m0.id;
     state.mission = null;
@@ -2833,6 +2873,10 @@ function updateMission(dt) {
         catalogCaper: [
           { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
+        ],
+        artiesMenu: [
+          { speaker: 'narrator', text: 'Behind the counter, under the scale, behind the good prosciutto: the reserve gabagool. Wrapped in butcher paper, then in a second layer of butcher paper, then in silence. The kid at the counter hands it over like it weighs exactly what it weighs.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is meat heavier when it’s a favor?! There should be a study!' : 'The reserve. Means Artie’s desperate. Means he pays happy. Everybody wins — especially the veal.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -3368,7 +3412,7 @@ function updateExplore(dt) {
     else p.dir = input.y > 0 ? 'down' : 'up';
     // cars carry momentum: spin up over ~1.2s instead of instant speed
     if (p.inCar) {
-      const wet = weatherRain() && ['hub', 'nyc', 'shore', 'pines'].includes(state.scene);
+      const wet = weatherRain() && OUTDOOR_SCENES.includes(state.scene);
       p.carV = Math.min(1, (p.carV || 0) + dt * (wet ? .8 : 1.2));
       if (wet && Math.abs(p.carV) > .7 && (input.x || input.y) && Math.random() < dt * .5) {
         spawnEffect(p.x, p.y + 10, 'screech', '#b8d0e0');
@@ -3446,7 +3490,54 @@ function updateExplore(dt) {
   updateBanking(dt);
   updateHeatDecay(dt);
   const inter = nearestInteraction();
-  if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
+  let jackTarget = null;
+  if (!p.inCar && state.hubCars && state.flags.freeRoam && state.scene === 'hub') {
+    let jd = 36;
+    for (const c of state.hubCars) {
+      const d = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
+      if (d < jd) { jackTarget = c; jd = d; }
+    }
+  }
+  if (jackTarget && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam && interactPressed()) {
+    // GTA carjacking: yank a driver out of a passing car
+    const jack = jackTarget;
+    state.interactCooldown = .8;
+    state.hubCars.splice(state.hubCars.indexOf(jack), 1);
+    p.inCar = true;
+    p.speed = 185 + Math.random() * 40;
+    p.carColor = jack.color;
+    p.carDamage = 0; p.carV = 0;
+    if (!blockedAt(jack.x + 9, jack.y - 2)) { p.x = jack.x + 9; p.y = jack.y - 2; }
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + .6);
+    state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
+    audio.sfx('door'); audio.sfx('crash');
+    spawnEffect(p.x + 8, p.y - 10, 'OUT OF THE CAR!', '#ff9a7a');
+    const roll = Math.random();
+    if (roll < .12) {
+      // unmarked cop car. bad choice.
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.4);
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'The driver flashes a badge, sighs the sigh of a man whose paperwork just doubled, and radios it in. Unmarked unit. Of course.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A COP?! I thought the mustache was a fashion choice! I want it on the record that I was BORROWING!' : 'Maronn’ — a cop. Nothing personal, officer. It’s a Jersey thing.' }
+      ]);
+    } else if (roll < .27) {
+      // wrong guy to jack: he squares up
+      spawnEffect(jack.x + 8, jack.y - 24, 'BAD PICK!', '#ff6a6a');
+      state.brawler = { x: jack.x + 4, y: jack.y - 18, hp: 3, state: 'prowl', t: 0, tx: jack.x, ty: jack.y, barkT: 2.4, bark: 'You picked the WRONG car, pal!', swingT: 0, hitT: 0 };
+      startDialog([
+        { speaker: 'narrator', text: 'The driver does NOT exit through the door. He exits through his OPTIONS — and he’s all out. He squares up.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is everyone in this state so angry?! It’s a lease — I checked the registration!' : 'Oh, you wanna go? Over a four-cylinder? Fine. FINE.' }
+      ]);
+    } else {
+      const victim = { kind: ['womanC', 'womanD', 'womanB'][Math.floor(Math.random() * 3)], x: jack.x + 4, y: jack.y - 18, region: { x: 40, y: 40, w: 600, h: 300 }, speed: 46, tx: jack.x - 120, ty: jack.y - 60, pause: 0, dir: 'down', barkT: 2.4, diveT: 0, fleeing: true, bark: state.player.kind === 'george' ? 'MY CAR! That’s a lease!' : 'please — I have a family — take the car!' };
+      ambientFor(state.scene).push(victim);
+      startDialog([
+        { speaker: 'narrator', text: 'You open the door. The driver opens his mouth, thinks better of it, and exits through it.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m not stealing — I’m relocating! That’s a thing! People relocate cars!' : 'You shoulda locked the door, pal. First rule of Jersey.' }
+      ]);
+    }
+  } else if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
     let talker = null; let td = 34;
     for (const n of ambientFor(state.scene)) {
@@ -3467,8 +3558,7 @@ function updateExplore(dt) {
         { speaker: 'narrator', text: talker.bark }
       ]);
     }
-  }
-  if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
+    } else if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
     audio.sfx('confirm');
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
@@ -4614,6 +4704,14 @@ function vesuvioInteractions() {
       ]);
     } },
     { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
+      if (!state.mission && !state.flags.artiesMenuDone && state.flags.turkeyTaxDone && state.flags.freeRoam) {
+        startMission('artiesMenu');
+        startDialog([
+          { speaker: 'artie', text: 'Tony — thank god — a FRIEND! Tonight’s rush and I got NOTHING — the supplier shorted me, the fish guy’s at his mother’s, the bread — don’t ask about the bread! Get me the reserve gabagool from the pork store, bread from that bodega in the city, a fish — fresh — and I owe you forever. $280!' },
+          { speaker: 'system', text: 'Mission accepted: THE LAST SUPPLY. The rush waits for no man.' }
+        ]);
+        return;
+      }
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'You ever pretend to own a restaurant to impress a waitress? Asking for a friend.' },
         { speaker: 'artie', text: 'I actually own the restaurant. It impresses nobody. Less than nobody.' },
@@ -5686,6 +5784,14 @@ function melfiInteractions() {
     ]);
   } });
   list.push({ x: 170, y: 200, w: 120, h: 90, radius: 40, label: 'Your chair', action: () => {
+    if (!state.mission && state.flags.therapyDone && !state.flags.shrinkRapDone && state.flags.freeRoam && state.player.kind !== 'george') {
+      startMission('shrinkRap');
+      startDialog([
+        { speaker: 'melfi', text: 'Before we begin — an exercise. A patient gave me this watch. It’s wildly inappropriate and it must go back to the shop in Manhattan. YOU’RE going to return it. Here’s the exercise: no crimes on the way. No heat, Tony. If the police so much as look at you, the exercise fails. Think you can be a civilian for one afternoon?' },
+        { speaker: 'system', text: 'Mission accepted: THE SHRINK RAP. Keep heat under 3 — no punching, no clipping, no “borrowing”.' }
+      ]);
+      return;
+    }
     if (state.player.kind === 'george') {
       startDialog([
         { speaker: 'melfi', text: 'I’m sorry — you want ME to analyze YOU? I specialize in anxiety, not… whatever constellation this is.' },
@@ -10350,11 +10456,19 @@ function drawMenu() {
   if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
+const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
 function weatherRain() {
-  if (state.scene !== 'hub' && state.scene !== 'nyc') return 0;
+  if (!OUTDOOR_SCENES.includes(state.scene)) return 0;
   // rain for ~90s out of every 360s, offset so it doesn't sync with night
   const wt = state.time % 360;
   return wt > 240 && wt < 330 ? 1 : 0;
+}
+
+function weatherSnow() {
+  if (!OUTDOOR_SCENES.includes(state.scene)) return 0;
+  // thanksgiving-eve flurries: the cold first hour of every 6-minute cycle
+  const wt = state.time % 360;
+  return wt < 60 ? 1 : 0;
 }
 
 function drawAtmosphere() {
@@ -10372,8 +10486,19 @@ function drawAtmosphere() {
     }
     if (Math.random() < .02) audio.noise(.06, .008, 0, 2600); // patter
   }
+  // thanksgiving flurries — lazy drifting flakes, everywhere outdoors
+  if (weatherSnow() && (state.mode === 'explore' || state.mode === 'transit')) {
+    const t = state.time;
+    for (let i = 0; i < 34; i++) {
+      const fx = ((i * 97 + t * (8 + (i % 5) * 4)) % 680) - 20 + Math.sin(t * .8 + i) * 14;
+      const fy = ((i * 71 + t * (12 + (i % 3) * 6)) % 400) - 20;
+      ctx.fillStyle = `rgba(240,246,255,${.4 + (i % 3) * .15})`;
+      ctx.fillRect(fx, fy, 2, 2);
+    }
+    if (Math.random() < .002) audio.tone(1200 + Math.random() * 400, .03, 'sine', .004);
+  }
   // day/night cycle for the outdoor open world — 4-minute days, warm dusk, blue night
-  if ((state.scene === 'hub' || state.scene === 'nyc') && (state.mode === 'explore' || state.mode === 'monte')) {
+  if (OUTDOOR_SCENES.includes(state.scene) && (state.mode === 'explore' || state.mode === 'monte')) {
     const dayT = (state.time % 240) / 240;
     // daylight 0-.5, dusk .5-.65, night .65-.9, dawn .9-1
     let dark = 0, warm = 0;
