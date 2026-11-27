@@ -1189,6 +1189,15 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  slice: {
+    w: 640, h: 416, label: 'Famous Original Ray’s · Manhattan', music: 'house',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,600,110), r(480,220,130,90)
+    ],
+    draw: drawSlice,
+    interactions: sliceInteractions
+  },
   taffy: {
     w: 640, h: 416, label: 'Salty’s Taffy · Boardwalk', music: 'house',
     colliders: [
@@ -5215,6 +5224,7 @@ function travelHub(place) {
     yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
     melfi: ['melfi', 320, 380, 'Dr. Melfi’s office. It smells like leather, tissues, and carefully withheld judgment.'],
     costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
+    slice: ['slice', 320, 360, 'Inside: heat, grease, glory. The real Ray’s — probably.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
   const d = destinations[place];
@@ -7007,6 +7017,69 @@ function taffyInteractions() {
   ];
 }
 
+function drawSlice() {
+  px(ctx, 0, 0, 640, 416, '#3a2a22');
+  // tile floor
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx + fy) % 2 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#44332a');
+  }
+  // counter + ovens along the north wall
+  px(ctx, 20, 20, 600, 110, '#6a5544');
+  px(ctx, 30, 30, 580, 40, '#8a7560');
+  // pizza ovens with fire glow
+  px(ctx, 420, 34, 180, 60, '#4a3a30');
+  const fl = Math.sin(state.time * 8) * 3;
+  px(ctx, 450, 52 - fl, 40, 26 + fl, '#e8722a');
+  px(ctx, 500, 56 - fl, 34, 22 + fl, '#ffd23e');
+  // pies on the counter
+  for (let pi2 = 0; pi2 < 4; pi2++) {
+    const pxp = 60 + pi2 * 80;
+    px(ctx, pxp, 42, 34, 34, '#d8a858');
+    px(ctx, pxp + 6, 48, 22, 22, '#c94030');
+    for (let pep = 0; pep < 4; pep++) px(ctx, pxp + 8 + (pep * 7) % 18, 52 + (pep * 11) % 14, 4, 4, '#8a2015');
+  }
+  // red vinyl booths east
+  px(ctx, 480, 220, 130, 90, '#8a2a2a');
+  px(ctx, 490, 230, 110, 30, '#a83a3a');
+  // the folding chairs + napkin dispenser vibe
+  px(ctx, 200, 240, 40, 30, '#5a6a7a');
+  // pizza guy behind the counter, sliding pies
+  const gx = 300 + Math.sin(state.time * .7) * 60;
+  drawPerson(ctx, gx - state.camera.x, 100 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'walk' });
+  ctx.fillStyle = '#e8c93e';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('FAMOUS ORIGINAL RAY’S — NOT AFFILIATED WITH ANY OTHER RAY', 320, 20);
+  ctx.textAlign = 'left';
+}
+
+function sliceInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the street', action: leaveOutside },
+    { x: 200, y: 130, w: 70, h: 30, radius: 44, label: 'A slice — $3', action: () => {
+      if (state.money < 3) { toast('Three bucks. It’s the cheapest dignity in Manhattan.'); return; }
+      state.money -= 3;
+      audio.sfx('pickup');
+      state.time += 2;
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George folds the slice lengthwise — the correct way, the only way — and eats it in four bites while walking nowhere in particular. Grease runs down his wrist. He has never been more of a New Yorker and he knows it.' },
+        { speaker: 'george', text: 'This is the food. This is THE food. Everything else is a rumor.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony eats the slice standing at the counter like the counter owes him money. It’s not Jersey pizza — he’d never say it is — but at 1am in Manhattan, it does the job and then some.' }
+      ]);
+    } },
+    { x: 490, y: 130, w: 80, h: 30, radius: 44, label: 'Watch the oven', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The pie goes in pale and comes out blistered in ninety seconds. The oven guy does it with a long peel and zero wasted motion, like a card sharp. You watch three rotations. It never stops being a little bit magic.' }]);
+    } },
+    { x: 540, y: 280, w: 60, h: 30, radius: 42, label: 'Take the booth', action: () => {
+      state.time += 4;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You slide into the red vinyl booth and do nothing at all for a few minutes. Outside, the city does its impression of a city that never sleeps. In here it’s just you, the heat lamps, and the faint hiss of a pie becoming a legend.' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7721,6 +7794,9 @@ function nycInteractions() {
       ] : [
         { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
       ]);
+    } },
+    { x: 200, y: 120, w: 60, h: 40, radius: 44, label: 'Famous Original Ray’s', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'Which Ray’s is the real Ray’s is a question that has ended friendships. This one has the good oven. Inside: heat, grease, glory.' }], () => travelHub('slice'));
     } },
     { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
