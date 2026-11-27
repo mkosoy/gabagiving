@@ -295,7 +295,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown'];
 function saveWorld() {
   try {
     const out = {};
@@ -1389,6 +1389,12 @@ const ambientSpecs = {
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
+  ],
+  meadow: [
+    { kind: 'bobby', x: 200, y: 300, region: { x: 100, y: 260, w: 300, h: 90 }, speed: 26 },
+    { kind: 'womanA', x: 350, y: 330, region: { x: 120, y: 280, w: 400, h: 80 }, speed: 30 },
+    { kind: 'christopher', x: 480, y: 290, region: { x: 300, y: 250, w: 240, h: 90 }, speed: 28 },
+    { kind: 'womanC', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 32 }
   ],
   shore: [
     { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
@@ -2535,6 +2541,15 @@ const MISSION_DEFS = {
       { scene: 'club', x: 400, y: 250, radius: 80, objective: 'deliver to the Bing before the rush', label: 'the gravy has landed' }
     ]
   },
+  fixedRace: {
+    title: 'THE FIXED RACE',
+    payout: 320, heat: 1, timeLimit: 0,
+    steps: [
+      { scene: 'meadow', x: 98, y: 130, radius: 46, objective: 'Put $50 on CRANBERRY SAUCE at the Meadowlands window', label: 'the betting window' },
+      { scene: 'meadow', x: 370, y: 130, radius: 46, objective: 'Watch the race from the rail — don’t blink', label: 'the track rail' },
+      { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2641,6 +2656,11 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      fixedRace: [
+        { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
+        { speaker: 'silvio', text: 'It lost. THE FIXED HORSE LOST. You know what that means, right? The fix was fixed. Somebody fixed our fix. …Come here. The fifty you lost? You’re not paying it back. THAT’S how much I respect the audacity. $320 for the story. This one gets told at the Bing forever.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE FIXED RACE. The house always wins, except when a different house wins.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -4270,6 +4290,19 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 60, y: 120, w: 40, h: 34, radius: 40, label: 'Jukebox — $1 a song', action: () => {
+    if (state.money < 1) { toast('A dollar. The jukebox is the cheapest vice in this building.'); return; }
+    state.money -= 1;
+    audio.sfx('pickup');
+    const picks = [
+      { m: 'club', t: 'Woke Up This Morning — the house standard. Silvio nods once, the highest honor the Bing bestows.' },
+      { m: 'house', t: 'The Godfather waltz. Half the room goes quiet out of pure instinct. The other half out of respect.' },
+      { m: 'dream', t: 'A slow one. The dancers hold still, unsure. Somewhere in the back, Paulie starts telling the same story for the fourth time.' }
+    ];
+    const pick = picks[Math.floor(Math.random() * picks.length)];
+    audio.setMusic(pick.m);
+    startDialog([{ speaker: 'narrator', text: 'Your dollar clunks down. ' + pick.t }]);
+  } });
   list.push({ x: 590, y: 120, w: 40, h: 34, radius: 40, label: 'Back office safe', action: () => {
     if ((state.money || 0) < 50) { toast('Silvio doesn’t hold less than $50. It’s a dignity thing.'); return; }
     const deposit = Math.min(state.money, Math.floor(state.money / 2));
@@ -4326,6 +4359,12 @@ function clubInteractions() {
       startDialog([
         { speaker: 'silvio', text: 'Last thing. You’re hot right now — I may have made you hot, details. The heat dies in the Pine Barrens. Get there before the clock does. $300, and don’t stop for the geese.' },
         { speaker: 'system', text: 'Mission accepted: PINE RUNNER. The heat is ON — drive south!' }
+      ]);
+    } else if (!state.mission && state.flags.gravyChainDone && !state.flags.fixedRaceDone && state.flags.freeRoam) {
+      startMission('fixedRace');
+      startDialog([
+        { speaker: 'silvio', text: 'One more. A horse named CRANBERRY SAUCE runs at the Meadowlands in the fifth. The fix is in — our guy knows the guy who walks the guy. Fifty on the nose, watch it come in, bring me the word. $320.' },
+        { speaker: 'system', text: 'Mission accepted: THE FIXED RACE. What could go wrong — it’s fixed.' }
       ]);
     } else if (!state.mission && state.flags.pineRunnerDone && !state.flags.gravyChainDone && state.flags.freeRoam) {
       startMission('gravyChain');
@@ -7560,6 +7599,29 @@ function drawNyc() {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
   drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
+  // Kenny Roger's Roasters — the red neon chicken that never sleeps
+  px(ctx, 560, 40, 90, 50, '#2a1a1a');
+  const rglow = .55 + Math.sin(state.time * 3) * .2;
+  ctx.save();
+  ctx.globalAlpha = rglow;
+  px(ctx, 568, 48, 74, 8, '#ff2a1a');
+  px(ctx, 568, 62, 74, 8, '#ff2a1a');
+  ctx.restore();
+  ctx.fillStyle = '#ffb0a0';
+  ctx.font = 'bold 7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('KENNY’S ROASTERS', 605, 56);
+  ctx.fillText('CHICKEN CHICKEN', 605, 70);
+  if (typeof isNight === 'function' && isNight()) {
+    ctx.save();
+    ctx.globalAlpha = .12 + Math.sin(state.time * 3) * .04;
+    ctx.fillStyle = '#ff3a2a';
+    ctx.beginPath();
+    ctx.arc(605, 120, 130, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.textAlign = 'left';
   // persistent reactive taxis — they brake and honk at jaywalkers
   if (!state.nycCars) updateNycTaxis(0);
   for (const c of (state.nycCars || [])) {
@@ -7652,6 +7714,14 @@ function drawNyc() {
 
 function nycInteractions() {
   return [
+    { x: 605, y: 120, w: 80, h: 40, radius: 44, label: 'The red chicken light', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The red neon glow of the chicken sign washes over the street like a sunset that only sells one thing. George feels his pupils dilate and his resolve weaken. He doesn’t even like the chicken. Nobody likes the chicken. That’s not what it’s about.' },
+        { speaker: 'george', text: 'It’s the light, Jerry. THE LIGHT. It gets in your head and it rearranges things!' }
+      ] : [
+        { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
+      ]);
+    } },
     { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 624, y: 200, w: 52, h: 44, radius: 42, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
