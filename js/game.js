@@ -758,7 +758,8 @@ const FT_NODES = [
   { id: 'nyc', x: 552, y: 102, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk\'s, the soup stand, Jerry\'s, the bodega' },
   { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
   { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
-  { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' }
+  { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' },
+  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' }
 ];
 
 function drawFastTravel() {
@@ -936,6 +937,7 @@ const EXIT_HINTS = {
   pines: '↑ NORTH: back to the neighborhood · → EAST: the Shore · T: map',
   shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
   ac: '← WEST: the Shore · T: map',
+  meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · T: map',
   njstreet: 'T: map · the neighborhood hub is the center of everything'
 };
 
@@ -1176,6 +1178,16 @@ const scenes = {
     ],
     draw: drawAC,
     interactions: acInteractions
+  },
+  meadow: {
+    w: 768, h: 416, label: 'The Meadowlands · Race Day', music: 'club',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      r(280,60,220,130), r(540,8,220,110), r(8,8,180,90),
+      r(600,240,120,90), r(60,280,110,80)
+    ],
+    draw: drawMeadow,
+    interactions: meadowInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -5158,6 +5170,9 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
+    { x: 10, y: 210, w: 26, h: 90, radius: 46, label: '← West: the Meadowlands', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'West on Route 3. The reeds get taller, the lots get bigger, and suddenly you can hear hooves. The Meadowlands.' }], () => startTransit('meadow', 700, 250, 'ROUTE 3 · EAST'));
+    } },
     { x: 420, y: 340, w: 60, h: 34, radius: 44, label: 'Pay’n’Spray', action: () => {
       if (!state.player.inCar) { toast('Drive a car in first. The garage only does cars.'); return; }
       if ((state.flags.heat || 0) <= 0 && !state.player.carDamage) { toast('Car’s clean. Nothing to spray.'); return; }
@@ -6689,6 +6704,104 @@ function bodegaInteractions() {
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'RIGGED! The whole lottery is a tax on people who are bad at math! …I’ll take another.' : 'Shoulda bought the cannoli instead.' }
         ]);
       }
+    } }
+  ];
+}
+
+function drawMeadow() {
+  px(ctx, 0, 0, 768, 416, '#23301f');
+  // swampy flatlands
+  for (let i = 0; i < 30; i++) {
+    const gx = (i * 97) % 760;
+    const gy = 150 + (i * 61) % 250;
+    px(ctx, gx, gy, 8, 3, '#2e4530');
+  }
+  // stadium silhouette northeast
+  px(ctx, 548, 8, 212, 104, '#2b2f38');
+  px(ctx, 560, 18, 188, 84, '#343945');
+  ctx.fillStyle = '#8f97a8';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE MEADOWLANDS', 654, 62);
+  const lit = Math.sin(state.time * 2) > 0;
+  px(ctx, 560, 30, 188, 3, lit ? '#ffe9a0' : '#6a6a55');
+  // grandstand west
+  px(ctx, 8, 8, 180, 84, '#4a3f35');
+  px(ctx, 16, 16, 164, 66, '#5d5044');
+  ctx.fillStyle = '#d8c9a8';
+  ctx.fillText('GRANDSTAND · RACING', 98, 34);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = '7px monospace';
+  ctx.fillText('POST TIME 7:00', 98, 48);
+  // the racetrack oval infield
+  px(ctx, 280, 60, 220, 130, '#6b543a');
+  px(ctx, 296, 74, 188, 102, '#3a5a34');
+  px(ctx, 330, 96, 120, 58, '#6b543a');
+  px(ctx, 344, 108, 92, 34, '#3a5a34');
+  // horses going around the rail
+  for (let h = 0; h < 3; h++) {
+    const ang = state.time * .5 + h * 2.1;
+    const hx = 390 + Math.cos(ang) * 72 - state.camera.x;
+    const hy = 125 + Math.sin(ang) * 42 - state.camera.y;
+    px(ctx, hx, hy, 8, 5, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+    px(ctx, hx + 6, hy - 2, 3, 3, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+  }
+  // parking lot rows with cars
+  px(ctx, 20, 120, 500, 60, '#3a3a3a');
+  for (let c = 0; c < 9; c++) {
+    px(ctx, 40 + c * 52, 132, 30, 14, ['#7a2a2a','#2a4a7a','#b8a888','#3a3a3a','#777','#2848a0','#6a5a2a','#4a4a4a','#8a3a5a'][c]);
+  }
+  // tailgate smoke
+  for (let s = 0; s < 4; s++) {
+    const sy = 300 - ((state.time * 20 + s * 18) % 60);
+    ctx.save();
+    ctx.globalAlpha = .3;
+    px(ctx, 110 + s * 4 - state.camera.x, sy - state.camera.y, 4, 4, '#aaa');
+    ctx.restore();
+  }
+  // drunk fans milling near tailgate
+  const fx = 150 + Math.sin(state.time * .3) * 30;
+  drawPerson(ctx, fx - state.camera.x, 320 - state.camera.y, 'manA', 'down', state.frame, { pose: 'walk' });
+  drawHighwaySign(660, 150, ['NJ TURNPIKE', '← NORTH CALDWELL']);
+  drawHighwaySign(60, 200, ['ROUTE 3 WEST', '← THE NEIGHBORHOOD']);
+  ctx.textAlign = 'left';
+}
+
+function meadowInteractions() {
+  return [
+    { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← West: the neighborhood', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'West on Route 3, past the reeds and the things the reeds keep secret. The neighborhood is ten minutes and a world away.' }], () => startTransit('hub', 60, 250, 'ROUTE 3 · WEST'));
+    } },
+    { x: 730, y: 210, w: 36, h: 90, radius: 46, label: 'Tunnel → Manhattan', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'East toward the skyline. The tunnel swallows you whole and spits you out in a place where the coffee costs four dollars.' }], () => startTransit('nyc', 60, 250, 'LINCOLN TUNNEL · EAST'));
+    } },
+    { x: 98, y: 100, w: 80, h: 30, radius: 46, label: 'Betting window — the ponies', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The real track, the real odds, the same four horses somehow. The teller doesn’t ask questions. The teller has seen everything twice.' }], () => initRacing());
+    } },
+    { x: 110, y: 310, w: 40, h: 30, radius: 42, label: 'Tailgate — sausage and peppers', action: () => {
+      if ((state.flags.tailgateFood || 0) > 2) { startDialog([{ speaker: 'narrator', text: 'The grill guy squints. "You again? Buddy. It’s Thanksgiving. Go home." The grill is closed to you now. This is somehow the saddest thing that has ever happened.' }]); return; }
+      state.flags.tailgateFood = (state.flags.tailgateFood || 0) + 1;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A stranger hands George a sausage and peppers off a tailgate grill, no questions asked. Free food. No obligation. No social contract. George has finally reached the promised land, and it is a parking lot off Route 3.' },
+        { speaker: 'george', text: 'You see this? THIS is living! A man cooks meat in a parking lot and just GIVES it to you! Why do we even have restaurants?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tailgate sausage and peppers. Onions done right. Tony eats it leaning on somebody’s El Camino and for four minutes there is no heat, no crews, no nothing. Just the Meadowlands wind and a sandwich.' },
+        { speaker: 'tony', text: 'This is better than half the restaurants I know. Don’t tell Artie. He’d genuinely never recover.' }
+      ]);
+    } },
+    { x: 640, y: 150, w: 60, h: 40, radius: 44, label: 'Stadium gate', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The stadium is dark — Thanksgiving, no game. A security guard the size of a freezer shakes his head before you even reach the gate. Behind him, an arena full of empty seats sits in the dark, dreaming of a halftime show.' }]);
+    } },
+    { x: 370, y: 130, w: 60, h: 30, radius: 44, label: 'Track rail — watch the workout', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You lean on the rail as the horses pound past, close enough to feel it in your sternum. One of them — the dark one, third out — runs like it personally owes somebody money. You make a mental note. The mental note is worth exactly nothing.' }]);
+    } },
+    { x: 60, y: 300, w: 110, h: 60, radius: 40, label: 'Sleep in the car', action: () => {
+      if (!state.player.inCar) { toast('You need to drive a car in here first.'); return; }
+      state.time += 30;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You crack the window, tilt the seat back, and sleep the parking-lot sleep of a person with nothing to prove. You wake up slightly later. The Meadowlands has not moved. Nothing has changed. It is perfect.' }]);
     } }
   ];
 }
