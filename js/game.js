@@ -7239,8 +7239,9 @@ function drawBodega() {
 }
 
 function robRegister(place, flavor) {
-  if ((state.registerCd || 0) > state.time) { toast('You just hit this place. Even you got rules. Come back later.'); return; }
-  state.registerCd = state.time + 120;
+  const key = 'registerCd_' + place;
+  if ((state[key] || 0) > state.time) { toast('You just hit this place. Even you got rules. Come back later.'); return; }
+  state[key] = state.time + 120;
   const take = 40 + Math.floor(Math.random() * 50);
   state.money += take;
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + 2);
@@ -7711,7 +7712,7 @@ function drawSlice() {
 function sliceInteractions() {
   return [
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the street', action: leaveOutside },
-    { x: 460, y: 130, w: 70, h: 34, radius: 44, label: 'Rob the register', action: () => robRegister('slice', 'You hit Ray’s register during the oven rush. Nobody stops you — the oven guy is the only employee who cares, and the oven guy is FLAMES. Behind you, a heated argument about which Ray this even is provides perfect cover.') },
+    { x: 520, y: 130, w: 60, h: 34, radius: 44, label: 'Rob the register', action: () => robRegister('slice', 'You hit Ray’s register during the oven rush. Nobody stops you — the oven guy is the only employee who cares, and the oven guy is FLAMES. Behind you, a heated argument about which Ray this even is provides perfect cover.') },
     { x: 200, y: 130, w: 70, h: 30, radius: 44, label: 'A slice — $3', action: () => {
       if (state.money < 3) { toast('Three bucks. It’s the cheapest dignity in Manhattan.'); return; }
       state.money -= 3;
