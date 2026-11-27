@@ -610,6 +610,25 @@ function drawDialog() {
   }
 }
 
+function drawFishing() {
+  const f = state.fishing;
+  if (!f) return;
+  ctx.fillStyle = 'rgba(8,10,16,.85)';
+  ctx.fillRect(190, 300, 260, 44);
+  ctx.strokeStyle = '#8fd8ff';
+  ctx.strokeRect(190, 300, 260, 44);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  if (f.phase === 'cast') ctx.fillText('…waiting for a bite…', 320, 325);
+  else {
+    ctx.fillStyle = '#ffd23e';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText('BITE! — press E NOW!', 320, 325);
+  }
+  ctx.textAlign = 'left';
+}
+
 function drawClaw() {
   const cl = state.claw;
   if (!cl) return;
@@ -5692,6 +5711,12 @@ function shoreInteractions() {
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
     } },
+    { x: 380, y: 140, w: 44, h: 34, radius: 42, label: 'Fish off the pier', action: () => {
+      if (state.mode === 'fishing') return;
+      state.mode = 'fishing';
+      state.fishing = { phase: 'cast', t: 1.5 + Math.random() * 3, window: 0 };
+      audio.sfx('pickup');
+    } },
     { x: 560, y: 160, w: 44, h: 40, radius: 42, label: 'Claw machine', action: () => {
       if (state.mode === 'claw') return;
       if (state.money < 5) { toast('The claw machine is $5.'); return; }
@@ -8234,6 +8259,7 @@ function render() {
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'claw') drawClaw();
+  else if (state.mode === 'fishing') drawFishing();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -8429,6 +8455,39 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'fishing') {
+    const f = state.fishing;
+    if (!f) { state.mode = 'explore'; return; }
+    if (f.phase === 'cast') {
+      f.t -= dt;
+      if (f.t <= 0) { f.phase = 'bite'; f.window = .7; audio.sfx('splash'); spawnEffect(170, 200, '!', '#8fd8ff'); }
+    } else if (f.phase === 'bite') {
+      f.window -= dt;
+      if (consume(['KeyE', 'Space'])) {
+        state.mode = 'explore';
+        state.fishing = null;
+        const roll = Math.random();
+        audio.sfx('cash');
+        if (roll < .12) {
+          state.money += 85;
+          startDialog([{ speaker: 'narrator', text: 'You yank at exactly the right moment — a striped bass, a beauty, thirty inches of pure fight. The pier applauds. A man in a bucket hat pays you $85 for it on the spot because this is the Jersey Shore and everything is for sale.' }]);
+        } else if (roll < .45) {
+          state.money += 18;
+          startDialog([{ speaker: 'narrator', text: 'A sea robin — ugly, edible, technically a fish. The bait shop gives you $18 for it without making eye contact.' }]);
+        } else if (roll < .6) {
+          startDialog(state.player.kind === 'george' ? [
+            { speaker: 'narrator', text: 'You reel in a boot. Inside the boot: a smaller boot. George stares at the nested boots with the hollow eyes of a man confronting a metaphor.' },
+            { speaker: 'george', text: 'A boot. In a boot. That’s my life. That’s literally — I’m the small boot, Jerry! THE SMALL BOOT!' }
+          ] : [{ speaker: 'narrator', text: 'Tony reels in a boot containing a smaller boot. He nods slowly. He has questions for the ocean. He decides, wisely, not to ask them.' }]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'Seaweed. A tremendous, triumphant mound of seaweed. The gulls are impressed. Nobody else is.' }]);
+        }
+      } else if (f.window <= 0) {
+        state.mode = 'explore';
+        state.fishing = null;
+        startDialog([{ speaker: 'narrator', text: 'The bite comes and goes — you feel the line go slack with the particular emptiness of a missed fish. Somewhere below, a fish tells the story differently.' }]);
       }
     }
   } else if (state.mode === 'claw') {
