@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune'];
 function saveWorld() {
   try {
     const out = {};
@@ -310,7 +310,7 @@ function saveWorld() {
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
     out.money = state.money || 0;
     out.heat = state.flags.heat || 0;
-    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step };
+    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step, steps: state.mission.steps, payout: state.mission.payout };
     if (state.player.x !== undefined) { out.scene = state.scene; out.px = Math.round(state.player.x); out.py = Math.round(state.player.y); }
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
@@ -327,9 +327,16 @@ function loadWorld() {
       state.player.x = w.px;
       state.player.y = w.py;
     }
-    if (w.mission && MISSION_DEFS[w.mission.id] && !state.flags[w.mission.id + 'Done']) {
+    const isRepeatable = ['oddJob', 'kramerJob', 'collection'].includes(w.mission && w.mission.id);
+    if (w.mission && MISSION_DEFS[w.mission.id] && (isRepeatable || !state.flags[w.mission.id + 'Done'])) {
       const def = MISSION_DEFS[w.mission.id];
-      state.mission = { id: w.mission.id, step: Math.min(w.mission.step, def.steps.length - 1), deadline: def.timeLimit ? state.time + def.timeLimit : null };
+      state.mission = {
+        id: w.mission.id,
+        step: Math.min(w.mission.step, def.steps.length - 1),
+        deadline: def.timeLimit ? state.time + def.timeLimit : null,
+        steps: (w.mission.steps || def.steps).map(s => ({ ...s })),
+        payout: w.mission.payout || def.payout
+      };
     }
   } catch (e) { /* ignore */ }
 }
@@ -832,7 +839,7 @@ function drawFastTravel() {
 
   // active mission objective pulses on the atlas
   if (state.mission && MISSION_DEFS[state.mission.id]) {
-    const mstep = MISSION_DEFS[state.mission.id].steps[state.mission.step];
+    const mstep = missionStep();
     if (mstep) {
       const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac' };
       const targetScene = hostRegion[mstep.scene] || mstep.scene;
@@ -2829,7 +2836,7 @@ function advanceMission() {
     startDialog(endings[m.id] || [{ speaker: 'system', text: 'Mission complete.' }]);
   } else {
     audio.sfx('confirm');
-    const st = def.steps[m.step];
+    const st = (m.steps || def.steps)[m.step];
     startDialog([{ speaker: 'system', text: `New objective: ${st.objective}` }]);
   }
 }
@@ -4583,11 +4590,12 @@ function clubInteractions() {
       ];
       const drop = drops[Math.floor(Math.random() * drops.length)];
       const rolledPayC = 90 + Math.floor(Math.random() * 50);
-      MISSION_DEFS.collection.steps = [
+      startMission('collection');
+      state.mission.payout = rolledPayC;
+      state.mission.steps = [
         { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Collect the envelope — ${drop.name.split('—')[0].trim()}`, label: 'the envelope' },
         { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
       ];
-      startMission('collection');
       startDialog([
         { speaker: 'silvio', text: `Collections, kid. ${drop.name}. Don’t count it in front of them — that’s respect. $${rolledPayC} for the walk.` },
         { speaker: 'system', text: 'Mission accepted: THE COLLECTION. Repeatable — the tribute never sleeps.' }
