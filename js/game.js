@@ -295,7 +295,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown'];
 function saveWorld() {
   try {
     const out = {};
@@ -2535,6 +2535,15 @@ const MISSION_DEFS = {
       { scene: 'club', x: 400, y: 250, radius: 80, objective: 'deliver to the Bing before the rush', label: 'the gravy has landed' }
     ]
   },
+  fixedRace: {
+    title: 'THE FIXED RACE',
+    payout: 320, heat: 1, timeLimit: 0,
+    steps: [
+      { scene: 'meadow', x: 98, y: 130, radius: 46, objective: 'Put $50 on CRANBERRY SAUCE at the Meadowlands window', label: 'the betting window' },
+      { scene: 'meadow', x: 370, y: 130, radius: 46, objective: 'Watch the race from the rail — don’t blink', label: 'the track rail' },
+      { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2641,6 +2650,11 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      fixedRace: [
+        { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
+        { speaker: 'silvio', text: 'It lost. THE FIXED HORSE LOST. You know what that means, right? The fix was fixed. Somebody fixed our fix. …Come here. The fifty you lost? You’re not paying it back. THAT’S how much I respect the audacity. $320 for the story. This one gets told at the Bing forever.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE FIXED RACE. The house always wins, except when a different house wins.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -4339,6 +4353,12 @@ function clubInteractions() {
       startDialog([
         { speaker: 'silvio', text: 'Last thing. You’re hot right now — I may have made you hot, details. The heat dies in the Pine Barrens. Get there before the clock does. $300, and don’t stop for the geese.' },
         { speaker: 'system', text: 'Mission accepted: PINE RUNNER. The heat is ON — drive south!' }
+      ]);
+    } else if (!state.mission && state.flags.gravyChainDone && !state.flags.fixedRaceDone && state.flags.freeRoam) {
+      startMission('fixedRace');
+      startDialog([
+        { speaker: 'silvio', text: 'One more. A horse named CRANBERRY SAUCE runs at the Meadowlands in the fifth. The fix is in — our guy knows the guy who walks the guy. Fifty on the nose, watch it come in, bring me the word. $320.' },
+        { speaker: 'system', text: 'Mission accepted: THE FIXED RACE. What could go wrong — it’s fixed.' }
       ]);
     } else if (!state.mission && state.flags.pineRunnerDone && !state.flags.gravyChainDone && state.flags.freeRoam) {
       startMission('gravyChain');
