@@ -7243,6 +7243,17 @@ function drawPlayer() {
   if (state.player.inCar) {
     const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
     drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
+    if ((state.player.carDamage || 0) >= 2) {
+      for (let i = 0; i < 3; i++) {
+        const ph = (state.time * .9 + i * .33) % 1;
+        const sx = state.player.x - 2 + Math.sin(ph * 9 + i) * 5;
+        const sy = state.player.y - 6 - ph * 26;
+        ctx.fillStyle = `rgba(90,90,95,${(1 - ph) * .4})`;
+        ctx.beginPath();
+        ctx.arc(sx - state.camera.x, sy - state.camera.y, 3 + ph * 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     return;
   }
   drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
