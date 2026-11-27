@@ -12118,7 +12118,7 @@ function drawPlayer() {
   const kind = state.player.kind;
   if (state.player.inCar) {
     const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
-    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
+    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0, state.player.carModel);
     if ((state.player.carDamage || 0) >= 2) {
       for (let i = 0; i < 3; i++) {
         const ph = (state.time * .9 + i * .33) % 1;
@@ -12521,9 +12521,8 @@ function drawPeptides() {
   outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
-function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
+function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = null) {
   const mapped = CAR_SPRITE_MAP[color];
-  const model = (state.player && state.player.inCar && state.player.carModel) || null;
   const spriteName = model || mapped || 'sedan';
   const needsTint = !!(model && color && mapped !== model);
   const img = carSprites[spriteName];
