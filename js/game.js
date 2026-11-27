@@ -4311,6 +4311,15 @@ function drawSoup() {
 
 function soupInteractions() {
   return [
+    { x: 420, y: 220, w: 44, h: 34, radius: 42, label: 'Mention Newman', action: () => {
+      audio.sfx('denied');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+      startDialog([
+        { speaker: 'narrator', text: 'You say the name “Newman” inside the soup stand. The ladles stop. The steam itself seems to flinch. A breadstick falls somewhere in the back, in slow motion.' },
+        { speaker: 'artie', text: 'THAT NAME! NOT IN MY STORE! He knew the rules! The bread is for CUSTOMERS! The line is for MOVING! GET OUT BEFORE I— actually, you know what? You stay. You look like you understand soup. But HIM — never again!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I barely know the man! We’re not close! I mean we’re close-adjacent! DON’T BAN ME, I’M BREAD-COMPLIANT!' : 'Guy runs a tight ship. I respect it. Also, noted: don’t mention the mailman.' }
+      ]);
+    } },
     { x: 370, y: 110, w: 60, h: 80, radius: 42, label: 'Order soup', action: () => {
       if (state.player.kind === 'george' && !state.flags.soupLesson) {
         state.flags.soupLesson = true;

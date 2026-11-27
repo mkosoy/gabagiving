@@ -303,6 +303,8 @@ export class AudioSys {
       if (this.musicMode === 'vesuvio' && Math.random() < .02) this.tone(520, .3, 'sine', .003, 0, 60); // a violin somewhere
       if (this.musicMode === 'yankees' && Math.random() < .02) this.noise(.06, .005, 0, 1200); // stadium crowd memory
       if (this.musicMode === 'yankees' && Math.random() < .012) this.tone(880, .1, 'sine', .004, 0, 220); // a bat crack, somewhere in the past
+      // crickets after dark — the sound of a neighborhood asleep (house mode covers hub/njstreet/pines-adjacent scenes)
+      if ((this.musicMode === 'house' || this.musicMode === 'dream') && Math.random() < .05) this.tone(4200 + Math.random() * 800, .03, 'sine', .002, 0, 100);
     }, 180);
   }
 }
