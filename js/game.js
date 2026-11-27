@@ -786,16 +786,11 @@ function drawFastTravel() {
   ctx.fillText('HUDSON', 418, 200);
   ctx.fillText('ATLANTIC', 460, 306);
 
-  // landmasses: jersey + manhattan
+  // landmasses: jersey mainland + the manhattan strip
   ctx.fillStyle = '#1d2b1a';
-  ctx.fillRect(80, 74, 300, 224);
-  ctx.fillRect(455, 74, 42, 180);
-  // redraw water over jersey edges (river + ocean overlap fix)
-  ctx.fillStyle = '#12283d';
-  ctx.fillRect(388, 74, 60, 224);
-  ctx.fillRect(80, 290, 470, 40);
-  ctx.fillStyle = '#1d2b1a';
+  ctx.fillRect(80, 74, 300, 200);
   ctx.fillRect(80, 250, 180, 40);
+  ctx.fillRect(462, 84, 26, 150);
 
   // the Parkway — spine of the state
   ctx.strokeStyle = '#caa53d';
