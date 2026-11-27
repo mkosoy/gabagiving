@@ -6808,6 +6808,17 @@ function drawCostanza() {
       const f = Math.sin(state.time * 9) * 1.5;
       px(ctx, 118, 118 + f * .3, 10, 6, '#8ecbff');
     }
+    // Frank parked on the sofa, Estelle circling the kitchen — painted-art positions
+    drawPerson(ctx, 108, 186, 'steinbrenner', 'right', state.frame * .5, { pose: 'sit' });
+    if (!state.flags.serenityNow) outlineText(ctx, 'SERENITY NOW!', 138, 138, '#ff9a7a', 8, 'center');
+    drawPerson(ctx, 210, 108, 'womanB', 'left', state.frame * .5, {});
+    if (!state.flags.serenityNow) outlineText(ctx, 'Frank, stop yelling!', 210, 78, '#e8e2d0', 7, 'center');
+    // the pole never comes down
+    px(ctx, 56, 130, 5, 150, '#c9ccd6');
+    px(ctx, 50, 278, 18, 5, '#8a8f9c');
+    outlineText(ctx, 'FESTIVUS POLE', 60, 122, '#9fd4ec', 6, 'center');
+    outlineText(ctx, 'Frank', 118, 216, '#ffb16a', 7, 'center');
+    outlineText(ctx, 'Estelle', 210, 138, '#e8e2d0', 7, 'center');
     return;
   }
 
@@ -6835,8 +6846,8 @@ function drawMelfiOffice() {
   const jot = Math.sin(state.time * .8) > .6;
   // dr. melfi stands by her chair, jotting notes between patients
   const sway = Math.sin(state.time * .7) * 3;
-  drawPerson(ctx, 470 + sway, 244, 'melfi', 'left', state.frame * .5, {});
-  if (jot) outlineText(ctx, '✎ hmm…', 478 + sway, 218, '#e8e2d0', 7, 'center');
+  drawPerson(ctx, 384, 228, 'melfi', 'left', state.frame * .5, { pose: 'sit' });
+  if (jot) outlineText(ctx, '✎ hmm…', 396, 190, '#e8e2d0', 7, 'center');
 }
 
 function melfiInteractions() {
@@ -9018,6 +9029,12 @@ function drawDmv() {
     outlineText(ctx, 'B-' + String(serving0).padStart(3, '0'), 509, 40, '#e8862a', 12, 'center');
     // the clerk in the one open window, medically incapable of urgency
     if (typeof drawPortrait === 'function') drawPortrait(ctx, 408, 58, 'manB');
+    // the waiting — backs of heads facing the windows, forever
+    drawPerson(ctx, 105, 237, 'manC', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 300, 237, 'womanA', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 483, 237, 'manA', 'down', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 152, 298, 'trucker', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 448, 298, 'manB', 'down', 0, { pose: 'sit', sitClip: .55 });
     // fluorescent flicker
     if (Math.sin(state.time * 17) > .92) { ctx.save(); ctx.globalAlpha = .1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 640, 416); ctx.restore(); }
     return;
@@ -9177,11 +9194,11 @@ function drawDiner() {
     ctx.arc(590 - state.camera.x, 210 - state.camera.y, 60, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    drawPerson(ctx, 200 - state.camera.x, 92 - state.camera.y, 'manB', 'down', Math.floor(state.time * .5) % 2, { pose: 'sit' });
-    drawPerson(ctx, 470 - state.camera.x, 92 - state.camera.y, 'womanA', 'down', Math.floor(state.time * .4) % 2, { pose: 'sit' });
-    drawPerson(ctx, 165 - state.camera.x, 185 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit' });
-    drawPerson(ctx, 330 - state.camera.x, 58 - state.camera.y, 'womanC', 'down', state.frame * .5, {});
-    drawPerson(ctx, 100 - state.camera.x, 322 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'stand' });
+    drawPerson(ctx, 148 - state.camera.x, 204 - state.camera.y, 'manB', 'up', Math.floor(state.time * .5) % 2, { pose: 'sit' });
+    drawPerson(ctx, 320 - state.camera.x, 204 - state.camera.y, 'womanA', 'up', Math.floor(state.time * .4) % 2, { pose: 'sit' });
+    drawPerson(ctx, 462 - state.camera.x, 204 - state.camera.y, 'trucker', 'up', 0, { pose: 'sit' });
+    drawPerson(ctx, 480 - state.camera.x, 296 - state.camera.y, 'waitress', 'left', state.frame * .5, {});
+    drawPerson(ctx, 128 - state.camera.x, 330 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'sit' });
     // the GABAGOOL WIZARD itself
     const pc = objArt.pinballcab;
     if (pc && pc.complete && pc.naturalWidth) {
