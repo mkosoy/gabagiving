@@ -387,13 +387,16 @@ export function drawPortrait(ctx, x, y, kind = 'tony') {
   px(ctx, x + 2, y + 2, 30, 30, '#31477a');
   const illustrated = illustratedSprites[canonicalSpriteKind(kind)];
   if (illustrated?.complete && illustrated.naturalWidth) {
-    const h = 31;
+    // bust crop: scale so head and shoulders fill the frame, not the whole body
+    const h = Math.round(34 / .24);
     const w = h * illustrated.naturalWidth / illustrated.naturalHeight;
     ctx.save();
     ctx.beginPath();
     ctx.rect(x + 2, y + 2, 30, 30);
     ctx.clip();
-    ctx.drawImage(illustrated, x + 17 - w / 2, y + 32 - h, w, h);
+    ctx.imageSmoothingEnabled = true;
+    if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(illustrated, x + 17 - w / 2, y + 2, w, h);
     ctx.restore();
     return;
   }
