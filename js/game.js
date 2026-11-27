@@ -2286,11 +2286,16 @@ function updateBrawler(dt) {
       b.swingT = 1.1;
       b.moving = false;
       if ((state.flags.hp || 3) <= 1) {
-        state.flags.hp = 3;
-        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
-        spawnEffect(p.x, p.y - 18, '-$40 ROBBED', '#ff6a6a');
-        b.bark = 'THANKS FOR THE DONATION!';
-        b.barkT = 1.8;
+        if (Math.random() < .5) {
+          state.flags.hp = 0;
+          if (!state.wasted) state.wasted = { t: 0 };
+        } else {
+          state.flags.hp = 3;
+          state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
+          spawnEffect(p.x, p.y - 18, '-$40 ROBBED', '#ff6a6a');
+          b.bark = 'THANKS FOR THE DONATION!';
+          b.barkT = 1.8;
+        }
       } else {
         state.flags.hp = (state.flags.hp || 3) - 1;
         spawnEffect(p.x, p.y - 18, 'OOF', '#ff6a6a');
@@ -2328,13 +2333,19 @@ function updateWasted(dt) {
     const spot = spots[state.scene] || [320, 250];
     state.player.x = spot[0]; state.player.y = spot[1];
     state.player.inCar = null;
+    state.player.carColor = null;
+    state.player.speed = state.player.kind === 'george' ? 96 : 88;
     state.flags.hp = 2;
     const fine = Math.floor(state.money * .1);
     state.money -= fine;
     state.flags.heat = 0;
     state.brawler = null;
+    if (state.mission) {
+      setTimeout(() => { if (!state.wasted) startDialog([{ speaker: 'narrator', text: 'The job you were on? Fell through. Whatever it was, it goes to someone else now — someone who doesn’t get knocked unconscious in the street. The neighborhood notices.' }]); }, 400);
+      state.mission = null;
+    }
     state.wasted = null;
-    toast('You wake up in a hospital gown and a bill. -$' + fine);
+    toast(state.player.kind === 'george' ? 'You wake up in a hospital gown. The nurse says you were very loud about the gown. -$' + fine : 'You wake up in a hospital gown and a bill. -$' + fine);
     saveProgress();
   }
 }
