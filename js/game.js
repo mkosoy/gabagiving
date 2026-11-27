@@ -2602,6 +2602,14 @@ const MISSION_DEFS = {
       { scene: 'club', x: 202, y: 182, radius: 46, objective: 'Report back to Christopher — tell him NOTHING was read', label: 'Christopher' }
     ]
   },
+  oddJob: {
+    title: 'ODD JOB',
+    payout: 80, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 250, radius: 60, objective: 'Deliver the parcel', label: 'the drop' },
+      { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2743,6 +2751,10 @@ function advanceMission() {
         { speaker: 'christopher', text: 'You didn’t read it. Swear. SWEAR. …Okay. Okay. Because the part where the mobster’s mother is ALSO his therapist — that’s fiction. That’s pure fiction, it’s not — people wouldn’t understand the layers. Here. $210. You’re a good friend of mine, you know that?' },
         { speaker: 'narrator', text: 'Three copies of “BARKATHTON” — a revenge epic about a man whose dog is elected senator — are gone forever. Cinema mourns quietly, not knowing why.' },
         { speaker: 'system', text: 'MISSION PASSED — THE SCREENPLAY. Some stories must never be told.' }
+      ],
+      oddJob: [
+        { speaker: 'newman', text: 'Delivered. On time. Undamaged. Unopened — mostly certain. The mail machine grinds on, and you, my friend, are a very small but very reliable cog. Hee hee.' },
+        { speaker: 'system', text: 'ODD JOB COMPLETE. There will always be another parcel. The mail is eternal.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2920,6 +2932,10 @@ function updateMission(dt) {
         screenplay: [
           { speaker: 'narrator', text: 'A hundred pages, still warm from the club office printer. The title page reads “BARKATHTON — by C.M.” You burn it without reading a word, which is either loyalty or a crime against comedy. Page forty-three curls away last: “the dog filibusters for nine hours…”' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A dog senator is ridiculous. A dog COMPTROLLER — now that has teeth. I should write my own!' : 'I didn’t read nothin’. I burned it with my eyes closed. …The dog part was almost good, though. I’m not made of stone.' }
+        ],
+        oddJob: [
+          { speaker: 'narrator', text: 'The parcel changes hands. No names. No questions. Somewhere, a sorting machine hums with approval.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Delivered! I’m a machine! A very tired, underpaid machine!' : 'Yeah, yeah. Next one. The mail’s eternal — so’s my cut.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -5775,6 +5791,29 @@ function hubInteractions() {
         startDialog([
           offers[mid],
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      }
+      else if (!state.mission && state.flags.bigOneDone && state.flags.freeRoam) {
+        // repeatable odd jobs — the mail never ends
+        const drops = [
+          { scene: 'vesuvio', x: 320, y: 250, radius: 60, name: 'Vesuvio — “kitchen supplies”, do not shake it' },
+          { scene: 'satriale', x: 320, y: 200, radius: 60, name: 'Satriale’s — it’s cold. why is it cold. don’t ask' },
+          { scene: 'bodega', x: 320, y: 200, radius: 60, name: 'the Manhattan bodega — the usual spot' },
+          { scene: 'cabin', x: 180, y: 300, radius: 60, name: 'the cabin in the Pines — yes, THAT Pines. hee hee' },
+          { scene: 'costanza', x: 320, y: 260, radius: 70, name: 'the Costanza house — ring twice, ignore the shouting' },
+          { scene: 'slice', x: 320, y: 200, radius: 60, name: 'Ray’s — the original. probably. they all say that' },
+          { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop — it smells like sugar and secrets' }
+        ];
+        const drop = drops[Math.floor(Math.random() * drops.length)];
+        MISSION_DEFS.oddJob.payout = 60 + Math.floor(Math.random() * 50);
+        MISSION_DEFS.oddJob.steps = [
+          { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Deliver the parcel — ${drop.name.split('—')[0].trim()}`, label: 'the drop' },
+          { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
+        ];
+        startMission('oddJob');
+        startDialog([
+          { speaker: 'newman', text: `The legend returns! Perfect timing — a parcel needs legs. ${drop.name}. $${MISSION_DEFS.oddJob.payout}. The mail never ends, my friend. It NEVER. ENDS.` },
+          { speaker: 'system', text: 'Mission accepted: ODD JOB. Repeatable work — the mail is eternal.' }
         ]);
       }
       else if (state.flags.bigOneDone) startDialog([
