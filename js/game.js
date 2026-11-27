@@ -314,6 +314,7 @@ function saveWorld() {
     const out = {};
     for (const k of WORLD_FLAGS) if (state.flags[k]) out[k] = state.flags[k];
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
+    out.stash = state.flags.stash || 0; // same — an emptied mattress must stay empty
     out.money = state.money || 0;
     out.heat = state.flags.heat || 0;
     if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step, steps: state.mission.steps, payout: state.mission.payout, timeLeft: state.mission.deadline ? (state.mission.deadline - state.time) : null };
@@ -326,6 +327,7 @@ function loadWorld() {
     const w = JSON.parse(localStorage.getItem('gabagiving-world-v1') || '{}');
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
+    if (typeof w.stash === 'number') state.flags.stash = w.stash;
     if (typeof w.money === 'number') state.money = w.money;
     if (typeof w.heat === 'number') state.flags.heat = w.heat;
     if (w.scene && scenes[w.scene] && typeof w.px === 'number' && state.flags.freeRoam) {
@@ -3989,27 +3991,25 @@ function houseInteractions() {
   if (s === 4) list.push({ x: 291, y: 24, w: 35, h: 44, label: 'Check mirror', action: checkMirror });
   if (s === 5) list.push({ x: 78, y: 240, w: 112, h: 46, label: 'Sit on couch', action: sitCouch });
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
-  if (state.flags.freeRoam) list.push({ x: 500, y: 60, w: 90, h: 50, radius: 50, label: 'The mattress — the family vault', action: () => {
+  if (state.flags.freeRoam) list.push({ x: 500, y: 60, w: 44, h: 50, radius: 46, label: 'Mattress — stash cash', action: () => {
+    if (state.money < 20) { startDialog([{ speaker: 'narrator', text: 'The mattress. King size, queen problems. You need at least $20 on you to make a deposit worth hiding. Every dollar you carry is a dollar the cops can fine — what’s in the mattress, they never find.' }]); return; }
+    const amt = Math.min(state.money, 20 + Math.floor((state.flags.stash || 0) * 0) + Math.floor(state.money * .25));
+    state.money -= amt;
+    state.flags.stash = (state.flags.stash || 0) + amt;
+    audio.sfx('cash');
+    startDialog([
+      { speaker: 'narrator', text: `You fold $${amt} into the mattress, in the spot even Carmela doesn’t know. Mattress total: $${state.flags.stash}. The mattress does not judge. The mattress does not testify.` },
+      { speaker: 'system', text: `Carrying $${state.money} · mattress $${state.flags.stash}. Busted fines only touch what you carry.` }
+    ]);
+  } });
+  if (state.flags.freeRoam) list.push({ x: 548, y: 60, w: 44, h: 50, radius: 46, label: 'Mattress — pull the stash', action: () => {
     const stash = state.flags.stash || 0;
-    const opts = [];
-    if (state.money >= 20) opts.push('stash some');
-    if (stash > 0) opts.push('take some out');
-    if (!opts.length) { startDialog([{ speaker: 'narrator', text: 'The mattress. King size, queen problems. There’s nothing in it yet — every dollar you carry is a dollar the cops can fine. Word to the wise: busted cops take 15% of what you’re CARRYING. What’s in the mattress, they never find.' }]); return; }
-    if (opts[0] === 'stash some') {
-      const amt = Math.min(state.money, Math.max(20, Math.floor(state.money / 2)));
-      state.money -= amt;
-      state.flags.stash = stash + amt;
-      audio.sfx('cash');
-      startDialog([
-        { speaker: 'narrator', text: `You fold $${amt} into the mattress, in the spot even Carmela doesn’t know. Mattress total: $${state.flags.stash}. The mattress does not judge. The mattress does not testify. The mattress is the most loyal member of this family.` },
-        { speaker: 'system', text: `Carrying $${state.money} · mattress $${state.flags.stash}. Busted fines only touch what you carry.` }
-      ]);
-    } else {
-      state.money += stash;
-      state.flags.stash = 0;
-      audio.sfx('cash');
-      startDialog([{ speaker: 'narrator', text: `You pull the whole stash — $${stash} — out of the mattress. It smells faintly of sleep and good decisions. You’re carrying $${state.money}. Spend it before you’re in a position to explain it.` }]);
-    }
+    if (!stash) { toast('Nothing in the mattress but springs and secrets.'); return; }
+    state.money += stash;
+    state.flags.stash = 0;
+    audio.sfx('cash');
+    saveWorld();
+    startDialog([{ speaker: 'narrator', text: `You pull the whole stash — $${stash} — out of the mattress. It smells faintly of sleep and good decisions. You’re carrying $${state.money}. Spend it before you’re in a position to explain it.` }]);
   } });
   if (state.flags.freeRoam) {
     list.push({ x: 108, y: 10, w: 58, h: 28, label: 'Geese update', action: () => startDialog([
