@@ -37,6 +37,12 @@ const sceneArt = {
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
+  casino: loadArt('./assets/bg-casino.webp'),
+  cabin: loadArt('./assets/bg-cabin.webp'),
+  meadow: loadArt('./assets/bg-meadow.webp'),
+  queens: loadArt('./assets/bg-queens.webp'),
+  taffy: loadArt('./assets/bg-taffy.webp'),
+  slice: loadArt('./assets/bg-slice.webp'),
   monks: loadArt('./assets/bg-monks.webp'),
   soup: loadArt('./assets/bg-soup.webp'),
   yankees: loadArt('./assets/bg-yankees.webp'),
@@ -1232,7 +1238,7 @@ const scenes = {
     w: 640, h: 416, label: 'Hunting Cabin · Deep in the Barrens', music: 'dream',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(20,20,120,80), r(480,20,140,90), r(60,240,100,60), r(400,250,120,50)
+      r(80,8,150,110), r(480,8,152,180), r(80,160,200,130), r(612,80,28,240)
     ],
     draw: drawCabin,
     interactions: cabinInteractions
@@ -6922,6 +6928,28 @@ function bodegaInteractions() {
 }
 
 function drawMeadow() {
+  if (drawSceneArt(sceneArt.meadow, 768, 416)) {
+    // horses circling the rail
+    for (let h = 0; h < 3; h++) {
+      const ang = state.time * .5 + h * 2.1;
+      const hx = 390 + Math.cos(ang) * 72 - state.camera.x;
+      const hy = 125 + Math.sin(ang) * 42 - state.camera.y;
+      px(ctx, hx, hy, 8, 5, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+      px(ctx, hx + 6, hy - 2, 3, 3, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+    }
+    for (let s = 0; s < 4; s++) {
+      const sy = 300 - ((state.time * 20 + s * 18) % 60);
+      ctx.save();
+      ctx.globalAlpha = .3;
+      px(ctx, 110 + s * 4 - state.camera.x, sy - state.camera.y, 4, 4, '#aaa');
+      ctx.restore();
+    }
+    const fx2 = 150 + Math.sin(state.time * .3) * 30;
+    drawPerson(ctx, fx2 - state.camera.x, 320 - state.camera.y, 'manA', 'down', state.frame, { pose: 'walk' });
+    drawHighwaySign(660, 150, ['NJ TURNPIKE', '← NORTH CALDWELL']);
+    drawHighwaySign(60, 200, ['ROUTE 3 WEST', '← THE NEIGHBORHOOD']);
+    return;
+  }
   px(ctx, 0, 0, 768, 416, '#23301f');
   // swampy flatlands
   for (let i = 0; i < 30; i++) {
@@ -7023,6 +7051,19 @@ function meadowInteractions() {
 }
 
 function drawCabin() {
+  if (drawSceneArt(sceneArt.cabin, 640, 416)) {
+    ctx.save();
+    ctx.globalAlpha = .14 + Math.sin(state.time * 9) * .05;
+    ctx.fillStyle = '#e8a54a';
+    ctx.beginPath();
+    ctx.arc(80 - state.camera.x, 130 - state.camera.y, 120, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    const cfl = Math.sin(state.time * 9) * 4;
+    px(ctx, 66 - state.camera.x, 66 - cfl - state.camera.y, 12, 18 + cfl, '#e8722a');
+    px(ctx, 78 - state.camera.x, 60 - cfl - state.camera.y, 10, 24 + cfl, '#ffd23e');
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#2a2018');
   // plank floor
   for (let fy = 0; fy < 416; fy += 16) px(ctx, 0, fy, 640, 1, '#241b13');
@@ -7069,7 +7110,7 @@ function cabinInteractions() {
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the clearing', action: () => {
       startDialog([{ speaker: 'narrator', text: 'You step out of the cabin. The pines are exactly where you left them. The pines are always exactly where you left them. That’s what’s unsettling.' }], () => setScene('pines', 430, 240));
     } },
-    { x: 100, y: 130, w: 60, h: 40, radius: 44, label: 'Warm up by the fire', action: () => {
+    { x: 150, y: 120, w: 60, h: 40, radius: 48, label: 'Warm up by the fire', action: () => {
       audio.sfx('pickup');
       state.flags.heat = Math.max(0, (state.flags.heat || 0) - 1);
       startDialog(state.player.kind === 'george' ? [
@@ -7084,7 +7125,7 @@ function cabinInteractions() {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'You eat beans out of the can, cold, with a spoon somebody left in 1987. On Thanksgiving. There is a version of your life where this is a low point. In this version, honestly, it’s not bad.' }]);
     } },
-    { x: 100, y: 270, w: 60, h: 30, radius: 40, label: 'Play checkers against yourself', action: () => {
+    { x: 180, y: 300, w: 60, h: 30, radius: 44, label: 'Play checkers against yourself', action: () => {
       audio.sfx('pickup');
       const won = Math.random() < .5;
       startDialog([{ speaker: 'narrator', text: won ? 'You play checkers against yourself and win. You also lose. Somewhere in the Barrens, a balance is maintained. You feel smarter and dumber at the same time.' : 'You play checkers against yourself and lose. To yourself. You demand a rematch. You lose that too. The Barrens does this to people.' }]);
@@ -7098,6 +7139,19 @@ function cabinInteractions() {
 }
 
 function drawTaffy() {
+  if (drawSceneArt(sceneArt.taffy, 640, 416)) {
+    const pull2 = Math.sin(state.time * 2.4) * 6;
+    ctx.save();
+    ctx.globalAlpha = .35;
+    px(ctx, 120 + pull2 - state.camera.x, 66 - state.camera.y, 40, 8, '#f0c9dc');
+    ctx.restore();
+    const ga2 = state.time * 1.4;
+    const gx3 = 320 + Math.cos(ga2) * 130 - state.camera.x;
+    const gy3 = 200 + Math.sin(ga2) * 60 - state.camera.y;
+    px(ctx, gx3, gy3, 7, 4, '#e8e8e8');
+    px(ctx, gx3 + 5, gy3 - 2, 3, 3, '#e8c93e');
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#c9b8a0');
   // checkered floor
   for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
@@ -7166,6 +7220,18 @@ function taffyInteractions() {
 }
 
 function drawSlice() {
+  if (drawSceneArt(sceneArt.slice, 640, 416)) {
+    ctx.save();
+    ctx.globalAlpha = .12 + Math.sin(state.time * 8) * .04;
+    ctx.fillStyle = '#e8722a';
+    ctx.beginPath();
+    ctx.arc(510 - state.camera.x, 70 - state.camera.y, 80, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    const pgx = 300 + Math.sin(state.time * .7) * 60;
+    drawPerson(ctx, pgx - state.camera.x, 100 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'walk' });
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#3a2a22');
   // tile floor
   for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
@@ -7229,6 +7295,20 @@ function sliceInteractions() {
 }
 
 function drawCasino() {
+  if (drawSceneArt(sceneArt.casino, 640, 416)) {
+    ctx.save();
+    ctx.globalAlpha = .1 + Math.sin(state.time * 2) * .03;
+    ctx.fillStyle = '#ffd76a';
+    ctx.beginPath();
+    ctx.arc(320 - state.camera.x, 40 - state.camera.y, 200, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    drawPerson(ctx, 210 - state.camera.x, 235 - state.camera.y, 'manA', 'down', 0, {});
+    drawPerson(ctx, 470 - state.camera.x, 235 - state.camera.y, 'womanB', 'down', 0, {});
+    const gcx = 180 + Math.sin(state.time * .4) * 20;
+    drawPerson(ctx, gcx - state.camera.x, 330 - state.camera.y, 'bobby', 'up', 0, {});
+    return;
+  }
   px(ctx, 0, 0, 640, 416, '#2a1a2e');
   // gaudy carpet
   for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
@@ -7300,6 +7380,20 @@ function casinoInteractions() {
 }
 
 function drawQueens() {
+  if (drawSceneArt(sceneArt.queens, 768, 416)) {
+    const qx = 200 + Math.sin(state.time * .25) * 140;
+    drawPerson(ctx, qx - state.camera.x, 290 - state.camera.y, 'womanC', Math.sin(state.time * .25) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
+    const qx2 = 600 - Math.sin(state.time * .31) * 120;
+    drawPerson(ctx, qx2 - state.camera.x, 270 - state.camera.y, 'manA', Math.sin(state.time * .31) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
+    drawHighwaySign(620, 250, ['SUBWAY →', 'MANHATTAN']);
+    // drifting autumn leaves
+    for (let lf = 0; lf < 5; lf++) {
+      const lx = ((lf * 173 + state.time * 22) % 790) - state.camera.x;
+      const ly = 200 + Math.sin(state.time * 1.3 + lf * 2) * 60 + lf * 30 - state.camera.y;
+      px(ctx, lx, ly, 3, 3, ['#e8722a', '#d4a017', '#c94030'][lf % 3]);
+    }
+    return;
+  }
   px(ctx, 0, 0, 768, 416, '#3d3830');
   // row houses — brick, aluminum siding, ambition
   const houses = [[40, '#7a4a3a'], [300, '#6a5a4a'], [560, '#5a6a7a']];
