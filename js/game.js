@@ -309,7 +309,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2713,6 +2713,20 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
     ]
   },
+  bigScore: {
+    title: 'THE BIG SCORE',
+    payout: 400, heat: 2, timeLimit: 420,
+    failDialog: [
+      { speaker: 'narrator', text: 'Too slow. The registers get refilled, the cage gets a second guard, and the window closes. Silvio doesn’t say anything. Silvio not saying anything is the worst sound in the world.' },
+      { speaker: 'system', text: 'MISSION FAILED — talk to Silvio to retry.' }
+    ],
+    steps: [
+      { scene: 'bodega', x: 340, y: 130, radius: 52, objective: 'First hit — the bodega register, Washington Heights', label: 'the bodega takes the fall' },
+      { scene: 'slice', x: 540, y: 130, radius: 52, objective: 'Second hit — Ray’s register, during the oven rush', label: 'the slice joint takes the fall' },
+      { scene: 'casino', x: 540, y: 118, radius: 52, objective: 'The big one — the Dunes cashier cage, Atlantic City', label: 'the cage takes the fall' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Get the take back to Silvio — do NOT get busted on the way', label: 'Silvio' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -2903,6 +2917,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'Flashback, ninety minutes ago, the Endgame Diner: Tony sits down between the two of them and says nothing for four full minutes. Then he orders onion rings for the table. Then he says, “we’re done here, yeah?” They are done there. The rings were excellent. Nobody touched the pie — nobody EVER touches the pie.' },
         { speaker: 'silvio', text: 'The four-minute silence. The rings for the table. Classic. You know the man in the members-only jacket nodded at you? He never nods. $220.' },
         { speaker: 'tony', text: 'Half of this job is knowing when to shut up. The other half is onion rings.' }
+      ],
+      bigScore: [
+        { speaker: 'narrator', text: 'Three registers, one night, one very unhappy police precinct. You slide the bundle across the table at the Bing. Silvio counts it without licking his thumb, because he’s a professional.' },
+        { speaker: 'silvio', text: 'The bodega. The slice joint. The CAGE? In one night? You know what the crew’s calling you behind your back? Don’t answer — it’s respectful, that’s the point. $400. And lay LOW for a while.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I can’t believe it worked! I mean — I CAN believe it! I planned it! Vandelay Industries doesn’t DO small-time! …please stop looking at me like that.' : 'The cage guy had a sandwich in his hand. Never even put it down. That’s professionalism. We’re all professionals out here.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -3168,6 +3187,10 @@ function updateMission(dt) {
         paulieShoe: [
           { speaker: 'narrator', text: 'You part the frozen brush where Paulie swears — SWEARS — he was only slightly disoriented. Nothing but frost, a rusted can of something unlabeled, and the deep suspicion that the trees are laughing.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m shoe-hunting in a haunted forest! For PAULIE! He doesn’t even tip!' : 'The shoe’s a size extra-wide. The forest is four hundred acres. This is what we in the business call a long shot.' }
+        ],
+        bigScore: [
+          { speaker: 'narrator', text: 'The bodega register never stood a chance. The cat watches from the counter with the detached interest of a creature that has seen eleven robberies this month. Lotto scratchers rain like confetti.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m doing it! I’m actually — this is a CRIME. An actual crime! …I feel ALIVE!' : 'One down. Clock’s ticking.' }
         ],
         sitDown: [
           { speaker: 'narrator', text: 'The back booth. Two associates, one laminated menu between them like a demilitarized zone. The beef: a parking spot. The shopping-cart incident is not discussed. It hangs in the air like the pie nobody will touch.' },
@@ -4927,7 +4950,15 @@ function clubInteractions() {
     ]);
   } });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
-    if (!state.mission && state.flags.freeRoam && state.flags.screenplayDone && !state.flags.sitDownDone) {
+    if (!state.mission && state.flags.freeRoam && state.flags.sitDownDone && !state.flags.bigScoreDone) {
+      startMission('bigScore');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+      startDialog([
+        { speaker: 'silvio', text: 'You want the big one? The BIG one? Fine. Three hits, one night: the bodega in the Heights, the slice joint, and then — the Dunes cage. In and out, no stopping, no heroics. The clock is your worst enemy. Well — second worst.' },
+        { speaker: 'silvio', text: '$400 for the night’s work. You get busted, you never heard of me, and I DEFINITELY never heard of you. Clock starts now.' },
+        { speaker: 'system', text: 'Mission accepted: THE BIG SCORE. Three hits before the window closes.' }
+      ]);
+    } else if (!state.mission && state.flags.freeRoam && state.flags.screenplayDone && !state.flags.sitDownDone) {
       startMission('sitDown');
       startDialog([
         { speaker: 'silvio', text: 'One more thing. Two of our — associates — got a beef over a parking spot at the Willowbrook Mall. It’s escalated. There was a shopping cart incident. It needs a sit-down before somebody does something we all gotta explain.' },
@@ -7548,6 +7579,10 @@ function robRegister(place, flavor) {
   audio.sfx('cash');
   audio.sfx('denied');
   spawnEffect(state.player.x + 8, state.player.y - 12, `+$${take} · +2 heat`, '#ff9a7a');
+  if (state.mission && state.mission.id === 'bigScore') {
+    const bsStep = missionStep();
+    if (bsStep && bsStep.scene === state.scene) setTimeout(() => { if (state.mission && state.mission.id === 'bigScore' && missionStep() && missionStep().scene === state.scene) advanceMission(); }, 60);
+  }
   startDialog([
     { speaker: 'narrator', text: flavor },
     { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a criminal now! A real one! I need to tell — no wait. I need to tell NOBODY. This is hard!' : `+${take}. Shoulda been more, but it’s Thanksgiving. Even robbery got a season.` }
