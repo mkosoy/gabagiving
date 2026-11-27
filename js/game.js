@@ -7876,7 +7876,8 @@ function pkRank(hand) {
   const counts = {};
   vs.forEach(v => counts[v] = (counts[v] || 0) + 1);
   const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c })).sort((a, b) => b.c - a.c || b.v - a.v);
-  const flat = groups.flatMap(g => Array(g.c).fill(g.v));
+  let flat = groups.flatMap(g => Array(g.c).fill(g.v));
+  if (uniq.join(',') === '2,3,4,5,14') flat = [5, 4, 3, 2, 14]; // wheel: ace plays low
   let rank = 0;
   if (straight && flush) rank = 8;
   else if (groups[0].c === 4) rank = 7;
@@ -7948,31 +7949,44 @@ function updatePoker(dt) {
       p.phase = 'reveal'; p.t = 0;
       audio.sfx('smash');
     }
-    if (consume(['Escape', 'KeyM'])) {
-      state.poker = null; state.mode = 'explore';
-      startDialog([{ speaker: 'narrator', text: 'You fold before the draw. Silvio nods slowly, filing this away. The twenty dollars stays on the felt, where it will live now.' }]);
-    }
   } else if (p.phase === 'reveal') {
     if (p.t > 2.2 || consume(['KeyE', 'KeyB'])) {
       const pr = pkRank(p.player.hand);
       const ranked = p.ai.map(ai => ({ ai, r: pkRank(ai.hand) }));
-      let best = pr, winner = 'player';
-      for (const e of ranked) if (pkCompare(e.r, best) > 0) { best = e.r; winner = e.ai.name; }
+      const seats = [{ name: 'player', r: pr }, ...ranked.map(e => ({ name: e.ai.name, r: e.r }))];
+      let best = pr;
+      for (const s of seats) if (pkCompare(s.r, best) > 0) best = s.r;
+      const winners = seats.filter(s => pkCompare(s.r, best) === 0).map(s => s.name);
       p.playerRank = pr;
-      p.result = winner;
+      const playerWon = winners.length === 1 && winners[0] === 'player';
+      const playerTied = winners.includes('player') && winners.length > 1;
+      p.result = playerWon ? 'player' : playerTied ? 'tie' : winners[0];
+      p.winners = winners;
       p.phase = 'done'; p.t = 0;
-      if (winner === 'player') {
+      if (playerWon) {
         state.flags.tribute = (state.flags.tribute || 0) + p.pot;
         state.stats.pokerWins = (state.stats.pokerWins || 0) + 1;
         audio.sfx('cash');
+      } else if (playerTied) {
+        const share = Math.floor(p.pot / winners.length);
+        state.flags.tribute = (state.flags.tribute || 0) + share;
+        p.share = share;
+        audio.sfx('pickup');
       } else audio.sfx('buzzer');
     }
   } else if (p.phase === 'done') {
     if (p.t > .8 && consume(['KeyE', 'KeyB', 'Space'])) {
       const won = p.result === 'player';
+      const tied = p.result === 'tie';
+      const share = p.share || 0;
+      const others = (p.winners || []).filter(w => w !== 'player').join(' and ');
       const pname = pkName(p.playerRank[0]);
       state.poker = null; state.mode = 'explore';
-      if (won) {
+      if (tied) {
+        startDialog([
+          { speaker: 'narrator', text: 'Dead heat — you and ' + others + ' show the same hand. The pot splits: $' + share + ' comes back to you. Paulie inspects both hands for a full minute, looking for the difference. There is no difference. That’s what a tie IS, Paulie.' }
+        ]);
+      } else if (won) {
         startDialog([
           { speaker: 'narrator', text: 'You rake the pot with ' + pname + '. $80 across the felt. Christopher throws his cards like they personally betrayed him, which, in a sense, they did.' },
           { speaker: 'silvio', text: 'Nice hand. Don’t make a habit of it.' }
@@ -8063,7 +8077,7 @@ function drawPoker() {
   ctx.fillStyle = '#e8dcc8';
   ctx.font = '10px monospace';
   if (p.phase === 'select') {
-    ctx.fillText('◀ ▶ choose · E mark for discard · B draw · M fold', 320, 320);
+    ctx.fillText('◀ ▶ choose · E mark for discard · B draw', 320, 320);
     ctx.fillStyle = '#b8a88a';
     ctx.fillText('marked cards get replaced — the table is watching', 320, 334);
   } else if (p.phase === 'reveal') {
@@ -8072,7 +8086,7 @@ function drawPoker() {
     const won = p.result === 'player';
     ctx.fillStyle = won ? '#9be59b' : '#ff9a8a';
     ctx.font = 'bold 12px monospace';
-    ctx.fillText(won ? 'YOU TAKE THE POT — ' + pkName(p.playerRank[0]).toUpperCase() : p.result.toUpperCase() + ' TAKES IT — you had ' + pkName(p.playerRank[0]), 320, 318);
+    ctx.fillText(won ? 'YOU TAKE THE POT — ' + pkName(p.playerRank[0]).toUpperCase() : p.result === 'tie' ? 'SPLIT POT — $' + (p.share || 0) + ' back to you' : p.result.toUpperCase() + ' TAKES IT — you had ' + pkName(p.playerRank[0]), 320, 318);
     ctx.fillStyle = '#b8a88a';
     ctx.font = '10px monospace';
     ctx.fillText('E to leave the table', 320, 336);
