@@ -3041,7 +3041,7 @@ function drawMissionHud() {
   const m = state.mission;
   if (!m) return;
   const def = MISSION_DEFS[m.id];
-  const st = def.steps[m.step];
+  const st = (m.steps || def.steps)[m.step];
   // objective banner, fixed to screen
   ctx.fillStyle = 'rgba(5,8,14,.72)';
   ctx.fillRect(140, 8, 360, 30);
@@ -5834,28 +5834,7 @@ function hubInteractions() {
       } else startDialog([{ speaker: 'narrator', text: 'The geese remember you. Geese never forget. That’s not a comforting trait in a goose.' }]);
     } },
     { x: 400, y: 300, w: 90, h: 40, radius: 40, label: 'Borrow car', action: () => {
-      if (state.player.inCar) return;
-      // every steal is a different car — color, speed, and dignity vary
-      const fleet = [
-        { speed: 230, color: '#a02828', name: 'a CORVETTE', line: state.player.kind === 'george' ? 'A CORVETTE! Midlife crisis complete! I’ve never felt so alive and so doomed!' : 'Red Corvette. Subtle as a heart attack. Perfect.' },
-        { speed: 190, color: '#3d6b35', name: 'a sensible sedan', line: state.player.kind === 'george' ? 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' : 'Nice car. Means it’s my car now. That’s how that works.' },
-        { speed: 160, color: '#b8a888', name: 'a wood-paneled station wagon', line: state.player.kind === 'george' ? 'A station wagon. Wood paneling. This is exactly the car I deserve and I hate it!' : 'A wagon. Slow. But nobody — NOBODY — suspects the wagon.' },
-        { speed: 205, color: '#2848a0', name: 'an unmarked-looking cruiser', line: state.player.kind === 'george' ? 'Is this a cop car? It LOOKS like a cop car. If it’s a cop car I’m just — test driving it! For the city!' : 'Ex-cop car. Still got the spotlight. Heh.' }
-      ];
-      const car = fleet[Math.floor(Math.random() * fleet.length)];
-      state.player.inCar = true;
-      state.player.speed = car.speed;
-      state.player.carColor = car.color;
-      state.player.carDamage = 0;
-      state.player.carV = 0;
-      audio.sfx('door');
-      audio.sfx('honk');
-      state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
-      spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
-      startDialog([
-        { speaker: 'narrator', text: `It's ${car.name}. Keys in the ignition, because New Jersey.` },
-        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: car.line }
-      ]);
+      stealRandomCar();
     } },
     { x: 330, y: 168, w: 92, h: 36, label: 'Chase replay', action: () => {
       initDrive();
@@ -10829,6 +10808,7 @@ function resetGame() {
   state.menu = null;
   state.npcs = {};
   state.movers = [];
+  state.money = 0;
   loadWorld();
   audio.setMusic('title');
 }
