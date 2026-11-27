@@ -332,7 +332,7 @@ function loadWorld() {
       state.player.x = w.px;
       state.player.y = w.py;
     }
-    const isRepeatable = ['oddJob', 'kramerJob', 'collection', 'frankJob'].includes(w.mission && w.mission.id);
+    const isRepeatable = ['oddJob', 'kramerJob', 'collection', 'frankJob', 'sliceJob'].includes(w.mission && w.mission.id);
     if (w.mission && MISSION_DEFS[w.mission.id] && (isRepeatable || !state.flags[w.mission.id + 'Done'])) {
       const def = MISSION_DEFS[w.mission.id];
       state.mission = {
@@ -2743,6 +2743,14 @@ const MISSION_DEFS = {
       { scene: 'costanza', x: 140, y: 140, radius: 60, objective: 'Report back to Frank', label: 'Frank' }
     ]
   },
+  sliceJob: {
+    title: 'THE SLICE RUN',
+    payout: 25, heat: 0, timeLimit: 150,
+    steps: [
+      { scene: 'hub', x: 320, y: 260, radius: 70, objective: 'Deliver the pie while it’s hot', label: 'the customer' },
+      { scene: 'slice', x: 320, y: 200, radius: 60, objective: 'Report back to Ray’s', label: 'Ray’s' }
+    ]
+  },
   leoScarf: {
     title: 'THE RE-GIFT',
     payout: 15, heat: 0, timeLimit: 0,
@@ -2913,6 +2921,10 @@ function advanceMission() {
       leoScarf: [
         { speaker: 'narrator', text: 'Leo sniffs the scarf once, decisively. “Still got the gift smell! Danny will never know. You’re a good boy. The eyebrows never lie.” He presses $15 into your hand. It is, somehow, also damp.' },
         { speaker: 'system', text: 'THE RE-GIFT COMPLETE. The circle of giving continues, minus the giving.' }
+      ],
+      sliceJob: [
+        { speaker: 'narrator', text: 'The pie arrives hot. The customer tips in exact change and a conspiracy theory about the other Ray’s. Back at the shop, the counter guy slides your cut across the marble without a word. The oven never stops.' },
+        { speaker: 'system', text: 'THE SLICE RUN COMPLETE. New York is eight million people standing between you and a hot pie.' }
       ],
       frankJob: [
         { speaker: 'womanB', text: 'You did it? Without incident? In THIS neighborhood? Frank, he did it without incident!' },
@@ -7777,6 +7789,32 @@ function sliceInteractions() {
         { speaker: 'george', text: 'This is the food. This is THE food. Everything else is a rumor.' }
       ] : [
         { speaker: 'narrator', text: 'Tony eats the slice standing at the counter like the counter owes him money. It’s not Jersey pizza — he’d never say it is — but at 1am in Manhattan, it does the job and then some.' }
+      ]);
+    } },
+    { x: 300, y: 130, w: 70, h: 30, radius: 44, label: 'The counter guy — delivery work', action: () => {
+      if (state.mission) { toast('Finish your current job first. The pies can wait. The pies are PATIENT.'); return; }
+      if (!state.flags.freeRoam) { startDialog([{ speaker: 'narrator', text: 'The counter guy jerks a thumb at the delivery rack. “You drive? You walk fast? Pies need legs. Come back when you’re your own boss.”' }]); return; }
+      const drops = [
+        { scene: 'hub', x: 180, y: 260, radius: 60, name: 'the blue house in the neighborhood — ring once, the dog bites' },
+        { scene: 'hub', x: 470, y: 300, radius: 60, name: 'the corner house in the neighborhood — exact change, ALWAYS exact change' },
+        { scene: 'queens', x: 250, y: 260, radius: 60, name: 'Queens — the house with the plastic on the couch. you know the one' },
+        { scene: 'queens', x: 420, y: 180, radius: 60, name: 'Queens — knock loud, the tv is ALWAYS loud' },
+        { scene: 'nyc', x: 300, y: 300, radius: 60, name: 'the walkup — fourth floor, no elevator, no excuses' }
+      ];
+      const drop = drops[Math.floor(Math.random() * drops.length)];
+      const rolledPay = 18 + Math.floor(Math.random() * 20);
+      startMission('sliceJob');
+      state.mission.payout = rolledPay;
+      state.mission.timeLimit = 150;
+      state.mission.deadline = state.time + 150;
+      state.mission.steps = [
+        { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Deliver the pie — ${drop.name.split('—')[0].trim()} — before it goes cold`, label: 'the customer' },
+        { scene: 'slice', x: 320, y: 200, radius: 60, objective: 'Report back to Ray’s', label: 'Ray’s' }
+      ];
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: `The counter guy slides a pie across the marble. “${drop.name}. $${rolledPay} plus whatever they tip, which is nothing, it’s never anything. You got two and a half minutes before it’s just bread and regret.” He is already making the next pie. He was never not making the next pie.` },
+        { speaker: 'system', text: 'Mission accepted: THE SLICE RUN. 150 seconds before the pie goes cold. Repeatable work — the oven never stops.' }
       ]);
     } },
     { x: 490, y: 130, w: 80, h: 30, radius: 44, label: 'Watch the oven', action: () => {
