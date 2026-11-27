@@ -1490,6 +1490,8 @@ function updateAmbient(dt) {
     if (typeof weatherRain === 'function' && weatherRain()) {
       spd *= 1.6; // everyone hurries in the rain
       if (Math.random() < dt * .05 && !n.barkT) { n.bark = ['this rain!', 'my hair!', 'c’mon, MOVE'][Math.floor(Math.random() * 3)]; n.barkT = 1.2; }
+    } else if (typeof weatherSnow === 'function' && weatherSnow()) {
+      if (Math.random() < dt * .04 && !n.barkT) { n.bark = ['flurries!', 'it’s really coming down', 'not before the turkey…', 'roads’ll be murder'][Math.floor(Math.random() * 4)]; n.barkT = 1.4; }
     }
     n.x += (dx / d) * spd * dt;
     n.y += (dy / d) * spd * dt;
