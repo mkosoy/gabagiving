@@ -309,7 +309,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2727,6 +2727,15 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Get the take back to Silvio — do NOT get busted on the way', label: 'Silvio' }
     ]
   },
+  soupSummit: {
+    title: 'THE SOUP SUMMIT',
+    payout: 260, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'soup', x: 450, y: 340, radius: 56, objective: 'Acquire the soup — follow the rules, exact change, NO small talk', label: 'the transaction' },
+      { scene: 'vesuvio', x: 320, y: 250, radius: 56, objective: 'Artie inspects the competition’s product', label: 'the inspection' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Deliver the dossier to Silvio', label: 'Silvio' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -2922,6 +2931,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'Three registers, one night, one very unhappy police precinct. You slide the bundle across the table at the Bing. Silvio counts it without licking his thumb, because he’s a professional.' },
         { speaker: 'silvio', text: 'The bodega. The slice joint. The CAGE? In one night? You know what the crew’s calling you behind your back? Don’t answer — it’s respectful, that’s the point. $400. And lay LOW for a while.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I can’t believe it worked! I mean — I CAN believe it! I planned it! Vandelay Industries doesn’t DO small-time! …please stop looking at me like that.' : 'The cage guy had a sandwich in his hand. Never even put it down. That’s professionalism. We’re all professionals out here.' }
+      ],
+      soupSummit: [
+        { speaker: 'narrator', text: 'Silvio reads Artie’s tasting notes like a war briefing. “The crab bisque is a problem,” he says finally. “A structural problem. Nobody tells Artie — he’d never recover. It stays in the family.”' },
+        { speaker: 'silvio', text: 'You carried soup across state lines without spilling a drop, which — between us — is more than I can say for the last three guys we trusted with liquid assets. $260. And remember: the bisque conversation never happened.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I followed every rule! Exact change! No small talk! I ordered like a MACHINE! …I did look at the bread a little longingly, but who didn’t!' : 'Two and a half hours to move soup. You know what — worth it. Artie cried a little. I ain’t saying why.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -3196,6 +3210,10 @@ function updateMission(dt) {
         paulieShoe: [
           { speaker: 'narrator', text: 'You part the frozen brush where Paulie swears — SWEARS — he was only slightly disoriented. Nothing but frost, a rusted can of something unlabeled, and the deep suspicion that the trees are laughing.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m shoe-hunting in a haunted forest! For PAULIE! He doesn’t even tip!' : 'The shoe’s a size extra-wide. The forest is four hundred acres. This is what we in the business call a long shot.' }
+        ],
+        soupSummit: [
+          { speaker: 'narrator', text: 'The transaction is flawless. Exact change, order stated plainly, no small talk, move to the left. The Soup Man hands over the containers with the solemnity of a man defusing ordnance. One mulligatawny. One crab bisque. Do not shake them. Do not even THINK about the bread.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I did it! PERFECT protocol! He almost — ALMOST — nodded at me!' : 'Guy runs soup like I run waste management. Respect. Quiet, exact, no questions.' }
         ],
         bigScore: [
           { speaker: 'narrator', text: 'The bodega register never stood a chance. The cat watches from the counter with the detached interest of a creature that has seen eleven robberies this month. Lotto scratchers rain like confetti.' },
@@ -4990,7 +5008,14 @@ function clubInteractions() {
     ]);
   } });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
-    if (!state.mission && state.flags.freeRoam && state.flags.sitDownDone && !state.flags.bigScoreDone) {
+    if (!state.mission && state.flags.freeRoam && state.flags.bigScoreDone && !state.flags.soupSummitDone) {
+      startMission('soupSummit');
+      startDialog([
+        { speaker: 'silvio', text: 'Competitive intelligence. There’s a soup operation in Manhattan — you know the one. Lines around the block. A dictator with a ladle. Artie’s losing customers to a COUNTER.' },
+        { speaker: 'silvio', text: 'Get me two containers — mulligatawny and the crab bisque — unshaken, unspilled, and you do NOT anger the man. Artie tastes, we assess. This is industrial espionage, soup division. $260. And kid — exact change.' },
+        { speaker: 'system', text: 'Mission accepted: THE SOUP SUMMIT. Two worlds. One ladle.' }
+      ]);
+    } else if (!state.mission && state.flags.freeRoam && state.flags.sitDownDone && !state.flags.bigScoreDone) {
       startMission('bigScore');
       state.registerCd_bodega = 0;
       state.registerCd_slice = 0;
