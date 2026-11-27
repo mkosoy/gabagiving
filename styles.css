@@ -153,6 +153,9 @@ html, body {
   #touchControls { display: block; }
 }
 @media (max-height: 430px) {
+  #btnF { top: calc(56px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); }
+  #btnR { top: calc(56px + env(safe-area-inset-top)); right: calc(70px + env(safe-area-inset-right)); }
+  #btnS { top: calc(56px + env(safe-area-inset-top)); right: calc(130px + env(safe-area-inset-right)); }
   #stickZone { transform: scale(.78); transform-origin: bottom left; }
   #touchButtons { transform: scale(.82); transform-origin: bottom right; }
 }

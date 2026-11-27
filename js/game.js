@@ -11302,9 +11302,16 @@ function update(dt) {
     pressed.clear();
   }
   if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
-    resetGame();
+    const nowT = performance.now();
+    if (state._resetArmT && nowT - state._resetArmT < 1500) {
+      state._resetArmT = 0;
+      resetGame();
+      pressed.clear();
+      return;
+    }
+    state._resetArmT = nowT;
+    toast('Tap ↻ again to restart — progress since your last save is lost. Once more with feeling.');
     pressed.clear();
-    return;
   }
 
   if (state.mode === 'title') {
