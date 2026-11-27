@@ -1252,6 +1252,13 @@ function updateAmbient(dt) {
     }
     let spd = n.fleeing ? n.speed * 2.2 : n.speed;
     if (!n.barkT && Math.random() < dt * .008) {
+      const grateful = state.flags.feastDone && Math.random() < .3;
+      if (grateful) {
+        const thanks = ['the feast! legendary!', 'you did that, didn’t ya', 'best thanksgiving in years', 'artie sends his love'];
+        n.bark = thanks[Math.floor(Math.random() * thanks.length)];
+        n.barkT = 1.8;
+        continue;
+      }
       const idle = state.scene === 'nyc'
         ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
         : state.scene === 'shore' || state.scene === 'ac'
