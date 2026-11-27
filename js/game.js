@@ -816,6 +816,32 @@ function drawFastTravel() {
     ctx.fillText(label, n.x, n.y - 13);
   });
 
+  // active mission objective pulses on the atlas
+  if (state.mission && MISSION_DEFS[state.mission.id]) {
+    const mstep = MISSION_DEFS[state.mission.id].steps[state.mission.step];
+    if (mstep) {
+      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac' };
+      const targetScene = hostRegion[mstep.scene] || mstep.scene;
+      const target = FT_NODES.find((n) => n.id === targetScene);
+      if (target) {
+        const mp = (Math.sin(state.time * 5) + 1) / 2;
+        ctx.strokeStyle = `rgba(255,90,90,${.5 + mp * .5})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(target.x, target.y - 22 - mp * 4);
+        ctx.lineTo(target.x + 9, target.y - 8 - mp * 4);
+        ctx.lineTo(target.x, target.y + 6 - mp * 4);
+        ctx.lineTo(target.x - 9, target.y - 8 - mp * 4);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = '#ff9a9a';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('OBJECTIVE', target.x, target.y - 28 - mp * 4);
+      }
+    }
+  }
+
   // header + footer backing bar
   ctx.fillStyle = 'rgba(6,10,18,.78)';
   ctx.fillRect(0, 0, 640, 24);
