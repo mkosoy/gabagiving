@@ -7921,7 +7921,7 @@ function queensInteractions() {
         { speaker: 'tony', text: 'Yeah, I know Jerry. Tell him… actually, tell him nothing. You never saw me. Here’s twenty for the trouble — buy yourself a spray tan or whatever you people do.' },
         { speaker: 'narrator', text: 'Leo takes the $20 with both hands and the expression of a man who has never once questioned money. “You’re a good boy! I can tell! The eyebrows never lie!” Somehow YOU are down $20. You’re not sure how that happened. He’s GOOD. −$20' }
       ]);
-      if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20);
+      if (!state.mission && Math.random() < .35) { if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20); }
     } },
     { x: 330, y: 245, w: 50, h: 26, radius: 44, inCarOk: true, label: 'The contested parking space', action: () => {
       if (!state.player.inCar) {
