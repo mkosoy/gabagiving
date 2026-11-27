@@ -9806,6 +9806,28 @@ function drawNyc() {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
   drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
+  // the Manhattan-side tunnel portal — the hole New Jersey comes out of
+  px(ctx, 0, 150, 40, 96, '#6a5a4a');
+  px(ctx, 4, 158, 32, 80, '#1a1410');
+  px(ctx, 0, 150, 40, 8, '#8a7a6a');
+  for (let rib = 0; rib < 4; rib++) px(ctx, 4 + rib * 8, 158, 2, 80, '#4a3a2a');
+  const tl = .5 + Math.sin(state.time * 2) * .15;
+  ctx.save();
+  ctx.globalAlpha = tl;
+  px(ctx, 8, 166, 4, 4, '#ffd23e');
+  px(ctx, 28, 166, 4, 4, '#ffd23e');
+  ctx.restore();
+  // steam — Manhattan breathes
+  if (Math.sin(state.time * .7) > 0) {
+    ctx.save();
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = '#c8c8d0';
+    const sx = 250 + (state.time * 14) % 300;
+    ctx.beginPath();
+    ctx.arc(sx, 216 - (state.time * 20) % 40, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   // Kenny Roger's Roasters — the red neon chicken that never sleeps
   px(ctx, 560, 40, 90, 50, '#2a1a1a');
   const rglow = .55 + Math.sin(state.time * 3) * .2;
