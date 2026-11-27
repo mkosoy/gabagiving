@@ -6298,6 +6298,99 @@ function drawDanceOff() {
   ctx.textAlign = 'left';
 }
 
+function initRoulette() {
+  if (state.money < 20) { toast('Roulette is $20 a spin. The wheel does not do credit.'); return; }
+  state.roulette = { phase: 'bet', pick: null, t: 0, result: null, spinT: 0 };
+  state.mode = 'roulette';
+  audio.sfx('pickup');
+}
+
+function updateRoulette(dt) {
+  const r = state.roulette;
+  if (!r) { state.mode = 'explore'; return; }
+  if (r.phase === 'bet') {
+    if (consume(['ArrowLeft', 'KeyA'])) { r.pick = 'red'; audio.sfx('pickup'); }
+    if (consume(['ArrowRight', 'KeyD'])) { r.pick = 'black'; audio.sfx('pickup'); }
+    if (r.pick && consume(['Space', 'Enter', 'KeyE'])) {
+      state.money -= 20;
+      r.phase = 'spin'; r.spinT = 0;
+      // the wheel decides
+      const roll = Math.random();
+      r.result = roll < .47 ? 'red' : roll < .94 ? 'black' : 'green';
+      r.number = Math.floor(Math.random() * 37);
+      audio.sfx('spin' in audio ? 'spin' : 'pickup');
+    }
+    if (consume(['Escape'])) { state.roulette = null; state.mode = 'explore'; }
+    return;
+  }
+  if (r.phase === 'spin') {
+    r.spinT += dt;
+    if (r.spinT > 3.2) {
+      r.phase = 'done';
+      if (r.result === r.pick) {
+        state.money += 40;
+        audio.sfx('cash');
+      } else audio.sfx('denied');
+    }
+    return;
+  }
+  if (r.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape'])) { state.roulette = null; state.mode = 'explore'; }
+}
+
+function drawRoulette() {
+  const r = state.roulette;
+  if (!r) return;
+  ctx.fillStyle = '#160a20';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ROULETTE — $20 a spin, red or black pays double', 320, 40);
+  // the wheel
+  const cx = 320, cy = 180, rad = 90;
+  for (let i = 0; i < 37; i++) {
+    const a = (i / 37) * Math.PI * 2 + (r.phase === 'spin' ? state.time * (6 - r.spinT * 1.6) : 0);
+    ctx.fillStyle = i === 0 ? '#2a8a3a' : i % 2 === 0 ? '#a02828' : '#1a1a1a';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, rad, a, a + Math.PI * 2 / 37);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#4a3a28';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+  ctx.fill();
+  // the ball
+  if (r.phase === 'spin') {
+    const ba = state.time * (6 - r.spinT * 1.6) * 1.7;
+    const br = 78 - r.spinT * 9;
+    px(ctx, cx + Math.cos(ba) * Math.max(46, br), cy + Math.sin(ba) * Math.max(46, br), 5, 5, '#fff');
+  }
+  if (r.phase === 'bet') {
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px monospace';
+    ctx.fillText('◀ RED or BLACK ▶ · SPACE spins · ESC walks', 320, 316);
+    if (r.pick) {
+      ctx.fillStyle = r.pick === 'red' ? '#f66' : '#ddd';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('on ' + r.pick.toUpperCase() + ' — SPACE to spin', 320, 296);
+    }
+  } else if (r.phase === 'spin') {
+    ctx.fillStyle = '#aaa';
+    ctx.font = '10px monospace';
+    ctx.fillText('the wheel decides…', 320, 316);
+  } else {
+    const won = r.result === r.pick;
+    ctx.fillStyle = r.result === 'red' ? '#f66' : r.result === 'black' ? '#ddd' : '#4a4';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(r.number + ' ' + r.result.toUpperCase(), 320, 296);
+    ctx.fillStyle = won ? '#6f6' : '#f66';
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText(won ? 'WINNER — double your money. +$40' : 'The house thanks you for the twenty. SPACE', 320, 316);
+  }
+  ctx.textAlign = 'left';
+}
+
 function initSlots() {
   state.slots = { reels: ['7', '7', '7'], spinning: false, spinT: 0, result: null, resultT: 0, pulls: 0 };
   state.mode = 'slots';
@@ -7186,6 +7279,7 @@ function casinoInteractions() {
     { x: 130, y: 130, w: 80, h: 30, radius: 46, label: 'The slots — $5 a pull', action: () => initSlots() },
     { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
     { x: 470, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 320, y: 210, w: 70, h: 30, radius: 44, label: 'Roulette — red or black', action: () => initRoulette() },
     { x: 500, y: 130, w: 70, h: 30, radius: 44, label: 'Cashier cage — count your sins', action: () => {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'The cashier counts your chips with the neutral face of a person who has watched ten thousand men have the best and worst nights of their lives in the same chair. Behind her, the vault hums. Everything here is somebody’s fault.' }]);
@@ -10210,6 +10304,7 @@ function render() {
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'danceoff') drawDanceOff();
+  else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
@@ -10597,6 +10692,8 @@ function update(dt) {
     updateSkeeball(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
+  } else if (state.mode === 'roulette') {
+    updateRoulette(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
