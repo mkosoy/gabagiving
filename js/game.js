@@ -5419,6 +5419,7 @@ function soupInteractions() {
       state.money -= 6;
       audio.sfx('pickup');
       state.time += 2;
+      if ((state.flags.hp || 3) < 3) { state.flags.hp = (state.flags.hp || 3) + 1; spawnEffect(state.player.x + 8, state.player.y - 20, '+1 HEALTH', '#9be59b'); }
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'George eats the mulligatawny in the corner, hunched over the cup like it might be repossessed. It is, he admits privately and only to himself, the best soup he has ever had. He would never say this out loud. Saying it out loud is how they take things away from you.' },
         { speaker: 'george', text: '(whispering) it’s perfect. it’s PERFECT. …you didn’t hear anything.' }
@@ -8159,6 +8160,7 @@ function sliceInteractions() {
       state.money -= 3;
       audio.sfx('pickup');
       state.time += 2;
+      if ((state.flags.hp || 3) < 3) { state.flags.hp = (state.flags.hp || 3) + 1; spawnEffect(state.player.x + 8, state.player.y - 20, '+1 HEALTH', '#9be59b'); }
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'George folds the slice lengthwise — the correct way, the only way — and eats it in four bites while walking nowhere in particular. Grease runs down his wrist. He has never been more of a New Yorker and he knows it.' },
         { speaker: 'george', text: 'This is the food. This is THE food. Everything else is a rumor.' }
