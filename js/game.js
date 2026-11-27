@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2557,6 +2557,14 @@ const MISSION_DEFS = {
       { scene: 'vesuvio', x: 320, y: 176, radius: 52, objective: 'Deliver everything to Artie at Vesuvio — before the rush', label: 'Artie' }
     ]
   },
+  shrinkRap: {
+    title: 'THE SHRINK RAP',
+    payout: 220, heat: 0, timeLimit: 0, maxHeat: 3,
+    steps: [
+      { scene: 'nyc', x: 400, y: 250, radius: 80, objective: 'Return the “grateful patient” watch to a Manhattan shop — calmly', label: 'the return' },
+      { scene: 'melfi', x: 170, y: 200, radius: 60, objective: 'Report back to Dr. Melfi — heat under 3 the whole way', label: 'Dr. Melfi' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2684,6 +2692,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'Artie presses $280 into your hand with both of his, the way a man hands over gratitude when words have a health-code violation. The kitchen roars to life behind him.' },
         { speaker: 'system', text: 'MISSION PASSED — THE LAST SUPPLY. Vesuvio lives to feed another rush.' }
       ],
+      shrinkRap: [
+        { speaker: 'melfi', text: 'You returned it. Without violence, without threats, without — and I want you to hear the significance of this — a SINGLE police interaction. Tony, this is what progress looks like. It’s boring and it’s progress.' },
+        { speaker: 'tony', text: 'Two hundred and twenty bucks to walk a watch across the river like a civilian. You know what the worst part is? …I feel GOOD about it. What’re you doing to me?' },
+        { speaker: 'system', text: 'MISSION PASSED — THE SHRINK RAP. Impulse control: one (1) time.' }
+      ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I transported gravy across two municipalities without a single spill! Put it on my resume! MAKE it my resume!' : 'Gravy’s here, Sil. And for the record — nobody touches the gravy. That’s always been the rule.' }
@@ -2769,6 +2782,16 @@ function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
   const m0 = state.mission;
+  if (MISSION_DEFS[m0.id].maxHeat && (state.flags.heat || 0) >= MISSION_DEFS[m0.id].maxHeat) {
+    state.mission = null;
+    audio.sfx('denied');
+    startDialog([
+      { speaker: 'narrator', text: 'Heat. You generated HEAT. The whole point — the ONE point — was no heat. Somewhere across the river, Dr. Melfi crosses out today’s date in her appointment book, twice, angrily.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The heat GENERATED ITSELF! I’m heat-adjacent at worst!' : 'Ah, maronn’. She’s gonna use the disappointed voice. I HATE the disappointed voice.' },
+      { speaker: 'system', text: 'MISSION FAILED — the exercise was impulse control. Talk to Dr. Melfi to retry.' }
+    ]);
+    return;
+  }
   if (m0.deadline && state.time > m0.deadline) {
     const id = m0.id;
     state.mission = null;
@@ -5759,6 +5782,14 @@ function melfiInteractions() {
     ]);
   } });
   list.push({ x: 170, y: 200, w: 120, h: 90, radius: 40, label: 'Your chair', action: () => {
+    if (!state.mission && state.flags.therapyDone && !state.flags.shrinkRapDone && state.flags.freeRoam && state.player.kind !== 'george') {
+      startMission('shrinkRap');
+      startDialog([
+        { speaker: 'melfi', text: 'Before we begin — an exercise. A patient gave me this watch. It’s wildly inappropriate and it must go back to the shop in Manhattan. YOU’RE going to return it. Here’s the exercise: no crimes on the way. No heat, Tony. If the police so much as look at you, the exercise fails. Think you can be a civilian for one afternoon?' },
+        { speaker: 'system', text: 'Mission accepted: THE SHRINK RAP. Keep heat under 3 — no punching, no clipping, no “borrowing”.' }
+      ]);
+      return;
+    }
     if (state.player.kind === 'george') {
       startDialog([
         { speaker: 'melfi', text: 'I’m sorry — you want ME to analyze YOU? I specialize in anxiety, not… whatever constellation this is.' },
