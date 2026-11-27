@@ -610,6 +610,21 @@ function drawDialog() {
   }
 }
 
+function drawToast() {
+  const tm = state.toastMsg;
+  if (!tm) return;
+  ctx.fillStyle = 'rgba(10,10,16,.88)';
+  const w2 = Math.min(560, tm.text.length * 6 + 30);
+  ctx.fillRect((640 - w2) / 2, 366, w2, 24);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect((640 - w2) / 2, 366, w2, 24);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(tm.text, 320, 382);
+  ctx.textAlign = 'left';
+}
+
 function drawTrot() {
   const tr = state.trot;
   if (!tr) return;
@@ -2942,6 +2957,11 @@ function updateExplore(dt) {
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
   }
+}
+
+function toast(text) {
+  state.toastMsg = { text, t: 2.6 };
+  audio.sfx && audio.sfx('denied');
 }
 
 function spawnEffect(x, y, text, color = '#ffe78a') {
@@ -7743,6 +7763,7 @@ function drawWorld() {
   drawObjectiveArrow();
   drawMinimap();
   drawMissionHud();
+  drawToast();
   drawBeacon();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
@@ -8470,6 +8491,7 @@ function update(dt) {
   state.time += dt;
   updateMovers(dt);
   for (const e of state.effects) e.t += dt;
+  if (state.toastMsg) { state.toastMsg.t -= dt; if (state.toastMsg.t <= 0) state.toastMsg = null; }
   state.effects = state.effects.filter((e) => e.t < e.life);
   if (consume(['KeyN'])) {
     const on = audio.toggle();
