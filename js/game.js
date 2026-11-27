@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2547,6 +2547,16 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
     ]
   },
+  artiesMenu: {
+    title: 'THE LAST SUPPLY',
+    payout: 280, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'satriale', x: 320, y: 200, radius: 60, objective: 'Pick up the gabagool reserve at Satriale’s', label: 'the gabagool reserve' },
+      { scene: 'bodega', x: 320, y: 200, radius: 60, objective: 'Get the good bread from the bodega in Manhattan', label: 'the bread' },
+      { scene: 'shore', x: 380, y: 140, radius: 52, objective: 'Catch a fresh fish off the shore pier', label: 'the pier' },
+      { scene: 'vesuvio', x: 320, y: 176, radius: 52, objective: 'Deliver everything to Artie at Vesuvio — before the rush', label: 'Artie' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2668,6 +2678,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
         { speaker: 'silvio', text: 'It lost. THE FIXED HORSE LOST. You know what that means, right? The fix was fixed. Somebody fixed our fix. …Come here. The fifty you lost? You’re not paying it back. THAT’S how much I respect the audacity. $320 for the story. This one gets told at the Bing forever.' },
         { speaker: 'system', text: 'MISSION PASSED — THE FIXED RACE. The house always wins, except when a different house wins.' }
+      ],
+      artiesMenu: [
+        { speaker: 'artie', text: 'The gabagool — the bread — is that FISH still moving? Tony, tonight’s menu writes itself! The rush is SAVED! Charmaine! CHARMAINE — cancel the emergency frozen calamari!' },
+        { speaker: 'narrator', text: 'Artie presses $280 into your hand with both of his, the way a man hands over gratitude when words have a health-code violation. The kitchen roars to life behind him.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE LAST SUPPLY. Vesuvio lives to feed another rush.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2833,6 +2848,10 @@ function updateMission(dt) {
         catalogCaper: [
           { speaker: 'narrator', text: 'A thousand mail-order catalogs, stacked neatly outside the Yankees supply office. Somewhere inside, Steinbrenner senses a disturbance in the mailstream.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I used to WORK here! I’m pretty sure I’m still technically employed here! This is a conflict of EVERYTHING!' : 'Catalogs. This is what the mail does to a man. Remember me when they write the ballad.' }
+        ],
+        artiesMenu: [
+          { speaker: 'narrator', text: 'Behind the counter, under the scale, behind the good prosciutto: the reserve gabagool. Wrapped in butcher paper, then in a second layer of butcher paper, then in silence. The kid at the counter hands it over like it weighs exactly what it weighs.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is meat heavier when it’s a favor?! There should be a study!' : 'The reserve. Means Artie’s desperate. Means he pays happy. Everybody wins — especially the veal.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -3454,7 +3473,7 @@ function updateExplore(dt) {
       if (d < jd) { jackTarget = c; jd = d; }
     }
   }
-  if (interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam && jackTarget) {
+  if (jackTarget && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam && interactPressed()) {
     // GTA carjacking: yank a driver out of a passing car
     const jack = jackTarget;
     state.interactCooldown = .8;
@@ -4660,6 +4679,14 @@ function vesuvioInteractions() {
       ]);
     } },
     { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
+      if (!state.mission && !state.flags.artiesMenuDone && state.flags.turkeyTaxDone && state.flags.freeRoam) {
+        startMission('artiesMenu');
+        startDialog([
+          { speaker: 'artie', text: 'Tony — thank god — a FRIEND! Tonight’s rush and I got NOTHING — the supplier shorted me, the fish guy’s at his mother’s, the bread — don’t ask about the bread! Get me the reserve gabagool from the pork store, bread from that bodega in the city, a fish — fresh — and I owe you forever. $280!' },
+          { speaker: 'system', text: 'Mission accepted: THE LAST SUPPLY. The rush waits for no man.' }
+        ]);
+        return;
+      }
       if (state.player.kind === 'george') startDialog([
         { speaker: 'george', text: 'You ever pretend to own a restaurant to impress a waitress? Asking for a friend.' },
         { speaker: 'artie', text: 'I actually own the restaurant. It impresses nobody. Less than nobody.' },
