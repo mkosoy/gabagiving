@@ -5380,6 +5380,25 @@ function drawSoup() {
 
 function soupInteractions() {
   return [
+    { x: 490, y: 268, w: 40, h: 28, radius: 30, label: 'The rules sign', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'The rules, laminated, at eye level: 1) KNOW YOUR ORDER. 2) MONEY READY. 3) MOVE TO THE LEFT. 4) NO COMMENTS. 5) THE BREAD IS NOT FREE. 6) YOU DO NOT ASK ABOUT THE BREAD. There is no rule 7. The absence of rule 7 feels intentional, like a trap.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Rule 5 and rule 6 CONTRADICT! If I can’t ask about the bread, how do I know it’s not free?! It’s a bread paradox! HE’S BUILT A BREAD PARADOX!' : 'Six rules. I know guys with crews that run on fewer. Honestly? Tighter operation than most of Jersey. The bread thing though — that’s just good business.' }
+      ]);
+    } },
+    { x: 300, y: 352, w: 46, h: 26, radius: 30, label: 'The eating counter', action: () => {
+      if (state.money < 6) { toast('Soup is six dollars, exact change, move to the left.'); return; }
+      state.money -= 6;
+      audio.sfx('pickup');
+      state.time += 2;
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George eats the mulligatawny in the corner, hunched over the cup like it might be repossessed. It is, he admits privately and only to himself, the best soup he has ever had. He would never say this out loud. Saying it out loud is how they take things away from you.' },
+        { speaker: 'george', text: '(whispering) it’s perfect. it’s PERFECT. …you didn’t hear anything.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony eats the soup standing at the counter, per the rules, in silence, per the rules. It is excellent soup. Nobody in the place makes eye contact with anyone else. It is the most peaceful meal he has had in months. He understands immediately why there is always a line.' }
+      ]);
+    } },
     { x: 420, y: 220, w: 44, h: 34, radius: 42, label: 'Mention Newman', action: () => {
       audio.sfx('denied');
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
