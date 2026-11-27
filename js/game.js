@@ -2089,10 +2089,17 @@ function drawParadeBalloon() {
   const bx = 800 - ((t * 60) % 1000);
   const by = 30 + Math.sin(t * 2) * 6;
   // turkey-shaped balloon, because of course it is
-  px(ctx, bx - 16, by - 10, 32, 20, '#c05a3a');
-  px(ctx, bx - 8, by - 18, 16, 10, '#8a2f23');
-  px(ctx, bx + 10, by - 14, 8, 8, '#caa07a');
-  px(ctx, bx + 12, by - 10, 4, 4, '#e23e3e');
+  const tb = animalArt.turkey;
+  if (tb && tb.complete && tb.naturalWidth) {
+    const asp = tb.naturalHeight / tb.naturalWidth;
+    const bw = 74;
+    ctx.drawImage(tb, bx - bw / 2, by - 22 - bw * asp / 2, bw, bw * asp);
+  } else {
+    px(ctx, bx - 16, by - 10, 32, 20, '#c05a3a');
+    px(ctx, bx - 8, by - 18, 16, 10, '#8a2f23');
+    px(ctx, bx + 10, by - 14, 8, 8, '#caa07a');
+    px(ctx, bx + 12, by - 10, 4, 4, '#e23e3e');
+  }
   // tethers to invisible handlers far below
   ctx.strokeStyle = 'rgba(220,220,220,.35)';
   for (const off of [-10, 0, 10]) {
@@ -9503,8 +9510,15 @@ function drawTaffy() {
   const ga = state.time * 1.4;
   const gx = 320 + Math.cos(ga) * 130 - state.camera.x;
   const gy = 200 + Math.sin(ga) * 60 - state.camera.y;
-  px(ctx, gx, gy, 7, 4, '#e8e8e8');
-  px(ctx, gx + 5, gy - 2, 3, 3, '#e8c93e');
+  const sg2 = animalArt.seagull;
+  if (sg2 && sg2.complete && sg2.naturalWidth) {
+    const asp = sg2.naturalHeight / sg2.naturalWidth;
+    const gw = 24;
+    ctx.drawImage(sg2, gx - gw / 2, gy - gw * asp / 2, gw, gw * asp);
+  } else {
+    px(ctx, gx, gy, 7, 4, '#e8e8e8');
+    px(ctx, gx + 5, gy - 2, 3, 3, '#e8c93e');
+  }
   ctx.fillStyle = '#6a4a3a';
   ctx.font = 'bold 9px monospace';
   ctx.textAlign = 'center';
@@ -10096,12 +10110,20 @@ function drawShore() {
     ctx.restore();
   }
   // seagulls
+  const sg = animalArt.seagull;
+  const sgOk = sg && sg.complete && sg.naturalWidth;
+  const sgAsp = sgOk ? sg.naturalHeight / sg.naturalWidth : 1;
   for (let i = 0; i < 4; i++) {
     const gx = (state.time * (14 + i * 5) + i * 190) % 820 - 30;
     const gy = 60 + i * 24 + Math.sin(state.time * 2 + i * 3) * 10;
-    px(ctx, gx, gy, 5, 2, '#e8e8e0');
-    if (Math.floor(state.time * 6 + i) % 2) px(ctx, gx - 2, gy - 1, 3, 1, '#e8e8e0');
-    else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
+    if (sgOk) {
+      const gw = 20;
+      ctx.drawImage(sg, gx - gw / 2, gy - gw * sgAsp / 2, gw, gw * sgAsp);
+    } else {
+      px(ctx, gx, gy, 5, 2, '#e8e8e0');
+      if (Math.floor(state.time * 6 + i) % 2) px(ctx, gx - 2, gy - 1, 3, 1, '#e8e8e0');
+      else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
+    }
   }
   outlineText(ctx, '← north', 24, 200, '#ffe78a', 7, 'left');
 }
