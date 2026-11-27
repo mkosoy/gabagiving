@@ -2285,6 +2285,15 @@ const MISSION_DEFS = {
       { scene: 'nyc', x: 200, y: 236, radius: 60, objective: 'ELAINE: report back — and no, you may NOT read the catalog copy aloud', label: 'the catalog is saved, again' }
     ]
   },
+  gravyChain: {
+    title: 'THE GRAVY CHAIN',
+    payout: 260, heat: 1.5, timeLimit: 260,
+    steps: [
+      { scene: 'vesuvio', x: 280, y: 330, radius: 70, objective: 'pick up Artie’s emergency gravy reserve', label: 'gravy reserve acquired — handle like a newborn' },
+      { scene: 'satriale', x: 262, y: 300, radius: 70, objective: 'the gravy needs the pork store’s spice blend', label: 'spice blend folded in' },
+      { scene: 'club', x: 400, y: 250, radius: 80, objective: 'deliver to the Bing before the rush', label: 'the gravy has landed' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
