@@ -3826,6 +3826,22 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
+    { x: 100, y: 100, w: 44, h: 34, radius: 40, label: 'Grappa for the kitchen', action: () => {
+      if (state.money < 30) { toast('Grappa for the whole kitchen runs $30.'); return; }
+      state.money -= 30;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .75);
+      audio.sfx('cash');
+      spawnEffect(state.player.x, state.player.y - 16, 'SALUTE!', '#ffd23e');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George buys the kitchen a round of grappa. Artie emerges, red-faced and glowing, and hugs him like family. In this restaurant, for this one night, George Costanza is family.' },
+        { speaker: 'artie', text: 'The man! THE MAN! Anything — anything — you ever need, George. Private table. Off-menu. The good chairs!' },
+        { speaker: 'george', text: 'The GOOD chairs? …Why are there bad chairs? WHAT DO YOU KNOW ABOUT THE CHAIRS?' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony sends grappa to the kitchen. Artie comes out weeping with gratitude — a grown man crying over distilled stems and skins, and everyone present respects it.' },
+        { speaker: 'artie', text: 'Tony. TONY. You remember the little guys. THAT’S why they say what they say about you.' },
+        { speaker: 'tony', text: 'What do they say? …No, seriously. What exactly are they saying? Tell me everything.' }
+      ]);
+    } },
     { x: 280, y: 330, w: 80, h: 40, radius: 46, label: 'The Feast', action: () => {
       if (!state.flags.bigOneDone || !state.flags.kramericaBookDone || !state.flags.pineRunnerDone) {
         toast('Something’s being prepared here. Finish the crews’ work first — Newman, Kramer, Silvio.');
