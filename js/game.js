@@ -4551,6 +4551,13 @@ function apartmentInteractions() {
         { speaker: 'george', text: 'That explains the fiscal structure of your pantry.' }
       ]);
     } });
+    list.push({ x: 20, y: 120, w: 46, h: 70, radius: 44, label: 'The fridge', action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'Jerry’s fridge: twelve condiments, a jungle of leftover containers labeled in his handwriting — “TURKEY — DO NOT OPEN UNTIL THURSDAY” — it is Wednesday. The tension is exquisite.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He LABELS them! With the DATE! You know who else labels food with dates? NOBODY! Civilization is a LIE, Jerry!' : 'Guy’s got a system for leftovers. In my family, leftovers are a rumor. The food never lives that long.' },
+        { speaker: 'jerry', text: 'Touch nothing. The containers are in a very specific order. There’s a dairy rotation. DAIRY. ROTATION.' }
+      ]);
+    } });
     list.push({ x: 556, y: 20, w: 74, h: 134, radius: 44, label: 'Bike', action: () => startDialog([
       { speaker: 'tony', text: 'Who keeps a bike inside? Guy’s afraid of the outdoors?' },
       { speaker: 'jerry', text: 'It’s decorative transportation.' }
