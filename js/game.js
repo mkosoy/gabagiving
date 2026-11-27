@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -4546,6 +4546,29 @@ function hubInteractions() {
         startDialog([
           { speaker: 'newman', text: 'WHAT— you! I saw that! MY route! MY mail! That is a FEDERAL offense, committed by a rank AMATEUR! …Technique was decent though. A little hunched. Heh heh.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s a federal offense?! It’s MAIL! Who reads mail! I was BORROWING the mail!' : 'Relax, mailman. I was checking for anthrax. Community service. You’re welcome.' }
+        ]);
+      }
+    } },
+    { x: 400, y: 100, w: 56, h: 34, radius: 44, label: 'The idling armored car', action: () => {
+      if (state.flags.armoredDone) { toast('The armored car route changed after the incident. Wonder whose fault that is.'); return; }
+      state.flags.armoredDone = true;
+      const roll = Math.random();
+      if (roll < .35) {
+        state.money += 320;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
+        audio.sfx('cash');
+        spawnEffect(state.player.x, state.player.y - 16, '+$320', '#ffd23e');
+        startDialog([
+          { speaker: 'narrator', text: 'The doors are open. The guard is buying a hot dog. The bag is just — there. Your hand moves before your brain does, the way it has since 1978. $320 in worn twenties. You walk away at a completely casual pace that fools absolutely no one.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’M A CRIMINAL NOW! I’ve crossed over! There’s no going back! …Do they validate parking?' : 'Guard’s buying a hot dog. On the job. In my day that was a sit-down offense. You know what — the hot dog guy is getting a taste of this. Everybody eats.' }
+        ]);
+      } else {
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
+        audio.sfx('denied');
+        spawnEffect(state.player.x, state.player.y - 16, 'THE GUARD LOOKS UP', '#ff8e8e');
+        startDialog([
+          { speaker: 'narrator', text: 'The doors are open. The bag is there. And the guard — a man built like a filing cabinet with a mustache — looks up from his hot dog with the speed of a man who was never eating a hot dog at all. You walk away whistling. You have never whistled before. It shows.' },
+          { speaker: 'narrator', text: 'The mustache follows you for three blocks. The heat is very much on.' }
         ]);
       }
     } },
