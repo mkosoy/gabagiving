@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -2261,6 +2261,24 @@ const MISSION_DEFS = {
       { scene: 'costanza', x: 480, y: 90, radius: 80, objective: 'FRANK: FESTIVUS IS NOT OVER UNTIL YOU PIN ME', label: 'Festivus — for the rest of us' }
     ]
   },
+  urbanSombrero: {
+    title: 'THE URBAN SOMBRERO',
+    payout: 230, heat: .5, timeLimit: 240,
+    steps: [
+      { scene: 'nyc', x: 200, y: 236, radius: 60, objective: 'ELAINE: take the sombrero prototype — DO NOT BE SEEN ENJOYING IT', label: 'sombrero acquired — it’s urban, it’s a sombrero' },
+      { scene: 'monks', x: 430, y: 120, radius: 70, objective: 'ELAINE: the catalog photographer is at Monk’s — get the shots', label: 'photographed — the hat tested very well' },
+      { scene: 'nyc', x: 200, y: 236, radius: 60, objective: 'ELAINE: bring it back before Peterman writes it into the catalog as a LIFESTYLE', label: 'the sombrero is delivered' }
+    ]
+  },
+  jPetermanBurma: {
+    title: 'THE BURMA SHAVE',
+    payout: 290, heat: 1, timeLimit: 250,
+    steps: [
+      { scene: 'nyc', x: 320, y: 300, radius: 70, objective: 'ELAINE: Peterman overbought Burma — pick up the surplus trinkets', label: 'trinkets acquired — so much Burma' },
+      { scene: 'bodega', x: 200, y: 60, radius: 70, objective: 'ELAINE: offload them at the bodega — tell no one the provenance', label: 'Burma liquidated' },
+      { scene: 'nyc', x: 200, y: 236, radius: 60, objective: 'ELAINE: report back — and no, you may NOT read the catalog copy aloud', label: 'the catalog is saved, again' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2335,6 +2353,14 @@ function advanceMission() {
       bottleRun: [
         { speaker: 'kramer', text: 'TEN CENTS A BOTTLE! In Michigan, Jerry — er, boss — TEN CENTS! The math is UNBEATABLE! Sure, the gas costs more than the refund, and the tunnel tolls, and the truck rental — but the VOLUME! We make it up in volume!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove glass bottles through the Holland Tunnel for a net LOSS and I’d do it again! That’s the Kramerica difference!' : 'Hauled empty bottles across state lines for a guy who doesn’t know what a margin is. I’ve laundered money with less risk. Here’s your cut — don’t spend it all in Michigan.' }
+      ],
+      urbanSombrero: [
+        { speaker: 'elaine', text: 'You got the shots?! Peterman saw them and whispered “…the streets of Rangoon” — I don’t know what it means either! He’s putting it in the catalog! $230, and if anyone asks, you never wore the hat. NO ONE wore the hat.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I may have worn the hat. Briefly! It has a very good brim! The URBAN part is key — it’s not a party sombrero, it’s a sombrero with a JOB!' : 'Drove a hat across town. A hat. I’m in waste management and I’m moving novelty headwear. You know what — the money spends the same.' }
+      ],
+      jPetermanBurma: [
+        { speaker: 'elaine', text: 'The Burma situation is CONTAINED! Peterman almost wrote an entire catalog from a hammock — do you know how hard it is to copyedit a hammock?! $290! And here — take this. It’s a small carved elephant. We have NINE HUNDRED.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I liquidated Burma! Me! A nation-state, laundered through a bodega! This goes on the resume RIGHT between marine biologist and latex!' : 'Moved some trinkets. Quiet, no questions — that’s how I like it. Tell your boss the catalog business is a lot like my business, except he writes his evidence down.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -6898,6 +6924,22 @@ function nycInteractions() {
       } else startDialog([{ speaker: 'narrator', text: 'The cart guy nods at you like a regular. You are a regular now. This is your cart.' }]);
     } },
     { x: 200, y: 236, w: 40, h: 34, radius: 40, label: 'Elaine', action: () => {
+      if (!state.mission && state.flags.urbanSombreroDone && !state.flags.jPetermanBurmaDone && state.flags.freeRoam) {
+        startMission('jPetermanBurma');
+        startDialog([
+          { speaker: 'elaine', text: 'Oh thank god — you! Do you want to make $290? Peterman went to Burma ONCE. The office is FULL. The accounting department is CRYING. I need someone with no questions and a strong back. You look like both.' },
+          { speaker: 'system', text: 'Mission accepted: THE BURMA SHAVE. So much Burma.' }
+        ]);
+        return;
+      }
+      if (!state.mission && !state.flags.urbanSombreroDone && state.flags.freeRoam) {
+        startMission('urbanSombrero');
+        startDialog([
+          { speaker: 'elaine', text: 'Psst! You want $230? I need someone to move a hat. Not just any hat — THE hat. Peterman can’t know it left the building, the photographer needs it at Monk’s, and NO ONE can be seen enjoying it. Can you not-enjoy a hat?' },
+          { speaker: 'system', text: 'Mission accepted: THE URBAN SOMBRERO. It’s urban. It’s a sombrero.' }
+        ]);
+        return;
+      }
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'elaine', text: 'George! Did you know a man in a tracksuit punched a goose near my office? Everyone is talking about it. Everyone!' },
         { speaker: 'george', text: 'A goose?! I don’t know anything about — okay ONE goose. But he started it! They all start it! It’s their whole thing!' }
