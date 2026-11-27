@@ -794,6 +794,13 @@ function drawHelp() {
 function r(x, y, w, h) { return { x, y, w, h }; }
 function costanzaInteractions() {
   return [
+  { x: 340, y: 120, w: 44, h: 30, radius: 42, label: 'The marble rye', action: () => {
+    audio.sfx('pickup');
+    startDialog([
+      { speaker: 'narrator', text: 'A marble rye sits on the windowsill, cooling like a crime scene. Nobody knows how it got here. Somebody knows exactly how it got here. Nobody is asking, because asking means hearing the story, and the story takes forty minutes.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I don’t know anything about a rye. Why would you ask ME? Who told you?! WAS IT FRANK?' : 'That’s a nice-looking rye. In my family, bread on a windowsill means somebody owes somebody. Here it probably means the same thing, somehow.' }
+    ]);
+  } },
   { x: 480, y: 90, w: 44, h: 34, radius: 40, label: 'Frank’s computer', action: () => {
     audio.sfx('pickup');
     startDialog([
@@ -5768,6 +5775,20 @@ function drawAC() {
 function acInteractions() {
   return [
     { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 640, y: 150, w: 40, h: 34, radius: 40, label: 'Psychic — $10 readings', action: () => {
+      if (state.money < 10) { toast('Madame Zelda sees poverty in your future. The reading is still $10.'); return; }
+      state.money -= 10;
+      audio.sfx('pickup');
+      const heat = state.flags.heat || 0;
+      const reading = heat >= 3
+        ? 'The cards show… a chase. Flashing lights. A man in uniform behind you — no, TWO men. Madame Zelda slides your ten back across the table. “This one’s on the house. You’re gonna need it. GO. Now.”'
+        : (state.money > 400
+          ? 'Madame Zelda peers into the crystal. “I see wealth… suspicious wealth. A safe. A man named Silvio counts your money and sings to it. Is this… is this normal where you’re from?” You nod. It is.'
+          : state.player.kind === 'george'
+            ? 'Madame Zelda shuffles, freezes, looks at George with genuine alarm. “The cards say you will be embarrassed on a date. Soon. Also every date after that. The cards are very consistent. The cards are SORRY.”'
+            : 'Madame Zelda reads your palm and goes quiet. “You carry a heavy sadness,” she says. “And gabagool. Mostly gabagool. The line of the heart is strong. The line of the cholesterol is stronger.”');
+      startDialog([{ speaker: 'narrator', text: reading }]);
+    } },
     { x: 450, y: 150, w: 56, h: 36, radius: 42, label: 'The $19.99 buffet', action: () => {
       if (state.money < 20) { toast('The buffet is $19.99 plus dignity, payable in advance.'); return; }
       state.money -= 20;
