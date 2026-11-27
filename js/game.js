@@ -5387,7 +5387,7 @@ function soupInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Rule 5 and rule 6 CONTRADICT! If I can’t ask about the bread, how do I know it’s not free?! It’s a bread paradox! HE’S BUILT A BREAD PARADOX!' : 'Six rules. I know guys with crews that run on fewer. Honestly? Tighter operation than most of Jersey. The bread thing though — that’s just good business.' }
       ]);
     } },
-    { x: 300, y: 352, w: 46, h: 26, radius: 30, label: 'The eating counter', action: () => {
+    { x: 300, y: 352, w: 46, h: 26, radius: 30, label: 'The eating counter — soup $6', action: () => {
       if (state.money < 6) { toast('Soup is six dollars, exact change, move to the left.'); return; }
       state.money -= 6;
       audio.sfx('pickup');
