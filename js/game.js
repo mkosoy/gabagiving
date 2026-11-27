@@ -2999,6 +2999,9 @@ function updateExplore(dt) {
     state.flags.mapHintShown = true;
     toast('Press T for the Garden State map — click anywhere to drive there.');
   }
+  // the white van speaker guy — a New Jersey constant, like property taxes
+  if (state.scene === 'hub' && state.vanHere === undefined) state.vanHere = Math.random() < .5;
+  if (state.scene !== 'hub') state.vanHere = undefined;
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
@@ -5161,6 +5164,31 @@ function hubInteractions() {
         { speaker: 'tony', text: 'When I was a kid the truck only had two flavors. Now there’s forty. That’s not progress — that’s confusion with sprinkles.' }
       ]);
     } }]),
+    ...(state.vanHere ? [{ x: 700, y: 330, w: 70, h: 36, radius: 40, label: 'White van — “speakers”', action: () => {
+      if ((state.flags.tribute || 0) < 40) { toast('The speakers are $40. A steal. Literally, probably.'); return; }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
+      const hot = Math.random() < .5;
+      audio.sfx(hot ? 'cash' : 'denied');
+      if (hot) {
+        state.flags.tribute = (state.flags.tribute || 0) + 95;
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The speakers are REAL. They’re barely even warm! George unloads them on a guy outside the bagel place within the hour for ninety-five.' },
+          { speaker: 'george', text: 'I’M A DISTRIBUTOR NOW! First the hats, now speakers! I’m basically Vandelay! I AM VANDELAY!' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony knows the van. Tony knows the guy knows he knows. The speakers are real — a professional courtesy between adjacent industries. They resell before sunset.' },
+          { speaker: 'tony', text: 'See, the trick with the van guys: sometimes they NEED the speakers to be real. Keeps the legend alive. It’s a whole ecosystem.' }
+        ]);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'The boxes are full of bricks. Bricks and a note that just says “SORRY NOTHING PERSONAL.” The van is already gone. The van was maybe never fully there.' },
+          { speaker: 'george', text: 'BRICKS! I paid forty dollars for BRICKS! …Although — good bricks. Very uniform. I could resell these as premium bricks— no. NO. I have to stop.' }
+        ] : [
+          { speaker: 'narrator', text: 'Bricks. Tony weighs one in his hand, nods once, and puts it down gently, like a man filing away a very small grudge for a very rainy day.' },
+          { speaker: 'tony', text: 'Forty years in the business and I buy bricks off a van. Don’t tell Silvio. Don’t tell ANYBODY. Especially not the van.' }
+        ]);
+      }
+      state.vanHere = false;
+    } }] : []),
     { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
       if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
       state.money -= 8;
@@ -7489,6 +7517,17 @@ function drawHub() {
     ctx.restore();
     outlineText(ctx, 'HOLLAND TUNNEL', px0 + 27, py0 + 10, '#ffe78a', 5, 'center');
     outlineText(ctx, 'NEW YORK →', px0 + 27, py0 + 130, '#9fd4ec', 5, 'center');
+  }
+  if (state.vanHere) {
+    // the white van. it is always the same van. it is never the same guy.
+    px(ctx, 700, 330, 58, 24, 'rgba(0,0,0,.3)');
+    px(ctx, 702, 318, 54, 26, '#ddd8ce');
+    px(ctx, 702, 318, 54, 6, '#c8c2b4');
+    px(ctx, 744, 322, 10, 14, '#b8b2a4');
+    px(ctx, 746, 324, 6, 5, '#9fd4ec');
+    px(ctx, 706, 340, 8, 5, '#1a1a20');
+    px(ctx, 738, 340, 8, 5, '#1a1a20');
+    outlineText(ctx, 'SPEAKERS', 728, 334, '#7a7264', 6, 'center');
   }
   // big green jersey highway signs — nobody reads them, everybody needs them
   drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
