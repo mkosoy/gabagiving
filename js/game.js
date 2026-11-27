@@ -1526,24 +1526,24 @@ const ambientSpecs = {
     { kind: 'christopher', x: 480, y: 204, region: { x: 420, y: 178, w: 130, h: 66 }, speed: 36 },
     { kind: 'womanA', x: 100, y: 206, region: { x: 40, y: 168, w: 130, h: 70 }, speed: 28 },
     { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 },
-    { kind: 'womanC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
+    { kind: 'manC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
-    { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
+    { kind: 'manA', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
   queens: [
     { kind: 'womanA', x: 200, y: 270, region: { x: 60, y: 250, w: 640, h: 40 }, speed: 30 },
-    { kind: 'bobby', x: 500, y: 280, region: { x: 80, y: 255, w: 600, h: 40 }, speed: 26 },
-    { kind: 'womanD', x: 350, y: 264, region: { x: 100, y: 250, w: 560, h: 40 }, speed: 34 }
+    { kind: 'manB', x: 500, y: 280, region: { x: 80, y: 255, w: 600, h: 40 }, speed: 26 },
+    { kind: 'trucker', x: 350, y: 264, region: { x: 100, y: 250, w: 560, h: 40 }, speed: 24 }
   ],
   meadow: [
     { kind: 'bobby', x: 200, y: 300, region: { x: 100, y: 260, w: 300, h: 90 }, speed: 26 },
     { kind: 'womanA', x: 350, y: 330, region: { x: 120, y: 280, w: 400, h: 80 }, speed: 30 },
     { kind: 'christopher', x: 480, y: 290, region: { x: 300, y: 250, w: 240, h: 90 }, speed: 28 },
-    { kind: 'womanC', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 32 }
+    { kind: 'manB', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 26 }
   ],
   shore: [
-    { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
+    { kind: 'manC', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 26 },
     { kind: 'bobby', x: 500, y: 260, region: { x: 120, y: 150, w: 500, h: 160 }, speed: 20 }
   ],
   nyc: [
@@ -1551,9 +1551,9 @@ const ambientSpecs = {
     { kind: 'elaine', x: 460, y: 254, region: { x: 90, y: 238, w: 300, h: 36 }, speed: 36 },
     { kind: 'womanA', x: 200, y: 250, region: { x: 60, y: 236, w: 640, h: 40 }, speed: 38 },
     { kind: 'jerry', x: 500, y: 246, region: { x: 420, y: 236, w: 300, h: 36 }, speed: 30 },
-    { kind: 'womanD', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
-    { kind: 'christopher', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 28 },
-    { kind: 'womanC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
+    { kind: 'manA', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
+    { kind: 'cop', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 24 },
+    { kind: 'manC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
@@ -1570,7 +1570,7 @@ const ambientSpecs = {
   ],
   monks: [
     { kind: 'womanA', x: 320, y: 380, region: { x: 120, y: 372, w: 380, h: 28 }, speed: 34 },
-    { kind: 'womanB', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
+    { kind: 'waitress', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
     { kind: 'bobby', x: 60, y: 240, region: { x: 30, y: 130, w: 60, h: 220 }, speed: 20 }
   ],
   soup: [
