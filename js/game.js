@@ -9872,6 +9872,27 @@ function drawHubWayfinding() {
   drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
   drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
   drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
+  // the Endgame Diner storefront — a stainless stripe in the north-edge gap, neon and everything
+  if (state.scene === 'hub') {
+    px(ctx, 852, 62, 68, 88, '#8a8a92');
+    px(ctx, 852, 62, 68, 6, '#c8c8d0');
+    for (let rib = 0; rib < 6; rib++) px(ctx, 852, 74 + rib * 12, 68, 2, '#7a7a84');
+    px(ctx, 876, 108, 20, 42, '#2a2a30'); // door
+    px(ctx, 878, 112, 16, 14, '#9fd4ec');
+    px(ctx, 856, 100, 16, 20, '#e8dfc8'); // window, warm inside
+    px(ctx, 902, 100, 14, 20, '#e8dfc8');
+    // the neon sign — ENDGAME in red, buzzes like a real one
+    const neon = Math.sin(state.time * 6) > -.85;
+    if (neon) outlineText(ctx, 'ENDGAME', 886, 78, '#ff5a4a', 6, 'center');
+    outlineText(ctx, 'DINER', 886, 90, neon ? '#ffd24a' : '#8a7a4a', 5, 'center');
+    ctx.save();
+    ctx.globalAlpha = neon ? .14 + Math.sin(state.time * 6) * .04 : .05;
+    ctx.fillStyle = '#ff5a4a';
+    ctx.beginPath();
+    ctx.arc(886, 96, 44, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
 }
 
