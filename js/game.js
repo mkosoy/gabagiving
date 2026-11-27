@@ -9524,6 +9524,10 @@ function cabinInteractions() {
 
 function drawTaffy() {
   if (drawSceneArt(sceneArt.taffy, 640, 416)) {
+    // the counter man, a browser at the case, a kid hypnotized by the puller
+    drawPerson(ctx, 430 - state.camera.x, 288 - state.camera.y, 'manB', 'down', Math.floor(state.time * .3), {});
+    drawPerson(ctx, 480 - state.camera.x, 232 - state.camera.y, 'womanA', 'up', state.frame * .5, {});
+    drawPerson(ctx, 152 - state.camera.x, 218 - state.camera.y, 'manC', 'up', 0, {});
     const pull2 = Math.sin(state.time * 2.4) * 6;
     ctx.save();
     ctx.globalAlpha = .35;
@@ -9644,7 +9648,10 @@ function drawSlice() {
     ctx.fill();
     ctx.restore();
     const pgx = 300 + Math.sin(state.time * .7) * 60;
-    drawPerson(ctx, pgx - state.camera.x, 100 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'walk' });
+    drawPerson(ctx, pgx - state.camera.x, 116 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'sit', sitClip: .42 });
+    // a couple of slice-eaters at the tables
+    drawPerson(ctx, 116 - state.camera.x, 258 - state.camera.y, 'manC', 'right', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 478 - state.camera.x, 262 - state.camera.y, 'womanA', 'left', 0, { pose: 'sit', sitClip: .55 });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#3a2a22');
