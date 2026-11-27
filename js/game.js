@@ -2134,6 +2134,17 @@ function missionStep() {
   return MISSION_DEFS[state.mission.id].steps[state.mission.step];
 }
 
+function updateBanking(dt) {
+  if ((state.flags.banked || 0) > 0) {
+    state.bankAccrual = (state.bankAccrual || 0) + dt;
+    if (state.bankAccrual >= 30) {
+      state.bankAccrual = 0;
+      const gain = Math.max(1, Math.round(state.flags.banked * .01));
+      state.flags.banked += gain;
+    }
+  }
+}
+
 function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
@@ -2742,6 +2753,7 @@ function updateExplore(dt) {
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
   updateMission(dt);
+  updateBanking(dt);
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
