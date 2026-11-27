@@ -1661,13 +1661,14 @@ function shoveNearest() {
   if (hitsBrawler) {
     const brickHit = (state.flags.brick || 0) > 0;
     if (brickHit) state.flags.brick -= 1;
-    bw.hp -= brickHit ? 2 : (state.player.kind === 'george' ? 1 : 1.5);
+    const batDmg = state.flags.hasBat && state.flags.freeRoam;
+    bw.hp -= brickHit ? 2 : batDmg ? (state.player.kind === 'george' ? 1.75 : 2.5) : (state.player.kind === 'george' ? 1 : 1.5);
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
     bw.bark = bw.hp > 0 ? ['GAAH!', 'MY NOSE!', 'CHEAP SHOT!'][Math.floor(Math.random() * 3)] : 'MADONE...';
     bw.barkT = 1.4;
-    const hitWord = brickHit ? 'BRICK!' : combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
+    const hitWord = brickHit ? 'BRICK!' : batDmg ? ['BATTING PRACTICE!', 'CRACK!', 'LOUISVILLE!'][Math.floor(Math.random() * 3)] : combo >= 3 ? 'UPPERCUT!' : combo === 2 ? 'POW POW!' : 'POW';
     spawnEffect(bw.x + 8, bw.y - 12, bw.hp > 0 ? hitWord : 'KNOCKOUT!', '#ffe78a');
     if (combo >= 2) spawnEffect(bw.x + 8, bw.y - 24, `COMBO x${combo}`, '#ff9a3e');
     audio.sfx('smash');
