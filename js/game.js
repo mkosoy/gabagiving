@@ -1327,7 +1327,11 @@ function ambientFor(sceneName) {
 function updateAmbient(dt) {
   const list = ambientFor(state.scene);
   const p = state.player;
+  const nightThin = typeof isNight === 'function' && isNight() && ['hub', 'nyc', 'njstreet', 'shore'].includes(state.scene);
+  let ni = -1;
   for (const n of list) {
+    ni++;
+    if (nightThin && !n.npc && ni % 2 === 1) continue;
     if (n.barkT > 0) n.barkT -= dt;
     if (n.diveT > 0) { n.diveT -= dt; continue; }
     const pd = Math.hypot(n.x - p.x, n.y - p.y);
@@ -1523,13 +1527,17 @@ function drawCash() {
 
 function drawAmbient() {
   const list = ambientFor(state.scene);
+  const nightThin = typeof isNight === 'function' && isNight() && ['hub', 'nyc', 'njstreet', 'shore'].includes(state.scene);
   if (state.mugger) {
     const mg = state.mugger;
     drawPerson(ctx, mg.x, mg.y, 'manB', 'down', state.frame * 1.2, {});
     px(ctx, mg.x + 3, mg.y + 2, 11, 4, '#2a2a30');
     outlineText(ctx, mg.phase === 'demand' ? 'MONEY. NOW.' : '…', mg.x + 8, mg.y - 10, '#ff8e8e', 6, 'center');
   }
+  let di = -1;
   for (const n of list) {
+    di++;
+    if (nightThin && !n.npc && di % 2 === 1) continue;
     const frame = n.moving ? state.frame * 1.6 : state.frame * .5;
     drawPerson(ctx, n.x, n.y, n.kind, n.dir, frame, n.diveT > 0 ? { pose: 'lean' } : {});
     if (n.npc === 'newman') {
