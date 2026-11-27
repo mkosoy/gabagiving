@@ -4179,7 +4179,7 @@ function clubInteractions() {
     ] : [
       { speaker: 'narrator', text: 'Tony Soprano does not dance. Tony stands on the dance floor moving with the gravity of a glacier that has decided, tonight only, to slightly groove. The floor clears around him out of respect. Or fear. Same thing.' },
       { speaker: 'tony', text: 'What? A guy can’t enjoy music? It’s Thanksgiving. Even the Bing has a heart.' }
-    ]);
+    ], () => initDanceOff());
   } });
   list.push({ x: 240, y: 380, w: 60, h: 28, radius: 40, label: 'Buy a round', action: () => {
     if (state.money < 100) { toast('A round for the house is $100.'); return; }
@@ -5977,6 +5977,101 @@ function drawSkeeball() {
     ctx.fillStyle = s.total >= 120 ? '#6f6' : '#f66';
     ctx.font = 'bold 12px monospace';
     ctx.fillText('TOTAL ' + s.total + (s.total >= 120 ? ' — the machine pays! +$40. SPACE' : ' — the machine remembers. SPACE'), 320, 336);
+  }
+  ctx.textAlign = 'left';
+}
+
+function initDanceOff() {
+  if ((state.flags.tribute || 0) < 10) { startDialog([{ speaker: 'narrator', text: 'The dance-off pot is ten dollars. The floor has seen things. It demands tribute.' }]); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 10);
+  const seq = [];
+  const dirs = ['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight'];
+  for (let i = 0; i < 12; i++) seq.push({ dir: dirs[Math.floor(Math.random() * 4)], t: 1.2 + i * .85, hit: null });
+  state.dance = { seq, t: 0, score: 0, phase: 'run', endT: 0 };
+  state.mode = 'danceoff';
+  audio.sfx('pickup');
+}
+
+function updateDanceOff(dt) {
+  const d = state.dance;
+  if (!d) { state.mode = 'explore'; return; }
+  d.t += dt;
+  if (d.phase === 'run') {
+    for (const dir of ['ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight']) {
+      if (consume([dir])) {
+        // hit the nearest unhit note of this direction within the window
+        let best = null, bd = .32;
+        for (const n of d.seq) {
+          if (n.hit || n.dir !== dir) continue;
+          const dist = Math.abs(n.t - d.t);
+          if (dist < bd) { best = n; bd = dist; }
+        }
+        if (best) {
+          best.hit = bd < .13 ? 'perfect' : 'good';
+          d.score += bd < .13 ? 2 : 1;
+          audio.sfx(bd < .13 ? 'cash' : 'punch');
+        } else {
+          audio.sfx('denied');
+          d.score = Math.max(0, d.score - 1);
+        }
+      }
+    }
+    const last = d.seq[d.seq.length - 1];
+    if (d.t > last.t + 1) {
+      d.phase = 'done'; d.endT = 0;
+      if (d.score >= 14) { state.flags.tribute = (state.flags.tribute || 0) + 60; audio.sfx('cash'); }
+    }
+    return;
+  }
+  if (d.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape'])) { state.dance = null; state.mode = 'explore'; }
+}
+
+function drawDanceOff() {
+  const d = state.dance;
+  if (!d) return;
+  ctx.fillStyle = '#160a20';
+  ctx.fillRect(0, 0, 640, 360);
+  // disco floor
+  for (let fx = 0; fx < 8; fx++) for (let fy = 0; fy < 3; fy++) {
+    const hue = (state.time * 90 + fx * 45 + fy * 90) % 360;
+    ctx.fillStyle = `hsla(${hue},70%,40%,.25)`;
+    ctx.fillRect(200 + fx * 30, 220 + fy * 30, 28, 28);
+  }
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('DANCE-OFF AT THE BING — 14+ points pays $60', 320, 40);
+  // dancer silhouette
+  const kind = state.player.kind;
+  const wig = Math.sin(state.time * 6) * (d.phase === 'run' ? 6 : 1);
+  drawPerson(ctx, 300 + wig * .4, 210, kind, 'down', state.frame * 2, {});
+  // target zone + notes
+  const lanes = { ArrowLeft: 200, ArrowUp: 270, ArrowDown: 340, ArrowRight: 410 };
+  const glyph = { ArrowLeft: '◀', ArrowUp: '▲', ArrowDown: '▼', ArrowRight: '▶' };
+  ctx.font = 'bold 16px monospace';
+  for (const dir of Object.keys(lanes)) {
+    ctx.fillStyle = 'rgba(255,255,255,.2)';
+    ctx.fillText(glyph[dir], lanes[dir], 80);
+  }
+  if (d.phase === 'run') {
+    for (const n of d.seq) {
+      if (n.hit) continue;
+      const y = 80 - (n.t - d.t) * 120;
+      if (y < 60 || y > 340) continue;
+      ctx.fillStyle = '#ffd23e';
+      ctx.fillText(glyph[n.dir], lanes[n.dir], y);
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px monospace';
+    ctx.fillText('score ' + d.score + ' · hit the arrows as they cross the line', 320, 336);
+  } else {
+    ctx.fillStyle = d.score >= 14 ? '#6f6' : '#f66';
+    ctx.font = 'bold 13px monospace';
+    const verdict = d.score >= 18 ? 'THE FLOOR IS YOURS. Elaine felt nothing. +$60' : d.score >= 14 ? 'Respectable. The little kicks landed. +$60' : 'The floor has seen worse. Once. In the seventies. SPACE';
+    ctx.fillText('score ' + d.score + ' — ' + verdict, 320, 140);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '9px monospace';
+    ctx.fillText('SPACE to leave the floor', 320, 170);
   }
   ctx.textAlign = 'left';
 }
@@ -9390,6 +9485,7 @@ function render() {
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
+  else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
@@ -9775,6 +9871,8 @@ function update(dt) {
     updateDarts(dt);
   } else if (state.mode === 'skeeball') {
     updateSkeeball(dt);
+  } else if (state.mode === 'danceoff') {
+    updateDanceOff(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
