@@ -3368,7 +3368,7 @@ function updateExplore(dt) {
     else p.dir = input.y > 0 ? 'down' : 'up';
     // cars carry momentum: spin up over ~1.2s instead of instant speed
     if (p.inCar) {
-      const wet = weatherRain() && ['hub', 'nyc', 'shore', 'pines'].includes(state.scene);
+      const wet = weatherRain() && OUTDOOR_SCENES.includes(state.scene);
       p.carV = Math.min(1, (p.carV || 0) + dt * (wet ? .8 : 1.2));
       if (wet && Math.abs(p.carV) > .7 && (input.x || input.y) && Math.random() < dt * .5) {
         spawnEffect(p.x, p.y + 10, 'screech', '#b8d0e0');
@@ -10396,11 +10396,19 @@ function drawMenu() {
   if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
+const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
 function weatherRain() {
-  if (state.scene !== 'hub' && state.scene !== 'nyc') return 0;
+  if (!OUTDOOR_SCENES.includes(state.scene)) return 0;
   // rain for ~90s out of every 360s, offset so it doesn't sync with night
   const wt = state.time % 360;
   return wt > 240 && wt < 330 ? 1 : 0;
+}
+
+function weatherSnow() {
+  if (!OUTDOOR_SCENES.includes(state.scene)) return 0;
+  // thanksgiving-eve flurries: the cold first hour of every 6-minute cycle
+  const wt = state.time % 360;
+  return wt < 60 ? 1 : 0;
 }
 
 function drawAtmosphere() {
@@ -10418,8 +10426,19 @@ function drawAtmosphere() {
     }
     if (Math.random() < .02) audio.noise(.06, .008, 0, 2600); // patter
   }
+  // thanksgiving flurries — lazy drifting flakes, everywhere outdoors
+  if (weatherSnow() && (state.mode === 'explore' || state.mode === 'transit')) {
+    const t = state.time;
+    for (let i = 0; i < 34; i++) {
+      const fx = ((i * 97 + t * (8 + (i % 5) * 4)) % 680) - 20 + Math.sin(t * .8 + i) * 14;
+      const fy = ((i * 71 + t * (12 + (i % 3) * 6)) % 400) - 20;
+      ctx.fillStyle = `rgba(240,246,255,${.4 + (i % 3) * .15})`;
+      ctx.fillRect(fx, fy, 2, 2);
+    }
+    if (Math.random() < .002) audio.tone(1200 + Math.random() * 400, .03, 'sine', .004);
+  }
   // day/night cycle for the outdoor open world — 4-minute days, warm dusk, blue night
-  if ((state.scene === 'hub' || state.scene === 'nyc') && (state.mode === 'explore' || state.mode === 'monte')) {
+  if (OUTDOOR_SCENES.includes(state.scene) && (state.mode === 'explore' || state.mode === 'monte')) {
     const dayT = (state.time % 240) / 240;
     // daylight 0-.5, dusk .5-.65, night .65-.9, dawn .9-1
     let dark = 0, warm = 0;
