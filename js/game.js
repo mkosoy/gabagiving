@@ -7803,6 +7803,13 @@ function queensInteractions() {
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
     } },
+    { x: 480, y: 210, w: 30, h: 40, radius: 42, label: 'Puddy', action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'David Puddy leans against a car that may or may not be his, staring straight ahead with the confidence of a man who has never once been unsure of anything.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Puddy! Hey! So — you and Elaine, is that — are you — what IS that?' : 'You look like a man who knows a guy. I know guys. You a guy who knows guys?' },
+        { speaker: 'narrator', text: 'Puddy regards you for a long moment. “Yeah, that’s right.” It answers nothing. It answers everything. You feel, somehow, completely briefed.' }
+      ]);
+    } },
     { x: 560, y: 210, w: 30, h: 40, radius: 42, label: 'Uncle Leo', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'Uncle Leo spots you from forty yards. There is no escape. There has never been an escape. “GEORGIE! HELLO!” The eyebrows are doing most of the waving.' },
@@ -8194,6 +8201,15 @@ function pinesInteractions() {
       setScene('cabin', 320, 360);
     } },
     { x: 460, y: 330, w: 60, h: 50, radius: 50, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
+    { x: 260, y: 350, w: 30, h: 24, radius: 40, label: 'Frozen turkey leg', hidden: () => (state.flags.brick || 0) > 0, action: () => {
+      state.flags.brick = 3;
+      audio.sfx('pickup');
+      spawnEffect(state.player.x + 8, state.player.y - 8, 'TURKEY LEG x3 · SEASONAL ORDNANCE', '#ff9a7a');
+      startDialog([
+        { speaker: 'narrator', text: 'Half-buried in the frost: a frozen turkey leg, hard as rebar. Somebody’s Thanksgiving never made it home. The Barrens provide. The Barrens always provide.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s frozen solid! You could — I mean, hypothetically — this is essentially a club! A DELICIOUS club!' : 'Frostbite hard. Three good swings in it, easy. Waste not.' }
+      ]);
+    } },
     { x: 300, y: 380, w: 130, h: 26, radius: 48, label: '← Drive back north', action: () => {
       audio.sfx('honk');
       startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
