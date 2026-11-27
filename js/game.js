@@ -8258,6 +8258,29 @@ function pkAiDiscard(hand) {
   return hand.map((c, i) => counts[c.v] === 1 && c.v < 12 ? i : -1).filter(i => i >= 0).slice(0, 3);
 }
 
+function pkTell(p) {
+  // one opponent has a readable tell — sometimes it's even true. Paulie's never is.
+  const idx = Math.floor(Math.random() * p.ai.length);
+  const ai = p.ai[idx];
+  const strength = pkRank(ai.hand)[0];
+  const strong = strength >= 2; // two pair or better pre-draw
+  const honest = ai.kind === 'paulie' ? Math.random() < .3 : Math.random() < .75;
+  const reads = honest ? strong : !strong;
+  const tells = {
+    strong: {
+      silvio: 'Silvio arranges his chips into a neat little wall. Silvio only builds walls when the foundation is solid.',
+      paulie: 'Paulie is very still. Unnaturally still. Paulie is never still unless the cards are speaking to him.',
+      christopher: 'Christopher keeps glancing at his cards and smirking, then remembering not to smirk, then smirking again.'
+    },
+    weak: {
+      silvio: 'Silvio is rotating one chip between his fingers, over and over. The chip is worried. Silvio is worried.',
+      paulie: 'Paulie is humming. Loudly. Paulie hums when he is losing, losing, or about to lose — his words.',
+      christopher: 'Christopher just muttered something about his screenplay to no one. His attention is not on the cards.'
+    }
+  };
+  return { text: tells[reads ? 'strong' : 'weak'][ai.kind], about: ai.name };
+}
+
 function initPoker() {
   if ((state.flags.tribute || 0) < 20) {
     startDialog([{ speaker: 'narrator', text: 'The buy-in is twenty dollars. You have less than that. The table observes this in silence, which is worse than any comment.' }]);
@@ -8271,8 +8294,9 @@ function initPoker() {
     player: mk('You', state.player.kind),
     ai: [mk('Silvio', 'silvio'), mk('Paulie', 'paulie'), mk('Christopher', 'christopher')],
     pot: 80, cur: 0, sel: [false, false, false, false, false],
-    phase: 'select', t: 0, ax: 0, result: null
+    phase: 'select', t: 0, ax: 0, result: null, round: 1, ante: 20, tell: null
   };
+  state.poker.tell = pkTell(state.poker);
   state.mode = 'poker';
   audio.sfx('pickup');
 }
@@ -8296,6 +8320,13 @@ function updatePoker(dt) {
         const di = pkAiDiscard(ai.hand);
         ai.discards = di;
         for (const i2 of di) ai.hand[i2] = deck.pop();
+      }
+      // high stakes, low morals: at round 2+ Silvio's redraw gets a quiet second opinion
+      if ((p.round || 1) >= 2 && deck.length >= 8) {
+        const sv = p.ai[0];
+        const altHand = sv.hand.slice();
+        for (const i3 of sv.discards) altHand[i3] = deck.pop();
+        if (pkCompare(pkRank(altHand), pkRank(sv.hand)) > 0) sv.hand = altHand;
       }
       p.phase = 'reveal'; p.t = 0;
       audio.sfx('smash');
@@ -8326,6 +8357,25 @@ function updatePoker(dt) {
       } else audio.sfx('buzzer');
     }
   } else if (p.phase === 'done') {
+    const canRide = p.result === 'player' && (p.round || 1) < 3 && (state.flags.tribute || 0) >= (p.ante || 20) * 2;
+    if (canRide && p.t > .8 && consume(['KeyF'])) {
+      // let it ride — ante doubles, pot doubles, the room gets quieter
+      const nextAnte = (p.ante || 20) * 2;
+      state.flags.tribute -= nextAnte;
+      const deck = pkDeck();
+      const mk = (name, kind) => ({ name, kind, hand: deck.splice(0, 5), discards: [], folded: false });
+      const round = (p.round || 1) + 1;
+      state.poker = {
+        deck,
+        player: mk('You', state.player.kind),
+        ai: [mk('Silvio', 'silvio'), mk('Paulie', 'paulie'), mk('Christopher', 'christopher')],
+        pot: nextAnte * 4, cur: 0, sel: [false, false, false, false, false],
+        phase: 'select', t: 0, ax: 0, result: null, round, ante: nextAnte, tell: null
+      };
+      state.poker.tell = pkTell(state.poker);
+      audio.sfx('spin');
+      return;
+    }
     if (p.t > .8 && consume(['KeyE', 'KeyB', 'Space'])) {
       const won = p.result === 'player';
       const tied = p.result === 'tie';
@@ -8375,7 +8425,12 @@ function drawPoker() {
   ctx.fillText('THE EXECUTIVE GAME', 320, 20);
   ctx.font = '10px monospace';
   ctx.fillStyle = '#b8a88a';
-  ctx.fillText('five-card draw · ante $20 · winner takes the pot', 320, 34);
+  ctx.fillText('five-card draw · ante $' + (p.ante || 20) + ' · pot $' + p.pot + ((p.round || 1) > 1 ? ' · ROUND ' + p.round + ' — the room has opinions' : ''), 320, 34);
+  if (p.tell && p.phase === 'select') {
+    ctx.fillStyle = '#d8c890';
+    ctx.font = '9px monospace';
+    ctx.fillText('— ' + p.tell.text, 320, 52);
+  }
   const suits = ['♠', '♥', '♦', '♣'];
   const suitCol = (s) => s === 1 || s === 2 ? '#d84040' : '#222';
   const oppX = [200, 320, 440];
@@ -8445,7 +8500,8 @@ function drawPoker() {
     ctx.fillText(won ? 'YOU TAKE THE POT — ' + pkName(p.playerRank[0]).toUpperCase() : p.result === 'tie' ? 'SPLIT POT — $' + (p.share || 0) + ' back to you' : p.result.toUpperCase() + ' TAKES IT — you had ' + pkName(p.playerRank[0]), 320, 318);
     ctx.fillStyle = '#b8a88a';
     ctx.font = '10px monospace';
-    ctx.fillText('E to leave the table', 320, 336);
+    const canRide2 = won && (p.round || 1) < 3 && (state.flags.tribute || 0) >= (p.ante || 20) * 2;
+    ctx.fillText(canRide2 ? 'F LET IT RIDE — ante $' + (p.ante || 20) * 2 + ', pot $' + (p.ante || 20) * 8 + '  ·  E take the money and leave' : 'E to leave the table', 320, 336);
   }
   ctx.textAlign = 'left';
 }
@@ -10047,6 +10103,16 @@ function drawAC() {
     drawPerson(ctx, wx, 250, 'womanA', Math.sin(state.time * .2) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
     const wx2 = 500 - Math.sin(state.time * .16) * 110;
     drawPerson(ctx, wx2, 230, 'bobby', Math.sin(state.time * .16) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
+    // boardwalk life — bench sitters watching the ocean, the rolling chair with a paying customer
+    drawPerson(ctx, 46, 178, 'womanG', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 402, 203, 'manC', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 428, 203, 'womanF', 'down', 0, { pose: 'sit', sitClip: .55 });
+    // rolling chair — passenger seated, pusher behind, slow parade down the boards
+    const rcX = 100 + ((state.time * 14) % 560);
+    drawPerson(ctx, rcX, 190, 'manB', 'down', 0, { pose: 'sit', sitClip: .5 });
+    drawPerson(ctx, rcX, 178, 'cop', 'right', state.frame, { pose: 'walk' });
+    // an elder feeding gulls that absolutely should not be encouraged
+    drawPerson(ctx, 660, 250, 'womanF', 'down', Math.floor(state.time * .7) % 2, { pose: 'stand' });
     return;
   }
   px(ctx, 0, 0, 768, 416, '#1a2030');
