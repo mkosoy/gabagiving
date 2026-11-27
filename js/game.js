@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -2234,6 +2234,24 @@ const MISSION_DEFS = {
       { scene: 'costanza', x: 480, y: 90, radius: 80, objective: 'FRANK: return them before your mother starts the airing of grievances EARLY', label: 'serenity achieved, briefly' }
     ]
   },
+  calzoneProtocol: {
+    title: 'THE CALZONE PROTOCOL',
+    payout: 210, heat: 0, timeLimit: 240,
+    steps: [
+      { scene: 'yankees', x: 480, y: 150, radius: 70, objective: 'STEINBRENNER: get the lunch order — he wants the calzone. THE CALZONE.', label: 'order memorized — calzone, extra napkins' },
+      { scene: 'monks', x: 430, y: 120, radius: 70, objective: 'STEINBRENNER: pick up the calzone — and NO, the tip does not go in the counter jar', label: 'calzone acquired — it’s heavier than expected' },
+      { scene: 'yankees', x: 560, y: 100, radius: 80, objective: 'STEINBRENNER: deliver before the fifth inning or there will be HELL TO PAY', label: 'the calzone has landed' }
+    ]
+  },
+  cottonUniforms: {
+    title: 'THE COTTON UNIFORMS',
+    payout: 280, heat: 1, timeLimit: 260,
+    steps: [
+      { scene: 'yankees', x: 480, y: 150, radius: 70, objective: 'STEINBRENNER: cotton uniforms — they breathe! BREATHE! Get the samples', label: 'samples acquired — so natural, so breathable' },
+      { scene: 'nyc', x: 320, y: 300, radius: 80, objective: 'STEINBRENNER: pick up the dye lot — cotton SHRINKS, keep that quiet', label: 'dye lot secured' },
+      { scene: 'yankees', x: 560, y: 100, radius: 80, objective: 'STEINBRENNER: deliver the uniforms — sizing is NOT your problem', label: 'the uniforms are in — they will shrink. they always shrink.' }
+    ]
+  },
   featsOfStrength: {
     title: 'FEATS OF STRENGTH',
     payout: 300, heat: .5,
@@ -2317,6 +2335,14 @@ function advanceMission() {
       bottleRun: [
         { speaker: 'kramer', text: 'TEN CENTS A BOTTLE! In Michigan, Jerry — er, boss — TEN CENTS! The math is UNBEATABLE! Sure, the gas costs more than the refund, and the tunnel tolls, and the truck rental — but the VOLUME! We make it up in volume!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove glass bottles through the Holland Tunnel for a net LOSS and I’d do it again! That’s the Kramerica difference!' : 'Hauled empty bottles across state lines for a guy who doesn’t know what a margin is. I’ve laundered money with less risk. Here’s your cut — don’t spend it all in Michigan.' }
+      ],
+      calzoneProtocol: [
+        { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He paid! The calzone system WORKS! I’m telling you, this is the beginning of a beautiful lunch-based relationship! …Wait, did he say no tip? I always tip! I OVERtip!' : 'Carried folded pizza across Manhattan for a baseball man. The Bing’s gonna love this one.' }
+      ],
+      cottonUniforms: [
+        { speaker: 'steinbrenner', text: 'Cotton breathes! You can’t put a price on breathability! Well — you can, it’s $280, here you go. Now if they shrink, that’s a laundry problem, and I know NOTHING about laundry.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'They’re going to shrink! I KNOW they’re going to shrink! Polyester doesn’t shrink! Why does no one listen to me about fabrics?! …The money’s good though. The money’s very good.' : 'Delivered shrinkin’ uniforms to the Yankees. In my line of work that’s called a long con with good lighting.' }
       ],
       serenityTapes: [
         { speaker: 'frank', text: 'SERENITY NOW! You did good, kid. The man on those tapes? That’s Lloyd Braun’s uncle. HE knows serenity. And for the record — I don’t yell. I PROJECT. $170, and your mother never finds out.' },
@@ -3985,6 +4011,15 @@ function clubInteractions() {
         { speaker: 'tony', text: 'One machine, no witnesses, infinite hope. The perfect Italian dessert.' }
       ], () => initSlots());
     } });
+    list.push({ x: 100, y: 260, w: 50, h: 40, radius: 30, label: 'Racing form', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A racing form, grease-stained, annotated in three different pens. Kramer’s handwriting: “NO SOUP — SURE THING.” A second annotation: “KRAMER IS AN IDIOT —SURE THING.” Same handwriting.' },
+        { speaker: 'george', text: 'Twenty dollars a race! I once won forty dollars on a horse named after a sandwich! This is my HERITAGE!' }
+      ] : [
+        { speaker: 'narrator', text: 'The Bing’s racing form. Paulie’s system: bet the horse with the funniest name. Paulie is currently banned from two tracks.' },
+        { speaker: 'tony', text: 'Horses. The one thing in this world that runs honest. Everything else — meh.' }
+      ], () => initRacing());
+    } });
     list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
       if ((state.flags.tribute || 0) < 50) {
         startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
@@ -4469,6 +4504,22 @@ const steinbrennerRants = [
 function yankeesInteractions() {
   return [
     { x: 250, y: 140, w: 150, h: 56, radius: 46, label: 'Steinbrenner', action: () => {
+      if (!state.mission && state.flags.calzoneProtocolDone && !state.flags.cottonUniformsDone && state.flags.freeRoam) {
+        startMission('cottonUniforms');
+        startDialog([
+          { speaker: 'steinbrenner', text: 'The uniforms! Polyester — it DOESN’T BREATHE, it never breathed, it will NEVER breathe! I need cotton samples and I need them fast. There’s money in it. There’s money in everything if you yell loud enough!' },
+          { speaker: 'system', text: 'Mission accepted: THE COTTON UNIFORMS. They will shrink. They always shrink.' }
+        ]);
+        return;
+      }
+      if (!state.mission && !state.flags.calzoneProtocolDone && state.flags.freeRoam) {
+        startMission('calzoneProtocol');
+        startDialog([
+          { speaker: 'steinbrenner', text: 'Hungry! I’m hungry and I want the calzone — THE CALZONE — from that place by the coffee shop! You look like a man who can move a calzone. Prove me right. $210!' },
+          { speaker: 'system', text: 'Mission accepted: THE CALZONE PROTOCOL. No tipping in the counter jar.' }
+        ]);
+        return;
+      }
       const rant = steinbrennerRants[Math.floor(Math.random() * steinbrennerRants.length)];
       if (state.player.kind === 'george') startDialog([
         { speaker: 'steinbrenner', text: rant },
@@ -5315,6 +5366,119 @@ function slotSymbol() {
   let r = Math.random() * total;
   for (const s of SLOT_SYMBOLS) { r -= s.weight; if (r <= 0) return s.glyph; }
   return 'L';
+}
+
+function initRacing() {
+  if ((state.flags.tribute || 0) < 20) { startDialog([{ speaker: 'narrator', text: 'The racing form costs twenty dollars of dignity, payable in tribute. You are short.' }]); return; }
+  state.racing = {
+    horses: [
+      { name: 'NO SOUP FOR YOU', x: 0, speed: 0, color: '#c33' },
+      { name: 'SERENITY NOW', x: 0, speed: 0, color: '#3a7' },
+      { name: 'GABAGOOL EXPRESS', x: 0, speed: 0, color: '#48d' },
+      { name: 'MASTER OF DOMAIN', x: 0, speed: 0, color: '#da3' }
+    ],
+    bet: 0, phase: 'pick', t: 0, finishT: 0, winner: -1, paid: false
+  };
+  state.mode = 'racing';
+  audio.sfx('pickup');
+}
+
+function updateRacing(dt) {
+  const r = state.racing;
+  if (!r) { state.mode = 'explore'; return; }
+  if (r.phase === 'pick') {
+    if (consume(['ArrowLeft', 'KeyA'])) r.bet = (r.bet + 3) % 4;
+    if (consume(['ArrowRight', 'KeyD'])) r.bet = (r.bet + 1) % 4;
+    if (consume(['Space', 'Enter', 'KeyE'])) {
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 20);
+      r.phase = 'run'; r.t = 0;
+      audio.sfx('cash');
+    }
+    if (consume(['Escape', 'KeyM'])) { state.racing = null; state.mode = 'explore'; }
+    return;
+  }
+  if (r.phase === 'run') {
+    r.t += dt;
+    for (const h of r.horses) {
+      h.speed = 30 + Math.sin(r.t * 2.3 + h.name.length) * 14 + Math.random() * 26;
+      h.x += h.speed * dt;
+    }
+    const lead = Math.max(...r.horses.map((h) => h.x));
+    if (lead >= 480 && r.winner < 0) {
+      r.winner = r.horses.findIndex((h) => h.x >= 480);
+      r.phase = 'done'; r.finishT = 0;
+    }
+    if (r.t > 30) { r.winner = r.horses.indexOf(r.horses.reduce((a, b) => (a.x > b.x ? a : b))); r.phase = 'done'; r.finishT = 0; }
+    return;
+  }
+  if (r.phase === 'done') {
+    r.finishT += dt;
+    if (!r.paid) {
+      r.paid = true;
+      if (r.winner === r.bet) {
+        state.flags.tribute = (state.flags.tribute || 0) + 70;
+        audio.sfx('cash');
+      } else audio.sfx('denied');
+    }
+    if (consume(['Space', 'Enter', 'KeyE', 'Escape', 'KeyM'])) { state.racing = null; state.mode = 'explore'; }
+  }
+}
+
+function drawRacing() {
+  const r = state.racing;
+  if (!r) return;
+  ctx.fillStyle = '#1a120b';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#2a1d10';
+  ctx.fillRect(60, 60, 520, 240);
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(60, 60, 520, 240);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE BING RACING FORM — $20 A RACE', 320, 44);
+  ctx.font = '9px monospace';
+  // track
+  for (let i = 0; i < 4; i++) {
+    const y = 90 + i * 55;
+    ctx.strokeStyle = 'rgba(255,255,255,.15)';
+    ctx.strokeRect(70, y, 500, 40);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    const h = r.horses[i];
+    ctx.fillText(h.name, 74, y + 14);
+    // finish line
+    ctx.fillStyle = 'rgba(255,255,255,.5)';
+    ctx.fillRect(70 + 480, y, 2, 40);
+    // horse
+    ctx.fillStyle = h.color;
+    const hx = 70 + Math.min(480, h.x);
+    ctx.fillRect(hx, y + 18, 18, 12);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(hx + 12, y + 20, 4, 4);
+    // bet marker
+    if (r.phase === 'pick' && r.bet === i) {
+      ctx.fillStyle = '#ffd23e';
+      ctx.fillText('►', 60, y + 30);
+    }
+    if (r.winner === i) {
+      ctx.fillStyle = '#ffd23e';
+      ctx.textAlign = 'right';
+      ctx.fillText('WINNER', 566, y + 14);
+      ctx.textAlign = 'left';
+    }
+  }
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  if (r.phase === 'pick') ctx.fillText('ARROWS pick your horse · SPACE to run the race · ESC walks away', 320, 330);
+  else if (r.phase === 'run') ctx.fillText('THEY’RE OFF!', 320, 330);
+  else {
+    const won = r.winner === r.bet;
+    ctx.fillStyle = won ? '#6f6' : '#f66';
+    ctx.fillText(won ? 'YOUR HORSE WINS — +$70 tribute! SPACE to leave' : r.horses[r.winner].name + ' takes it. The house sends regards. SPACE to leave', 320, 330);
+  }
+  ctx.textAlign = 'left';
 }
 
 function initSlots() {
@@ -8649,6 +8813,7 @@ function render() {
   else if (state.mode === 'transit') drawTransit();
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
+  else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
@@ -9034,6 +9199,8 @@ function update(dt) {
     }
   } else if (state.mode === 'slots') {
     updateSlots(dt);
+  } else if (state.mode === 'racing') {
+    updateRacing(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
