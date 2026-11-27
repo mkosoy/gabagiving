@@ -5938,7 +5938,7 @@ function drawYankees() {
     const pace = Math.sin(state.time * .7);
     const sx2 = 322 + pace * 70;
     const shake = Math.sin(state.time * 13) * 1.2;
-    drawPerson(ctx, sx2 + shake, 165, 'junior', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
+    drawPerson(ctx, sx2 + shake, 152, 'steinbrenner', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
     // steam of rage
     if (Math.sin(state.time * 2) > .6) {
       px(ctx, sx2 - 5, 150, 3, 6, 'rgba(255,120,90,.5)');
@@ -9749,8 +9749,13 @@ function drawCasino() {
     ctx.arc(320 - state.camera.x, 40 - state.camera.y, 200, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    drawPerson(ctx, 210 - state.camera.x, 235 - state.camera.y, 'manA', 'down', 0, {});
-    drawPerson(ctx, 470 - state.camera.x, 235 - state.camera.y, 'womanB', 'down', 0, {});
+    drawPerson(ctx, 167 - state.camera.x, 203 - state.camera.y, 'manA', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 467 - state.camera.x, 203 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit', sitClip: .55 });
+    // gamblers actually at the stools
+    drawPerson(ctx, 138 - state.camera.x, 262 - state.camera.y, 'manC', 'up', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 505 - state.camera.x, 262 - state.camera.y, 'womanC', 'up', 0, { pose: 'sit', sitClip: .55 });
+    // one more feeding the slots
+    drawPerson(ctx, 118 - state.camera.x, 116 - state.camera.y, 'manB', 'up', 0, { pose: 'sit', sitClip: .5 });
     const gcx = 180 + Math.sin(state.time * .4) * 20;
     drawPerson(ctx, gcx - state.camera.x, 330 - state.camera.y, 'bobby', 'up', 0, {});
     return;
