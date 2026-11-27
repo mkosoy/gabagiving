@@ -8676,6 +8676,19 @@ function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
   }
   // shadow
   px(ctx, x - 15, y - 19, 30, 40, 'rgba(0,0,0,.35)');
+  // night headlights — beams ahead of the hood
+  if (typeof isNight === 'function' && isNight()) {
+    ctx.fillStyle = 'rgba(255,240,180,.10)';
+    ctx.beginPath();
+    ctx.moveTo(x - 9, y - 18);
+    ctx.lineTo(x + 9, y - 18);
+    ctx.lineTo(x + 20, y - 58);
+    ctx.lineTo(x - 20, y - 58);
+    ctx.closePath();
+    ctx.fill();
+    px(ctx, x - 9, y - 19, 5, 3, '#fff3c4');
+    px(ctx, x + 4, y - 19, 5, 3, '#fff3c4');
+  }
   // body
   px(ctx, x - 13, y - 20, 26, 40, '#0d1017');
   px(ctx, x - 11, y - 18, 22, 36, color);
