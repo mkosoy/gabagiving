@@ -1189,6 +1189,15 @@ const scenes = {
     draw: drawMeadow,
     interactions: meadowInteractions
   },
+  casino: {
+    w: 640, h: 416, label: 'The Dunes Casino · Atlantic City', music: 'club',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,20,240,80), r(380,20,240,80), r(140,240,140,80), r(400,240,140,80)
+    ],
+    draw: drawCasino,
+    interactions: casinoInteractions
+  },
   slice: {
     w: 640, h: 416, label: 'Famous Original Ray’s · Manhattan', music: 'house',
     colliders: [
@@ -5198,7 +5207,8 @@ function leaveOutside() {
 
 function travelHub(place) {
   // remember which outdoor region we came from so interior exits return correctly
-  if ((state.scene === 'hub' || state.scene === 'nyc') && place !== 'hub' && place !== 'nyc') {
+  const outdoors = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow'];
+  if (outdoors.includes(state.scene) && !outdoors.includes(place)) {
     state.returnTo = null;
     const bx = Math.max(20, state.player.x);
     const by = state.player.y;
@@ -5224,6 +5234,7 @@ function travelHub(place) {
     yankees: ['yankees', 590, 380, 'The Yankees front office. Somewhere, a typewriter is being yelled at.'],
     melfi: ['melfi', 320, 380, 'Dr. Melfi’s office. It smells like leather, tissues, and carefully withheld judgment.'],
     costanza: ['costanza', 320, 380, 'The Costanza house. You can hear the shouting from the driveway.'],
+    casino: ['casino', 320, 360, 'The Dunes. Oxygen-pumped air, no clocks, no mercy.'],
     slice: ['slice', 320, 360, 'Inside: heat, grease, glory. The real Ray’s — probably.'],
     hub: ['hub', 320, 240, 'Back out in the neighborhood.']
   };
@@ -7080,6 +7091,76 @@ function sliceInteractions() {
   ];
 }
 
+function drawCasino() {
+  px(ctx, 0, 0, 640, 416, '#2a1a2e');
+  // gaudy carpet
+  for (let fx = 0; fx < 40; fx++) for (let fy = 0; fy < 26; fy++) {
+    if ((fx * 3 + fy * 7) % 5 === 0) px(ctx, fx * 16, fy * 16, 16, 16, '#33203a');
+  }
+  // chandelier glow
+  ctx.save();
+  ctx.globalAlpha = .1 + Math.sin(state.time * 2) * .03;
+  ctx.fillStyle = '#ffd76a';
+  ctx.beginPath();
+  ctx.arc(320, 40, 200, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // slots row west
+  for (let s = 0; s < 4; s++) {
+    const sx = 30 + s * 58;
+    px(ctx, sx, 20, 48, 80, '#6a2a3a');
+    px(ctx, sx + 8, 30, 32, 26, '#1a1a2a');
+    const spin = Math.floor(state.time * 3 + s) % 3;
+    px(ctx, sx + 10, 36 + spin * 3, 8, 8, '#ffd23e');
+    px(ctx, sx + 20, 36, 8, 8, '#e83a5a');
+    px(ctx, sx + 30, 36 + ((spin + 1) % 3) * 3, 8, 8, '#3ae85a');
+    px(ctx, sx + 36, 64, 6, 20, '#c9a86a');
+  }
+  // cashier cage east
+  px(ctx, 380, 20, 240, 80, '#4a3a28');
+  for (let bar = 0; bar < 12; bar++) px(ctx, 392 + bar * 18, 30, 3, 60, '#c9a86a');
+  // blackjack tables — green felt
+  px(ctx, 140, 240, 140, 80, '#2a6a3a');
+  px(ctx, 150, 250, 120, 60, '#35884a');
+  px(ctx, 400, 240, 140, 80, '#2a6a3a');
+  px(ctx, 410, 250, 120, 60, '#35884a');
+  // dealers + a lonely gambler
+  drawPerson(ctx, 210 - state.camera.x, 235 - state.camera.y, 'manA', 'down', 0, {});
+  drawPerson(ctx, 470 - state.camera.x, 235 - state.camera.y, 'womanB', 'down', 0, {});
+  const gx = 180 + Math.sin(state.time * .4) * 20;
+  drawPerson(ctx, gx - state.camera.x, 330 - state.camera.y, 'bobby', 'up', 0, {});
+  ctx.fillStyle = '#ffd76a';
+  ctx.font = 'bold 9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('★ THE DUNES — WHERE THE BUFFET NEVER CLOSES ★', 320, 130);
+  ctx.textAlign = 'left';
+}
+
+function casinoInteractions() {
+  return [
+    { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: leaveOutside },
+    { x: 130, y: 130, w: 80, h: 30, radius: 46, label: 'The slots — $5 a pull', action: () => initSlots() },
+    { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 470, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 500, y: 130, w: 70, h: 30, radius: 44, label: 'Cashier cage — count your sins', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The cashier counts your chips with the neutral face of a person who has watched ten thousand men have the best and worst nights of their lives in the same chair. Behind her, the vault hums. Everything here is somebody’s fault.' }]);
+    } },
+    { x: 320, y: 170, w: 80, h: 30, radius: 44, label: 'The buffet — $12, all you can regret', action: () => {
+      if (state.money < 12) { toast('Twelve dollars. The shrimp alone is worth it, allegedly.'); return; }
+      state.money -= 12;
+      audio.sfx('pickup');
+      state.time += 6;
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George approaches the buffet with a strategy document he wrote on a napkin in the car. Proteins first — maximum value density. The shrimp. THE SHRIMP. A man in a visor tries to share the ladle. It does not go well for the man in the visor.' },
+        { speaker: 'george', text: 'Twelve dollars! I’m eating forty dollars of shrimp MINIMUM. This is arithmetic, not gluttony!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony does the buffet the way he does everything: like he owns it, which — through three shell companies and a favor — he technically does. The carving station guy knows him. The carving station guy is smart enough not to say so.' }
+      ]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7101,6 +7182,9 @@ function drawAC() {
 function acInteractions() {
   return [
     { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 384, y: 130, w: 80, h: 40, radius: 46, label: 'The Dunes casino', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The doors part with a breath of cold, oxygen-enriched air. No clocks. No windows. The carpet pattern was designed by a man who hated you personally. Welcome to the Dunes.' }], () => travelHub('casino'));
+    } },
     { x: 640, y: 150, w: 40, h: 34, radius: 40, label: 'Psychic — $10 readings', action: () => {
       if (state.money < 10) { toast('Madame Zelda sees poverty in your future. The reading is still $10.'); return; }
       state.money -= 10;
