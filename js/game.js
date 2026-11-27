@@ -301,7 +301,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
 function saveWorld() {
   try {
     const out = {};
@@ -2583,6 +2583,15 @@ const MISSION_DEFS = {
       { scene: 'club', x: 400, y: 250, radius: 80, objective: 'deliver to the Bing before the rush', label: 'the gravy has landed' }
     ]
   },
+  trackSystem: {
+    title: 'THE TRACK SYSTEM',
+    payout: 280, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'meadow', x: 200, y: 230, radius: 48, objective: 'Consult the railbirds — Kramer swears by the guy in the cap', label: 'the railbirds' },
+      { scene: 'meadow', x: 98, y: 130, radius: 46, objective: 'Place the bet per the SYSTEM', label: 'the betting window' },
+      { scene: 'meadow', x: 370, y: 130, radius: 46, objective: 'Watch the race — the system cannot lose', label: 'the track rail' }
+    ]
+  },
   fixedRace: {
     title: 'THE FIXED RACE',
     payout: 320, heat: 1, timeLimit: 0,
@@ -2625,7 +2634,7 @@ const MISSION_DEFS = {
   }
 };
 const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'libraryRun', 'bigOne'];
-const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'kramericaBook'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'trackSystem', 'kramericaBook'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -2698,6 +2707,11 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      trackSystem: [
+        { speaker: 'narrator', text: 'The railbird in the cap — Kramer’s oracle — sells you the system for five dollars: “Always bet the horse that looks like it knows something.” You study the field. One horse, fourth from the rail, unmistakably looks like it knows something. You bet it. It comes in second. SECOND. The system has never come in second before. The railbird is inconsolable. You are somehow up anyway — place money is money.' },
+        { speaker: 'kramer', text: 'Second?! It never comes in second! That’s not — the SYSTEM doesn’t DO second! …Although. Huh. You know what, second place money is still money, buddy. The system evolves. THE SYSTEM EVOLVES!' },
+        { speaker: 'system', text: 'MISSION PASSED — THE TRACK SYSTEM. Place money is money. $280.' }
       ],
       fixedRace: [
         { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
@@ -8417,7 +8431,10 @@ function nycInteractions() {
         startMission(mid);
         const offers = {
           muffinTops: { speaker: 'kramer', text: 'Buddy! Perfect timing! Kramerica Foods needs a logistics man. Muffin stumps — forty pounds — to the bodega. They take anything. $140. Giddy up!' },
-          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' }
+          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' },
+          bottleRun: { speaker: 'kramer', text: 'Buddy — bottles. Cases of them. The deposit money is just SITTING there in Michigan waiting for us. Well — the truck goes to Michigan eventually. You just get them to the bodega for now. Logistics! $160.' },
+          trackSystem: { speaker: 'kramer', text: 'The Meadowlands, buddy. I got a system. A SYSTEM. It involves a man in a cap and a horse that knows things. Put the bet down, watch it run, bring me the word. This cannot fail — it’s mathematically ordained. $280.' },
+          kramericaBook: { speaker: 'kramer', text: 'The coffee table book about coffee tables — it’s DONE, buddy. The publisher wants the manuscript at the Yankees office. Don’t ask why. Publishing is a strange world. $300 and a credit in the acknowledgments!' }
         };
         startDialog([
           offers[mid],
