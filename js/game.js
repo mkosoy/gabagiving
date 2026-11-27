@@ -309,7 +309,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2705,6 +2705,14 @@ const MISSION_DEFS = {
       { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
     ]
   },
+  sitDown: {
+    title: 'THE SIT-DOWN',
+    payout: 220, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'diner', x: 270, y: 240, radius: 60, objective: 'Mediate the beef at the Endgame Diner — the booth, back corner', label: 'the sit-down' },
+      { scene: 'club', x: 304, y: 132, radius: 42, objective: 'Report back to Silvio at the Bing', label: 'Silvio' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -2886,6 +2894,15 @@ function advanceMission() {
       jPetermanBurma: [
         { speaker: 'elaine', text: 'The Burma situation is CONTAINED! Peterman almost wrote an entire catalog from a hammock — do you know how hard it is to copyedit a hammock?! $290! And here — take this. It’s a small carved elephant. We have NINE HUNDRED.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I liquidated Burma! Me! A nation-state, laundered through a bodega! This goes on the resume RIGHT between marine biologist and latex!' : 'Moved some trinkets. Quiet, no questions — that’s how I like it. Tell your boss the catalog business is a lot like my business, except he writes his evidence down.' }
+      ],
+      sitDown: state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'Flashback, ninety minutes ago, the Endgame Diner: George mediates the beef by explaining, at length, that HE once lost a parking spot at Willowbrook in 1987 and it haunts him still. Both parties are so moved — or so exhausted — that they shake on it. Nobody touches their pie. Nobody ever touches the pie.' },
+        { speaker: 'silvio', text: 'You mediated it with a STORY? No threats? Huh. Unorthodox. Effective. The cart guy sends his regards and also his medical bills, which I have lost. $220, peacemaker.' },
+        { speaker: 'george', text: 'Conflict resolution is about empathy! Empathy and the strategic deployment of personal trauma! I should do this professionally!' }
+      ] : [
+        { speaker: 'narrator', text: 'Flashback, ninety minutes ago, the Endgame Diner: Tony sits down between the two of them and says nothing for four full minutes. Then he orders onion rings for the table. Then he says, “we’re done here, yeah?” They are done there. The rings were excellent. Nobody touched the pie — nobody EVER touches the pie.' },
+        { speaker: 'silvio', text: 'The four-minute silence. The rings for the table. Classic. You know the man in the members-only jacket nodded at you? He never nods. $220.' },
+        { speaker: 'tony', text: 'Half of this job is knowing when to shut up. The other half is onion rings.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -3151,6 +3168,11 @@ function updateMission(dt) {
         paulieShoe: [
           { speaker: 'narrator', text: 'You part the frozen brush where Paulie swears — SWEARS — he was only slightly disoriented. Nothing but frost, a rusted can of something unlabeled, and the deep suspicion that the trees are laughing.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m shoe-hunting in a haunted forest! For PAULIE! He doesn’t even tip!' : 'The shoe’s a size extra-wide. The forest is four hundred acres. This is what we in the business call a long shot.' }
+        ],
+        sitDown: [
+          { speaker: 'narrator', text: 'The back booth. Two associates, one laminated menu between them like a demilitarized zone. The beef: a parking spot. The shopping-cart incident is not discussed. It hangs in the air like the pie nobody will touch.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Gentlemen. I too have lost a spot at Willowbrook. November 14th, 1987. I circled for forty minutes. FORTY. So when I say I understand — I mean it from the scar tissue!' : 'Sit down. Both of ya. …We’re gonna sit here until this is done. I got nowhere to be. I got ALL night. The coffee’s bottomless. Think about that.' },
+          { speaker: 'narrator', text: 'Ninety minutes later — or four minutes, depending on the mediator — it is resolved. Hands are shaken. The pie, untouched, is boxed for nobody. The man in the members-only jacket does not look up.' }
         ],
         screenplay: [
           { speaker: 'narrator', text: 'A hundred pages, still warm from the club office printer. The title page reads “BARKATHTON — by C.M.” You burn it without reading a word, which is either loyalty or a crime against comedy. Page forty-three curls away last: “the dog filibusters for nine hours…”' },
@@ -4905,7 +4927,14 @@ function clubInteractions() {
     ]);
   } });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
-    if (!state.mission && state.flags.bigMouthDone && !state.flags.pineRunnerDone && state.flags.freeRoam) {
+    if (!state.mission && state.flags.freeRoam && state.flags.screenplayDone && !state.flags.sitDownDone) {
+      startMission('sitDown');
+      startDialog([
+        { speaker: 'silvio', text: 'One more thing. Two of our — associates — got a beef over a parking spot at the Willowbrook Mall. It’s escalated. There was a shopping cart incident. It needs a sit-down before somebody does something we all gotta explain.' },
+        { speaker: 'silvio', text: 'The Endgame Diner, back booth, tonight. Neutral ground — nobody gets clipped in a diner. It’s a law of physics. You mediate. $220 for keeping the peace.' },
+        { speaker: 'system', text: 'Mission accepted: THE SIT-DOWN. Neutral ground. Bottomless coffee.' }
+      ]);
+    } else if (!state.mission && state.flags.bigMouthDone && !state.flags.pineRunnerDone && state.flags.freeRoam) {
       startMission('pineRunner');
       state.flags.heat = Math.max(state.flags.heat || 0, 3);
       startDialog([
@@ -7809,17 +7838,78 @@ function drawDiner() {
     ctx.arc(590 - state.camera.x, 210 - state.camera.y, 60, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    // the regulars — a diner is its people
+    drawPerson(ctx, 200 - state.camera.x, 92 - state.camera.y, 'manB', 'down', Math.floor(state.time * .5) % 2, { pose: 'sit' });
+    drawPerson(ctx, 470 - state.camera.x, 92 - state.camera.y, 'womanA', 'down', Math.floor(state.time * .4) % 2, { pose: 'sit' });
+    drawPerson(ctx, 165 - state.camera.x, 185 - state.camera.y, 'womanB', 'down', 0, { pose: 'sit' });
+    drawPerson(ctx, 330 - state.camera.x, 58 - state.camera.y, 'womanC', 'down', state.frame * .5, {});
+    drawPerson(ctx, 100 - state.camera.x, 322 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'stand' });
     return;
   }
-  px(ctx, 0, 0, 640, 416, '#3a3230');
-  for (let fy = 0; fy < 416; fy += 16) px(ctx, 0, fy, 640, 1, '#332b29');
-  px(ctx, 30, 30, 580, 68, '#8a8a8e');
-  px(ctx, 30, 30, 580, 8, '#c8c8ce');
-  px(ctx, 120, 150, 96, 70, '#7a2e2e');
-  px(ctx, 420, 150, 96, 70, '#7a2e2e');
-  px(ctx, 120, 280, 96, 70, '#7a2e2e');
-  px(ctx, 420, 280, 96, 70, '#7a2e2e');
+  // checkered floor
+  for (let fy = 8; fy < 408; fy += 16) for (let fx = 8; fx < 632; fx += 16) {
+    px(ctx, fx, fy, 16, 16, ((fx + fy) / 16) % 2 ? '#3d3436' : '#332b2c');
+  }
+  // back wall band with windows — night outside, neon glow
+  px(ctx, 8, 8, 624, 22, '#4a3a42');
+  for (let wx = 60; wx < 600; wx += 120) {
+    px(ctx, wx, 10, 60, 18, '#141c2e');
+    px(ctx, wx, 10, 60, 2, '#6a5a62');
+    px(ctx, wx + 26, 10, 2, 18, '#6a5a62');
+    px(ctx, wx + 8, 14, 10, 8, '#e85a4a'); // neon OPEN reflection
+  }
+  // the long chrome counter with stools
+  px(ctx, 30, 30, 580, 68, '#9a9aa2');
+  px(ctx, 30, 30, 580, 8, '#d8d8e0');
+  px(ctx, 30, 88, 580, 10, '#6a6a72');
+  px(ctx, 30, 40, 580, 3, '#7a7a84');
+  // pie case on the counter — the rotating shrine
+  px(ctx, 440, 44, 60, 40, '#c8b060');
+  px(ctx, 444, 48, 52, 32, '#2e2020');
+  const pieSpin = Math.floor(state.time * 2) % 3;
+  px(ctx, 448 + pieSpin * 4, 54, 12, 8, '#c85a5a');
+  px(ctx, 466 - pieSpin * 3, 62, 12, 8, '#e8d88a');
+  // coffee urns steaming
+  px(ctx, 120, 44, 30, 44, '#b8b8c0');
+  px(ctx, 156, 44, 30, 44, '#a8a8b0');
+  if (Math.sin(state.time * 2) > 0) { px(ctx, 130, 36, 3, 6, '#888'); px(ctx, 168, 34, 3, 6, '#888'); }
+  // counter stools — red vinyl tops
+  for (let sx = 90; sx < 560; sx += 62) {
+    px(ctx, sx, 104, 18, 8, '#a02e2e');
+    px(ctx, sx + 7, 112, 4, 20, '#6a6a72');
+  }
+  // booths — red vinyl with chrome trim and little table
+  for (const [bx, by] of [[120, 150], [420, 150], [120, 280], [420, 280]]) {
+    px(ctx, bx, by, 96, 70, '#7a2e2e');
+    px(ctx, bx, by, 96, 14, '#a03e3e');
+    px(ctx, bx, by + 56, 96, 14, '#a03e3e');
+    px(ctx, bx + 32, by + 26, 32, 18, '#d8d0c0');
+    px(ctx, bx + 32, by + 26, 32, 3, '#f0e8d8');
+    // ketchup and the little jukebox remote on each table
+    px(ctx, bx + 38, by + 30, 4, 7, '#c03030');
+    px(ctx, bx + 52, by + 31, 8, 6, '#3a3a44');
+  }
+  // the big jukebox — glowing arch, chrome trim
   px(ctx, 560, 200, 60, 140, '#2e4a6b');
+  px(ctx, 566, 206, 48, 60, '#7ab5e8');
+  px(ctx, 570, 210, 40, 40, '#e8c93e');
+  px(ctx, 566, 272, 48, 8, '#c0c0c8');
+  const jb = Math.sin(state.time * 4) > 0 ? '#e85a4a' : '#4ae85a';
+  px(ctx, 568, 286, 6, 6, jb); px(ctx, 580, 286, 6, 6, '#4a6ae8'); px(ctx, 592, 286, 6, 6, jb);
+  // tiled wainscot strip along walls
+  for (let wx = 8; wx < 632; wx += 24) px(ctx, wx, 400, 24, 8, wx % 48 ? '#4a3a42' : '#554350');
+  // hanging ceiling lights
+  for (let lx = 130; lx < 600; lx += 140) {
+    px(ctx, lx, 8, 2, 12, '#2a2a2e');
+    px(ctx, lx - 5, 20, 12, 8, '#e8c93e');
+    ctx.save();
+    ctx.globalAlpha = .07;
+    ctx.fillStyle = '#e8c93e';
+    ctx.beginPath();
+    ctx.arc(lx + 1, 60, 46, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 function dinerInteractions() {
@@ -7892,7 +7982,14 @@ function dinerInteractions() {
       audio.sfx('success');
       startDialog([
         { speaker: 'narrator', text: 'You slide into the booth. Vinyl squeaks. Somewhere a trucker is explaining the government to nobody.' + (hadHeat ? ' Twenty minutes of coffee later, the heat on you fades a little. Nobody looks for anybody in a diner. It’s a law of physics.' : '') },
-        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A booth! See, a booth is a little apartment you rent by the hour. With pie access!' : 'Every important conversation I ever had happened in a booth. There’s a reason for that.' }
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A booth! See, a booth is a little apartment you rent by the hour. With pie access!' : 'Every important conversation I ever had happened in a booth. There’s a reason for that.' },
+        { speaker: 'narrator', text: 'From the counter, a trucker is saying — ' + [
+          '“— buried out in the Pines, I’m telling you. Things out there ain’t been found since the war. Any war.”',
+          '“— Gabagool Park. Middle of suburbia. Who hides something in a PARK? Somebody who knows nobody looks in parks, that’s who.”',
+          '“— twelve of them, scattered across the whole state. You ask me, it’s a scavenger hunt for guys who ain’t afraid of paperwork.”',
+          '“— the radio station out of Secaucus. The POLICE band. Illegal as sin and twice as informative.”',
+          '“— a cabin, deep past the clearing. Smoke coming out the chimney in August. Nobody asks. You don’t ask in the Pines.”'
+        ][Math.floor(Math.random() * 5)] }
       ]);
     } },
     { x: 380, y: 120, w: 40, h: 26, radius: 40, label: 'The waitress', action: () => {
