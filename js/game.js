@@ -3994,7 +3994,7 @@ function houseInteractions() {
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
   if (state.flags.freeRoam) list.push({ x: 500, y: 60, w: 44, h: 50, radius: 46, label: 'Mattress — stash cash', action: () => {
     if (state.money < 20) { startDialog([{ speaker: 'narrator', text: 'The mattress. King size, queen problems. You need at least $20 on you to make a deposit worth hiding. Every dollar you carry is a dollar the cops can fine — what’s in the mattress, they never find.' }]); return; }
-    const amt = Math.max(20, Math.floor(state.money * .25));
+    const amt = Math.max(20, Math.floor(state.money * .6));
     state.money -= amt;
     state.flags.stash = (state.flags.stash || 0) + amt;
     audio.sfx('cash');
