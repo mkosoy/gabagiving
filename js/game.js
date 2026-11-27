@@ -63,6 +63,10 @@ const sceneArt = {
   mgClaw: loadArt('./assets/bg-mgclaw.webp'),
   mgStrength: loadArt('./assets/bg-mgstrength.webp'),
   mgArmwrestle: loadArt('./assets/bg-mgarmwrestle.webp'),
+  mgFishing: loadArt('./assets/bg-mgfishing.webp'),
+  mgCraps: loadArt('./assets/bg-mgcraps.webp'),
+  mgGoose: loadArt('./assets/bg-mggoose.webp'),
+  mgDream: loadArt('./assets/bg-mgdream.webp'),
   mgDanceoff: loadArt('./assets/mg-danceoff.webp'),
   mgHorsetrack: loadArt('./assets/mg-horsetrack.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
@@ -802,6 +806,7 @@ function drawTrot() {
 }
 
 function drawFishing() {
+  const mgBg = drawMgBackdrop(sceneArt.mgFishing, 640, 416, 0.42);
   const f = state.fishing;
   if (!f) return;
   ctx.fillStyle = 'rgba(8,10,16,.85)';
@@ -6997,18 +7002,21 @@ function drawGoose(gx, gy, panic) {
 
 function drawGooseChase() {
   const g = state.goosechase;
-  px(ctx, 0, 0, 640, 416, '#3d6b35');
-  // park detail
-  for (let i = 0; i < 30; i++) px(ctx, (i * 97) % 640, 80 + (i * 61) % 300, 3, 2, '#2e5428');
-  ctx.fillStyle = '#4a7a40';
-  ctx.beginPath();
-  ctx.ellipse(320, 420, 380, 100, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // pond corner
-  ctx.fillStyle = '#3a6a8f';
-  ctx.beginPath();
-  ctx.ellipse(590, 100, 80, 46, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const mgBg = drawMgBackdrop(sceneArt.mgGoose, 640, 416, 0.15);
+  if (!mgBg) {
+    px(ctx, 0, 0, 640, 416, '#3d6b35');
+    // park detail
+    for (let i = 0; i < 30; i++) px(ctx, (i * 97) % 640, 80 + (i * 61) % 300, 3, 2, '#2e5428');
+    ctx.fillStyle = '#4a7a40';
+    ctx.beginPath();
+    ctx.ellipse(320, 420, 380, 100, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // pond corner
+    ctx.fillStyle = '#3a6a8f';
+    ctx.beginPath();
+    ctx.ellipse(590, 100, 80, 46, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   outlineText(ctx, 'GABAGOOL PARK · CATCH THE GOOSE', 320, 40, '#ffe78a', 11, 'center');
   if (!g) return;
   if (!g.done) outlineText(ctx, `${Math.max(0, g.duration - g.t).toFixed(1)}s`, 320, 62, '#fffbe8', 10, 'center');
@@ -7893,6 +7901,7 @@ function drawStrength() {
 }
 
 function drawCraps() {
+  const mgBg = drawMgBackdrop(sceneArt.mgCraps, 640, 416, 0.45);
   const c = state.craps;
   if (!c) return;
   ctx.fillStyle = 'rgba(8,6,12,.9)';
@@ -12430,12 +12439,15 @@ function drawWorld() {
 }
 
 function drawDream() {
+  const mgBg = drawMgBackdrop(sceneArt.mgDream, 640, 416, 0.3);
   const t = state.dreamT;
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#1c123c');
-  grad.addColorStop(1, '#512541');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  if (!mgBg) {
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#1c123c');
+    grad.addColorStop(1, '#512541');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
   for (let i = 0; i < 28; i++) {
     const x = (i * 83 + Math.sin(i) * 30) % W;
     const y = ((t * 95 + i * 67) % (H + 70)) - 50;
