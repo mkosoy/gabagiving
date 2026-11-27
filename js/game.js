@@ -1565,6 +1565,27 @@ function drawIceCream() {
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
 
+function drawWantedPoster() {
+  if (state.scene !== 'hub' || (state.flags.heat || 0) < 4) return;
+  const wx = 620, wy = 108;
+  px(ctx, wx - 14, wy - 18, 28, 36, '#e8ddc0');
+  px(ctx, wx - 14, wy - 18, 28, 3, '#c9b98a');
+  ctx.fillStyle = '#3a2c1c';
+  ctx.font = 'bold 5px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('WANTED', wx, wy - 12);
+  // crude sketch of the player — spitting image, unfortunately
+  const kind = state.player.kind;
+  px(ctx, wx - 5, wy - 8, 10, 8, kind === 'george' ? '#caa07a' : '#d8b08a');
+  px(ctx, wx - 5, wy - 9, 10, 2, kind === 'george' ? '#6b4a2f' : '#2c2018');
+  px(ctx, wx - 4, wy + 1, 8, 7, kind === 'george' ? '#7a8a5a' : '#3a3a44');
+  const flicker = Math.floor(state.time * 2) % 2;
+  ctx.fillStyle = flicker ? '#8a2020' : '#5a1414';
+  ctx.font = '4px monospace';
+  ctx.fillText('$5000 REWARD', wx, wy + 12);
+  ctx.textAlign = 'left';
+}
+
 function drawUmbrellaGuy() {
   if (state.scene !== 'nyc' || !weatherRain()) return;
   const t = state.time * .8;
@@ -7623,6 +7644,7 @@ function drawWorld() {
   drawKite();
   drawLawnmower();
   drawUmbrellaGuy();
+  drawWantedPoster();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
