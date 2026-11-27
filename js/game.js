@@ -3774,6 +3774,8 @@ function nearestInteraction() {
       ]);
     }
   } });
+  }
+  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
   list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
       if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
       else enterHub(false);
