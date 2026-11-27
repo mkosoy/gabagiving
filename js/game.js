@@ -1202,7 +1202,8 @@ const scenes = {
     colliders: [
       r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
       r(40,30,180,110), r(300,30,180,110), r(560,30,170,110),
-      r(8,300,752,116)
+      r(8,300,752,116),
+      r(30,185,170,50), r(250,185,180,50), r(500,185,180,50)
     ],
     draw: drawQueens,
     interactions: queensInteractions
@@ -7474,7 +7475,7 @@ function queensInteractions() {
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
     } },
-    { x: 230, y: 210, w: 60, h: 30, radius: 44, label: 'Borrow a street car', hidden: () => !!state.player.inCar, action: () => {
+    { x: 250, y: 245, w: 60, h: 30, radius: 48, label: 'Borrow a street car', hidden: () => !!state.player.inCar, action: () => {
       stealRandomCar();
     } },
     { x: 80, y: 150, w: 60, h: 40, radius: 42, label: 'Sit on the stoop', action: () => {
