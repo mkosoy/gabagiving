@@ -2746,6 +2746,10 @@ const MISSION_DEFS = {
   sliceJob: {
     title: 'THE SLICE RUN',
     payout: 25, heat: 0, timeLimit: 150,
+    failDialog: [
+      { speaker: 'narrator', text: 'The pie goes cold in your hands. Somewhere, a customer looks out the window one last time and orders Chinese. Back at Ray’s, the counter guy doesn’t yell. He just makes the next pie. Somehow that’s worse.' },
+      { speaker: 'system', text: 'MISSION FAILED — the oven never stops. Talk to the counter guy at Ray’s to retry.' }
+    ],
     steps: [
       { scene: 'hub', x: 320, y: 260, radius: 70, objective: 'Deliver the pie while it’s hot', label: 'the customer' },
       { scene: 'slice', x: 320, y: 200, radius: 60, objective: 'Report back to Ray’s', label: 'Ray’s' }
@@ -2820,6 +2824,7 @@ function advanceMission() {
   if (!m) return;
   const def = MISSION_DEFS[m.id];
   m.step += 1;
+  if (m.id === 'sliceJob' && m.step >= 1) m.deadline = null; // the pie is delivered — the clock stops
   const msteps = m.steps || def.steps;
   if (m.step >= msteps.length) {
     // mission complete
@@ -3029,10 +3034,13 @@ function updateMission(dt) {
     const id = m0.id;
     state.mission = null;
     audio.sfx('denied');
-    startDialog([
+    const failLines = MISSION_DEFS[id].failDialog || [
       { speaker: 'narrator', text: 'Too slow. The job falls through. Newman will pretend he never offered it, out loud, repeatedly, to everyone.' },
       { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The traffic! The tunnel! I demand a recount!' : 'Yeah, yeah. Another day, another blown deadline in this economy.' },
-      { speaker: 'system', text: 'MISSION FAILED — talk to Newman to retry.' },
+      { speaker: 'system', text: 'MISSION FAILED — talk to Newman to retry.' }
+    ];
+    startDialog([
+      ...failLines,
       ...(MISSION_DEFS[id].failExtra || [])
     ]);
     return;
