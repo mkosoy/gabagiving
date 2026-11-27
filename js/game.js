@@ -3466,7 +3466,7 @@ function updateExplore(dt) {
   updateHeatDecay(dt);
   const inter = nearestInteraction();
   let jackTarget = null;
-  if (!p.inCar && state.hubCars && state.flags.freeRoam) {
+  if (!p.inCar && state.hubCars && state.flags.freeRoam && state.scene === 'hub') {
     let jd = 36;
     for (const c of state.hubCars) {
       const d = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
@@ -3482,7 +3482,7 @@ function updateExplore(dt) {
     p.speed = 185 + Math.random() * 40;
     p.carColor = jack.color;
     p.carDamage = 0; p.carV = 0;
-    p.x = jack.x + 9; p.y = jack.y - 2;
+    if (!blockedAt(jack.x + 9, jack.y - 2)) { p.x = jack.x + 9; p.y = jack.y - 2; }
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + .6);
     state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
     audio.sfx('door'); audio.sfx('crash');
