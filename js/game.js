@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked'];
 function saveWorld() {
   try {
     const out = {};
@@ -3558,6 +3558,25 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 590, y: 120, w: 40, h: 34, radius: 40, label: 'Back office safe', action: () => {
+    if ((state.money || 0) < 50) { toast('Silvio doesn’t hold less than $50. It’s a dignity thing.'); return; }
+    const deposit = Math.min(state.money, Math.floor(state.money / 2));
+    state.money -= deposit;
+    state.flags.banked = (state.flags.banked || 0) + deposit;
+    audio.sfx('cash');
+    startDialog([
+      { speaker: 'narrator', text: `Silvio counts $${deposit} into the office safe with the tenderness of a man tucking in a child. “Half of what you carry — house rules. It’s safe here. Safer than you are.” Total banked: $${state.flags.banked}.` },
+      { speaker: 'silvio', text: 'Busted out there, they take what you’re carrying. What’s in here? Never happened. That’s the beauty of a safe — officially, it’s empty.' }
+    ]);
+  } });
+  list.push({ x: 590, y: 160, w: 40, h: 30, radius: 40, label: 'Withdraw from safe', action: () => {
+    if (!(state.flags.banked > 0)) { toast('The safe is empty. Officially it was always empty.'); return; }
+    const amt = state.flags.banked;
+    state.flags.banked = 0;
+    state.money += amt;
+    audio.sfx('cash');
+    startDialog([{ speaker: 'narrator', text: `Silvio opens the safe and hands you $${amt} in bills that have never met a serial number database. “Spend it in good health. Or bad health. Health is your business.”` }]);
+  } });
   list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
     audio.sfx('pickup');
     startDialog(state.player.kind === 'george' ? [
