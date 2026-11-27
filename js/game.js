@@ -75,6 +75,7 @@ const sceneArt = {
   casino: loadArt('./assets/bg-casino.webp'),
   cabin: loadArt('./assets/bg-cabin.webp'),
   poolside: loadArt('./assets/bg-poolside.webp'),
+  greengrove: loadArt('./assets/bg-greengrove.webp'),
   meadow: loadArt('./assets/bg-meadow.webp'),
   queens: loadArt('./assets/bg-queens.webp'),
   taffy: loadArt('./assets/bg-taffy.webp'),
@@ -960,7 +961,7 @@ function drawFastTravel() {
   if (state.mission && MISSION_DEFS[state.mission.id]) {
     const mstep = missionStep();
     if (mstep) {
-      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac' };
+      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac', greengrove: 'hub' };
       const targetScene = hostRegion[mstep.scene] || mstep.scene;
       const target = FT_NODES.find((n) => n.id === targetScene);
       if (target) {
@@ -1355,6 +1356,15 @@ const scenes = {
     ],
     draw: drawPoolside,
     interactions: poolsideInteractions
+  },
+  greengrove: {
+    w: 640, h: 416, label: 'Green Grove · Retirement Community', music: 'dream',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(40,60,200,90), r(380,50,220,60), r(60,260,180,60), r(400,240,180,70)
+    ],
+    draw: drawGreenGrove,
+    interactions: greengroveInteractions
   },
   dmv: {
     w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
@@ -6396,6 +6406,12 @@ function stealRandomCar() {
 
 function hubInteractions() {
   const list = [
+    { x: 1150, y: 150, w: 60, h: 40, radius: 48, label: 'Green Grove', action: () => {
+      startDialog([
+        { speaker: 'narrator', text: 'A brick building set back from the road behind a lawn that is mowed within an inch of its life. GREEN GROVE — A RETIREMENT COMMUNITY. Not a nursing home. There is a sign clarifying this. The sign has been corrected so many times the correction has a correction.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Retirement community! Now THAT is the life! Meals! Activities! No responsibility! …why do we wait until we’re OLD for this?' : 'Yeah, yeah. It’s a retirement community. Say it right, she haunts you less.' }
+      ], () => travelHub('greengrove'));
+    } },
     { x: 885, y: 150, w: 50, h: 34, radius: 46, label: 'Endgame Diner', action: () => {
       if (!state.flags.dinerSeen) {
         state.flags.dinerSeen = true;
@@ -9817,6 +9833,218 @@ function poolsideInteractions() {
       startDialog([{ speaker: 'narrator', text: 'You touch the water. It is approximately the temperature of a loan shark’s heart. The pool stays open because closing it would mean admitting winter exists, and in this house we do not admit things. The ducks do not mind. The ducks are professionals.' }]);
     } }
   ];
+}
+
+function drawGreenGrove() {
+  if (drawSceneArt(sceneArt.greengrove, 640, 416)) {
+    // the residents are baked into the painting — the nurse is the one thing in this room that never stops moving
+    const nx = 200 + ((state.time * 22) % 280);
+    drawPerson(ctx, nx - state.camera.x, 300 - state.camera.y, 'waitress', 'right', state.frame, { pose: 'walk' });
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#8a7a6a');
+}
+
+function greengroveInteractions() {
+  return [
+    { x: 30, y: 340, w: 80, h: 66, radius: 44, label: 'Leave', action: leaveOutside },
+    { x: 320, y: 130, w: 130, h: 50, radius: 54, label: 'Bingo — $5 a card', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'The bingo table. Folding chairs, a cage of numbered balls, and Mrs. Lombardi — who has not lost a Thursday since the Reagan administration and reminds everyone of this constantly. The nurse smiles the smile of someone paid by the hour.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Five dollars! For BINGO! In my day it was two! …fine. Fine! But if I win I’m telling everyone. And if I lose I was never here.' : 'Bingo. The one game in America with no muscle in it at all. …Get me a card. Don’t tell nobody.' }
+      ], () => initBingo());
+    } },
+    { x: 500, y: 60, w: 90, h: 50, radius: 46, label: 'The activities board', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'ACTIVITIES — NOVEMBER. Monday: chair yoga. Tuesday: chair yoga (advanced). Wednesday: candlepin bowling, CANCELLED (hip). Thursday: BINGO — no outside food, no exceptions, this means YOU, Sal. Friday: Thanksgiving pageant rehearsal, roles TBD, the turkey costume is “being discussed”. Saturday: quiet time. Sunday: quieter time.' }]);
+    } },
+    { x: 560, y: 130, w: 70, h: 50, radius: 46, label: 'The piano', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'The piano player nods at you without stopping. Four songs. Rotation. Forever. You catch yourself humming along and realize, with horror, that you know all four. That is what this place does. It gets in.' }]);
+    } }
+  ];
+}
+
+// ---------- Bingo: THURSDAYS BELONG TO MRS. LOMBARDI ----------
+function bingoCard() {
+  const cols = [];
+  for (let c = 0; c < 5; c++) {
+    const pool = [];
+    for (let n = c * 15 + 1; n <= c * 15 + 15; n++) pool.push(n);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    cols.push(pool.slice(0, 5));
+  }
+  // card[row][col]
+  const card = [];
+  for (let row = 0; row < 5; row++) card.push(cols.map(c2 => c2[row]));
+  return card;
+}
+
+function initBingo() {
+  if ((state.flags.tribute || 0) < 5) { startDialog([{ speaker: 'narrator', text: 'Five dollars a card. The cage does not extend credit. Neither does Mrs. Lombardi, who has opinions about credit.' }]); return; }
+  state.flags.tribute -= 5;
+  const deck = [];
+  for (let n = 1; n <= 75; n++) deck.push(n);
+  for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
+  state.bingo = {
+    card: bingoCard(), deck, called: [], cur: null, callT: 2.2, daubed: { '2,2': true },
+    cx: 0, cy: 0, lockout: 0, phase: 'play', t: 0, msg: null
+  };
+  state.mode = 'bingo';
+  audio.sfx('pickup');
+}
+
+function bingoWin(daubed) {
+  const has = (r, c) => !!daubed[r + ',' + c];
+  for (let r = 0; r < 5; r++) { if ([0, 1, 2, 3, 4].every(c => has(r, c))) return true; }
+  for (let c = 0; c < 5; c++) { if ([0, 1, 2, 3, 4].every(r => has(r, c))) return true; }
+  if ([0, 1, 2, 3, 4].every(i => has(i, i))) return true;
+  if ([0, 1, 2, 3, 4].every(i => has(i, 4 - i))) return true;
+  return false;
+}
+
+function updateBingo(dt) {
+  const b = state.bingo;
+  if (!b) { state.mode = 'explore'; return; }
+  b.t += dt;
+  if (b.phase === 'play') {
+    b.lockout = Math.max(0, b.lockout - dt);
+    b.callT -= dt;
+    if (b.callT <= 0 && b.deck.length) {
+      b.cur = b.deck.pop();
+      b.called.push(b.cur);
+      b.callT = 2.6;
+      audio.sfx('blip');
+      // mercy rule: undobbed hits fade in after two more calls — the nurse takes pity
+      b.mercyT = (b.mercyT || 0) + 1;
+      if (b.mercyT >= 2) {
+        for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+          const v = b.card[r][c];
+          if (b.called.slice(0, -2).includes(v) && !b.daubed[r + ',' + c]) b.daubed[r + ',' + c] = 'mercy';
+        }
+      }
+      if (bingoWin(b.daubed)) {
+        b.phase = 'won'; b.t = 0;
+        state.flags.tribute = (state.flags.tribute || 0) + 25;
+        audio.sfx('cash');
+        return;
+      }
+      if (b.called.length >= 30) { b.phase = 'lost'; b.t = 0; audio.sfx('buzzer'); return; }
+    }
+    // cursor
+    let mvx = 0, mvy = 0;
+    if (consume(['ArrowLeft'])) mvx = -1;
+    if (consume(['ArrowRight'])) mvx = 1;
+    if (consume(['ArrowUp'])) mvy = -1;
+    if (consume(['ArrowDown'])) mvy = 1;
+    if (Math.abs(axis.x) > .6 && Math.abs(b.ax || 0) <= .6) mvx = axis.x > 0 ? 1 : -1;
+    if (Math.abs(axis.y) > .6 && Math.abs(b.ay || 0) <= .6) mvy = axis.y > 0 ? 1 : -1;
+    b.ax = axis.x; b.ay = axis.y;
+    if (mvx) { b.cx = Math.max(0, Math.min(4, b.cx + mvx)); audio.sfx('blip'); }
+    if (mvy) { b.cy = Math.max(0, Math.min(4, b.cy + mvy)); audio.sfx('blip'); }
+    if (consume(['Space', 'Enter', 'KeyE', 'KeyB'])) {
+      if (b.lockout <= 0 && !b.daubed[b.cy + ',' + b.cx]) {
+        const v = b.card[b.cy][b.cx];
+        if (b.called.includes(v)) {
+          b.daubed[b.cy + ',' + b.cx] = true;
+          audio.sfx('pickup');
+          if (bingoWin(b.daubed)) {
+            b.phase = 'won'; b.t = 0;
+            state.flags.tribute = (state.flags.tribute || 0) + 25;
+            audio.sfx('cash');
+          }
+        } else {
+          b.lockout = 1.2;
+          audio.sfx('denied');
+        }
+      }
+    }
+    if (consume(['Escape', 'KeyM'])) { state.bingo = null; state.mode = 'explore'; }
+    return;
+  }
+  if ((b.phase === 'won' || b.phase === 'lost') && b.t > 1.2 && consume(['Space', 'Enter', 'KeyE', 'KeyB', 'Escape', 'KeyM'])) {
+    const won = b.phase === 'won';
+    state.bingo = null; state.mode = 'explore';
+    startDialog(won ? [
+      { speaker: 'narrator', text: 'BINGO. You say it quietly, because you are not sure of the etiquette, and then NOT quietly at all. The room applauds with genuine warmth except for one corner. Mrs. Lombardi does not look at you. Mrs. Lombardi will remember this. $25.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I WON! Me! At bingo! Does anyone want a certificate?! I want a certificate!' : 'What? It’s a game. Cards, numbers — I know numbers. Don’t make it weird.' }
+    ] : [
+      { speaker: 'narrator', text: 'BINGO — from the corner. Mrs. Lombardi raises one finger, not the rude one, but somehow it is the rude one. The nurse collects the balls. “She does this every week,” the nurse whispers. “It means the world to her. Please don’t come back on Thursdays.”' }
+    ]);
+  }
+}
+
+function drawBingo() {
+  const b = state.bingo;
+  if (!b) return;
+  if (!drawMgBackdrop(sceneArt.greengrove, 640, 360, .55)) {
+    ctx.fillStyle = '#241c18';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  ctx.fillStyle = '#e8c25a';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THURSDAY BINGO — GREEN GROVE', 320, 20);
+  // current call — the big ball
+  if (b.cur) {
+    const col = ['#c03a3a', '#3a6ac0', '#e8c832', '#3aa05a', '#8a4ab0'][Math.floor((b.cur - 1) / 15)];
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(88, 110, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 22px monospace';
+    const letter = 'BINGO'[Math.floor((b.cur - 1) / 15)];
+    ctx.fillText(letter, 88, 104);
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText(b.cur, 88, 126);
+  }
+  ctx.fillStyle = '#b8a88a';
+  ctx.font = '9px monospace';
+  ctx.fillText('calls: ' + b.called.length + '/30 — then it’s hers', 88, 160);
+  // the card
+  const gx = 176, gy = 54, cell = 52;
+  const letters = 'BINGO';
+  for (let c = 0; c < 5; c++) {
+    ctx.fillStyle = ['#c03a3a', '#3a6ac0', '#e8c832', '#3aa05a', '#8a4ab0'][c];
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText(letters[c], gx + c * cell + cell / 2, gy - 6);
+  }
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const x = gx + c * cell, y = gy + r * cell;
+      const mark = b.daubed[r + ',' + c];
+      ctx.fillStyle = mark === true ? '#3a6b3a' : mark === 'mercy' ? '#4a5a45' : '#f0ead8';
+      ctx.fillRect(x + 2, y + 2, cell - 4, cell - 4);
+      ctx.strokeStyle = '#333';
+      ctx.strokeRect(x + 2.5, y + 2.5, cell - 5, cell - 5);
+      ctx.fillStyle = mark ? '#e8ffe0' : '#222';
+      ctx.font = (r === 2 && c === 2) ? 'bold 9px monospace' : 'bold 15px monospace';
+      ctx.fillText((r === 2 && c === 2) ? 'FREE' : b.card[r][c], x + cell / 2, y + cell / 2 + 5);
+    }
+  }
+  // cursor
+  if (b.phase === 'play') {
+    ctx.strokeStyle = b.lockout > 0 ? '#c03a3a' : '#ffe78a';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(gx + b.cx * cell + 1, gy + b.cy * cell + 1, cell - 2, cell - 2);
+    ctx.lineWidth = 1;
+  }
+  // called ticker — last few
+  ctx.fillStyle = '#b8a88a';
+  ctx.font = '9px monospace';
+  ctx.fillText('called: ' + b.called.slice(-8).join(' · '), 380, 330);
+  if (b.phase === 'play') {
+    ctx.fillText('◀ ▲ ▼ ▶ move · E daub — wrong daubs cost you · M folds', 320, 352);
+  } else {
+    ctx.fillStyle = b.phase === 'won' ? '#9be59b' : '#ff9a8a';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText(b.phase === 'won' ? 'BINGO — $25 · the room loves you except one corner' : 'MRS. LOMBARDI TAKES IT — as is tradition', 320, 330);
+    ctx.font = '9px monospace';
+    ctx.fillStyle = '#c8c8d0';
+    ctx.fillText('E to leave the table', 320, 348);
+  }
 }
 
 function drawCabin() {
@@ -13675,6 +13903,7 @@ function render() {
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'pool') drawPool();
+  else if (state.mode === 'bingo') drawBingo();
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'pinball') drawPinball();
   else if (state.mode === 'poker') drawPoker();
@@ -14112,6 +14341,8 @@ function update(dt) {
     updateSlots(dt);
   } else if (state.mode === 'racing') {
     updateRacing(dt);
+  } else if (state.mode === 'bingo') {
+    updateBingo(dt);
   } else if (state.mode === 'pool') {
     updatePool(dt);
   } else if (state.mode === 'darts') {
