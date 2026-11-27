@@ -8066,6 +8066,16 @@ function drawQueens() {
 
 function queensInteractions() {
   return [
+    { x: 640, y: 120, w: 50, h: 40, radius: 44, label: 'The neighbor’s dog', action: () => {
+      audio.sfx('denied');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The dog — a beagle with the lungs of a much larger animal — has barked at this fence since 1987. George barks back, once. The dog pauses, reassesses the relationship, and redoubles. Somewhere inside, a neighbor mutters that the dog never barks. The dog barks.' },
+        { speaker: 'george', text: 'He started it! Ask anyone! HE. STARTED. IT.' }
+      ] : [
+        { speaker: 'narrator', text: 'The dog barks at you through the fence — then recognizes you and stops, tail going. You’ve been leaving cold cuts on the fence post for weeks. This dog knows things about you. This dog is the most loyal being in Queens. The dog says nothing.' },
+        { speaker: 'tony', text: 'Good boy. Keep it that way.' }
+      ]);
+    } },
     { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← Subway: Manhattan', action: () => {
       startDialog([{ speaker: 'narrator', text: 'The 7 train rattles toward Manhattan. A man is eating soup out of a thermos in direct violation of several unwritten rules. Nobody stops him. This is Queens’ gift to the world: the absence of rules nobody wrote down.' }], () => startTransit('nyc', 60, 250, 'THE 7 TRAIN · WESTBOUND'));
     } },
