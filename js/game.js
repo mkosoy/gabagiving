@@ -1605,6 +1605,26 @@ function drawIceCream() {
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
 
+function drawParadeBalloon() {
+  if (state.scene !== 'nyc') return;
+  const t = state.time * .12;
+  const bx = 800 - ((t * 60) % 1000);
+  const by = 30 + Math.sin(t * 2) * 6;
+  // turkey-shaped balloon, because of course it is
+  px(ctx, bx - 16, by - 10, 32, 20, '#c05a3a');
+  px(ctx, bx - 8, by - 18, 16, 10, '#8a2f23');
+  px(ctx, bx + 10, by - 14, 8, 8, '#caa07a');
+  px(ctx, bx + 12, by - 10, 4, 4, '#e23e3e');
+  // tethers to invisible handlers far below
+  ctx.strokeStyle = 'rgba(220,220,220,.35)';
+  for (const off of [-10, 0, 10]) {
+    ctx.beginPath();
+    ctx.moveTo(bx + off, by + 10);
+    ctx.lineTo(bx + off * 1.6, by + 120);
+    ctx.stroke();
+  }
+}
+
 function drawWantedPoster() {
   if (state.scene !== 'hub' || (state.flags.heat || 0) < 4) return;
   const wx = 620, wy = 108;
@@ -7707,6 +7727,7 @@ function drawWorld() {
   drawLawnmower();
   drawUmbrellaGuy();
   drawWantedPoster();
+  drawParadeBalloon();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
