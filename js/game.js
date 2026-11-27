@@ -49,6 +49,9 @@ const sceneArt = {
   njstreet: loadArt('./assets/bg-njstreet.webp'),
   diner: loadArt('./assets/bg-diner.webp'),
   dmv: loadArt('./assets/bg-dmv.webp'),
+  mgPoker: loadArt('./assets/mg-poker.webp'),
+  mgKitchen: loadArt('./assets/mg-kitchen.webp'),
+  mgBlackjack: loadArt('./assets/mg-blackjack.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -7973,28 +7976,35 @@ function updateKitchen(dt) {
 function drawKitchen() {
   const k = state.kitchen;
   if (!k) return;
-  ctx.fillStyle = '#1c1410';
-  ctx.fillRect(0, 0, 640, 360);
-  // stove glow
-  ctx.fillStyle = '#2a1c12';
-  ctx.fillRect(60, 60, 520, 220);
-  ctx.fillStyle = '#c23a2a';
-  ctx.fillRect(60, 60, 520, 34);
+  const hasKitchenArt = sceneArt.mgKitchen && sceneArt.mgKitchen.complete && sceneArt.mgKitchen.naturalWidth;
+  if (hasKitchenArt) {
+    ctx.drawImage(sceneArt.mgKitchen, 0, 0, 640, 360);
+    ctx.fillStyle = 'rgba(12,8,6,.45)';
+    ctx.fillRect(0, 0, 640, 34);
+  } else {
+    ctx.fillStyle = '#1c1410';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#2a1c12';
+    ctx.fillRect(60, 60, 520, 220);
+    ctx.fillStyle = '#c23a2a';
+    ctx.fillRect(60, 60, 520, 34);
+  }
   ctx.fillStyle = '#f5efdd';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
   ctx.fillText('VESUVIO — DINNER RUSH', 320, 82);
-  // flames
-  for (let i = 0; i < 5; i++) {
-    const fx = 140 + i * 90;
-    const h = 10 + Math.sin(state.time * 9 + i * 2) * 5;
-    ctx.fillStyle = '#e8862a';
-    ctx.fillRect(fx, 250 - h, 26, h);
-    ctx.fillStyle = '#ffd76e';
-    ctx.fillRect(fx + 8, 250 - h * .6, 10, h * .6);
+  if (!hasKitchenArt) {
+    for (let i = 0; i < 5; i++) {
+      const fx = 140 + i * 90;
+      const h = 10 + Math.sin(state.time * 9 + i * 2) * 5;
+      ctx.fillStyle = '#e8862a';
+      ctx.fillRect(fx, 250 - h, 26, h);
+      ctx.fillStyle = '#ffd76e';
+      ctx.fillRect(fx + 8, 250 - h * .6, 10, h * .6);
+    }
+    ctx.fillStyle = '#1c1410';
+    ctx.fillRect(60, 250, 520, 30);
   }
-  ctx.fillStyle = '#1c1410';
-  ctx.fillRect(60, 250, 520, 30);
   // current order ticket
   const o = k.order;
   ctx.fillStyle = '#f5efdd';
@@ -8212,16 +8222,20 @@ function updatePoker(dt) {
 function drawPoker() {
   const p = state.poker;
   if (!p) return;
-  ctx.fillStyle = '#0d2417';
-  ctx.fillRect(0, 0, 640, 360);
-  ctx.fillStyle = '#1a4a2e';
-  ctx.beginPath();
-  ctx.ellipse(320, 210, 290, 130, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#6e5540';
-  ctx.lineWidth = 8;
-  ctx.stroke();
-  ctx.lineWidth = 1;
+  if (sceneArt.mgPoker && sceneArt.mgPoker.complete && sceneArt.mgPoker.naturalWidth) {
+    ctx.drawImage(sceneArt.mgPoker, 0, 0, 640, 360);
+  } else {
+    ctx.fillStyle = '#0d2417';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#1a4a2e';
+    ctx.beginPath();
+    ctx.ellipse(320, 210, 290, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#6e5540';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
   ctx.fillStyle = '#e8c25a';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -8391,18 +8405,23 @@ function bjDrawHand(hand, x, y, hideFirst) {
 }
 
 function drawBlackjack() {
-  px(ctx, 0, 0, 640, 416, '#0d2818');
+  if (sceneArt.mgBlackjack && sceneArt.mgBlackjack.complete && sceneArt.mgBlackjack.naturalWidth) {
+    ctx.drawImage(sceneArt.mgBlackjack, 0, 0, 640, 416);
+  } else {
+    px(ctx, 0, 0, 640, 416, '#0d2818');
+  }
   outlineText(ctx, 'BLACKJACK · THE BING BACK ROOM', 320, 46, '#ffe78a', 11, 'center');
   const bj = state.blackjack;
   if (!bj) return;
-  // felt table
-  ctx.fillStyle = '#1a4a2e';
-  ctx.beginPath();
-  ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#c8a040';
-  ctx.lineWidth = 3;
-  ctx.stroke();
+  if (!(sceneArt.mgBlackjack && sceneArt.mgBlackjack.complete && sceneArt.mgBlackjack.naturalWidth)) {
+    ctx.fillStyle = '#1a4a2e';
+    ctx.beginPath();
+    ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#c8a040';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
   const hideDealer = bj.phase === 'player';
   bjDrawHand(bj.dealer, 290, 150, hideDealer);
   outlineText(ctx, 'DEALER' + (hideDealer ? '' : ` · ${bjTotal(bj.dealer)}`), 320, 112, '#fffbe8', 8, 'center');
