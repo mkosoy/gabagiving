@@ -8170,7 +8170,7 @@ function nycInteractions() {
         { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
       ]);
     } },
-    { x: 200, y: 120, w: 60, h: 40, radius: 44, label: 'Famous Original Ray’s', action: () => {
+    { x: 200, y: 150, w: 60, h: 40, radius: 52, label: 'Famous Original Ray’s', action: () => {
       startDialog([{ speaker: 'narrator', text: 'Which Ray’s is the real Ray’s is a question that has ended friendships. This one has the good oven. Inside: heat, grease, glory.' }], () => travelHub('slice'));
     } },
     { x: 730, y: 210, w: 34, h: 90, radius: 46, label: 'Subway → Queens', action: () => {
