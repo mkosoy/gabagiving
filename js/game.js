@@ -3167,7 +3167,13 @@ function updateMission(dt) {
     if (m0.surviveT <= 0) spawnEffect(state.player.x + 8, state.player.y - 20, 'HEAT WEATHERED', '#8ffff2');
   }
   if (m0.surviveT > 0) return;
-  if (Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
+  const crimeGated = m0.id === 'bigScore' && m0.step < 3; // the registers only count if you actually rob them
+  if (crimeGated && Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
+    // the heist press IS the crime — the beacon zone triggers the robbery directly,
+    // so overlapping furniture hotspots can't eat the keypress
+    const rob = (scenes[state.scene].interactions() || []).find(a => /Rob the (register|cashier cage)/.test(a.label || ''));
+    if (rob) { state.interactCooldown = .8; rob.action(); }
+  } else if (!crimeGated && Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
     state.interactCooldown = .8;
     spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
     if (state.mission.step === 0) {
@@ -4952,6 +4958,9 @@ function clubInteractions() {
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
     if (!state.mission && state.flags.freeRoam && state.flags.sitDownDone && !state.flags.bigScoreDone) {
       startMission('bigScore');
+      state.registerCd_bodega = 0;
+      state.registerCd_slice = 0;
+      state.registerCd_casino = 0; // the window only opens if the registers are actually robbable
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
       startDialog([
         { speaker: 'silvio', text: 'You want the big one? The BIG one? Fine. Three hits, one night: the bodega in the Heights, the slice joint, and then — the Dunes cage. In and out, no stopping, no heroics. The clock is your worst enemy. Well — second worst.' },
@@ -8421,6 +8430,7 @@ function casinoInteractions() {
       const take = 120 + Math.floor(Math.random() * 80);
       state.money += take;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
+      if (state.mission && state.mission.id === 'bigScore' && missionStep() && missionStep().scene === 'casino') setTimeout(() => { if (state.mission && state.mission.id === 'bigScore' && missionStep() && missionStep().scene === 'casino') advanceMission(); }, 60);
       audio.sfx('cash');
       audio.sfx('denied');
       spawnEffect(state.player.x + 8, state.player.y - 12, `+$${take} · +3 heat`, '#ff9a7a');
