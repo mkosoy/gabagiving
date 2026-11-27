@@ -8373,6 +8373,9 @@ function drawKitchen() {
     ctx.drawImage(sceneArt.mgKitchen, 0, 0, 640, 360);
     ctx.fillStyle = 'rgba(12,8,6,.45)';
     ctx.fillRect(0, 0, 640, 34);
+    // Artie at the pass, plating and judging simultaneously — he gets faster when you're behind
+    const hustle = k.order && k.order.t < 4 ? 1.6 : 1;
+    drawPerson(ctx, 588, 132 + Math.sin(state.time * 3 * hustle) * 3, 'artie', 'left', state.frame * hustle, { pose: 'work' });
   } else {
     ctx.fillStyle = '#1c1410';
     ctx.fillRect(0, 0, 640, 360);
