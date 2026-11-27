@@ -3741,7 +3741,7 @@ function nearestInteraction() {
   const scene = scenes[state.scene];
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
-  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
+  if (state.flags.freeRoam && state.scene === 'yankees') {
     list.push({ x: 560, y: 100, w: 40, h: 30, radius: 40, label: 'The intercom', action: () => {
     audio.sfx('denied');
     const rants = [
