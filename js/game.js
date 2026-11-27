@@ -53,6 +53,10 @@ const sceneArt = {
   mgKitchen: loadArt('./assets/mg-kitchen.webp'),
   mgBlackjack: loadArt('./assets/mg-blackjack.webp'),
   mgPinball: loadArt('./assets/mg-pinball.webp'),
+  mgSkeeball: loadArt('./assets/mg-skeeball.webp'),
+  mgDarts: loadArt('./assets/mg-darts.webp'),
+  mgMonte: loadArt('./assets/mg-monte.webp'),
+  mgRoulette: loadArt('./assets/mg-roulette.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -7173,11 +7177,23 @@ function updateDarts(dt) {
   if (d.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape', 'KeyM'])) { state.darts = null; state.mode = 'explore'; }
 }
 
+function drawMgBackdrop(img, w, h, dim) {
+  if (img && img.complete && img.naturalWidth) {
+    ctx.drawImage(img, 0, 0, w, h);
+    ctx.fillStyle = 'rgba(8,6,10,' + dim + ')';
+    ctx.fillRect(0, 0, w, h);
+    return true;
+  }
+  return false;
+}
+
 function drawDarts() {
   const d = state.darts;
   if (!d) return;
-  ctx.fillStyle = '#171008';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgDarts, 640, 360, .45)) {
+    ctx.fillStyle = '#171008';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#c9a227';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -7494,8 +7510,10 @@ function updateSkeeball(dt) {
 function drawSkeeball() {
   const s = state.skee;
   if (!s) return;
-  ctx.fillStyle = '#101426';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgSkeeball, 640, 360, .4)) {
+    ctx.fillStyle = '#101426';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#ffd23e';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -7683,8 +7701,10 @@ function updateRoulette(dt) {
 function drawRoulette() {
   const r = state.roulette;
   if (!r) return;
-  ctx.fillStyle = '#160a20';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgRoulette, 640, 360, .45)) {
+    ctx.fillStyle = '#160a20';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#ffd23e';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -10432,8 +10452,10 @@ function updateMonte(dt) {
 }
 
 function drawMonte() {
-  px(ctx, 0, 0, 640, 416, '#1c1710');
-  px(ctx, 0, 200, 640, 216, '#2c2419');
+  if (!drawMgBackdrop(sceneArt.mgMonte, 640, 416, .6)) {
+    px(ctx, 0, 0, 640, 416, '#1c1710');
+    px(ctx, 0, 200, 640, 216, '#2c2419');
+  }
   outlineText(ctx, 'THREE-CARD MONTE', 320, 60, '#ffe78a', 12, 'center');
   const m = state.monte;
   if (!m) return;
