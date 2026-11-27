@@ -9691,6 +9691,56 @@ function nycInteractions() {
   ];
 }
 
+function drawHubWayfinding() {
+  // Holland Tunnel portal at the east edge — a real structure you drive into
+  if (state.scene === 'hub') {
+    // connector asphalt: the main road bends right into the tunnel mouth
+    px(ctx, 1060, 204, 172, 44, '#2e2e34');
+    px(ctx, 1060, 204, 172, 3, '#454550');
+    px(ctx, 1060, 245, 172, 3, '#454550');
+    for (let dx = 1066; dx < 1226; dx += 22) px(ctx, dx, 224, 12, 3, '#c8b830');
+    // curved shoulder joining the main road up top
+    px(ctx, 1060, 170, 60, 34, '#2e2e34');
+    px(ctx, 1118, 178, 30, 26, '#2e2e34');
+    // arrow painted on the asphalt pointing at the mouth
+    px(ctx, 1150, 218, 40, 6, '#c8b830');
+    px(ctx, 1186, 212, 8, 18, '#c8b830');
+    px(ctx, 1190, 208, 4, 26, '#2e2e34');
+    const px0 = 1226, py0 = 196;
+    px(ctx, px0, py0, 54, 14, '#5a4a38'); // fascia
+    px(ctx, px0, py0, 54, 4, '#7a6848');
+    px(ctx, px0 + 4, py0 + 14, 8, 104, '#4a3e30'); // left pillar
+    px(ctx, px0 + 42, py0 + 14, 8, 104, '#4a3e30'); // right pillar
+    px(ctx, px0 + 12, py0 + 14, 30, 104, '#0a0c12'); // tunnel mouth darkness
+    px(ctx, px0 + 12, py0 + 14, 30, 8, '#161a24');
+    const glow = .5 + Math.sin(state.time * 2.2) * .3;
+    ctx.save();
+    ctx.globalAlpha = glow;
+    px(ctx, px0 + 16, py0 + 20, 4, 3, '#e8b822'); // interior lights receding
+    px(ctx, px0 + 24, py0 + 24, 3, 2, '#e8b822');
+    px(ctx, px0 + 30, py0 + 28, 2, 2, '#e8b822');
+    ctx.restore();
+    outlineText(ctx, 'HOLLAND TUNNEL', px0 + 27, py0 + 10, '#ffe78a', 5, 'center');
+    outlineText(ctx, 'NEW YORK →', px0 + 27, py0 + 130, '#9fd4ec', 5, 'center');
+  }
+  if (state.vanHere) {
+    // the white van. it is always the same van. it is never the same guy.
+    px(ctx, 700, 330, 58, 24, 'rgba(0,0,0,.3)');
+    px(ctx, 702, 318, 54, 26, '#ddd8ce');
+    px(ctx, 702, 318, 54, 6, '#c8c2b4');
+    px(ctx, 744, 322, 10, 14, '#b8b2a4');
+    px(ctx, 746, 324, 6, 5, '#9fd4ec');
+    px(ctx, 706, 340, 8, 5, '#1a1a20');
+    px(ctx, 738, 340, 8, 5, '#1a1a20');
+    outlineText(ctx, 'SPEAKERS', 728, 334, '#7a7264', 6, 'center');
+  }
+  // big green jersey highway signs — nobody reads them, everybody needs them
+  drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
+  drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
+  drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
+
+}
+
 function drawHub() {
   drawHubEast();
   if (drawSceneArt(sceneArt.hub, 640, 416)) {
@@ -9748,45 +9798,13 @@ function drawHub() {
     const nl = Math.sin(state.time * 1.1) * 3;
     drawPerson(ctx, 556 + nl, 226, 'bobby', 'left', state.frame * .8);
     outlineText(ctx, 'Newman', 556, 210, '#cfe0ff', 6, 'center');
+    drawHubWayfinding();
     outlineText(ctx, 'FREE ROAM', 320, 24, '#ffe78a', 10, 'center');
     return;
   }
   drawNjStreet();
 
-  // Holland Tunnel portal at the east edge — a real structure you drive into
-  if (state.scene === 'hub') {
-    const px0 = 1226, py0 = 196;
-    px(ctx, px0, py0, 54, 14, '#5a4a38'); // fascia
-    px(ctx, px0, py0, 54, 4, '#7a6848');
-    px(ctx, px0 + 4, py0 + 14, 8, 104, '#4a3e30'); // left pillar
-    px(ctx, px0 + 42, py0 + 14, 8, 104, '#4a3e30'); // right pillar
-    px(ctx, px0 + 12, py0 + 14, 30, 104, '#0a0c12'); // tunnel mouth darkness
-    px(ctx, px0 + 12, py0 + 14, 30, 8, '#161a24');
-    const glow = .5 + Math.sin(state.time * 2.2) * .3;
-    ctx.save();
-    ctx.globalAlpha = glow;
-    px(ctx, px0 + 16, py0 + 20, 4, 3, '#e8b822'); // interior lights receding
-    px(ctx, px0 + 24, py0 + 24, 3, 2, '#e8b822');
-    px(ctx, px0 + 30, py0 + 28, 2, 2, '#e8b822');
-    ctx.restore();
-    outlineText(ctx, 'HOLLAND TUNNEL', px0 + 27, py0 + 10, '#ffe78a', 5, 'center');
-    outlineText(ctx, 'NEW YORK →', px0 + 27, py0 + 130, '#9fd4ec', 5, 'center');
-  }
-  if (state.vanHere) {
-    // the white van. it is always the same van. it is never the same guy.
-    px(ctx, 700, 330, 58, 24, 'rgba(0,0,0,.3)');
-    px(ctx, 702, 318, 54, 26, '#ddd8ce');
-    px(ctx, 702, 318, 54, 6, '#c8c2b4');
-    px(ctx, 744, 322, 10, 14, '#b8b2a4');
-    px(ctx, 746, 324, 6, 5, '#9fd4ec');
-    px(ctx, 706, 340, 8, 5, '#1a1a20');
-    px(ctx, 738, 340, 8, 5, '#1a1a20');
-    outlineText(ctx, 'SPEAKERS', 728, 334, '#7a7264', 6, 'center');
-  }
-  // big green jersey highway signs — nobody reads them, everybody needs them
-  drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
-  drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
-  drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
+  drawHubWayfinding();
 }
 
 function drawHighwaySign(x, y, lines) {
