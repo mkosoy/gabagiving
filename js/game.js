@@ -2333,6 +2333,8 @@ function updateWasted(dt) {
     const spot = spots[state.scene] || [320, 250];
     state.player.x = spot[0]; state.player.y = spot[1];
     state.player.inCar = null;
+    state.player.carColor = null;
+    state.player.speed = state.player.kind === 'george' ? 96 : 88;
     state.flags.hp = 2;
     const fine = Math.floor(state.money * .1);
     state.money -= fine;
