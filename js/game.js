@@ -8043,6 +8043,7 @@ function drawHub() {
   // big green jersey highway signs — nobody reads them, everybody needs them
   drawHighwaySign(1075, 168, ['HOLLAND TUNNEL', 'MANHATTAN →']);
   drawHighwaySign(518, 330, ['GSP SOUTH ↓', 'PINE BARRENS', 'SHORE · A.C.']);
+  drawHighwaySign(60, 168, ['ROUTE 3 WEST', '← MEADOWLANDS']);
 }
 
 function drawHighwaySign(x, y, lines) {
