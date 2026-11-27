@@ -8378,16 +8378,17 @@ function drawPoker() {
   ctx.fillText('five-card draw · ante $20 · winner takes the pot', 320, 34);
   const suits = ['♠', '♥', '♦', '♣'];
   const suitCol = (s) => s === 1 || s === 2 ? '#d84040' : '#222';
-  const oppX = [150, 320, 490];
+  const oppX = [200, 320, 440];
   p.ai.forEach((ai, k) => {
     const x = oppX[k];
-    drawPortrait(ctx, x - 16, 48, ai.kind);
+    // the man himself, sunk into the back-room chair
+    drawPerson(ctx, x - 10, 78, ai.kind, 'down', 0, { pose: 'sit', sitClip: .48 });
     ctx.fillStyle = '#e8dcc8';
     ctx.font = '9px monospace';
-    ctx.fillText(ai.name, x, 96);
+    ctx.fillText(ai.name, x, 118);
     const show = p.phase === 'done';
     ai.hand.forEach((c, i) => {
-      const cx = x - 34 + i * 15, cy = 102;
+      const cx = x - 34 + i * 15, cy = 124;
       ctx.fillStyle = show ? '#f5efdd' : '#8a2a2a';
       ctx.fillRect(cx, cy, 13, 18);
       ctx.strokeStyle = '#333';
