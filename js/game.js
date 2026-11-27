@@ -94,7 +94,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
-    if (vx <= 52 && vy <= 34) { pressed.add('Escape'); return; }
+    if (vx <= 52 && vy <= 34) { state.mode = state.dialog ? 'dialogue' : 'explore'; pressed.clear(); audio.sfx('denied'); return; }
     for (let ni = 0; ni < FT_NODES.length; ni++) {
       const n = FT_NODES[ni];
       if (Math.hypot(vx - n.x, vy - n.y) < 24) {
