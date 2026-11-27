@@ -2393,7 +2393,12 @@ function updateFares(dt) {
     if (state.fareT <= 0) {
       state.fareT = 25 + Math.random() * 25;
       // spawn a fare at the road edge ahead of the player
-      const fx = Math.max(120, Math.min(1160, p.x + (Math.random() < .5 ? -1 : 1) * (140 + Math.random() * 160)));
+      let fx = Math.max(120, Math.min(1160, p.x + (Math.random() < .5 ? -1 : 1) * (140 + Math.random() * 160)));
+      // never hail from inside a parked car — nudge clear of anything curbside
+      for (const s2 of (PARKED_CARS[state.scene] || [])) {
+        if (Math.abs(s2.x - fx) < 46) fx = s2.x + (fx >= s2.x ? 52 : -52);
+      }
+      fx = Math.max(120, Math.min(1160, fx));
       const spots = { hub: [330, 700, 1100], nyc: [330, 550, 900], queens: [330, 500, 800] };
       const dests = { hub: [[1200, 238, 'the tunnel'], [150, 238, 'the west side'], [885, 160, 'the diner']], nyc: [[620, 236, 'Jerry’s'], [150, 240, 'the park'], [1100, 240, 'the bridge and tunnel crowd']], queens: [[500, 240, 'the sauna'], [200, 240, 'the boulevard'], [700, 240, 'the Costanza place — no wait, anywhere BUT']] };
       const dl = dests[state.scene];
