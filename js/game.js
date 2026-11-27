@@ -11234,6 +11234,11 @@ function checkMissionHeatBreach() {
 
 function update(dt) {
   state.frameCount = (state.frameCount || 0) + 1;
+  const overlayMode = ['menu', 'fasttravel', 'dialogue'].includes(state.mode);
+  if (state._overlayMode !== overlayMode) {
+    state._overlayMode = overlayMode;
+    document.body.classList.toggle('overlayOpen', overlayMode);
+  }
   state.time += dt;
   checkMissionHeatBreach();
   updateMovers(dt);

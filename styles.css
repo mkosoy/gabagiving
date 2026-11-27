@@ -149,3 +149,5 @@ html, body {
 @media (orientation: portrait) and (pointer: coarse) {
   #rotateHint:not(.dismissed) { display: block; }
 }
+
+body.overlayOpen #stripCol { visibility: hidden; }
