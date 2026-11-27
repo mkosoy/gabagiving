@@ -392,6 +392,20 @@ function menuEntries() {
       }, open: true
     });
   }
+  entries.push({
+    label: 'Criminal record', hint: 'your career in numbers — the feds wish they had this',
+    act: () => {
+      closeMenu();
+      const s = state.stats || {};
+      const lines = [
+        { speaker: 'narrator', text: `CRIMINAL RECORD — ${state.player.kind === 'george' ? 'Costanza, George L.' : 'Soprano, Anthony J.'} — compilation of the season’s activities to date:` },
+        { speaker: 'system', text: `Cars “borrowed”: ${s.carsStolen || 0} · Punches thrown: ${s.punches || 0} · Missions completed: ${s.missions || 0}` },
+        { speaker: 'system', text: `Cash on hand: $${state.money} · Current heat: ${(state.flags.heat || 0).toFixed(1)} stars · Gabagool packages: ${[0,1,2,3,4,5,6,7,8,9,10,11].filter(i => state.flags['pkg' + i]).length}/12` },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'This is a résumé! If you squint, and lie, and notarize it — it’s a RÉSUMÉ!' : 'You know what the feds got? Paperwork. What I got? A legacy. Big difference. Both admissible, unfortunately.' }
+      ];
+      startDialog(lines);
+    }, open: true
+  });
   const chapters = [
     ['house', 'Ch.1 — Tony’s House'],
     ['rome', 'Ch.2 — Rome & Augustus'],
