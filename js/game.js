@@ -3546,6 +3546,7 @@ function updateExplore(dt) {
     state.carRadio = ((state.carRadio ?? -1) + 1) % stations.length;
     audio.setMusic(stations[state.carRadio]);
     const names = ['WBPM 88.1 — the drive mix', 'WNYC — traffic & smooth', 'WBING — club classics', 'WROME — amore hour', 'WPINE — late night static'];
+    if (state.carRadio === 2) spawnEffect(p.x + 8, p.y - 34, '“…all Thanksgiving weekend, NONSTOP club classics…”', '#8ffff2');
     spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
   }
   // leaving a borrowed car takes priority over other interactions
