@@ -5444,7 +5444,8 @@ function acInteractions() {
     { x: 250, y: 150, w: 60, h: 40, radius: 42, label: 'High-roller slots', action: () => {
       if (state.money < 50) { toast('High-roller slots are $50 a pull.'); return; }
       state.money -= 50;
-      const roll = Math.random();
+      const night = isNight();
+      const roll = Math.random() * (night ? .82 : 1); // the house gets generous after dark — or seems to
       audio.sfx('spin');
       if (roll < .04) {
         state.money += 1000;
