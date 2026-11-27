@@ -5534,7 +5534,11 @@ function drawVesuvio() {
     const wy = 240 + Math.cos(state.time * .22) * 60;
     drawPerson(ctx, wx, wy, 'womanD', Math.sin(state.time * .35) > 0 ? 'right' : 'left', state.frame * 2);
     drawPerson(ctx, 338 + Math.sin(state.time * 1.3) * 2, 192, 'artie', 'down', state.frame, { pose: 'stand' });
-    drawPerson(ctx, 180, 246, 'womanC', 'right', state.frame + 1, { pose: 'stand' });
+    drawPerson(ctx, 172, 252, 'womanC', 'right', state.frame + 1, { pose: 'sit', sitClip: .55 });
+    // dinner service — couples actually at the tables
+    drawPerson(ctx, 446, 252, 'manA', 'left', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 492, 266, 'womanA', 'up', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 236, 262, 'manB', 'up', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
     // oven fire flicker
     const f = Math.sin(state.time * 11) * 2;
     px(ctx, 478, 96 + f * .4, 34, 22 + f, '#ff9b32');
@@ -12195,9 +12199,9 @@ function drawClub() {
   if (drawSceneArt(sceneArt.club, 640, 416)) {
     drawTurkey(ctx, 320, 204, 1.6, true);
     // Crew members sit around the private table with individual idle motion.
-    drawPerson(ctx, 218 + Math.sin(state.time * .9) * 1.5, 192, 'christopher', 'right', state.frame, { pose: 'sit' });
-    drawPerson(ctx, 408 + Math.sin(state.time * 1.2) * 1.5, 192, 'paulie', 'left', state.frame + 1, { pose: 'sit' });
-    drawPerson(ctx, 320 + Math.sin(state.time * .7) * 1.5, 142, 'silvio', 'down', state.frame + 2, { pose: 'sit' });
+    drawPerson(ctx, 218 + Math.sin(state.time * .9) * 1.5, 196, 'christopher', 'right', state.frame, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 408 + Math.sin(state.time * 1.2) * 1.5, 196, 'paulie', 'left', state.frame + 1, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 320 + Math.sin(state.time * .7) * 1.5, 148, 'silvio', 'down', state.frame + 2, { pose: 'sit', sitClip: .5 });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#160e1e');
