@@ -3446,7 +3446,35 @@ function updateExplore(dt) {
   updateBanking(dt);
   updateHeatDecay(dt);
   const inter = nearestInteraction();
-  if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
+  let jackTarget = null;
+  if (!p.inCar && state.hubCars && state.flags.freeRoam) {
+    let jd = 36;
+    for (const c of state.hubCars) {
+      const d = Math.hypot((p.x + 8) - (c.x + 17), (p.y + 8) - (c.y + 7));
+      if (d < jd) { jackTarget = c; jd = d; }
+    }
+  }
+  if (interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam && jackTarget) {
+    // GTA carjacking: yank a driver out of a passing car
+    const jack = jackTarget;
+    state.interactCooldown = .8;
+    state.hubCars.splice(state.hubCars.indexOf(jack), 1);
+    p.inCar = true;
+    p.speed = 185 + Math.random() * 40;
+    p.carColor = jack.color;
+    p.carDamage = 0; p.carV = 0;
+    p.x = jack.x + 9; p.y = jack.y - 2;
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + .6);
+    state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
+    audio.sfx('door'); audio.sfx('crash');
+    spawnEffect(p.x + 8, p.y - 10, 'OUT OF THE CAR!', '#ff9a7a');
+    const victim = { kind: ['womanC', 'womanD', 'womanB'][Math.floor(Math.random() * 3)], x: jack.x + 4, y: jack.y - 18, region: { x: 40, y: 40, w: 600, h: 300 }, speed: 46, tx: jack.x - 120, ty: jack.y - 60, pause: 0, dir: 'down', barkT: 2.4, diveT: 0, fleeing: true, bark: state.player.kind === 'george' ? 'MY CAR! That’s a lease!' : 'please — I have a family — take the car!' };
+    ambientFor(state.scene).push(victim);
+    startDialog([
+      { speaker: 'narrator', text: 'You open the door. The driver opens his mouth, thinks better of it, and exits through it.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m not stealing — I’m relocating! That’s a thing! People relocate cars!' : 'You shoulda locked the door, pal. First rule of Jersey.' }
+    ]);
+  } else if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
     let talker = null; let td = 34;
     for (const n of ambientFor(state.scene)) {
@@ -3467,8 +3495,7 @@ function updateExplore(dt) {
         { speaker: 'narrator', text: talker.bark }
       ]);
     }
-  }
-  if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
+    } else if (inter && interactPressed() && (state.interactCooldown || 0) <= 0) {
     audio.sfx('confirm');
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
