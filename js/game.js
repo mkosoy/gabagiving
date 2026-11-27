@@ -3550,7 +3550,7 @@ function updateExplore(dt) {
     spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
   }
   // leaving a borrowed car takes priority over other interactions
-  if (p.inCar && interactPressed()) {
+  if (p.inCar && interactPressed() && !(nearestInteraction() && nearestInteraction().inCarOk)) {
     p.inCar = false;
     p.carColor = null;
     p.speed = p.kind === 'george' ? 96 : 88;
@@ -7786,7 +7786,7 @@ function queensInteractions() {
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
     } },
-    { x: 330, y: 245, w: 50, h: 26, radius: 44, label: 'The contested parking space', action: () => {
+    { x: 330, y: 245, w: 50, h: 26, radius: 44, inCarOk: true, label: 'The contested parking space', action: () => {
       if (!state.player.inCar) {
         startDialog([
           { speaker: 'narrator', text: 'A single open parking space, defended by a man standing in it. LEGALLY, he cannot do this. PHYSICALLY, he is doing this. He has been doing it since October.' },
