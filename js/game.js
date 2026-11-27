@@ -315,7 +315,7 @@ function saveWorld() {
     out.tribute = state.flags.tribute || 0; // zero balances must survive reloads — losses are real
     out.money = state.money || 0;
     out.heat = state.flags.heat || 0;
-    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step, steps: state.mission.steps, payout: state.mission.payout, timeLeft: state.mission.deadline ? Math.max(0, state.mission.deadline - state.time) : null };
+    if (state.mission) out.mission = { id: state.mission.id, step: state.mission.step, steps: state.mission.steps, payout: state.mission.payout, timeLeft: state.mission.deadline ? (state.mission.deadline - state.time) : null };
     if (state.player.x !== undefined) { out.scene = state.scene; out.px = Math.round(state.player.x); out.py = Math.round(state.player.y); }
     localStorage.setItem('gabagiving-world-v1', JSON.stringify(out));
   } catch (e) { /* storage unavailable */ }
@@ -338,7 +338,7 @@ function loadWorld() {
       state.mission = {
         id: w.mission.id,
         step: Math.min(w.mission.step, def.steps.length - 1),
-        deadline: typeof w.mission.timeLeft === 'number' ? (w.mission.timeLeft > 0 ? state.time + w.mission.timeLeft : null) : (def.timeLimit ? state.time + def.timeLimit : null),
+        deadline: ('timeLeft' in w.mission) ? (typeof w.mission.timeLeft === 'number' ? state.time + w.mission.timeLeft : null) : (def.timeLimit ? state.time + def.timeLimit : null),
         steps: (w.mission.id === 'jerrysFavor' ? def.steps : (w.mission.steps || def.steps)).map(s => ({ ...s })),
         payout: w.mission.payout || def.payout
       };
