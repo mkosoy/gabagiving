@@ -7784,6 +7784,24 @@ function drawCabin() {
 
 function cabinInteractions() {
   return [
+    { x: 380, y: 60, w: 60, h: 30, radius: 44, label: 'The window — watch the treeline', action: () => {
+      audio.sfx('pickup');
+      const russian = Math.random() < .35;
+      startDialog(russian ? [
+        { speaker: 'narrator', text: 'You watch the treeline through the small frost-edged window. For a moment — just a moment — something moves between the pines. Large. Patient. Wrong-footed in a way that suggests one shoe. Then nothing. You do not look away for a full minute. The pines do not blink either.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'HE’S OUT THERE! You saw it too, don’t say you didn’t! One shoe! ONE SHOE! Nobody limps like that unless a SHOE IS MISSING!' : 'Yeah. He’s still out there. Interior decorator my ass — guy’s a glacier with a grudge. Let him have the pines. The pines are his now.' }
+      ] : [
+        { speaker: 'narrator', text: 'You watch the treeline. Nothing moves. Snow sifts down through the pines in no hurry whatsoever. Whatever is out there — and something IS out there, the footprints didn’t lie — it has nowhere to be. That’s the thing about the Pines. Neither do you, while you’re in them.' },
+        { speaker: 'system', text: 'The fire crackles behind you. For now: warm.' }
+      ]);
+    } },
+    { x: 100, y: 200, w: 40, h: 30, radius: 40, label: 'The rifle — empty, decorative', action: () => {
+      audio.sfx('denied');
+      startDialog([
+        { speaker: 'narrator', text: 'A hunting rifle over the fireplace, bolt open, no ammunition anywhere in the cabin — you checked, everyone checks, the last guy clearly checked too. Above it, a small carved sign: THE ONLY THING WORTH HUNTING IN HERE IS PEACE AND QUIET. Under it, in different handwriting, in pencil: the peace and quiet is ALSO out of season.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Empty! Of course it’s empty! In THIS cabin?! With HIM out there?! I’m sleeping with the canned beans. At least the cans are FULL.' : 'Smart. You leave a loaded rifle in a place like this, eventually it gets used, and not on a deer. Whoever owns this cabin knows exactly what they’re doing. That’s rare.' }
+      ]);
+    } },
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the clearing', action: () => {
       startDialog([{ speaker: 'narrator', text: 'You step out of the cabin. The pines are exactly where you left them. The pines are always exactly where you left them. That’s what’s unsettling.' }], () => setScene('pines', 430, 240));
     } },
