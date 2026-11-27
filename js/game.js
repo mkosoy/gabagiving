@@ -415,7 +415,17 @@ function menuEntries() {
         const st = (state.mission.steps || def.steps || [])[state.mission.step] || {};
         lines.push({ speaker: 'system', text: `CURRENT JOB: ${def.title || state.mission.id} — ${st.objective || 'see it through'}${state.mission.payout ? ` ($${state.mission.payout})` : ''}` });
         if (st.label) lines.push({ speaker: 'system', text: `Next stop: ${st.label}. Follow the pulsing beacon — or the edge arrow when it’s off-screen.` });
-      } else lines.push({ speaker: 'system', text: 'No active job. Talk to people with a ! overhead — Newman in the neighborhood, Kramer in Manhattan, Silvio at the Bing, Frank in Queens, Artie at Vesuvio, Melfi, Christopher, Paulie… the world is hiring.' });
+      } else {
+        lines.push({ speaker: 'system', text: 'No active job. Talk to people with a ! overhead — the world is hiring.' });
+        const work = [];
+        if (state.flags.bigOneDone) work.push('Newman (neighborhood) — odd jobs, the mail never ends');
+        if (state.flags.kramericaBookDone) work.push('Kramer (Manhattan) — Kramerica errands');
+        if (state.flags.turkeyTaxDone) work.push('Silvio (the Bing) — collections');
+        if (state.flags.saunaSerenityDone) work.push('Frank (Queens) — Festivus errands');
+        work.push('The counter guy at Ray’s (Manhattan) — pie deliveries, ALWAYS hiring');
+        if (work.length) lines.push({ speaker: 'system', text: 'REPEATABLE WORK:\n' + work.join('\n') });
+        else lines.push({ speaker: 'system', text: 'Nothing repeatable yet — finish story jobs and the phone fills up with work.' });
+      }
       const doneCnt = ['packageJobDone','bigSaladDone','ryeExpressDone','turkeyTaxDone','bigMouthDone','gravyChainDone','fixedRaceDone','serenityTapesDone','featsOfStrengthDone','saunaSerenityDone','calzoneProtocolDone','cottonUniformsDone','kramericaBookDone','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','jerrysFavorDone','trackSystemDone'].filter(f => state.flags[f]).length;
       lines.push({ speaker: 'system', text: `Career: ${doneCnt} jobs finished, ${state.stats.carsStolen || 0} cars borrowed, $${state.money} on hand, heat ${(state.flags.heat || 0).toFixed(1)}/5.` });
       lines.push({ speaker: 'narrator', text: 'The phone is a 2004 flip phone. It has one game. The game is Snake. You do not have time for Snake. You are IN Snake.' });
