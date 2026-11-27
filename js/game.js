@@ -283,6 +283,13 @@ const state = {
   stats: { started: 0, calls: 0, vials: 0, smashes: 0, crashes: 0 }
 };
 
+// one wallet — money and tribute were parallel currencies; money is now an alias of the tribute in the HUD
+Object.defineProperty(state, 'money', {
+  get() { return state.flags.tribute || 0; },
+  set(v) { state.flags.tribute = Math.max(0, Math.round(v)); },
+  configurable: true
+});
+
 function objective(text) { state.objective = text; saveProgress(); }
 
 function saveProgress() {
@@ -329,7 +336,12 @@ function loadWorld() {
     for (const k of WORLD_FLAGS) if (w[k]) state.flags[k] = w[k];
     if (typeof w.tribute === 'number') state.flags.tribute = w.tribute;
     if (typeof w.stash === 'number') state.flags.stash = w.stash;
-    if (typeof w.money === 'number') state.money = w.money;
+    if (typeof w.money === 'number' || typeof w.tribute === 'number') {
+      // legacy saves had two wallets — merge them; unified saves carry identical values
+      const wm = typeof w.money === 'number' ? w.money : 0;
+      const wt = typeof w.tribute === 'number' ? w.tribute : 0;
+      state.money = (wm !== wt) ? wm + wt : wm;
+    }
     if (typeof w.heat === 'number') state.flags.heat = w.heat;
     if (w.scene && scenes[w.scene] && typeof w.px === 'number' && state.flags.freeRoam) {
       state.scene = w.scene;
