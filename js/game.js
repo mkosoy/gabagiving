@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat'];
 function saveWorld() {
   try {
     const out = {};
@@ -1260,7 +1260,9 @@ function updateAmbient(dt) {
         continue;
       }
       const idle = state.scene === 'nyc'
-        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
+        ? (state.flags.heat || 0) >= 4.5
+          ? ['that’s HIM!', 'it’s the poster guy!', 'somebody call — actually don’t', 'I saw him first!']
+          : ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
         : state.scene === 'shore' || state.scene === 'ac'
           ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
           : state.scene === 'pines'
@@ -2801,6 +2803,7 @@ function updateExplore(dt) {
           state.flags.heat = 0;
           if (state.cop) state.cop = null;
           if (state.cop2) state.cop2 = null;
+          if (state.copCar) state.copCar = null;
           audio.sfx('success');
           spawnEffect(state.player.x, state.player.y - 20, 'SERENITY NOW — heat cleared', '#8ffff2');
           state.cheatBuf = '';
@@ -2808,6 +2811,12 @@ function updateExplore(dt) {
           state.money += 50;
           audio.sfx('pickup');
           spawnEffect(state.player.x, state.player.y - 20, '+$50 — leftovers money', '#ffe78a');
+          state.cheatBuf = '';
+        } else if (state.cheatBuf.endsWith('BIZARRO')) {
+          state.money = Math.max(0, state.money - 50);
+          audio.sfx('success');
+          spawnEffect(state.player.x, state.player.y - 20, 'BIZARRO WORLD — you pay THEM. goodbye $50', '#c09aff');
+          startDialog([{ speaker: 'narrator', text: 'In the Bizarro world, crime pays YOU negative money. Up is down. Cats chase dogs. Newman is a humanitarian. You feel strangely at peace, and fifty dollars poorer.' }]);
           state.cheatBuf = '';
         }
       }
@@ -3003,7 +3012,20 @@ function nearestInteraction() {
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
-    list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
+    list.push({ x: 560, y: 100, w: 40, h: 30, radius: 40, label: 'The intercom', action: () => {
+    audio.sfx('denied');
+    const rants = [
+      'WHO TOUCHED THE INTERCOM?! COSTANZA?! IS THAT YOU?! GET IN HERE! Actually — DON’T! I’m in a meeting with myself!',
+      'This is Steinbrenner! Whoever pressed this button — I admire the initiative! You’re fired! The initiative doesn’t matter!',
+      'INTERCOMS are for EMERGENCIES! Is the mustard spicy brown yet?! THEN IT’S NOT AN EMERGENCY!',
+      'I was in the middle of a very important nap— MEETING! A very important MEETING about naps— NAPS OF BUSINESS!'
+    ];
+    startDialog([
+      { speaker: 'narrator', text: 'You press the intercom. Every speaker in the stadium clears its throat at once.' },
+      { speaker: 'steinbrenner', text: rants[Math.floor(Math.random() * rants.length)] }
+    ]);
+  } });
+  list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
     if (state.player.kind === 'george') {
       if (!state.flags.deskNap) {
         state.flags.deskNap = true;
@@ -5922,6 +5944,18 @@ function shoreInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
+    } },
+    { x: 250, y: 110, w: 44, h: 34, radius: 40, label: 'Metal detector guy', action: () => {
+      audio.sfx('pickup');
+      if (!state.flags.metalChat) {
+        state.flags.metalChat = true;
+        state.money += 12;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'The metal detector guy — forty years on this beach, knees like a seabird — shows you today’s haul: eleven bottle caps, a hoop earring, and one very suspicious washer. He pays you $12 for “that thing you’re standing on.” You were standing on a quarter. He’s that good.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A CAREER! A man with a metal detector has a CAREER! What do I have?! A nap mat under a desk!' : 'Forty years walking in circles. No boss, no crew, no sit-downs. This guy figured it all out. Don’t tell nobody he exists.' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'The detector hums its patient song. Somewhere under the sand: bottle caps, always and forever, mostly bottle caps. He keeps walking. The dream is the point.' }]);
     } },
     { x: 380, y: 140, w: 44, h: 34, radius: 42, label: 'Fish off the pier', action: () => {
       if (state.mode === 'fishing') return;
