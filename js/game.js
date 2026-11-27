@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap'];
 function saveWorld() {
   try {
     const out = {};
@@ -2134,6 +2134,17 @@ function missionStep() {
   return MISSION_DEFS[state.mission.id].steps[state.mission.step];
 }
 
+function updateBanking(dt) {
+  if ((state.flags.banked || 0) > 0) {
+    state.bankAccrual = (state.bankAccrual || 0) + dt;
+    if (state.bankAccrual >= 30) {
+      state.bankAccrual = 0;
+      const gain = Math.max(1, Math.round(state.flags.banked * .01));
+      state.flags.banked += gain;
+    }
+  }
+}
+
 function updateMission(dt) {
   const st = missionStep();
   if (!st) return;
@@ -2742,6 +2753,7 @@ function updateExplore(dt) {
   state.camera.y = Math.max(0, Math.min(scene.h - H, p.y - H / 2));
 
   updateMission(dt);
+  updateBanking(dt);
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
@@ -2792,7 +2804,25 @@ function nearestInteraction() {
   if (!scene) return null;
   const list = scene.interactions().filter((i) => (typeof i.hidden === 'function' ? !i.hidden() : !i.hidden));
   if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
-    list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
+    list.push({ x: 480, y: 150, w: 44, h: 34, radius: 40, label: 'George’s desk', action: () => {
+    if (state.player.kind === 'george') {
+      if (!state.flags.deskNap) {
+        state.flags.deskNap = true;
+        state.money += 60;
+        audio.sfx('cash');
+        startDialog([
+          { speaker: 'narrator', text: 'George’s desk: a monument to appearing busy. The drawer contains a nap mat, a sandwich from March, and $60 in per diem George never reported. It’s yours now. It was always yours.' },
+          { speaker: 'george', text: 'The nap mat! My sweet nap mat! I wondered where — I mean, I’ve never seen this desk before in my life!' }
+        ]);
+      } else startDialog([{ speaker: 'narrator', text: 'The desk sits quiet, its nap mat undisturbed, its sandwich unaged beyond what science can explain.' }]);
+    } else {
+      startDialog([
+        { speaker: 'narrator', text: 'Tony studies the desk of a man who is paid to do nothing and does it poorly. Somewhere deep in his soul, a respect forms — the purest grift he has ever witnessed, and the man doesn’t even know he’s running it.' },
+        { speaker: 'tony', text: 'This Costanza. He’s got the safest job in America and he complains about it. That’s not a worker. That’s an artist.' }
+      ]);
+    }
+  } });
+  list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
       if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
       else enterHub(false);
     } });
@@ -3558,6 +3588,25 @@ function enterClub() {
 function clubInteractions() {
   const talked = state.flags.clubTalked;
   const list = [];
+  list.push({ x: 590, y: 120, w: 40, h: 34, radius: 40, label: 'Back office safe', action: () => {
+    if ((state.money || 0) < 50) { toast('Silvio doesn’t hold less than $50. It’s a dignity thing.'); return; }
+    const deposit = Math.min(state.money, Math.floor(state.money / 2));
+    state.money -= deposit;
+    state.flags.banked = (state.flags.banked || 0) + deposit;
+    audio.sfx('cash');
+    startDialog([
+      { speaker: 'narrator', text: `Silvio counts $${deposit} into the office safe with the tenderness of a man tucking in a child. “Half of what you carry — house rules. It’s safe here. Safer than you are.” Total banked: $${state.flags.banked}.` },
+      { speaker: 'silvio', text: 'Busted out there, they take what you’re carrying. What’s in here? Never happened. That’s the beauty of a safe — officially, it’s empty.' }
+    ]);
+  } });
+  list.push({ x: 590, y: 160, w: 40, h: 30, radius: 40, label: 'Withdraw from safe', action: () => {
+    if (!(state.flags.banked > 0)) { toast('The safe is empty. Officially it was always empty.'); return; }
+    const amt = state.flags.banked;
+    state.flags.banked = 0;
+    state.money += amt;
+    audio.sfx('cash');
+    startDialog([{ speaker: 'narrator', text: `Silvio opens the safe and hands you $${amt} in bills that have never met a serial number database. “Spend it in good health. Or bad health. Health is your business.”` }]);
+  } });
   list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
     audio.sfx('pickup');
     startDialog(state.player.kind === 'george' ? [
@@ -6074,6 +6123,18 @@ function nycInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CONVERTIBLE!', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A red convertible, top down, keys in it, in MANHATTAN. This is either a gift or a trap. It is both. It is New York.' }]);
+    } },
+    { x: 690, y: 260, w: 40, h: 34, radius: 42, label: 'Pretzel cart', action: () => {
+      if (state.money < 3) { toast('The pretzel man does not extend credit. He has been hurt before.'); return; }
+      state.money -= 3;
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .1);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The pretzel is the size of a steering wheel and roughly as chewy. George inhales half of it standing up, which in New York counts as dining out.' },
+        { speaker: 'george', text: 'THESE PRETZELS… are making me THIRSTY! …I don’t know why I yelled that. I don’t know what’s wrong with me. Where’s a water fountain?' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony eats a pretzel the way he does everything: completely, without ceremony, while walking. The pretzel man nods with respect. Nobody eats like that anymore. Nobody.' }
+      ]);
     } },
     { x: 60, y: 240, w: 40, h: 34, radius: 42, label: 'Saxophone guy', action: () => {
       if (state.money < 1) { toast('You haven’t even a dollar for the arts.'); return; }
