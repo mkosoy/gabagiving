@@ -118,7 +118,17 @@ html, body {
   background: rgba(154,64,42,.78) !important;
 }
 #btnB { background: rgba(53,91,150,.72) !important; }
-#btnS { background: rgba(40,120,60,.72) !important; font-size: 10px !important; }
+#btnS {
+  position: fixed;
+  pointer-events: auto;
+  border-radius: 50% !important;
+  right: calc(10px + env(safe-area-inset-right));
+  top: calc(238px + env(safe-area-inset-top));
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 10px !important;
+  background: rgba(40,120,60,.72) !important;
+}
 #btnR, #btnF {
   position: fixed;
   pointer-events: auto;
