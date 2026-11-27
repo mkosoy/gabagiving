@@ -316,7 +316,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2346,6 +2346,7 @@ function updateWasted(dt) {
     state.player.x = spot[0]; state.player.y = spot[1];
     state.player.inCar = null;
     state.player.carColor = null;
+    state.player.carName = null;
     state.player.speed = state.player.kind === 'george' ? 96 : 88;
     state.flags.hp = 2;
     const fine = Math.floor(state.money * .1);
@@ -2376,6 +2377,97 @@ function drawWasted() {
     outlineText(ctx, 'WASTED', 0, 0, '#c03028', 34, 'center');
     ctx.restore();
     if (t > 1.6) outlineText(ctx, 'the meadowlands hospital is not covered by your plan', 320, 210, '#8a8a92', 8, 'center');
+  }
+}
+
+
+// ——— taxi fares: anybody with a car is a cab in this economy ———
+function updateFares(dt) {
+  if (!state.flags.freeRoam || !OUTDOOR_SCENES.includes(state.scene)) { state.fare = null; return; }
+  const p = state.player;
+  // the yellow cab in Manhattan has its own deeper gypsy-cab mode — don't compete with it
+  if (state.scene === 'nyc' && p.carColor === '#e8b822') return;
+  if (!p.inCar) { if (state.fare && state.fare.stage === 'aboard') { /* they bail */ state.fare = null; toast('Your fare bails. People talk. This is why nobody stops.'); } return; }
+  if (!state.fare) {
+    state.fareT = (state.fareT || 8) - dt;
+    if (state.fareT <= 0) {
+      state.fareT = 25 + Math.random() * 25;
+      // spawn a fare at the road edge ahead of the player
+      let fx = Math.max(120, Math.min(1160, p.x + (Math.random() < .5 ? -1 : 1) * (140 + Math.random() * 160)));
+      // never hail from inside a parked car — nudge clear of anything curbside
+      for (const s2 of (PARKED_CARS[state.scene] || [])) {
+        if (Math.abs(s2.x - fx) < 46) fx = s2.x + (fx >= s2.x ? 52 : -52);
+      }
+      fx = Math.max(120, Math.min(1160, fx));
+      const spots = { hub: [330, 700, 1100], nyc: [330, 550, 900], queens: [330, 500, 800] };
+      const dests = { hub: [[1200, 238, 'the tunnel'], [150, 238, 'the west side'], [885, 160, 'the diner']], nyc: [[620, 236, 'Jerry’s'], [150, 240, 'the park'], [1100, 240, 'the bridge and tunnel crowd']], queens: [[500, 240, 'the sauna'], [200, 240, 'the boulevard'], [700, 240, 'the Costanza place — no wait, anywhere BUT']] };
+      const dl = dests[state.scene];
+      if (!dl) return;
+      const d = dl[Math.floor(Math.random() * dl.length)];
+      state.fare = { x: fx, y: 236, stage: 'hail', dx: d[0], dy: d[1], dname: d[2], t: 0, pay: 30 + Math.floor(Math.random() * 40) };
+    }
+    return;
+  }
+  const f = state.fare;
+  f.t += dt;
+  if (f.stage === 'hail') {
+    if (f.t > 30) { state.fare = null; return; } // gives up
+    const d = Math.hypot(p.x - f.x, p.y - f.y);
+    if (d < 42 && Math.abs(p.carV || 0) < .35) {
+      f.stage = 'aboard';
+      f.t = 0;
+      f.limit = 45;
+      audio.sfx('door');
+      spawnEffect(f.x, f.y - 14, 'WHERE TO?', '#ffe78a');
+      startDialog([{ speaker: 'narrator', text: 'A passenger slides in. "' + f.dname + ', and step on it." No hello. This is the tri-state area; hello is implied by the absence of hostility. The meter — your meter — is running. ish.' }]);
+    }
+    return;
+  }
+  if (f.stage === 'aboard') {
+    if (f.t > f.limit) {
+      state.fare = null;
+      audio.sfx('denied');
+      startDialog([{ speaker: 'narrator', text: 'Too slow. The passenger mutters something anatomical, pays nothing, and is gone at the next light. In this economy, punctuality is the whole product.' }]);
+      return;
+    }
+    const d = Math.hypot(p.x - f.dx, p.y - f.dy);
+    if (d < 46 && Math.abs(p.carV || 0) < .4) {
+      const quick = f.t < f.limit * .55;
+      const tip = quick ? Math.floor(f.pay * .5) : 0;
+      state.money += f.pay + tip;
+      audio.sfx('cash');
+      spawnEffect(p.x + 8, p.y - 18, 'FARE +$' + (f.pay + tip), '#9be59b');
+      state.stats.fares = (state.stats.fares || 0) + 1;
+      startDialog([{ speaker: 'narrator', text: 'The passenger peels off bills without looking at you — the highest form of respect available — and is gone. ' + (quick ? 'A tip, even. You drove like you meant it.' : 'No tip. You drove like a person with nowhere to be.') }]);
+      state.fare = null;
+    }
+  }
+}
+
+function drawFares() {
+  const f = state.fare;
+  if (!f || state.scene !== undefined && !OUTDOOR_SCENES.includes(state.scene)) return;
+  if (f.stage === 'hail') {
+    // waving figure at the curb
+    const wave = Math.sin(state.time * 8) * 4;
+    px(ctx, f.x - 4, f.y - 14, 8, 12, '#d0a060');
+    px(ctx, f.x - 3, f.y - 20, 6, 6, '#e8c8a0');
+    px(ctx, f.x + 4, f.y - 18 - wave, 2, 8, '#d0a060');
+    outlineText(ctx, 'TAXI!', f.x, f.y - 26, '#ffd23e', 7, 'center');
+  } else if (f.stage === 'aboard') {
+    // destination marker — pulsing chevron + distance ticker
+    const pulse = 1 + Math.sin(state.time * 5) * .2;
+    ctx.save();
+    ctx.fillStyle = '#ffd23e';
+    ctx.globalAlpha = .85;
+    ctx.beginPath();
+    ctx.moveTo(f.dx, f.dy - 26 * pulse);
+    ctx.lineTo(f.dx - 7, f.dy - 38 * pulse);
+    ctx.lineTo(f.dx + 7, f.dy - 38 * pulse);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    outlineText(ctx, 'fare: ' + Math.max(0, Math.ceil(f.limit - f.t)) + 's', f.dx, f.dy - 44 * pulse, '#ffd23e', 7, 'center');
   }
 }
 
@@ -2805,6 +2897,15 @@ const MISSION_DEFS = {
       { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the route to Kramer', label: 'Kramer' }
     ]
   },
+  assman: {
+    title: 'THE ASSMAN',
+    payout: 240, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'queens', x: 150, y: 242, radius: 52, objective: 'Spot the car with the ASSMAN plates — last seen in Queens', label: 'the plates' },
+      { scene: 'nyc', x: 300, y: 240, radius: 52, objective: 'The car moved — Manhattan. Plates don’t lie', label: 'the plates again' },
+      { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the truth to Kramer', label: 'Kramer' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -3009,6 +3110,10 @@ function advanceMission() {
       truckerSystem: [
         { speaker: 'kramer', text: 'The service road! Of course! Trucks avoid the tolls, the tolls avoid the trucks, and Kramerica avoids BOTH — it’s the circle of freight, buddy! The logistics division is ALIVE! $190 — and I’m naming the route after you. Well — after the trucker. Well — it’s gonna have a name, that’s the point!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a logistics pioneer! They’ll write case studies! Bad ones! But still!' : 'Interviewed a trucker, drove a service road, got paid. Easiest money since the last time somebody paid me to drive around. Which is often. It’s a good racket.' }
+      ],
+      assman: [
+        { speaker: 'kramer', text: 'You saw it?! With your own eyes! The DMV made those plates for ME, buddy — a clerical error, a beautiful mistake — and now they’re out there, on some other man’s car, living their best life. Some proctologist is driving around with MY destiny on his bumper. Well. Let him have it. I’ve moved on. I’m the ASSMAN of the mind now. $240.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Wait — the plates were supposed to be HIS? The universe almost gave KRAMER the respect he never earned! …I’m going to start ordering vanity plates for everyone I know. This is a GOLDMINE of confusion!' : 'Two boroughs of driving to look at a license plate. This city makes philosopers of us all — or at least guys who read bumpers for money.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -3291,6 +3396,10 @@ function updateMission(dt) {
         truckerSystem: [
           { speaker: 'narrator', text: 'The trucker doesn’t look up from his coffee, but he talks. Forty years of roads in one monologue: the service road behind the Meadowlands — no tolls, no scales, no troopers, just reeds and the occasional smell of money being laundered. “You didn’t hear it from me,” he says, to nobody, because he never looked at you.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fascinating! The trucker economy! A shadow logistics network hiding in plain sight! I must document everything!' : 'Truckers and my crew got the same road-map, turns out. Small world. No — small TOLLS.' }
+        ],
+        assman: [
+          { speaker: 'narrator', text: 'And there it is — parked plain as day. A cream-colored sedan wearing plates that read, in bold state-issue blue: ASSMAN. A man in a white coat gets out, locks it, and walks into a medical building with the serenity of someone who has made peace with his plates.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A DOCTOR. Of course a doctor has them! A proctologist — it has to be! It’s TOO PERFECT!' : 'A doctor. The plates belong to a doctor. I don’t know what I expected but it wasn’t a guy with a stethoscope.' }
         ],
         bigScore: [
           { speaker: 'narrator', text: 'The bodega register never stood a chance. The cat watches from the counter with the detached interest of a creature that has seen eleven robberies this month. Lotto scratchers rain like confetti.' },
@@ -3640,7 +3749,7 @@ function updateExplore(dt) {
         audio.sfx('door');
       }
     }
-  } else if (state.fare) {
+  } else if (state.fare && (state.fare.stage === 'pickup' || state.fare.stage === 'dropoff')) {
     state.fare = null;
     state.fareCd = 8;
   }
@@ -3916,6 +4025,7 @@ function updateExplore(dt) {
   if (p.inCar && !(nearestInteraction() && nearestInteraction().inCarOk) && interactPressed()) {
     p.inCar = false;
     p.carColor = null;
+    p.carName = null;
     p.speed = p.kind === 'george' ? 96 : 88;
     state.carRadio = undefined;
     const sc = scenes[state.scene];
@@ -4027,6 +4137,7 @@ function updateExplore(dt) {
           p.inCar = true;
           p.speed = Math.round(s.speed * (state.flags.engineTune ? 1.15 : 1));
           p.carColor = s.color;
+          p.carName = s.name;
           p.carDamage = 0; p.carV = 0;
           if (!blockedAt(s.x + 9, s.y - 2)) { p.x = s.x + 9; p.y = s.y - 2; }
           state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
@@ -6128,12 +6239,14 @@ function stealRandomCar() {
     { speed: 230, color: '#a02828', name: 'a CORVETTE', line: state.player.kind === 'george' ? 'A CORVETTE! Midlife crisis complete! I’ve never felt so alive and so doomed!' : 'Red Corvette. Subtle as a heart attack. Perfect.' },
     { speed: 190, color: '#3d6b35', name: 'a sensible sedan', line: state.player.kind === 'george' ? 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' : 'Nice car. Means it’s my car now. That’s how that works.' },
     { speed: 160, color: '#b8a888', name: 'a wood-paneled station wagon', line: state.player.kind === 'george' ? 'A station wagon. Wood paneling. This is exactly the car I deserve and I hate it!' : 'A wagon. Slow. But nobody — NOBODY — suspects the wagon.' },
+    { speed: 200, color: '#e8b822', name: 'a yellow cab', line: state.player.kind === 'george' ? 'A CAB! I’m a cab driver now! Do I need a license? I don’t have a regular license!' : 'Yellow cab. In Manhattan this thing is invisible — and the back seat pays cash.' },
     { speed: 205, color: '#2848a0', name: 'an unmarked-looking cruiser', line: state.player.kind === 'george' ? 'Is this a cop car? It LOOKS like a cop car. If it’s a cop car I’m just — test driving it! For the city!' : 'Ex-cop car. Still got the spotlight. Heh.' }
   ];
   const car = fleet[Math.floor(Math.random() * fleet.length)];
   state.player.inCar = true;
   state.player.speed = Math.round(car.speed * (state.flags.engineTune ? 1.15 : 1));
   state.player.carColor = car.color;
+  state.player.carName = car.name;
   state.player.carDamage = 0;
   state.player.carV = 0;
   audio.sfx('door');
@@ -6173,6 +6286,44 @@ function hubInteractions() {
       if (state.cop2) state.cop2 = null;
       audio.sfx('cash');
       startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
+    { x: 490, y: 340, w: 50, h: 30, radius: 42, label: 'The export list', action: () => {
+      const want = state.exportWant;
+      if (!want || want.until < state.time) {
+        const kinds = [
+          ['corvette', 'a red Corvette', 250],
+          ['mail', 'a mail truck — don’t ask. a guy in Ohio collects them', 200],
+          ['cruiser', 'an ex-cop cruiser', 180],
+          ['wagon', 'a wood-paneled wagon — the overseas market is strange and wealthy', 150],
+          ['sedan', 'a sensible sedan', 130]
+        ];
+        const k = kinds[Math.floor(Math.random() * kinds.length)];
+        state.exportWant = { key: k[0], label: k[1], pay: k[2], until: state.time + 600 };
+        startDialog([
+          { speaker: 'narrator', text: 'The mechanic slides a greasy index card across the counter. The EXPORT LIST. This week’s market: ' + k[1] + '. Pays $' + k[2] + ', no questions, no paperwork, no returns. The card smells like transmission fluid and opportunity.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A car-finding LIST! Like a scavenger hunt, but grand theft! Finally — a crime with STRUCTURE!' : 'Yeah, yeah. I know the drill. Don’t scratch it on the way in — I don’t pay extra for detail work.' }
+        ]);
+        return;
+      }
+      if (!state.player.inCar) { toast('The list wants ' + want.label + ' — drive it in. $' + want.pay + '.'); return; }
+      const cn = (state.player.carName || '') + ' ' + (state.player.carColor || '');
+      const keys = { corvette: /corvette/i, mail: /mail/i, cruiser: /cruiser/i, wagon: /wagon/i, sedan: /sedan/i };
+      if (!keys[want.key] || !keys[want.key].test(state.player.carName || '')) {
+        toast('The mechanic shakes his head — not the car on the list. He wants ' + want.label + '.');
+        return;
+      }
+      state.money += want.pay;
+      state.exportWant = null;
+      state.player.inCar = false;
+      state.player.carColor = null;
+      state.player.carName = null;
+      state.player.speed = state.player.kind === 'george' ? 96 : 88;
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 16, 'EXPORTED +$' + want.pay, '#ffd23e');
+      startDialog([
+        { speaker: 'narrator', text: 'The mechanic circles the car once, nods twice, and it vanishes into the shop before the door finishes rolling. Somewhere — a port, a container ship, a market you will never see — it becomes someone else’s problem. $' + want.pay + ', cash, in an envelope that is somehow already greasy.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m an EXPORTER now! Vandelay Industries — import AND export! The circle is complete!' : 'Easy money. The car never existed. I never existed. Nobody exists. Get me another list.' }
+      ]);
     } },
     { x: 420, y: 300, w: 60, h: 30, radius: 40, label: 'Engine tune', action: () => {
       if (state.flags.engineTune) { toast('Already tuned. She purrs. Don’t push your luck.'); return; }
@@ -7015,6 +7166,207 @@ function initSkeeball() {
   state.skee = { balls: [], power: 0, dir: 1, charging: false, phase: 'aim', total: 0, t: 0 };
   state.mode = 'skeeball';
   audio.sfx('pickup');
+}
+
+
+// ——— the diner pinball machine: "GABAGOOL WIZARD" ———
+function initPinball() {
+  if ((state.flags.tribute || 0) < 2) { toast('Two bucks a play. The machine takes crumpled singles and the occasional button.'); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+  state.pin = { x: 404, y: 330, vx: 0, vy: 0, score: 0, balls: 3, launched: false, charging: false, power: 0, lf: 0, rf: 0, msg: '', msgT: 0, over: false, overT: 0, flash: 0 };
+  state.mode = 'pinball';
+  audio.sfx('pickup');
+}
+
+function updatePinball(dt) {
+  const g = state.pin;
+  if (!g) { state.mode = 'explore'; return; }
+  if (g.over) {
+    g.overT += dt;
+    if (g.overT > 2) {
+      state.mode = 'explore';
+      const sc = g.score;
+      state.pin = null;
+      if (sc >= 3000) {
+        state.flags.tribute = (state.flags.tribute || 0) + 50;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'The machine spits a stream of tickets nobody has ever seen before. The waitress counts them twice, eyebrows climbing. $50 — you are, as of this moment, the Gabagool Wizard of record. The previous record holder was a long-haul trucker. He still never looked at anyone.' }]);
+      } else if (sc >= 1500) {
+        state.flags.tribute = (state.flags.tribute || 0) + 20;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'Respectable. The machine reluctantly prints tickets for $20. The jukebox plays a little piano riff, which is the closest this diner has to applause.' }]);
+      } else {
+        startDialog([{ speaker: 'narrator', text: 'The machine eats your two dollars with a sound like a small mechanical shrug. Pinball is a cruel mistress. The pie watches, saying nothing.' }]);
+      }
+    }
+    return;
+  }
+  g.flash = Math.max(0, g.flash - dt);
+  g.msgT = Math.max(0, g.msgT - dt);
+  g.lf = down(['ArrowLeft', 'KeyF']) ? 1 : 0;
+  g.rf = down(['ArrowRight', 'KeyE']) ? 1 : 0;
+  if (!g.launched) {
+    if (down(['Space', 'KeyE', 'KeyB'])) { g.charging = true; g.power = Math.min(1, g.power + dt * 1.3); }
+    else if (g.charging) {
+      g.launched = true;
+      g.vy = -(420 + g.power * 300);
+      g.charging = false;
+      audio.sfx('honk');
+    }
+    if (consume(['Escape', 'KeyM']) && g.balls === 3 && !g.score) { state.pin = null; state.mode = 'explore'; }
+    return;
+  }
+  // physics
+  g.vy += 620 * dt;
+  g.x += g.vx * dt;
+  g.y += g.vy * dt;
+  // walls: table inner 232..392, top 30, lane divider x=392 from y 62 down, lane right edge 416
+  if (g.x < 238) { g.x = 238; g.vx = Math.abs(g.vx) * .82; }
+  if (g.x > 410) { g.x = 410; g.vx = -Math.abs(g.vx) * .82; }
+  if (g.y < 34) { g.y = 34; g.vy = Math.abs(g.vy) * .82; if (g.x > 390) { g.vx = -140 - Math.random() * 60; g.msg = 'AROUND THE TOP!'; g.msgT = 1; } }
+  // lane divider: ball in lane (x>392) below y=62 can't re-enter play field going down; once over the top it's in play
+  if (g.x > 392 && g.x < 396 && g.y > 62 && g.vx < 0) { g.vx = 0; g.x = 396; }
+  if (g.x >= 388 && g.x < 392 && g.y > 62) { g.x = 388; g.vx = -Math.abs(g.vx) * .5; }
+  // bumpers — three, score 50 each hit
+  const bumpers = [[278, 96, 15], [336, 76, 15], [306, 150, 15]];
+  for (const [bx, by, br] of bumpers) {
+    const d = Math.hypot(g.x - bx, g.y - by);
+    if (d < br + 5) {
+      const ang = Math.atan2(g.y - by, g.x - bx);
+      const sp = Math.max(260, Math.hypot(g.vx, g.vy) * 1.05);
+      g.vx = Math.cos(ang) * sp;
+      g.vy = Math.sin(ang) * sp;
+      g.x = bx + Math.cos(ang) * (br + 5.5);
+      g.y = by + Math.sin(ang) * (br + 5.5);
+      g.score += 50;
+      g.flash = .12;
+      g.msg = '+50';
+      g.msgT = .5;
+      audio.sfx('pickup');
+    }
+  }
+  // rollover targets — two little lanes worth 100 each, one-time per ball
+  if (!g.rollHit) g.rollHit = {};
+  const rolls = [[250, 200, 'L'], [368, 200, 'R']];
+  for (const [rx, ry, id] of rolls) {
+    if (!g.rollHit[id] && Math.hypot(g.x - rx, g.y - ry) < 12) {
+      g.rollHit[id] = true;
+      g.score += 100;
+      g.msg = 'ROLLOVER +100';
+      g.msgT = .8;
+      audio.sfx('cash');
+    }
+  }
+  // flippers: pivot zones at bottom — left pivot (286,318), right pivot (356,318)
+  if (g.y > 296 && g.y < 330) {
+    if (g.lf && g.x > 258 && g.x < 300 && g.vy > 0) {
+      g.vy = -330 - Math.random() * 60;
+      g.vx = 60 + Math.random() * 80;
+      audio.sfx('smash');
+    }
+    if (g.rf && g.x > 342 && g.x < 384 && g.vy > 0) {
+      g.vy = -330 - Math.random() * 60;
+      g.vx = -(60 + Math.random() * 80);
+      audio.sfx('smash');
+    }
+  }
+  // dead flipper zone — ball resting on unpressed flipper rolls toward center drain
+  if (g.y > 316 && g.y < 336) {
+    if (g.x > 262 && g.x < 310 && !g.lf) g.vx += 90 * dt;
+    if (g.x > 332 && g.x < 380 && !g.rf) g.vx -= 90 * dt;
+  }
+  // drain
+  if (g.y > 352) {
+    g.balls -= 1;
+    audio.sfx('denied');
+    if (g.balls <= 0) {
+      g.over = true;
+      g.overT = 0;
+    } else {
+      g.x = 404; g.y = 330; g.vx = 0; g.vy = 0; g.launched = false; g.power = 0; g.rollHit = null;
+      g.msg = 'BALL ' + (4 - g.balls) + ' — SHOOT AGAIN';
+      g.msgT = 1.6;
+    }
+  }
+}
+
+function drawPinball() {
+  const g = state.pin;
+  px(ctx, 0, 0, 640, 360, '#14101c');
+  // the machine
+  px(ctx, 220, 14, 204, 340, '#3a2030');
+  px(ctx, 226, 20, 192, 328, '#221420');
+  // backglass
+  px(ctx, 236, 24, 172, 34, '#1a2a4a');
+  outlineText(ctx, 'GABAGOOL WIZARD', 322, 40, '#ffd23e', 10, 'center');
+  outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
+  // playfield
+  px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  // lane divider + lane
+  px(ctx, 392, 62, 4, 286, '#4a3040');
+  px(ctx, 396, 62, 20, 286, '#1a1020');
+  outlineText(ctx, 'PLUNGER', 406, 76, '#8a6a5a', 6, 'center');
+  // top arc hint
+  px(ctx, 232, 62, 160, 4, '#5a4a6a');
+  // bumpers
+  const bumpers = [[278, 96, 15, '#ff5a4a'], [336, 76, 15, '#ffd23e'], [306, 150, 15, '#5ab8ff']];
+  for (const [bx, by, br, col] of bumpers) {
+    const glow = g.flash ? .5 : .2;
+    ctx.save();
+    ctx.globalAlpha = glow + Math.sin(state.time * 4 + bx) * .1;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(bx, by, br + 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    px(ctx, bx - br, by - br, br * 2, br * 2, col);
+    px(ctx, bx - br + 4, by - br + 4, br * 2 - 8, br * 2 - 8, '#fff8');
+  }
+  // rollovers
+  for (const [rx, ry, id] of [[250, 200, 'L'], [368, 200, 'R']]) {
+    const lit = g.rollHit && g.rollHit[id];
+    px(ctx, rx - 4, ry - 4, 8, 8, lit ? '#9be59b' : '#4a6a4a');
+  }
+  // flippers
+  const la = g.lf ? -0.7 : 0.3;
+  const ra = g.rf ? -0.7 : 0.3;
+  ctx.save();
+  ctx.strokeStyle = '#e8d24a';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(286, 318);
+  ctx.lineTo(286 + Math.cos(la) * 34, 318 + Math.sin(la) * 34 * .4 - (g.lf ? 10 : 0));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(356, 318);
+  ctx.lineTo(356 - Math.cos(ra) * 34, 318 + Math.sin(ra) * 34 * .4 - (g.rf ? 10 : 0));
+  ctx.stroke();
+  ctx.restore();
+  // ball
+  if (!g.over) {
+    px(ctx, g.x - 3, g.y - 3, 6, 6, '#e8e8f0');
+    px(ctx, g.x - 2, g.y - 2, 2, 2, '#fff');
+  }
+  // plunger power meter
+  if (!g.launched && !g.over) {
+    px(ctx, 428, 330 - (g.power || 0) * 100, 8, (g.power || 0) * 100, '#ff5a4a');
+    outlineText(ctx, g.charging ? 'RELEASE!' : 'hold E/B to plunge', 320, 360 - 8, '#8a8a92', 8, 'center');
+  }
+  outlineText(ctx, 'balls: ' + g.balls, 480, 100, '#fff', 10, 'left');
+  outlineText(ctx, 'F/◀ left flipper', 480, 130, '#8a8a92', 8, 'left');
+  outlineText(ctx, 'A/▶ right flipper', 480, 144, '#8a8a92', 8, 'left');
+  outlineText(ctx, '1500+ pays $20', 480, 170, '#5a6a5a', 8, 'left');
+  outlineText(ctx, '3000+ pays $50', 480, 184, '#5a6a5a', 8, 'left');
+  outlineText(ctx, 'multiball is a myth', 480, 210, '#4a4a52', 7, 'left');
+  if (g.msgT > 0) outlineText(ctx, g.msg, 320, 290, '#ffd23e', 12, 'center');
+  if (g.over) {
+    px(ctx, 200, 130, 240, 90, '#000a');
+    outlineText(ctx, 'GAME OVER', 320, 160, '#ff5a4a', 18, 'center');
+    outlineText(ctx, 'final score ' + g.score, 320, 190, '#fff', 11, 'center');
+  }
+  // the machine's legs, because a machine with no visible legs is a floating machine
+  px(ctx, 226, 348, 8, 10, '#111');
+  px(ctx, 410, 348, 8, 10, '#111');
 }
 
 function updateSkeeball(dt) {
@@ -8174,6 +8526,10 @@ function dinerInteractions() {
       state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 10);
       state.armCd = state.time + 120;
       initArmWrestle('trucker');
+    } },
+    { x: 554, y: 260, w: 26, h: 30, radius: 40, label: 'Pinball — $2', action: () => {
+      if (state.scene !== 'diner') return;
+      initPinball();
     } },
     { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
       if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
@@ -9795,6 +10151,12 @@ function nycInteractions() {
           { speaker: 'kramer', text: 'Buddy — Kramerica Logistics has a problem. The tolls are eating us alive. ALIVE! But the truckers — the truckers know every road in Jersey. Every shortcut. Every no-scale zone. There’s a guy at the Endgame Diner — truckers always know. Interview him. Verify the route. Logistics, buddy — it’s about to be a SCIENCE.' },
           { speaker: 'system', text: 'Mission accepted: THE TRUCKER SYSTEM. The shadow freight network awaits.' }
         ]);
+      } else if (!state.mission && state.flags.truckerSystemDone && !state.flags.assmanDone && state.flags.freeRoam) {
+        startMission('assman');
+        startDialog([
+          { speaker: 'kramer', text: 'Buddy — sit down. Sensitive matter. You know the DMV? Circus of incompetence. They printed vanity plates — ASSMAN — beautiful plates — and they were meant for ME. Clerical error! Now they’re OUT THERE, buddy, on somebody else’s car. I need you to find them. I need closure. I need to know who’s driving my legacy. $240 for closure.' },
+          { speaker: 'system', text: 'Mission accepted: THE ASSMAN. Find the plates.' }
+        ]);
       } else if (!state.mission && state.flags.kramericaBookDone && state.flags.freeRoam) {
         const drops = [
           { scene: 'monks', x: 320, y: 250, radius: 60, name: 'Monk’s — a business lunch. The business is confidential. The lunch is soup' },
@@ -11218,6 +11580,7 @@ function drawWorld() {
   drawRussian();
   drawTailCourier();
   drawBrawler();
+  drawFares();
   drawCash();
   drawInteractionMarkers();
   drawPlayer();
@@ -11923,6 +12286,7 @@ function render() {
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
+  else if (state.mode === 'pinball') drawPinball();
   else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
@@ -12020,6 +12384,7 @@ function checkMissionHeatBreach() {
 
 function update(dt) {
   if (state.wasted) { updateWasted(dt); return; }
+  updateFares(dt);
   state.frameCount = (state.frameCount || 0) + 1;
   const overlayMode = ['menu', 'fasttravel', 'dialogue'].includes(state.mode);
   if (state._overlayMode !== overlayMode) {
@@ -12359,6 +12724,8 @@ function update(dt) {
     updateDarts(dt);
   } else if (state.mode === 'skeeball') {
     updateSkeeball(dt);
+  } else if (state.mode === 'pinball') {
+    updatePinball(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
   } else if (state.mode === 'roulette') {
