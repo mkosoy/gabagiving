@@ -4709,6 +4709,17 @@ function hubInteractions() {
         ]);
       }
     } },
+    { x: 640, y: 140, w: 40, h: 30, radius: 42, label: 'Light the grill', action: () => {
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .3);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George lights the Soprano family grill with the confidence of a man who has never met propane. The flame whoomp— a modest fireball. His eyebrows survive. Barely. The smell of lighter fluid and ambition fills North Caldwell.' },
+        { speaker: 'george', text: 'I’M GRILLING NOW! I have a grill AND a system! The system is: meat, then more meat! Why does no one respect the system?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony lights the grill one-handed, fluid-perfect, first click. This is a man who has grilled through three decades and two indictments. The coals know him. The neighborhood smells it and collectively relaxes.' },
+        { speaker: 'tony', text: 'Thanksgiving, a grill, the smell of charcoal. This is the stuff they can never take from you. The Feds can have the rest. Not this.' }
+      ]);
+    } },
     { x: 680, y: 150, w: 44, h: 30, radius: 42, label: 'AJ’s lemonade stand', action: () => {
       if (state.money < 4) { toast('AJ’s lemonade is $4. Yes, really. No, he will not negotiate.'); return; }
       state.money -= 4;
