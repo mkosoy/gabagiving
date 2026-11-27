@@ -126,6 +126,8 @@ canvas.addEventListener('pointerdown', (e) => {
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
     const entries = menuEntries();
+    if (vy >= 74 && vy <= 91 && (state.menu.scroll || 0) > 0) { state.menu.scroll -= 1; state.menu.sel = Math.max(0, state.menu.sel - 1); audio.sfx('pickup'); return; }
+    if (vy >= 336 && vy <= 356 && (state.menu.scroll || 0) + 14 < entries.length) { state.menu.scroll += 1; state.menu.sel = Math.min(entries.length - 1, state.menu.sel + 1); audio.sfx('pickup'); return; }
     const idx = Math.floor((vy - 92) / 17) + (state.menu.scroll || 0);
     if (vx >= 130 && vx <= 510 && idx >= 0 && idx < entries.length) {
       state.menu.sel = idx;
@@ -399,6 +401,42 @@ function menuEntries() {
       }, open: true
     });
   }
+  entries.push({
+    label: 'Cell phone — jobs & messages', hint: state.mission ? 'a job is ACTIVE — check it' : 'your mission tracker',
+    act: () => {
+      closeMenu();
+      const lines = [];
+      if (state.mission) {
+        const def = MISSION_DEFS[state.mission.id] || {};
+        const st = (state.mission.steps || def.steps || [])[state.mission.step] || {};
+        lines.push({ speaker: 'system', text: `CURRENT JOB: ${def.title || state.mission.id} — ${st.objective || 'see it through'}${state.mission.payout ? ` ($${state.mission.payout})` : ''}` });
+        if (st.label) lines.push({ speaker: 'system', text: `Next stop: ${st.label}. Follow the pulsing beacon — or the edge arrow when it’s off-screen.` });
+      } else lines.push({ speaker: 'system', text: 'No active job. Talk to people with a ! overhead — Newman in the neighborhood, Kramer in Manhattan, Silvio at the Bing, Frank in Queens, Artie at Vesuvio, Melfi, Christopher, Paulie… the world is hiring.' });
+      const doneCnt = ['packageJobDone','bigSaladDone','ryeExpressDone','turkeyTaxDone','bigMouthDone','gravyChainDone','fixedRaceDone','serenityTapesDone','featsOfStrengthDone','saunaSerenityDone','calzoneProtocolDone','cottonUniformsDone','kramericaBookDone','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','jerrysFavorDone','trackSystemDone'].filter(f => state.flags[f]).length;
+      lines.push({ speaker: 'system', text: `Career: ${doneCnt} jobs finished, ${state.stats.carsStolen || 0} cars borrowed, $${state.money} on hand, heat ${(state.flags.heat || 0).toFixed(1)}/5.` });
+      lines.push({ speaker: 'narrator', text: 'The phone is a 2004 flip phone. It has one game. The game is Snake. You do not have time for Snake. You are IN Snake.' });
+      startDialog(lines);
+    }, open: true
+  });
+  entries.push({
+    label: 'World map — pick a destination', hint: 'the big Garden State atlas, tap a place twice',
+    act: () => {
+      closeMenu();
+      state.flags.freeRoam = true;
+      state.mode = 'fasttravel';
+      state.ftSel = 0;
+      pressed.clear();
+    }, open: true
+  });
+  if (!state.flags.freeRoam) entries.push({
+    label: 'Open world — skip to free roam', hint: 'the whole state, right now — story optional',
+    act: () => {
+      closeMenu();
+      state.flags.sandbox = true;
+      enterHub(false);
+      objective('Free roam: choose a landmark — press T or MENU for the map');
+    }, open: true
+  });
   if (state.flags.freeRoam) entries.push({
     label: 'Criminal record', hint: 'your career in numbers — the feds wish they had this',
     act: () => {
@@ -918,8 +956,8 @@ function drawHelp() {
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
-  outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
-  outlineText(ctx, 'T: fast travel · G: slip a cop \$100 when close', 174, 186, '#fff', 9);
+  outlineText(ctx, 'F: PUNCH people (some fight back!) · horn in cars', 174, 172, '#ffe78a', 9);
+  outlineText(ctx, 'MENU: world map · cell phone jobs · open world anytime', 174, 186, '#fff', 9);
   outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
   const st = state.stats;
   outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 214, '#8fb8ff', 8, 'center');
@@ -1060,8 +1098,8 @@ const scenes = {
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
       r(0,0,250,106), r(70,112,120,56), r(254,40,94,110), r(354,104,108,52),
       r(556,12,76,240),
-      r(130,190,270,98), r(402,210,56,70), r(444,300,108,92),
-      r(242,296,120,46), r(14,304,136,100), r(530,368,98,44)
+      r(130,190,270,86), r(402,210,56,70), r(444,300,108,92),
+      r(250,300,104,38), r(14,320,110,84), r(530,368,98,44)
     ],
     draw: drawApartment,
     interactions: apartmentInteractions
@@ -10982,6 +11020,13 @@ function update(dt) {
   }
   if (state.mode === 'menu') {
     const entries = menuEntries();
+    state.menuStickT = (state.menuStickT || 0) - dt;
+    const mi = moveInput();
+    if (Math.abs(mi.y) > .5 && state.menuStickT <= 0) {
+      state.menu.sel = (state.menu.sel + (mi.y > 0 ? 1 : -1) + entries.length) % entries.length;
+      state.menuStickT = .22;
+      audio.sfx('pickup');
+    }
     if (consume(['ArrowDown', 'KeyS'])) { state.menu.sel = (state.menu.sel + 1) % entries.length; audio.sfx('pickup'); }
     if (consume(['ArrowUp', 'KeyW'])) { state.menu.sel = (state.menu.sel - 1 + entries.length) % entries.length; audio.sfx('pickup'); }
     if (interactPressed()) {
@@ -10999,8 +11044,17 @@ function update(dt) {
     return;
   }
   if (state.mode === 'fasttravel') {
+    state.ftStickT = (state.ftStickT || 0) - dt;
+    if (typeof state.ftSel !== 'number' || isNaN(state.ftSel)) state.ftSel = 0;
+    const fi = moveInput();
+    if (Math.abs(fi.y) > .5 && state.ftStickT <= 0) {
+      state.ftSel = (state.ftSel + (fi.y > 0 ? 1 : -1) + FT_NODES.length) % FT_NODES.length;
+      state.ftStickT = .22;
+      audio.sfx('pickup');
+    }
     if (consume(['ArrowUp', 'KeyW'])) { state.ftSel = (state.ftSel - 1 + FT_NODES.length) % FT_NODES.length; audio.sfx('pickup'); }
     if (consume(['ArrowDown', 'KeyS'])) { state.ftSel = (state.ftSel + 1) % FT_NODES.length; audio.sfx('pickup'); }
+    if (state.ftSel === undefined) state.ftSel = 0;
     if (consume(['KeyE', 'Space', 'Enter'])) {
       const n = FT_NODES[state.ftSel];
       if (n.id === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
