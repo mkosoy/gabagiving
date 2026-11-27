@@ -28,7 +28,8 @@ const carSprites = {};
 const CAR_SPRITE_MAP = {
   '#8f1f2e': 'sedan', '#7e2733': 'sedan', '#a02828': 'corvette', '#e8b822': 'cab',
   '#2848a0': 'cruiser', '#e8e4da': 'mailtruck', '#b8a888': 'wagon', '#3d6b35': 'sedan-green2',
-  '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon'
+  '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon',
+  '#e8e4d8': 'mailtruck', '#dcd8cc': 'mailtruck', '#c03838': 'corvette', '#31445e': 'sedan-bluegray'
 };
 for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
   carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
@@ -4915,9 +4916,9 @@ function updateDrive(dt) {
     o.x += o.vx * dt;
     if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
     if (o.x < 178 || o.x > 462) o.vx *= -1;
-    const ox = o.x - 13, oy = o.y - 12;
-    const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
-    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 26, h: 24 })) {
+    const ox = o.x - 12, oy = o.y - 20;
+    const car = { x: d.x - 12, y: d.y - 24, w: 24, h: 46 };
+    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 24, h: 40 })) {
       o.hit = true;
       if (o.type === 'money') {
         d.boost = 2.7;
@@ -6336,6 +6337,7 @@ function hubInteractions() {
       state.money -= 50;
       state.flags.heat = 0;
       state.player.carDamage = 0;
+      if (!state.player.carModel) state.player.carModel = CAR_SPRITE_MAP[state.player.carColor] || 'sedan';
       const colors = ['#3d6b35', '#6b3d3d', '#3d3d6b', '#6b6b3d', '#444'];
       state.player.carColor = colors[Math.floor(Math.random() * colors.length)];
       if (state.cop) state.cop = null;
@@ -12435,7 +12437,10 @@ function drawPeptides() {
 }
 
 function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
-  const spriteName = CAR_SPRITE_MAP[color] || 'sedan';
+  const mapped = CAR_SPRITE_MAP[color];
+  const model = (state.player && state.player.inCar && state.player.carModel) || null;
+  const spriteName = model || mapped || 'sedan';
+  const needsTint = !!(model && color && mapped !== model);
   const img = carSprites[spriteName];
   if (img && img.complete && img.naturalWidth > 0) {
     ctx.save();
@@ -12459,7 +12464,27 @@ function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
     }
     const w = 30;
     const h = Math.round(w * img.naturalHeight / img.naturalWidth);
-    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    if (needsTint) {
+      // resprayed: draw onto a scratch canvas and tint, so the body shape stays the stolen model
+      if (!drawCar._scratch) {
+        drawCar._scratch = document.createElement('canvas');
+        drawCar._scratch.width = 40;
+        drawCar._scratch.height = 80;
+      }
+      const sc = drawCar._scratch;
+      const scx = sc.getContext('2d');
+      scx.clearRect(0, 0, 40, 80);
+      scx.drawImage(img, (40 - w) / 2, (80 - h) / 2, w, h);
+      scx.globalCompositeOperation = 'source-atop';
+      scx.fillStyle = color;
+      scx.globalAlpha = .45;
+      scx.fillRect(0, 0, 40, 80);
+      scx.globalAlpha = 1;
+      scx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(sc, -20, -40);
+    } else {
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    }
     ctx.restore();
     if (target) {
       ctx.strokeStyle = '#ffe78a';
