@@ -610,6 +610,21 @@ function drawDialog() {
   }
 }
 
+function drawToast() {
+  const tm = state.toastMsg;
+  if (!tm) return;
+  ctx.fillStyle = 'rgba(10,10,16,.88)';
+  const w2 = Math.min(560, tm.text.length * 6 + 30);
+  ctx.fillRect((640 - w2) / 2, 366, w2, 24);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect((640 - w2) / 2, 366, w2, 24);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(tm.text, 320, 382);
+  ctx.textAlign = 'left';
+}
+
 function drawTrot() {
   const tr = state.trot;
   if (!tr) return;
@@ -768,7 +783,7 @@ function drawHelp() {
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
   outlineText(ctx, 'Shift: sprint · F: punch / horn · R: car radio', 174, 172, '#fff', 9);
-  outlineText(ctx, 'T: fast travel between regions', 174, 186, '#fff', 9);
+  outlineText(ctx, 'T: fast travel · G: slip a cop \$100 when close', 174, 186, '#fff', 9);
   outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
   const st = state.stats;
   outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 214, '#8fb8ff', 8, 'center');
@@ -1237,9 +1252,20 @@ function updateAmbient(dt) {
     }
     let spd = n.fleeing ? n.speed * 2.2 : n.speed;
     if (!n.barkT && Math.random() < dt * .008) {
+      const grateful = state.flags.feastDone && Math.random() < .3;
+      if (grateful) {
+        const thanks = ['the feast! legendary!', 'you did that, didn’t ya', 'best thanksgiving in years', 'artie sends his love'];
+        n.bark = thanks[Math.floor(Math.random() * thanks.length)];
+        n.barkT = 1.8;
+        continue;
+      }
       const idle = state.scene === 'nyc'
-        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again']
-        : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!'];
+        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
+        : state.scene === 'shore' || state.scene === 'ac'
+          ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
+          : state.scene === 'pines'
+            ? ['quiet out here…', 'too quiet', 'pine fresh, they say']
+            : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!', 'in-laws incoming', 'turkey’s in the oven', 'happy thanksgiving!'];
       n.bark = idle[Math.floor(Math.random() * idle.length)];
       n.barkT = 1.8;
     }
@@ -1484,6 +1510,19 @@ function updateCop(dt) {
   // either unit close enough counts toward the bust
   const d2 = state.cop2 ? Math.hypot((p.x + 8) - state.cop2.x, (p.y + 8) - state.cop2.y) : 999;
   // GTA rules: they can't cuff a moving car — you have to stop or be on foot
+  // a cop within arm's reach can be reasoned with — Jersey reasoning, $100 a dose
+  if (Math.min(d, d2) < 44 && consume(['KeyG']) && (state.money || 0) >= 100 && !state.bribeCd) {
+    state.money -= 100;
+    state.flags.heat = 0;
+    state.cop = null;
+    state.cop2 = null;
+    state.copCar = null;
+    state.bribeCd = true;
+    setTimeout(() => { state.bribeCd = false; }, 4000);
+    audio.sfx('cash');
+    spawnEffect(p.x, p.y - 20, 'CONTRIBUTION ACCEPTED', '#ffd23e');
+    startDialog([{ speaker: 'narrator', text: 'A hundred dollars changes hands with the practiced smoothness of a transaction older than the republic. The officer remembers a pressing appointment elsewhere. “Nice neighborhood,” he says, meaning it sincerely for the first time.' }]);
+  }
   const evading = p.inCar && (p.carV || 0) > .45;
   if (Math.min(d, d2) < 30 && !evading) {
     c.bustT += dt;
@@ -1586,6 +1625,38 @@ function drawIceCream() {
   drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawParadeBalloon() {
+  if (state.scene !== 'nyc') return;
+  const t = state.time * .12;
+  const bx = 800 - ((t * 60) % 1000);
+  const by = 30 + Math.sin(t * 2) * 6;
+  // turkey-shaped balloon, because of course it is
+  px(ctx, bx - 16, by - 10, 32, 20, '#c05a3a');
+  px(ctx, bx - 8, by - 18, 16, 10, '#8a2f23');
+  px(ctx, bx + 10, by - 14, 8, 8, '#caa07a');
+  px(ctx, bx + 12, by - 10, 4, 4, '#e23e3e');
+  // tethers to invisible handlers far below
+  ctx.strokeStyle = 'rgba(220,220,220,.35)';
+  for (const off of [-10, 0, 10]) {
+    ctx.beginPath();
+    ctx.moveTo(bx + off, by + 10);
+    ctx.lineTo(bx + off * 1.6, by + 120);
+    ctx.stroke();
+  }
+}
+
+function drawRaccoons() {
+  if (state.scene !== 'hub' || !isNight()) return;
+  const t = state.time;
+  for (let i = 0; i < 2; i++) {
+    const rx = 240 + i * 130 + Math.sin(t * .5 + i * 2) * 30;
+    const ry = 350 + Math.cos(t * .7 + i) * 8;
+    px(ctx, rx - 5, ry - 4, 10, 7, '#5a5a62');
+    px(ctx, rx + 3, ry - 7, 5, 5, '#6a6a72');
+    px(ctx, rx - 8, ry - 3, 4, 3, '#3a3a42'); // striped tail, allegedly
+  }
 }
 
 function drawWantedPoster() {
@@ -2176,6 +2247,7 @@ function advanceMission() {
     state.flags.heat = Math.min(5, (state.flags.heat || 0) + def.heat);
     audio.sfx('cash');
     audio.sfx('success');
+    for (let ei = 0; ei < 6; ei++) spawnEffect(state.player.x + (ei - 2.5) * 14, state.player.y - 24 - (ei % 2) * 10, '★', '#ffd23e');
     const endings = {
       packageJob: state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'George returns the receipt. $200, minus what Newman calls "handling." Plus heat. Newman whistles, suddenly very busy with absolutely nothing.' },
@@ -2904,6 +2976,11 @@ function updateExplore(dt) {
     spawnEffect(state.player.x + 8, state.player.y - 8, inter.label.toUpperCase().slice(0, 15), '#ffe78a');
     inter.action();
   }
+}
+
+function toast(text) {
+  state.toastMsg = { text, t: 2.6 };
+  audio.sfx && audio.sfx('denied');
 }
 
 function spawnEffect(x, y, text, color = '#ffe78a') {
@@ -5612,6 +5689,19 @@ function drawAC() {
 function acInteractions() {
   return [
     { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 450, y: 150, w: 56, h: 36, radius: 42, label: 'The $19.99 buffet', action: () => {
+      if (state.money < 20) { toast('The buffet is $19.99 plus dignity, payable in advance.'); return; }
+      state.money -= 20;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George approaches the buffet with a strategy: proteins first, no filler, visit structure optimized. Forty minutes later he is weeping gently into a bread pudding. The system has beaten him. It beats everyone.' },
+        { speaker: 'george', text: 'The crab legs are TIME-GATED! They ration the crab legs! That’s not a buffet, that’s a crab-leg LOTTERY! …I’ll take a plate for the road. Two plates. A tray!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony does the buffet the way he does everything: no wasted motion. Plate one, meat. Plate two, meat adjacent. Plate three is dessert because Tony Soprano contains multitudes. The carving station guy gives him the respect slice — the end cut. The fat cap. The one they save.' },
+        { speaker: 'tony', text: 'Nineteen ninety-nine. In this economy? This is the last honest deal in America. Don’t tell nobody. Actually — tell Paulie nothing, he’d move in.' }
+      ]);
+    } },
     { x: 250, y: 150, w: 60, h: 40, radius: 42, label: 'High-roller slots', action: () => {
       if (state.money < 50) { toast('High-roller slots are $50 a pull.'); return; }
       state.money -= 50;
@@ -7677,6 +7767,8 @@ function drawWorld() {
   drawLawnmower();
   drawUmbrellaGuy();
   drawWantedPoster();
+  drawRaccoons();
+  drawParadeBalloon();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
@@ -7691,6 +7783,7 @@ function drawWorld() {
   drawObjectiveArrow();
   drawMinimap();
   drawMissionHud();
+  drawToast();
   drawBeacon();
   // location badge
   drawPanel(8, 42, 172, 25, '#182448', '#92896f');
@@ -8418,6 +8511,7 @@ function update(dt) {
   state.time += dt;
   updateMovers(dt);
   for (const e of state.effects) e.t += dt;
+  if (state.toastMsg) { state.toastMsg.t -= dt; if (state.toastMsg.t <= 0) state.toastMsg = null; }
   state.effects = state.effects.filter((e) => e.t < e.life);
   if (consume(['KeyN'])) {
     const on = audio.toggle();
