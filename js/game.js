@@ -7813,6 +7813,22 @@ function casinoInteractions() {
     { x: 320, y: 392, w: 60, h: 22, radius: 44, label: 'Back to the boardwalk', action: leaveOutside },
     { x: 130, y: 130, w: 80, h: 30, radius: 46, label: 'The slots — $5 a pull', action: () => initSlots() },
     { x: 210, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
+    { x: 520, y: 130, w: 46, h: 30, radius: 40, label: 'Rob the cashier cage', action: () => {
+      const key = 'registerCd_casino';
+      if ((state[key] || 0) > state.time) { toast('The cage is already light. Security remembers your face — come back in a few minutes.'); return; }
+      state[key] = state.time + 150;
+      const take = 120 + Math.floor(Math.random() * 80);
+      state.money += take;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
+      audio.sfx('cash');
+      audio.sfx('denied');
+      spawnEffect(state.player.x + 8, state.player.y - 12, `+$${take} · +3 heat`, '#ff9a7a');
+      startDialog([
+        { speaker: 'narrator', text: `You slide the note. The cashier reads it twice, looks at the camera, looks at you, and slides $${take} in non-sequential bills under the glass with the weary professionalism of a man who is paid eleven dollars an hour to NOT be a hero.` },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A NOTE! I can’t believe the note WORKED! It was a thank-you card! I robbed them with a THANK-YOU CARD!' : 'Non-sequentials. Professional. I almost respect this place. Almost. That carpet is still a crime worse than mine.' },
+        { speaker: 'system', text: 'The eye in the sky has your face now. +3 heat. The cage restocks in a couple of minutes.' }
+      ]);
+    } },
     { x: 470, y: 290, w: 60, h: 40, radius: 44, label: 'Blackjack table', action: () => initBlackjack() },
     { x: 320, y: 210, w: 70, h: 30, radius: 44, label: 'Roulette — red or black', action: () => initRoulette() },
     { x: 60, y: 380, w: 80, h: 26, radius: 42, label: 'ATM of doom', action: () => {
