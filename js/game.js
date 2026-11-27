@@ -316,7 +316,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone','dmvSeen','dmvTicket','dmvServing'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone','dmvSeen','dmvTicket','dmvServing','interventionDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2915,6 +2915,16 @@ const MISSION_DEFS = {
       { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the truth to Kramer', label: 'Kramer' }
     ]
   },
+  intervention: {
+    title: 'THE INTERVENTION',
+    payout: 260, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'satriale', x: 320, y: 200, radius: 56, objective: 'Round up Paulie at Satriale’s — he’s “busy” with the cat', label: 'Paulie' },
+      { scene: 'vesuvio', x: 320, y: 176, radius: 52, objective: 'Get Artie — he’s crying into the sauce again but he’s coming', label: 'Artie' },
+      { scene: 'melfi', x: 170, y: 200, radius: 56, objective: 'Dr. Melfi must attend — professionally. Not socially. Professionally.', label: 'Dr. Melfi' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Everyone assembled — back to the Bing for the big talk', label: 'Silvio' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -3119,6 +3129,10 @@ function advanceMission() {
       truckerSystem: [
         { speaker: 'kramer', text: 'The service road! Of course! Trucks avoid the tolls, the tolls avoid the trucks, and Kramerica avoids BOTH — it’s the circle of freight, buddy! The logistics division is ALIVE! $190 — and I’m naming the route after you. Well — after the trucker. Well — it’s gonna have a name, that’s the point!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a logistics pioneer! They’ll write case studies! Bad ones! But still!' : 'Interviewed a trucker, drove a service road, got paid. Easiest money since the last time somebody paid me to drive around. Which is often. It’s a good racket.' }
+      ],
+      intervention: [
+        { speaker: 'silvio', text: 'Everybody sat down. Everybody talked. Christopher cried — don’t you DARE repeat that — and the vetting process for his new no-show job has been thoroughly discussed. $260. You do the Lord’s work, my friend. The very specific, highly regional Lord’s work.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'An intervention! I’ve always wanted to be in one! Well — not IN one. NEAR one. At a safe, supportive distance!' : 'You don’t intervene on people like Christopher. You just… circle closer. Anyway, he cried. Nobody saw anything.' }
       ],
       assman: [
         { speaker: 'kramer', text: 'You saw it?! With your own eyes! The DMV made those plates for ME, buddy — a clerical error, a beautiful mistake — and now they’re out there, on some other man’s car, living their best life. Some proctologist is driving around with MY destiny on his bumper. Well. Let him have it. I’ve moved on. I’m the ASSMAN of the mind now. $240.' },
@@ -3405,6 +3419,10 @@ function updateMission(dt) {
         truckerSystem: [
           { speaker: 'narrator', text: 'The trucker doesn’t look up from his coffee, but he talks. Forty years of roads in one monologue: the service road behind the Meadowlands — no tolls, no scales, no troopers, just reeds and the occasional smell of money being laundered. “You didn’t hear it from me,” he says, to nobody, because he never looked at you.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fascinating! The trucker economy! A shadow logistics network hiding in plain sight! I must document everything!' : 'Truckers and my crew got the same road-map, turns out. Small world. No — small TOLLS.' }
+        ],
+        intervention: [
+          { speaker: 'narrator', text: 'Paulie resists with the force of a man defending a lifetime of never processing anything. Then you mention there’s free food at the Bing and suddenly he’s helping you load the car.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He came willingly! Once food was involved! The system works!' : 'Paulie’s in. Guy’s a sucker for antipasto. Aren’t we all.' }
         ],
         assman: [
           { speaker: 'narrator', text: 'And there it is — parked plain as day. A cream-colored sedan wearing plates that read, in bold state-issue blue: ASSMAN. A man in a white coat gets out, locks it, and walks into a medical building with the serenity of someone who has made peace with his plates.' },
@@ -5224,6 +5242,12 @@ function clubInteractions() {
         { speaker: 'silvio', text: 'You want the big one? The BIG one? Fine. Three hits, one night: the bodega in the Heights, the slice joint, and then — the Dunes cage. In and out, no stopping, no heroics. The clock is your worst enemy. Well — second worst.' },
         { speaker: 'silvio', text: '$400 for the night’s work. You get busted, you never heard of me, and I DEFINITELY never heard of you. Clock starts now.' },
         { speaker: 'system', text: 'Mission accepted: THE BIG SCORE. Three hits before the window closes.' }
+      ]);
+    } else if (!state.mission && state.flags.freeRoam && state.flags.soupSummitDone && !state.flags.interventionDone) {
+      startMission('intervention');
+      startDialog([
+        { speaker: 'silvio', text: 'It’s Christopher. He’s been… erratic. The screenplay thing was a cry for help. Possibly the noise he makes IS the cry, nobody’s sure. We’re doing an intervention — tonight, back room. I need bodies. Paulie, Artie, the doctor. Nobody volunteers for these things, which is why you’re volunteering. $260.' },
+        { speaker: 'system', text: 'Mission accepted: THE INTERVENTION. Supportive confrontation, Jersey style.' }
       ]);
     } else if (!state.mission && state.flags.freeRoam && state.flags.screenplayDone && !state.flags.sitDownDone) {
       startMission('sitDown');
