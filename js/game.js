@@ -3172,7 +3172,11 @@ function updateMission(dt) {
     // the heist press IS the crime — the beacon zone triggers the robbery directly,
     // so overlapping furniture hotspots can't eat the keypress
     const rob = (scenes[state.scene].interactions() || []).find(a => /Rob the (register|cashier cage)/.test(a.label || ''));
-    if (rob) { state.interactCooldown = .8; rob.action(); }
+    if (rob) {
+      state.interactCooldown = .8;
+      state['registerCd_' + state.scene] = 0; // a planned job — the heist window itself is the cooldown
+      rob.action();
+    }
   } else if (!crimeGated && Math.hypot(st.x - p.x, st.y - p.y) < st.radius && interactPressed() && (state.interactCooldown || 0) <= 0) {
     state.interactCooldown = .8;
     spawnEffect(st.x, st.y - 20, st.label.toUpperCase(), '#8ffff2');
