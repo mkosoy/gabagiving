@@ -334,7 +334,7 @@ function loadWorld() {
         id: w.mission.id,
         step: Math.min(w.mission.step, def.steps.length - 1),
         deadline: def.timeLimit ? state.time + def.timeLimit : null,
-        steps: (w.mission.steps || def.steps).map(s => ({ ...s })),
+        steps: (w.mission.id === 'jerrysFavor' ? def.steps : (w.mission.steps || def.steps)).map(s => ({ ...s })),
         payout: w.mission.payout || def.payout
       };
     }
