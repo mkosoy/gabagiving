@@ -37,6 +37,7 @@ const sceneArt = {
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
+  map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
   cabin: loadArt('./assets/bg-cabin.webp'),
   meadow: loadArt('./assets/bg-meadow.webp'),
@@ -301,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
 function saveWorld() {
   try {
     const out = {};
@@ -760,130 +761,30 @@ function drawTrivia() {
 }
 
 const FT_NODES = [
-  { id: 'hub', x: 258, y: 108, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale\'s, Vesuvio' },
-  { id: 'nyc', x: 552, y: 102, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk\'s, the soup stand, Jerry\'s, the bodega' },
-  { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
-  { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
-  { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' },
-  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' },
-  { id: 'queens', x: 555, y: 210, dx: 300, dy: 250, name: 'Queens', flavor: 'THE 7 TRAIN', desc: 'the Costanzas, the sauna, the shampoo factory' }
+  { id: 'hub', x: 408, y: 82, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale\'s, Vesuvio' },
+  { id: 'nyc', x: 475, y: 50, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk\'s, the soup stand, Jerry\'s, the bodega' },
+  { id: 'meadow', x: 442, y: 108, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' },
+  { id: 'queens', x: 562, y: 56, dx: 300, dy: 250, name: 'Queens', flavor: 'THE 7 TRAIN', desc: 'the Costanzas, the sauna, the shampoo factory' },
+  { id: 'pines', x: 316, y: 212, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
+  { id: 'shore', x: 452, y: 184, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
+  { id: 'ac', x: 416, y: 282, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' }
 ];
 
 function drawFastTravel() {
-  // full-screen road map — the state of New Jersey, Thanksgiving eve
+  // the painted Garden State atlas
   ctx.fillStyle = '#0a0f16';
   ctx.fillRect(0, 0, 640, 360);
-  // paper
-  ctx.fillStyle = '#0e1a12';
-  ctx.fillRect(14, 8, 612, 344);
+  if (sceneArt.map && sceneArt.map.complete && sceneArt.map.naturalWidth) {
+    ctx.drawImage(sceneArt.map, 0, 0, 640, 360);
+    ctx.fillStyle = 'rgba(6,10,18,.25)';
+    ctx.fillRect(0, 0, 640, 360);
+  } else {
+    ctx.fillStyle = '#0e1a12';
+    ctx.fillRect(14, 8, 612, 344);
+  }
   ctx.strokeStyle = '#d4a017';
   ctx.lineWidth = 2;
-  ctx.strokeRect(14, 8, 612, 344);
-
-  // water: the Hudson river + the Atlantic
-  ctx.fillStyle = '#12283d';
-  ctx.fillRect(448, 16, 88, 240);
-  ctx.fillRect(380, 288, 246, 64);
-  ctx.fillRect(536, 16, 90, 336);
-  ctx.fillStyle = '#1a3a55';
-  for (let wy = 24; wy < 340; wy += 16) {
-    ctx.fillRect(452 + (wy % 32 === 0 ? 8 : 0), wy, 34, 2);
-    if (wy > 280) ctx.fillRect(388 + (wy % 32 === 0 ? 10 : 0), wy, 60, 2);
-  }
-  ctx.fillStyle = '#7fb8dd';
-  ctx.font = '8px monospace';
-  ctx.textAlign = 'center';
-  ctx.save();
-  ctx.translate(474, 140);
-  ctx.rotate(Math.PI / 2);
-  ctx.fillText('H U D S O N   R I V E R', 0, 0);
-  ctx.restore();
-  ctx.fillText('A T L A N T I C   O C E A N', 500, 330);
-
-  // jersey landmass — rough silhouette
-  ctx.fillStyle = '#16281a';
-  ctx.beginPath();
-  ctx.moveTo(60, 20);
-  ctx.lineTo(446, 20);
-  ctx.lineTo(446, 150);
-  ctx.lineTo(440, 210);
-  ctx.lineTo(420, 250);
-  ctx.lineTo(390, 280);
-  ctx.lineTo(350, 300);
-  ctx.lineTo(300, 320);
-  ctx.lineTo(240, 330);
-  ctx.lineTo(120, 336);
-  ctx.lineTo(60, 330);
-  ctx.closePath();
-  ctx.fill();
-  // sandy hook + shore strip
-  ctx.fillRect(410, 180, 14, 80);
-  // manhattan strip
-  ctx.fillStyle = '#241f14';
-  ctx.fillRect(538, 40, 34, 150);
-  ctx.fillStyle = '#c9a86a';
-  ctx.font = '7px monospace';
-  ctx.save();
-  ctx.translate(528, 120);
-  ctx.rotate(Math.PI / 2);
-  ctx.fillText('M A N H A T T A N', 0, 0);
-  ctx.restore();
-
-  // decorative roads: turnpike (I-95) + parkway spine
-  ctx.strokeStyle = 'rgba(150,150,140,.35)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([]);
-  ctx.beginPath();
-  ctx.moveTo(150, 20);
-  ctx.lineTo(200, 120);
-  ctx.lineTo(230, 220);
-  ctx.lineTo(260, 330);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(180,180,170,.5)';
-  ctx.font = '7px monospace';
-  ctx.fillText('NJ TURNPIKE', 178, 120);
-
-  // the Garden State Parkway — spine of the state
-  ctx.strokeStyle = '#caa53d';
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([6, 4]);
-  ctx.beginPath();
-  ctx.moveTo(258, 108);
-  ctx.lineTo(222, 196);
-  ctx.lineTo(310, 230);
-  ctx.lineTo(400, 248);
-  ctx.stroke();
-  // AC expressway
-  ctx.strokeStyle = '#8ab';
-  ctx.beginPath();
-  ctx.moveTo(400, 248);
-  ctx.lineTo(322, 318);
-  ctx.stroke();
-  // the tunnel — under the Hudson
-  ctx.strokeStyle = '#e8722a';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(258, 108);
-  ctx.lineTo(446, 100);
-  ctx.setLineDash([3, 5]);
-  ctx.lineTo(552, 102);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#e8722a';
-  ctx.font = '7px monospace';
-  ctx.fillText('HOLLAND TUNNEL', 350, 92);
-
-  // towns/landmarks
-  ctx.fillStyle = '#6f8f6f';
-  ctx.font = '7px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('Newark', 320, 62);
-  ctx.fillText('Jersey City', 390, 80);
-  ctx.fillText('Sandy Hook', 424, 178);
-  ctx.fillText('EXIT 13', 296, 118);
-  ctx.fillStyle = '#4a5';
-  ctx.fillRect(316, 58, 3, 3);
-  ctx.fillRect(386, 76, 3, 3);
+  ctx.strokeRect(4, 4, 632, 352);
 
   // region nodes
   FT_NODES.forEach((n, i) => {
@@ -891,7 +792,7 @@ function drawFastTravel() {
     const here = n.id === state.scene;
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
     if (sel) {
-      ctx.strokeStyle = `rgba(255,210,62,${.4 + pulse * .5})`;
+      ctx.strokeStyle = `rgba(255,210,62,${.45 + pulse * .5})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(n.x, n.y, 13 + pulse * 3, 0, Math.PI * 2);
@@ -902,39 +803,39 @@ function drawFastTravel() {
     ctx.arc(n.x, n.y, sel ? 7 : 5.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
-    ctx.fillStyle = sel || here ? '#fff3c4' : '#ddd';
+    // label backing for readability over the painted map
+    const label = n.name + (here ? '  ★ you are here' : '');
     ctx.font = (sel ? 'bold ' : '') + '9px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(n.name + (here ? '  ★ you are here' : ''), n.x, n.y - 12);
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(6,10,18,.72)';
+    ctx.fillRect(n.x - tw / 2 - 3, n.y - 22, tw + 6, 11);
+    ctx.fillStyle = sel || here ? '#fff3c4' : '#ddd';
+    ctx.fillText(label, n.x, n.y - 13);
   });
 
-  // header + footer
+  // header + footer backing bar
+  ctx.fillStyle = 'rgba(6,10,18,.78)';
+  ctx.fillRect(0, 0, 640, 24);
+  ctx.fillRect(0, 316, 640, 44);
   ctx.fillStyle = '#ffd23e';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('THE GARDEN STATE — THANKSGIVING EVE', 320, 28);
+  ctx.fillText('THE GARDEN STATE — THANKSGIVING EVE', 320, 17);
   const cur = FT_NODES[state.ftSel || 0];
   if (cur) {
     ctx.fillStyle = '#9ab';
     ctx.font = '9px monospace';
-    ctx.fillText(cur.desc, 320, 330);
+    ctx.fillText(cur.desc, 320, 332);
     ctx.fillStyle = '#e8722a';
-    ctx.fillText('route: ' + cur.flavor, 320, 341);
+    ctx.fillText('route: ' + cur.flavor, 320, 344);
   }
-  ctx.fillStyle = '#666';
-  ctx.font = '8px monospace';
-  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 108, 341);
-  // legend
   ctx.fillStyle = '#888';
+  ctx.font = '8px monospace';
   ctx.textAlign = 'left';
-  ctx.font = '7px monospace';
-  ctx.fillText('— — GSP', 30, 306);
-  ctx.fillStyle = '#e8722a';
-  ctx.fillText('—— tunnel', 30, 316);
-  ctx.fillStyle = '#8ab';
-  ctx.fillText('— — expressway', 30, 326);
+  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 12, 344);
   ctx.textAlign = 'left';
 }
 
@@ -1544,7 +1445,11 @@ function updateAmbient(dt) {
           : ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
         : state.scene === 'shore' || state.scene === 'ac'
           ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
-          : state.scene === 'pines'
+          : state.scene === 'queens'
+            ? ['the 7 is delayed AGAIN', 'serenity now! serenity now!', 'that’s my spot. that’s MY SPOT', 'the curtain saw everything', 'queens — the borough of kings']
+            : state.scene === 'meadow'
+              ? ['the four horse is a criminal', 'big race tonight', 'sausage and peppers, two dollars', 'I had the winner. I HAD him']
+              : state.scene === 'pines' 
             ? ['quiet out here…', 'too quiet', 'pine fresh, they say']
             : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!', 'in-laws incoming', 'turkey’s in the oven', 'happy thanksgiving!'];
       n.bark = idle[Math.floor(Math.random() * idle.length)];
@@ -2583,6 +2488,15 @@ const MISSION_DEFS = {
       { scene: 'club', x: 400, y: 250, radius: 80, objective: 'deliver to the Bing before the rush', label: 'the gravy has landed' }
     ]
   },
+  trackSystem: {
+    title: 'THE TRACK SYSTEM',
+    payout: 280, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'meadow', x: 200, y: 230, radius: 48, objective: 'Consult the railbirds — Kramer swears by the guy in the cap', label: 'the railbirds' },
+      { scene: 'meadow', x: 98, y: 130, radius: 46, objective: 'Place the bet per the SYSTEM', label: 'the betting window' },
+      { scene: 'meadow', x: 370, y: 130, radius: 46, objective: 'Watch the race — the system cannot lose', label: 'the track rail' }
+    ]
+  },
   fixedRace: {
     title: 'THE FIXED RACE',
     payout: 320, heat: 1, timeLimit: 0,
@@ -2625,7 +2539,7 @@ const MISSION_DEFS = {
   }
 };
 const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'libraryRun', 'bigOne'];
-const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'kramericaBook'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'trackSystem', 'kramericaBook'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -2698,6 +2612,11 @@ function advanceMission() {
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You had me hand-deliver MAIL to sabotage the MAIL?! I’m an accessory to postal treason!' : 'A hundred fifty to carry catalogs. I’ve done worse for less. Don’t tell anybody that.' }
+      ],
+      trackSystem: [
+        { speaker: 'narrator', text: 'The railbird in the cap — Kramer’s oracle — sells you the system for five dollars: “Always bet the horse that looks like it knows something.” You study the field. One horse, fourth from the rail, unmistakably looks like it knows something. You bet it. It comes in second. SECOND. The system has never come in second before. The railbird is inconsolable. You are somehow up anyway — place money is money.' },
+        { speaker: 'kramer', text: 'Second?! It never comes in second! That’s not — the SYSTEM doesn’t DO second! …Although. Huh. You know what, second place money is still money, buddy. The system evolves. THE SYSTEM EVOLVES!' },
+        { speaker: 'system', text: 'MISSION PASSED — THE TRACK SYSTEM. Place money is money. $280.' }
       ],
       fixedRace: [
         { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
@@ -8417,7 +8336,10 @@ function nycInteractions() {
         startMission(mid);
         const offers = {
           muffinTops: { speaker: 'kramer', text: 'Buddy! Perfect timing! Kramerica Foods needs a logistics man. Muffin stumps — forty pounds — to the bodega. They take anything. $140. Giddy up!' },
-          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' }
+          bladderRun: { speaker: 'kramer', text: 'The bladder, buddy. She’s full. She needs to be… relieved. In the Pine Barrens. It’s not dumping — it’s redistribution of petroleum assets! $200. Mostly airtight.' },
+          bottleRun: { speaker: 'kramer', text: 'Buddy — bottles. Cases of them. The deposit money is just SITTING there in Michigan waiting for us. Well — the truck goes to Michigan eventually. You just get them to the bodega for now. Logistics! $160.' },
+          trackSystem: { speaker: 'kramer', text: 'The Meadowlands, buddy. I got a system. A SYSTEM. It involves a man in a cap and a horse that knows things. Put the bet down, watch it run, bring me the word. This cannot fail — it’s mathematically ordained. $280.' },
+          kramericaBook: { speaker: 'kramer', text: 'The coffee table book about coffee tables — it’s DONE, buddy. The publisher wants the manuscript at the Yankees office. Don’t ask why. Publishing is a strange world. $300 and a credit in the acknowledgments!' }
         };
         startDialog([
           offers[mid],
