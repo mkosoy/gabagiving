@@ -8198,7 +8198,20 @@ function nycInteractions() {
           { speaker: 'tony', text: 'Two dollars for bad news. At least the bagels here are honest.' }
         ]);
         audio.sfx('pickup');
-      } else startDialog([{ speaker: 'narrator', text: 'Same headlines. Somehow worse the second time.' }]);
+      } else {
+        const headlines = [];
+        if (state.flags.fixedRaceDone) headlines.push('FIXED RACE FIXED BY RIVAL FIX — HORSE BLAMES NOBODY');
+        if (state.flags.gravyChainDone) headlines.push('GRAVY SHORTAGE AVERTED — STRIP CLUB THANKSGIVING SAVED');
+        if (state.flags.trackSystemDone) headlines.push('LOCAL SYSTEM COMES IN SECOND — SYSTEM EVOLVES, SAYS MAN IN CAP');
+        if (state.flags.libraryRunDone) headlines.push('23-YEAR OVERDUE BOOK RETURNED — LIBRARY COP RETIRES TRIUMPHANT');
+        if (state.flags.turkeyTaxDone) headlines.push('TURKEY PRICES UP — ENVELOPES UNRELATED, INSIST RESTAURANTS');
+        if (state.flags.heatMagnetDone) headlines.push('MAIL THIEF AT LARGE — POSTAL INSPECTOR "VERY SURE THIS TIME"');
+        if (state.flags.cottonUniformsDone) headlines.push('YANKEES UNIFORMS BREATHE AGAIN — COTTON INDUSTRY REJOICES');
+        headlines.push('TURKEY PRICES THIS YEAR — FORGET ABOUT IT');
+        if (state.flags.heat >= 3) headlines.unshift('MANHUNT — ARMED AND GABAGOOLY');
+        const pick2 = headlines[Math.floor((state.time / 40) % headlines.length)];
+        startDialog([{ speaker: 'narrator', text: 'Today’s headline: ' + pick2 + '. The paper costs two dollars. The ink costs extra, spiritually.' }]);
+      }
     } },
     { x: 600, y: 290, w: 90, h: 46, radius: 44, label: 'Payphone', hidden: () => !!state.flags.latexExport, action: () => {
       if (state.player.kind === 'george') {
