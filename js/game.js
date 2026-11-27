@@ -2824,7 +2824,7 @@ function advanceMission() {
   if (!m) return;
   const def = MISSION_DEFS[m.id];
   m.step += 1;
-  if (m.id === 'sliceJob' && m.step >= 1) m.deadline = null; // the pie is delivered — the clock stops
+  if (m.id === 'sliceJob' && m.step >= 1 && (!m.deadline || state.time <= m.deadline)) m.deadline = null; // on-time pie delivered — the clock stops
   const msteps = m.steps || def.steps;
   if (m.step >= msteps.length) {
     // mission complete
