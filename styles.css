@@ -99,7 +99,7 @@ html, body {
 #touchButtons {
   pointer-events: auto;
   position: absolute;
-  right: calc(84px + env(safe-area-inset-right));
+  right: calc(22px + env(safe-area-inset-right));
   bottom: calc(26px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
@@ -145,6 +145,9 @@ html, body {
 #btnF {
   top: calc(118px + env(safe-area-inset-top));
   background: rgba(55,116,130,.72) !important;
+}
+@media (min-width: 600px) {
+  #touchButtons { right: calc(84px + env(safe-area-inset-right)); }
 }
 @media (pointer: coarse), (max-width: 850px) {
   #touchControls { display: block; }
