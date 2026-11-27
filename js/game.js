@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2576,6 +2576,16 @@ const MISSION_DEFS = {
       { scene: 'club', x: 396, y: 182, radius: 46, objective: 'Bring whatever you found back to Paulie at the Bing', label: 'Paulie' }
     ]
   },
+  screenplay: {
+    title: 'THE SCREENPLAY',
+    payout: 210, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'club', x: 320, y: 330, radius: 50, objective: 'Burn the copy in the Bing’s back room — near the dice game, quietly', label: 'the back-room copy' },
+      { scene: 'satriale', x: 320, y: 200, radius: 60, objective: 'Recover the copy at Satriale’s before the guys read it aloud', label: 'the pork-store copy' },
+      { scene: 'cabin', x: 180, y: 300, radius: 60, objective: 'Destroy the “writer’s retreat” draft hidden in the cabin', label: 'the retreat draft' },
+      { scene: 'club', x: 202, y: 182, radius: 46, objective: 'Report back to Christopher — tell him NOTHING was read', label: 'Christopher' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2712,6 +2722,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'The shoe is not in the treeline. The shoe is not at the pond. What IS at the pond: one (1) frozen footprint, size extra-wide, leading in a circle. You bring Paulie a pinecone, a frozen sock of indeterminate ownership, and the truth.' },
         { speaker: 'paulie', text: 'A SOCK?! I don’t wanna hear about no sock! That shoe was ITALIAN! …The Russian’s still out there, you know. Guy took my shoe AND my dignity. Here — hundred ninety. For the search. And hey — you see a guy out there with an interior decorator’s eye, you know what to do.' },
         { speaker: 'system', text: 'MISSION PASSED — THE MISSING SHOE. Some pines are just barren.' }
+      ],
+      screenplay: [
+        { speaker: 'christopher', text: 'You didn’t read it. Swear. SWEAR. …Okay. Okay. Because the part where the mobster’s mother is ALSO his therapist — that’s fiction. That’s pure fiction, it’s not — people wouldn’t understand the layers. Here. $210. You’re a good friend of mine, you know that?' },
+        { speaker: 'narrator', text: 'Three copies of “BARKATHTON” — a revenge epic about a man whose dog is elected senator — are gone forever. Cinema mourns quietly, not knowing why.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE SCREENPLAY. Some stories must never be told.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2885,6 +2900,10 @@ function updateMission(dt) {
         paulieShoe: [
           { speaker: 'narrator', text: 'You part the frozen brush where Paulie swears — SWEARS — he was only slightly disoriented. Nothing but frost, a rusted can of something unlabeled, and the deep suspicion that the trees are laughing.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m shoe-hunting in a haunted forest! For PAULIE! He doesn’t even tip!' : 'The shoe’s a size extra-wide. The forest is four hundred acres. This is what we in the business call a long shot.' }
+        ],
+        screenplay: [
+          { speaker: 'narrator', text: 'A hundred pages, still warm from the club office printer. The title page reads “BARKATHTON — by C.M.” You burn it without reading a word, which is either loyalty or a crime against comedy. Page forty-three curls away last: “the dog filibusters for nine hours…”' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A dog senator is ridiculous. A dog COMPTROLLER — now that has teeth. I should write my own!' : 'I didn’t read nothin’. I burned it with my eyes closed. …The dog part was almost good, though. I’m not made of stone.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -4455,7 +4474,18 @@ function clubInteractions() {
     state.craps = { bet: 25, phase: 'choose', pick: null, t: 0 };
     audio.sfx('pickup');
   } });
-  if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
+  list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => {
+    if (!state.mission && state.flags.freeRoam && state.flags.gravyChainDone && !state.flags.screenplayDone) {
+      startMission('screenplay');
+      startDialog([
+        { speaker: 'christopher', text: 'T’ — hey. You can’t tell nobody. I wrote a screenplay. It’s — look, the guys CANNOT read it. There are copies. Three. One in the back, one at the pork store, one I was workshopping at this cabin in the Pines — don’t ask. Destroy them. ALL of them. $210 and my eternal gratitude. You read NONE of it.' },
+        { speaker: 'system', text: 'Mission accepted: THE SCREENPLAY. Destroy all copies. Do not read the copies.' }
+      ]);
+      return;
+    }
+    if (!talked.christopher) { clubTalk('christopher'); return; }
+    startDialog([{ speaker: 'christopher', text: state.flags.screenplayDone ? 'I’m outlining a new one. It’s about a guy who can’t get a pilot made. It’s called a TRAGEDY. You heard nothin’.' : 'You hear that engine? Could be nothin’. Could be a guy with a small head start.' }]);
+  } });
   list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => {
     if (!state.mission && state.flags.freeRoam && state.flags.fixedRaceDone && !state.flags.paulieShoeDone) {
       startMission('paulieShoe');
