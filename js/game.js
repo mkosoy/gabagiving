@@ -2256,7 +2256,7 @@ function updateBrawler(dt) {
   }
   // the turkey defends its person
   const tk = state.turkey;
-  if (tk && tk.friend && b.hp > 0 && !tk.enraged && !tk.racing) {
+  if (tk && tk.friend && b.hp > 0 && !tk.enraged && !tk.racing && state.scene === 'hub' && b.state === 'chase') {
     tk.peckT = (tk.peckT || 0) - dt;
     const td = Math.hypot(tk.x - b.x, tk.y - b.y);
     if (td > 22) {
