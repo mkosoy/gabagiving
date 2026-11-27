@@ -1363,7 +1363,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -1381,6 +1381,7 @@ function updateCop(dt) {
     spawnEffect(c.x, c.y, 'HEAT CLEARED', '#8ffff2');
     state.cop = null;
     state.cop2 = null;
+    state.copCar = null;
     return;
   }
   // wanted escalation: a second unit joins at high heat
@@ -1390,6 +1391,31 @@ function updateCop(dt) {
     audio.sfx('honk');
   }
   if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
+  // heat 4+: a patrol car joins in — the only thing in Jersey that drives worse than you
+  if (heat >= 4 && !state.copCar) {
+    state.copCar = { x: state.scene === 'nyc' ? 30 : 60, y: 60, angle: 0, flashT: 0 };
+    spawnEffect(state.player.x + 8, state.player.y - 34, 'PATROL CAR INBOUND!', '#ff6a6a');
+    audio.sfx('honk');
+  }
+  if (heat < 3.5 && state.copCar) state.copCar = null;
+  if (state.copCar) {
+    const cc = state.copCar;
+    cc.flashT += dt;
+    const pdx = state.player.x - cc.x, pdy = state.player.y - cc.y;
+    const pdist = Math.hypot(pdx, pdy) || 1;
+    const cspd = 168;
+    cc.x += pdx / pdist * cspd * dt;
+    cc.y += pdy / pdist * cspd * dt;
+    cc.angle = Math.atan2(pdy, pdx) + Math.PI / 2;
+    if (pdist < 26 && state.player.inCar) {
+      state.player.carV = (state.player.carV || 1) * .25;
+      state.player.carDamage = (state.player.carDamage || 0) + 1;
+      spawnEffect(state.player.x, state.player.y - 20, 'RAMMED!', '#ff8e8e');
+      audio.sfx('crash');
+      cc.x -= pdx / pdist * 30;
+      cc.y -= pdy / pdist * 30;
+    }
+  }
   const p = state.player;
   const maxHeat = (state.flags.heat || 0) >= 4.5;
   const speed = (p.inCar ? 150 : 120) * (maxHeat ? 1.3 : 1);
@@ -1415,6 +1441,7 @@ function updateCop(dt) {
     if (c.bustT > (maxHeat ? .5 : .8)) {
       state.cop = null;
       state.cop2 = null;
+      state.copCar = null;
       state.flags.heat = 0;
       p.inCar = false;
       p.speed = p.kind === 'george' ? 96 : 88;
@@ -1649,7 +1676,7 @@ function drawTailCourier() {
 
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
-  for (const c of [state.cop, state.cop2].filter(Boolean)) {
+  for (const c of [state.cop, state.cop2, state.copCar].filter(Boolean)) {
     drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
