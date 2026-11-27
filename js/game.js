@@ -3550,7 +3550,7 @@ function updateExplore(dt) {
     spawnEffect(p.x + 8, p.y - 22, names[state.carRadio], '#8ffff2');
   }
   // leaving a borrowed car takes priority over other interactions
-  if (p.inCar && interactPressed() && !(nearestInteraction() && nearestInteraction().inCarOk)) {
+  if (p.inCar && !(nearestInteraction() && nearestInteraction().inCarOk) && interactPressed()) {
     p.inCar = false;
     p.carColor = null;
     p.speed = p.kind === 'george' ? 96 : 88;
