@@ -71,7 +71,13 @@ const illustratedSprites = {
   romanPerformer: loadSprite('./assets/sprites/romanPerformer.webp'),
   newman: loadSprite('./assets/sprites/newman.webp'),
   steinbrenner: loadSprite('./assets/sprites/steinbrenner.webp'),
-  soupNazi: loadSprite('./assets/sprites/soupnazi.webp')
+  soupNazi: loadSprite('./assets/sprites/soupnazi.webp'),
+  manA: loadSprite('./assets/sprites/manA.webp'),
+  manB: loadSprite('./assets/sprites/manB.webp'),
+  manC: loadSprite('./assets/sprites/manC.webp'),
+  cop: loadSprite('./assets/sprites/cop.webp'),
+  trucker: loadSprite('./assets/sprites/trucker.webp'),
+  waitress: loadSprite('./assets/sprites/waitress.webp')
 };
 
 const spriteAliases = {
@@ -86,7 +92,7 @@ function canonicalSpriteKind(kind) { return spriteAliases[kind] || kind; }
 
 function drawIllustratedPerson(ctx, x, y, img, kind, dir, frame, options) {
   const pose = options.pose || 'stand';
-  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45, newman: 40, steinbrenner: 42, soupNazi: 45 };
+  const heights = { tony: 47, aj: 41, carmela: 43, paulie: 43, augustus: 49, jerry: 43, george: 38, kramer: 49, elaine: 42, meadow: 44, melfi: 45, christopher: 45, silvio: 46, bobby: 46, artie: 44, irina: 44, junior: 42, janice: 44, plav: 45, romanGuard: 48, romanSenator: 46, romanNoblewoman: 45, romanCitizen: 43, romanCitizenWoman: 43, romanPerformer: 46, derek: 45, newman: 40, steinbrenner: 42, soupNazi: 45, manA: 45, manB: 43, manC: 42, cop: 46, trucker: 47, waitress: 43 };
   let h = (heights[kind] || 43) * 1.3 * (options.scale ? options.scale / 1.18 : 1);
   let w = h * img.naturalWidth / img.naturalHeight;
   const sitting = pose === 'sit';

@@ -24,6 +24,17 @@ function loadArt(src) {
   img.src = src + (src.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
   return img;
 }
+const carSprites = {};
+const CAR_SPRITE_MAP = {
+  '#8f1f2e': 'sedan', '#7e2733': 'sedan', '#a02828': 'corvette', '#e8b822': 'cab',
+  '#2848a0': 'cruiser', '#e8e4da': 'mailtruck', '#b8a888': 'wagon', '#3d6b35': 'sedan-green2',
+  '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon',
+  '#e8e4d8': 'mailtruck', '#dcd8cc': 'mailtruck', '#c03838': 'corvette', '#31445e': 'sedan-bluegray'
+};
+for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
+  carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
+}
+
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
@@ -37,6 +48,18 @@ const sceneArt = {
   costanza: loadArt('./assets/bg-costanza.webp'),
   njstreet: loadArt('./assets/bg-njstreet.webp'),
   diner: loadArt('./assets/bg-diner.webp'),
+  dmv: loadArt('./assets/bg-dmv.webp'),
+  mgPoker: loadArt('./assets/mg-poker.webp'),
+  mgKitchen: loadArt('./assets/mg-kitchen.webp'),
+  mgBlackjack: loadArt('./assets/mg-blackjack.webp'),
+  mgPinball: loadArt('./assets/mg-pinball.webp'),
+  mgSkeeball: loadArt('./assets/mg-skeeball.webp'),
+  mgDarts: loadArt('./assets/mg-darts.webp'),
+  mgMonte: loadArt('./assets/mg-monte.webp'),
+  mgRoulette: loadArt('./assets/mg-roulette.webp'),
+  mgSlots: loadArt('./assets/mg-slots.webp'),
+  mgDanceoff: loadArt('./assets/mg-danceoff.webp'),
+  mgHorsetrack: loadArt('./assets/mg-horsetrack.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -1315,7 +1338,10 @@ const scenes = {
     w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
     colliders: [
       r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
-      r(30,30,580,64), r(80,170,200,54), r(360,170,200,54), r(240,300,160,44)
+      r(8,8,624,142), r(160,148,130,10), r(330,148,130,10),
+      r(48,208,155,52), r(238,208,165,52), r(428,208,155,52),
+      r(38,296,220,74), r(338,296,245,74),
+      r(8,148,44,130), r(58,122,52,30)
     ],
     draw: drawDmv,
     interactions: dmvInteractions
@@ -1508,24 +1534,24 @@ const ambientSpecs = {
     { kind: 'christopher', x: 480, y: 204, region: { x: 420, y: 178, w: 130, h: 66 }, speed: 36 },
     { kind: 'womanA', x: 100, y: 206, region: { x: 40, y: 168, w: 130, h: 70 }, speed: 28 },
     { kind: 'bobby', x: 330, y: 330, region: { x: 260, y: 310, w: 160, h: 60 }, speed: 24 },
-    { kind: 'womanC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
+    { kind: 'manC', x: 760, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 34 },
     { kind: 'silvio', x: 900, y: 280, region: { x: 700, y: 198, w: 480, h: 90 }, speed: 30 },
-    { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
+    { kind: 'manA', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
   queens: [
     { kind: 'womanA', x: 200, y: 270, region: { x: 60, y: 250, w: 640, h: 40 }, speed: 30 },
-    { kind: 'bobby', x: 500, y: 280, region: { x: 80, y: 255, w: 600, h: 40 }, speed: 26 },
-    { kind: 'womanD', x: 350, y: 264, region: { x: 100, y: 250, w: 560, h: 40 }, speed: 34 }
+    { kind: 'manB', x: 500, y: 280, region: { x: 80, y: 255, w: 600, h: 40 }, speed: 26 },
+    { kind: 'trucker', x: 350, y: 264, region: { x: 100, y: 250, w: 560, h: 40 }, speed: 24 }
   ],
   meadow: [
     { kind: 'bobby', x: 200, y: 300, region: { x: 100, y: 260, w: 300, h: 90 }, speed: 26 },
     { kind: 'womanA', x: 350, y: 330, region: { x: 120, y: 280, w: 400, h: 80 }, speed: 30 },
     { kind: 'christopher', x: 480, y: 290, region: { x: 300, y: 250, w: 240, h: 90 }, speed: 28 },
-    { kind: 'womanC', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 32 }
+    { kind: 'manB', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 26 }
   ],
   shore: [
-    { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
+    { kind: 'manC', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 26 },
     { kind: 'bobby', x: 500, y: 260, region: { x: 120, y: 150, w: 500, h: 160 }, speed: 20 }
   ],
   nyc: [
@@ -1533,9 +1559,9 @@ const ambientSpecs = {
     { kind: 'elaine', x: 460, y: 254, region: { x: 90, y: 238, w: 300, h: 36 }, speed: 36 },
     { kind: 'womanA', x: 200, y: 250, region: { x: 60, y: 236, w: 640, h: 40 }, speed: 38 },
     { kind: 'jerry', x: 500, y: 246, region: { x: 420, y: 236, w: 300, h: 36 }, speed: 30 },
-    { kind: 'womanD', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
-    { kind: 'christopher', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 28 },
-    { kind: 'womanC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
+    { kind: 'manA', x: 620, y: 252, region: { x: 200, y: 238, w: 520, h: 36 }, speed: 34 },
+    { kind: 'cop', x: 90, y: 258, region: { x: 50, y: 240, w: 240, h: 34 }, speed: 24 },
+    { kind: 'manC', x: 340, y: 380, region: { x: 60, y: 364, w: 640, h: 32 }, speed: 40 }
   ],
   club: [
     { kind: 'womanD', x: 120, y: 270, region: { x: 60, y: 250, w: 160, h: 80 }, speed: 30 },
@@ -1552,7 +1578,7 @@ const ambientSpecs = {
   ],
   monks: [
     { kind: 'womanA', x: 320, y: 380, region: { x: 120, y: 372, w: 380, h: 28 }, speed: 34 },
-    { kind: 'womanB', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
+    { kind: 'waitress', x: 560, y: 250, region: { x: 532, y: 130, w: 60, h: 220 }, speed: 26 },
     { kind: 'bobby', x: 60, y: 240, region: { x: 30, y: 130, w: 60, h: 220 }, speed: 20 }
   ],
   soup: [
@@ -4905,9 +4931,11 @@ function updateDrive(dt) {
     o.x += o.vx * dt;
     if (o.spin) { o.y += dt * 160; o.x += o.vx * dt * 2.4; o.spin -= dt; }
     if (o.x < 178 || o.x > 462) o.vx *= -1;
-    const ox = o.x - 13, oy = o.y - 12;
-    const car = { x: d.x - 13, y: d.y - 18, w: 26, h: 34 };
-    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: 26, h: 24 })) {
+    const small = o.type === 'money' || o.type === 'gabagool';
+    const ow = small ? 18 : 24, oh = small ? 14 : 40;
+    const ox = o.x - ow / 2, oy = o.y - oh / 2;
+    const car = { x: d.x - 12, y: d.y - 24, w: 24, h: 46 };
+    if (!o.hit && rectsOverlap(car, { x: ox, y: oy, w: ow, h: oh })) {
       o.hit = true;
       if (o.type === 'money') {
         d.boost = 2.7;
@@ -5160,7 +5188,13 @@ function clubInteractions() {
     audio.sfx('cash');
     startDialog([{ speaker: 'narrator', text: `Silvio opens the safe and hands you $${amt} in bills that have never met a serial number database. “Spend it in good health. Or bad health. Health is your business.”` }]);
   } });
-  list.push({ x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
+  list.push({ x: 300, y: 320, w: 60, h: 34, radius: 42, label: 'Executive game — $20 ante', action: () => {
+      if (!state.flags.freeRoam) return;
+      startDialog([
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A card game! With CRIMINALS! …I mean — what criminals. These are businessmen. I’m also a businessman. Vandelay. You may have heard.' : 'The executive game. Silvio’s been running it since before the floods. Twenty in, cards don’t lie — people do, constantly, but the cards are straight.' }
+      ], () => initPoker());
+    } },
+    { x: 400, y: 250, w: 60, h: 50, radius: 44, label: 'Dance floor', action: () => {
     audio.sfx('pickup');
     startDialog(state.player.kind === 'george' ? [
       { speaker: 'narrator', text: 'George hits the dance floor with the confidence of a man who has never once been filmed dancing. The little kicks! The thumbs! Somewhere, Elaine feels a disturbance, as if a million happy feet cried out at once.' },
@@ -5527,6 +5561,12 @@ function vesuvioInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m being TOASTED! By MOBSTERS! This is the greatest day of my life and I can never tell my parents!' : 'This is what it’s about. The food, the family — even the mailman. Everybody eats. HAPPY THANKSGIVING, ya miserable convicts.' },
         { speaker: 'system', text: 'THE FEAST — all mission chains complete. +$1000, heat cleared. The world stays open — the shore, the city, the Pines are all still out there.' }
       ]);
+    } },
+    { x: 210, y: 140, w: 60, h: 34, radius: 42, label: 'Help in the kitchen', action: () => {
+      if (!state.flags.freeRoam) return;
+      startDialog([
+        { speaker: 'artie', text: 'You want to help? During the RUSH? …You know what, yes. God help me, yes. Tickets come up, you build the plate — sauce, cheese, basil, fire, in the order on the slip. Wrong ingredient and the plate is dead. You get paid per plate. Don’t burn anything that isn’t supposed to be burnt.' }
+      ], () => initKitchen());
     } },
     { x: 320, y: 176, w: 48, h: 44, label: 'Artie', action: () => {
       if (!state.mission && !state.flags.artiesMenuDone && state.flags.turkeyTaxDone && state.flags.freeRoam) {
@@ -6314,6 +6354,7 @@ function hubInteractions() {
       state.money -= 50;
       state.flags.heat = 0;
       state.player.carDamage = 0;
+      if (!state.player.carModel) state.player.carModel = CAR_SPRITE_MAP[state.player.carColor] || 'sedan';
       const colors = ['#3d6b35', '#6b3d3d', '#3d3d6b', '#6b6b3d', '#444'];
       state.player.carColor = colors[Math.floor(Math.random() * colors.length)];
       if (state.cop) state.cop = null;
@@ -7042,9 +7083,11 @@ function updateRacing(dt) {
 function drawRacing() {
   const r = state.racing;
   if (!r) return;
-  ctx.fillStyle = '#1a120b';
-  ctx.fillRect(0, 0, 640, 360);
-  ctx.fillStyle = '#2a1d10';
+  if (!drawMgBackdrop(sceneArt.mgHorsetrack, 640, 360, .35)) {
+    ctx.fillStyle = '#1a120b';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  ctx.fillStyle = 'rgba(26,18,11,.75)';
   ctx.fillRect(60, 60, 520, 240);
   ctx.strokeStyle = '#c9a227';
   ctx.lineWidth = 2;
@@ -7139,11 +7182,23 @@ function updateDarts(dt) {
   if (d.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape', 'KeyM'])) { state.darts = null; state.mode = 'explore'; }
 }
 
+function drawMgBackdrop(img, w, h, dim) {
+  if (img && img.complete && img.naturalWidth) {
+    ctx.drawImage(img, 0, 0, w, h);
+    ctx.fillStyle = 'rgba(8,6,10,' + dim + ')';
+    ctx.fillRect(0, 0, w, h);
+    return true;
+  }
+  return false;
+}
+
 function drawDarts() {
   const d = state.darts;
   if (!d) return;
-  ctx.fillStyle = '#171008';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgDarts, 640, 360, .45)) {
+    ctx.fillStyle = '#171008';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#c9a227';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -7335,7 +7390,11 @@ function drawPinball() {
   outlineText(ctx, 'GABAGOOL WIZARD', 322, 40, '#ffd23e', 10, 'center');
   outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
   // playfield
-  px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  if (sceneArt.mgPinball && sceneArt.mgPinball.complete && sceneArt.mgPinball.naturalWidth) {
+    ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
+  } else {
+    px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  }
   // lane divider + lane
   px(ctx, 392, 62, 4, 286, '#4a3040');
   px(ctx, 396, 62, 20, 286, '#1a1020');
@@ -7353,13 +7412,26 @@ function drawPinball() {
     ctx.arc(bx, by, br + 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-    px(ctx, bx - br, by - br, br * 2, br * 2, col);
-    px(ctx, bx - br + 4, by - br + 4, br * 2 - 8, br * 2 - 8, '#fff8');
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath();
+    ctx.arc(bx - 3, by - 3, br * .45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.5)';
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.stroke();
   }
   // rollovers
   for (const [rx, ry, id] of [[250, 200, 'L'], [368, 200, 'R']]) {
     const lit = g.rollHit && g.rollHit[id];
-    px(ctx, rx - 4, ry - 4, 8, 8, lit ? '#9be59b' : '#4a6a4a');
+    ctx.fillStyle = lit ? '#9be59b' : '#4a6a4a';
+    ctx.beginPath();
+    ctx.arc(rx, ry, 5, 0, Math.PI * 2);
+    ctx.fill();
   }
   // flippers
   const la = g.lf ? -0.7 : 0.3;
@@ -7443,8 +7515,10 @@ function updateSkeeball(dt) {
 function drawSkeeball() {
   const s = state.skee;
   if (!s) return;
-  ctx.fillStyle = '#101426';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgSkeeball, 640, 360, .4)) {
+    ctx.fillStyle = '#101426';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#ffd23e';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -7543,8 +7617,10 @@ function updateDanceOff(dt) {
 function drawDanceOff() {
   const d = state.dance;
   if (!d) return;
-  ctx.fillStyle = '#160a20';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgDanceoff, 640, 360, .35)) {
+    ctx.fillStyle = '#160a20';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   // disco floor
   for (let fx = 0; fx < 8; fx++) for (let fy = 0; fy < 3; fy++) {
     const hue = (state.time * 90 + fx * 45 + fy * 90) % 360;
@@ -7632,8 +7708,10 @@ function updateRoulette(dt) {
 function drawRoulette() {
   const r = state.roulette;
   if (!r) return;
-  ctx.fillStyle = '#160a20';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgRoulette, 640, 360, .45)) {
+    ctx.fillStyle = '#160a20';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   ctx.fillStyle = '#ffd23e';
   ctx.font = 'bold 13px monospace';
   ctx.textAlign = 'center';
@@ -7821,7 +7899,9 @@ function drawCraps() {
 
 function drawSlots() {
   const s = state.slots;
-  px(ctx, 0, 0, 640, 416, '#16101e');
+  if (!drawMgBackdrop(sceneArt.mgSlots, 640, 416, .45)) {
+    px(ctx, 0, 0, 640, 416, '#16101e');
+  }
   outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
   // machine body
   px(ctx, 170, 90, 300, 210, '#3a2a4a');
@@ -7850,6 +7930,437 @@ function drawSlots() {
     outlineText(ctx, 'E = PULL · move to walk away', 320, 316, '#ffe78a', 9, 'center');
   }
   px(ctx, 170, 236, 300, 4, '#c8a040');
+}
+
+
+// ---------- Vesuvio kitchen rush ----------
+const KITCHEN_ING = [
+  { key: 'KeyE', key2: 'KeyA', label: 'A', name: 'sauce', color: '#c23a2a' },
+  { key: 'KeyB', label: 'B', name: 'cheese', color: '#f0e6c8' },
+  { key: 'KeyR', label: 'R', name: 'basil', color: '#4a8a3a' },
+  { key: 'KeyF', label: 'F', name: 'fire', color: '#e8862a' }
+];
+const KITCHEN_DISHES = [
+  { name: 'baked ziti', pay: 9, len: 3 },
+  { name: 'veal parm', pay: 12, len: 4 },
+  { name: 'calamari', pay: 14, len: 4 },
+  { name: 'the feast plate', pay: 18, len: 5 }
+];
+function kitchenOrder() {
+  const d = KITCHEN_DISHES[Math.floor(Math.random() * KITCHEN_DISHES.length)];
+  const seq = [];
+  for (let i = 0; i < d.len; i++) seq.push(Math.floor(Math.random() * 4));
+  if (seq[seq.length - 1] !== 3) seq[seq.length - 1] = 3; // always finish on the fire
+  return { name: d.name, pay: d.pay, seq, done: 0, t: 22 };
+}
+function initKitchen() {
+  state.kitchen = { order: kitchenOrder(), served: 0, ruined: 0, streak: 0, best: 0, timer: 75, flash: 0, flashBad: 0, over: false, overT: 0, earned: 0 };
+  state.mode = 'kitchen';
+  audio.sfx('pickup');
+}
+function updateKitchen(dt) {
+  const k = state.kitchen;
+  if (!k) { state.mode = 'explore'; return; }
+  if (k.over) {
+    k.overT += dt;
+    if (k.overT > 1 && consume(['KeyE', 'KeyB', 'Space'])) {
+      const earned = k.earned, served = k.served, ruined = k.ruined;
+      state.kitchen = null; state.mode = 'explore';
+      state.flags.tribute = (state.flags.tribute || 0) + earned;
+      if (earned > 0) audio.sfx('cash');
+      const lines = served >= 6
+        ? [{ speaker: 'artie', text: served + ' plates! The man’s a natural! Take the $' + earned + ' — and listen, the invitation to invest in this restaurant is STILL retracted, but warmly this time.' }]
+        : served >= 3
+          ? [{ speaker: 'artie', text: served + ' plates out the door, ' + ruined + ' in the bin. $' + earned + '. Not bad for a — what are you exactly? Don’t answer that. $' + earned + '.' }]
+          : [{ speaker: 'artie', text: 'That was… hmm. The health inspector would call it "an experience". $' + earned + ' for the effort. Please stop helping before the dinner rush.' }];
+      startDialog(lines);
+    }
+    return;
+  }
+  k.timer -= dt;
+  k.flash = Math.max(0, k.flash - dt);
+  k.flashBad = Math.max(0, k.flashBad - dt);
+  const o = k.order;
+  o.t -= dt;
+  if (o.t <= 0) {
+    // order walked
+    k.ruined++; k.streak = 0; k.flashBad = .5;
+    audio.sfx('buzzer');
+    k.order = kitchenOrder();
+  } else {
+    for (let i = 0; i < 4; i++) {
+      if (consume(KITCHEN_ING[i].key2 ? [KITCHEN_ING[i].key, KITCHEN_ING[i].key2] : [KITCHEN_ING[i].key])) {
+        if (o.seq[o.done] === i) {
+          o.done++;
+          k.flash = .25;
+          audio.sfx('blip');
+          if (o.done >= o.seq.length) {
+            const bonus = k.streak >= 2 ? Math.round(o.pay * .5) : 0;
+            k.earned += o.pay + bonus;
+            k.served++; k.streak++;
+            k.best = Math.max(k.best, k.streak);
+            spawnEffect(320, 200, '+$' + (o.pay + bonus), '#9be59b');
+            audio.sfx('pickup');
+            k.order = kitchenOrder();
+          }
+        } else {
+          k.ruined++; k.streak = 0; k.flashBad = .5;
+          audio.sfx('buzzer');
+          spawnEffect(320, 200, 'RUINED', '#ff9a8a');
+          k.order = kitchenOrder();
+        }
+        break;
+      }
+    }
+  }
+  if (consume(['Escape', 'KeyM'])) {
+    state.kitchen = null; state.mode = 'explore';
+    startDialog([{ speaker: 'artie', text: 'Walking out mid-shift! In the middle of the RUSH! …Honestly? Respect. Most of my dishwashers just ghost. The unpaid tickets are the restaurant’s problem now, which is to say: my problem, which is to say: please never do this again.' }]);
+    return;
+  }
+  if (k.timer <= 0) { k.over = true; k.overT = 0; audio.sfx('cash'); }
+}
+function drawKitchen() {
+  const k = state.kitchen;
+  if (!k) return;
+  const hasKitchenArt = sceneArt.mgKitchen && sceneArt.mgKitchen.complete && sceneArt.mgKitchen.naturalWidth;
+  if (hasKitchenArt) {
+    ctx.drawImage(sceneArt.mgKitchen, 0, 0, 640, 360);
+    ctx.fillStyle = 'rgba(12,8,6,.45)';
+    ctx.fillRect(0, 0, 640, 34);
+  } else {
+    ctx.fillStyle = '#1c1410';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#2a1c12';
+    ctx.fillRect(60, 60, 520, 220);
+    ctx.fillStyle = '#c23a2a';
+    ctx.fillRect(60, 60, 520, 34);
+  }
+  ctx.fillStyle = '#f5efdd';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('VESUVIO — DINNER RUSH', 320, 82);
+  if (!hasKitchenArt) {
+    for (let i = 0; i < 5; i++) {
+      const fx = 140 + i * 90;
+      const h = 10 + Math.sin(state.time * 9 + i * 2) * 5;
+      ctx.fillStyle = '#e8862a';
+      ctx.fillRect(fx, 250 - h, 26, h);
+      ctx.fillStyle = '#ffd76e';
+      ctx.fillRect(fx + 8, 250 - h * .6, 10, h * .6);
+    }
+    ctx.fillStyle = '#1c1410';
+    ctx.fillRect(60, 250, 520, 30);
+  }
+  // current order ticket
+  const o = k.order;
+  ctx.fillStyle = '#f5efdd';
+  ctx.fillRect(190, 108, 260, 118);
+  ctx.strokeStyle = '#6e5540';
+  ctx.strokeRect(190.5, 108.5, 259, 117);
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(o.name.toUpperCase(), 320, 128);
+  // time bar
+  ctx.fillStyle = o.t < 7 ? '#c23a2a' : '#4a8a3a';
+  ctx.fillRect(200, 134, 240 * Math.max(0, o.t / 22), 5);
+  // sequence
+  for (let i = 0; i < o.seq.length; i++) {
+    const ing = KITCHEN_ING[o.seq[i]];
+    const sx = 320 - (o.seq.length - 1) * 24 + i * 48;
+    const sy = 172;
+    ctx.fillStyle = i < o.done ? '#4a8a3a' : ing.color;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 17, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = i === o.done ? '#ffe78a' : '#333';
+    ctx.lineWidth = i === o.done ? 3 : 1;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(ing.label, sx, sy + 5);
+    if (i < o.seq.length - 1) {
+      ctx.fillStyle = '#999';
+      ctx.font = '10px monospace';
+      ctx.fillText('→', sx + 24, sy + 4);
+    }
+  }
+  ctx.fillStyle = '#666';
+  ctx.font = '9px monospace';
+  ctx.fillText('A sauce · B cheese · R basil · F fire — wrong ingredient ruins the plate', 320, 214);
+  // hud
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = 'bold 12px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('SHIFT ' + Math.max(0, Math.ceil(k.timer)) + 's', 70, 312);
+  ctx.fillText('served ' + k.served, 70, 330);
+  ctx.fillStyle = '#ffe78a';
+  ctx.fillText('earned $' + k.earned, 480, 312);
+  ctx.fillStyle = k.streak >= 2 ? '#ffd76e' : '#b8a88a';
+  ctx.fillText('streak x' + k.streak + (k.streak >= 2 ? ' (+50%)' : ''), 480, 330);
+  ctx.textAlign = 'center';
+  if (k.flashBad > 0) {
+    ctx.fillStyle = 'rgba(194,58,42,' + (k.flashBad * .5) + ')';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  if (k.over) {
+    ctx.fillStyle = 'rgba(10,8,6,.82)';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#e8c25a';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('SHIFT OVER', 320, 150);
+    ctx.fillStyle = '#e8dcc8';
+    ctx.font = '11px monospace';
+    ctx.fillText('plates out: ' + k.served + ' · ruined: ' + k.ruined + ' · best streak x' + k.best, 320, 176);
+    ctx.fillStyle = '#ffe78a';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('EARNED $' + k.earned, 320, 202);
+    ctx.fillStyle = '#b8a88a';
+    ctx.font = '10px monospace';
+    ctx.fillText('E to wipe your hands', 320, 232);
+  }
+  ctx.textAlign = 'left';
+}
+
+// ---------- The Executive Game (five-card draw) ----------
+function pkDeck() {
+  const d = [];
+  for (let s = 0; s < 4; s++) for (let v = 2; v <= 14; v++) d.push({ v, s });
+  for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = d[i]; d[i] = d[j]; d[j] = t; }
+  return d;
+}
+function pkRank(hand) {
+  const vs = hand.map(c => c.v).sort((a, b) => b - a);
+  const ss = hand.map(c => c.s);
+  const flush = ss.every(s => s === ss[0]);
+  const uniq = [...new Set(vs)].sort((a, b) => a - b);
+  let straight = 0;
+  if (uniq.length === 5 && uniq[4] - uniq[0] === 4) straight = uniq[4];
+  else if (uniq.join(',') === '2,3,4,5,14') straight = 5;
+  const counts = {};
+  vs.forEach(v => counts[v] = (counts[v] || 0) + 1);
+  const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c })).sort((a, b) => b.c - a.c || b.v - a.v);
+  let flat = groups.flatMap(g => Array(g.c).fill(g.v));
+  if (uniq.join(',') === '2,3,4,5,14') flat = [5, 4, 3, 2, 14]; // wheel: ace plays low
+  let rank = 0;
+  if (straight && flush) rank = 8;
+  else if (groups[0].c === 4) rank = 7;
+  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) rank = 6;
+  else if (flush) rank = 5;
+  else if (straight) rank = 4;
+  else if (groups[0].c === 3) rank = 3;
+  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) rank = 2;
+  else if (groups[0].c === 2) rank = 1;
+  return [rank, ...flat];
+}
+function pkName(rank) {
+  return ['high card', 'a pair', 'two pair', 'three of a kind', 'a straight', 'a flush', 'a full house', 'four of a kind', 'a STRAIGHT FLUSH'][rank] || 'high card';
+}
+function pkCompare(a, b) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const d = (a[i] || 0) - (b[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+function pkAiDiscard(hand) {
+  const r = pkRank(hand);
+  if (r[0] >= 4) return [];
+  const counts = {};
+  hand.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+  return hand.map((c, i) => counts[c.v] === 1 && c.v < 12 ? i : -1).filter(i => i >= 0).slice(0, 3);
+}
+
+function initPoker() {
+  if ((state.flags.tribute || 0) < 20) {
+    startDialog([{ speaker: 'narrator', text: 'The buy-in is twenty dollars. You have less than that. The table observes this in silence, which is worse than any comment.' }]);
+    return;
+  }
+  state.flags.tribute -= 20;
+  const deck = pkDeck();
+  const mk = (name, kind) => ({ name, kind, hand: deck.splice(0, 5), discards: [], folded: false });
+  state.poker = {
+    deck,
+    player: mk('You', state.player.kind),
+    ai: [mk('Silvio', 'silvio'), mk('Paulie', 'paulie'), mk('Christopher', 'christopher')],
+    pot: 80, cur: 0, sel: [false, false, false, false, false],
+    phase: 'select', t: 0, ax: 0, result: null
+  };
+  state.mode = 'poker';
+  audio.sfx('pickup');
+}
+
+function updatePoker(dt) {
+  const p = state.poker;
+  if (!p) { state.mode = 'explore'; return; }
+  p.t += dt;
+  if (p.phase === 'select') {
+    let mv = 0;
+    if (consume(['ArrowLeft'])) mv = -1;
+    if (consume(['ArrowRight'])) mv = 1;
+    if (Math.abs(axis.x) > .6 && Math.abs(p.ax) <= .6) mv = axis.x > 0 ? 1 : -1;
+    p.ax = axis.x;
+    if (mv) { p.cur = (p.cur + mv + 5) % 5; audio.sfx('blip'); }
+    if (consume(['KeyE'])) { p.sel[p.cur] = !p.sel[p.cur]; audio.sfx('blip'); }
+    if (consume(['KeyB', 'Space'])) {
+      const deck = p.deck;
+      for (let i = 0; i < 5; i++) if (p.sel[i]) p.player.hand[i] = deck.pop();
+      for (const ai of p.ai) {
+        const di = pkAiDiscard(ai.hand);
+        ai.discards = di;
+        for (const i2 of di) ai.hand[i2] = deck.pop();
+      }
+      p.phase = 'reveal'; p.t = 0;
+      audio.sfx('smash');
+    }
+  } else if (p.phase === 'reveal') {
+    if (p.t > 2.2 || consume(['KeyE', 'KeyB'])) {
+      const pr = pkRank(p.player.hand);
+      const ranked = p.ai.map(ai => ({ ai, r: pkRank(ai.hand) }));
+      const seats = [{ name: 'player', r: pr }, ...ranked.map(e => ({ name: e.ai.name, r: e.r }))];
+      let best = pr;
+      for (const s of seats) if (pkCompare(s.r, best) > 0) best = s.r;
+      const winners = seats.filter(s => pkCompare(s.r, best) === 0).map(s => s.name);
+      p.playerRank = pr;
+      const playerWon = winners.length === 1 && winners[0] === 'player';
+      const playerTied = winners.includes('player') && winners.length > 1;
+      p.result = playerWon ? 'player' : playerTied ? 'tie' : winners[0];
+      p.winners = winners;
+      p.phase = 'done'; p.t = 0;
+      if (playerWon) {
+        state.flags.tribute = (state.flags.tribute || 0) + p.pot;
+        state.stats.pokerWins = (state.stats.pokerWins || 0) + 1;
+        audio.sfx('cash');
+      } else if (playerTied) {
+        const share = Math.floor(p.pot / winners.length);
+        state.flags.tribute = (state.flags.tribute || 0) + share;
+        p.share = share;
+        audio.sfx('pickup');
+      } else audio.sfx('buzzer');
+    }
+  } else if (p.phase === 'done') {
+    if (p.t > .8 && consume(['KeyE', 'KeyB', 'Space'])) {
+      const won = p.result === 'player';
+      const tied = p.result === 'tie';
+      const share = p.share || 0;
+      const others = (p.winners || []).filter(w => w !== 'player').join(' and ');
+      const pname = pkName(p.playerRank[0]);
+      state.poker = null; state.mode = 'explore';
+      if (tied) {
+        startDialog([
+          { speaker: 'narrator', text: 'Dead heat — you and ' + others + ' show the same hand. The pot splits: $' + share + ' comes back to you. Paulie inspects both hands for a full minute, looking for the difference. There is no difference. That’s what a tie IS, Paulie.' }
+        ]);
+      } else if (won) {
+        startDialog([
+          { speaker: 'narrator', text: 'You rake the pot with ' + pname + '. $80 across the felt. Christopher throws his cards like they personally betrayed him, which, in a sense, they did.' },
+          { speaker: 'silvio', text: 'Nice hand. Don’t make a habit of it.' }
+        ]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: p.result + ' takes it. You had ' + pname + ', which in this room is a rumor, not a hand. Paulie is doing a small seated celebration that he thinks is subtle.' },
+          { speaker: 'paulie', text: 'The secret is I never look at my cards. Can’t lose what you don’t acknowledge.' }
+        ]);
+      }
+    }
+  }
+}
+
+function drawPoker() {
+  const p = state.poker;
+  if (!p) return;
+  if (sceneArt.mgPoker && sceneArt.mgPoker.complete && sceneArt.mgPoker.naturalWidth) {
+    ctx.drawImage(sceneArt.mgPoker, 0, 0, 640, 360);
+  } else {
+    ctx.fillStyle = '#0d2417';
+    ctx.fillRect(0, 0, 640, 360);
+    ctx.fillStyle = '#1a4a2e';
+    ctx.beginPath();
+    ctx.ellipse(320, 210, 290, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#6e5540';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+  ctx.fillStyle = '#e8c25a';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE EXECUTIVE GAME', 320, 20);
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#b8a88a';
+  ctx.fillText('five-card draw · ante $20 · winner takes the pot', 320, 34);
+  const suits = ['♠', '♥', '♦', '♣'];
+  const suitCol = (s) => s === 1 || s === 2 ? '#d84040' : '#222';
+  const oppX = [150, 320, 490];
+  p.ai.forEach((ai, k) => {
+    const x = oppX[k];
+    drawPortrait(ctx, x - 16, 48, ai.kind);
+    ctx.fillStyle = '#e8dcc8';
+    ctx.font = '9px monospace';
+    ctx.fillText(ai.name, x, 96);
+    const show = p.phase === 'done';
+    ai.hand.forEach((c, i) => {
+      const cx = x - 34 + i * 15, cy = 102;
+      ctx.fillStyle = show ? '#f5efdd' : '#8a2a2a';
+      ctx.fillRect(cx, cy, 13, 18);
+      ctx.strokeStyle = '#333';
+      ctx.strokeRect(cx + .5, cy + .5, 12, 17);
+      if (show) {
+        ctx.fillStyle = suitCol(c.s);
+        ctx.font = '8px monospace';
+        ctx.fillText((c.v === 14 ? 'A' : c.v === 13 ? 'K' : c.v === 12 ? 'Q' : c.v === 11 ? 'J' : c.v) + suits[c.s], cx + 6, cy + 13);
+      }
+    });
+    if (p.phase === 'done') {
+      ctx.fillStyle = '#ffe78a';
+      ctx.fillText(pkName(pkRank(ai.hand)[0]), x, 132);
+    } else if (p.phase === 'reveal') {
+      ctx.fillStyle = '#b8a88a';
+      ctx.fillText('drew ' + ai.discards.length, x, 132);
+    }
+  });
+  ctx.fillStyle = '#ffe78a';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText('POT $' + p.pot, 320, 158);
+  const py = 240;
+  p.player.hand.forEach((c, i) => {
+    const cx = 220 + i * 42, cy = py + (p.sel[i] ? -12 : 0);
+    ctx.fillStyle = '#f5efdd';
+    ctx.fillRect(cx, cy, 34, 48);
+    ctx.strokeStyle = p.cur === i && p.phase === 'select' ? '#ffe78a' : '#333';
+    ctx.lineWidth = p.cur === i && p.phase === 'select' ? 3 : 1;
+    ctx.strokeRect(cx + .5, cy + .5, 33, 47);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = suitCol(c.s);
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText((c.v === 14 ? 'A' : c.v === 13 ? 'K' : c.v === 12 ? 'Q' : c.v === 11 ? 'J' : c.v), cx + 17, cy + 20);
+    ctx.font = '15px monospace';
+    ctx.fillText(suits[c.s], cx + 17, cy + 38);
+    if (p.sel[i]) {
+      ctx.fillStyle = '#ff9a4a';
+      ctx.font = '8px monospace';
+      ctx.fillText('DISCARD', cx + 17, cy - 4);
+    }
+  });
+  ctx.fillStyle = '#e8dcc8';
+  ctx.font = '10px monospace';
+  if (p.phase === 'select') {
+    ctx.fillText('◀ ▶ choose · E mark for discard · B draw', 320, 320);
+    ctx.fillStyle = '#b8a88a';
+    ctx.fillText('marked cards get replaced — the table is watching', 320, 334);
+  } else if (p.phase === 'reveal') {
+    ctx.fillText('the draw is in…', 320, 320);
+  } else {
+    const won = p.result === 'player';
+    ctx.fillStyle = won ? '#9be59b' : '#ff9a8a';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(won ? 'YOU TAKE THE POT — ' + pkName(p.playerRank[0]).toUpperCase() : p.result === 'tie' ? 'SPLIT POT — $' + (p.share || 0) + ' back to you' : p.result.toUpperCase() + ' TAKES IT — you had ' + pkName(p.playerRank[0]), 320, 318);
+    ctx.fillStyle = '#b8a88a';
+    ctx.font = '10px monospace';
+    ctx.fillText('E to leave the table', 320, 336);
+  }
+  ctx.textAlign = 'left';
 }
 
 function initBlackjack() {
@@ -7941,18 +8452,23 @@ function bjDrawHand(hand, x, y, hideFirst) {
 }
 
 function drawBlackjack() {
-  px(ctx, 0, 0, 640, 416, '#0d2818');
+  if (sceneArt.mgBlackjack && sceneArt.mgBlackjack.complete && sceneArt.mgBlackjack.naturalWidth) {
+    ctx.drawImage(sceneArt.mgBlackjack, 0, 0, 640, 416);
+  } else {
+    px(ctx, 0, 0, 640, 416, '#0d2818');
+  }
   outlineText(ctx, 'BLACKJACK · THE BING BACK ROOM', 320, 46, '#ffe78a', 11, 'center');
   const bj = state.blackjack;
   if (!bj) return;
-  // felt table
-  ctx.fillStyle = '#1a4a2e';
-  ctx.beginPath();
-  ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#c8a040';
-  ctx.lineWidth = 3;
-  ctx.stroke();
+  if (!(sceneArt.mgBlackjack && sceneArt.mgBlackjack.complete && sceneArt.mgBlackjack.naturalWidth)) {
+    ctx.fillStyle = '#1a4a2e';
+    ctx.beginPath();
+    ctx.ellipse(320, 240, 260, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#c8a040';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
   const hideDealer = bj.phase === 'player';
   bjDrawHand(bj.dealer, 290, 150, hideDealer);
   outlineText(ctx, 'DEALER' + (hideDealer ? '' : ` · ${bjTotal(bj.dealer)}`), 320, 112, '#fffbe8', 8, 'center');
@@ -8416,6 +8932,17 @@ function meadowInteractions() {
 }
 
 function drawDmv() {
+  if (drawSceneArt(sceneArt.dmv, 640, 416)) {
+    // live NOW SERVING number over the painted display
+    const serving0 = state.flags.dmvServing || 41;
+    px(ctx, 470, 32, 78, 24, '#2a2a26');
+    outlineText(ctx, 'B-' + String(serving0).padStart(3, '0'), 509, 40, '#e8862a', 12, 'center');
+    // the clerk in the one open window, medically incapable of urgency
+    if (typeof drawPortrait === 'function') drawPortrait(ctx, 408, 58, 'manB');
+    // fluorescent flicker
+    if (Math.sin(state.time * 17) > .92) { ctx.save(); ctx.globalAlpha = .1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 640, 416); ctx.restore(); }
+    return;
+  }
   // procedural institutional despair — no painted art could capture it more cheaply
   px(ctx, 0, 0, 640, 416, '#8a8a80');
   px(ctx, 0, 96, 640, 320, '#a8a898'); // linoleum
@@ -8482,10 +9009,10 @@ function drawDmv() {
 
 function dmvInteractions() {
   return [
-    { x: 320, y: 380, w: 90, h: 26, radius: 46, label: 'Back to Manhattan', action: () => {
+    { x: 610, y: 262, w: 26, h: 60, radius: 48, label: 'Back to Manhattan', action: () => {
       setScene('nyc', 420, 250);
     } },
-    { x: 568, y: 252, w: 24, h: 30, radius: 40, label: 'Take a number', action: () => {
+    { x: 498, y: 138, w: 26, h: 34, radius: 44, label: 'Take a number', action: () => {
       if (state.flags.dmvTicket) { toast('You already have a number — B-' + state.flags.dmvTicket + '. It is not being served. It may never be served.'); return; }
       const serving = state.flags.dmvServing || 41;
       const ticket = serving + 3 + Math.floor(Math.random() * 4);
@@ -8497,7 +9024,7 @@ function dmvInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'THREE numbers away! That’s nothing! That’s — wait, how long is a number? …HOW LONG IS A NUMBER?!' : 'Yeah, I don’t do lines. We’ll see how this plays out.' }
       ]);
     } },
-    { x: 270, y: 74, w: 120, h: 26, radius: 44, label: 'The clerk window', action: () => {
+    { x: 420, y: 116, w: 90, h: 26, radius: 54, label: 'The clerk window', action: () => {
       const serving = state.flags.dmvServing || 41;
       const ticket = state.flags.dmvTicket;
       if (ticket && ticket <= serving) {
@@ -8515,7 +9042,7 @@ function dmvInteractions() {
         ]);
       }
     } },
-    { x: 300, y: 266, w: 60, h: 20, radius: 40, label: 'Slip the clerk $40', action: () => {
+    { x: 478, y: 122, w: 50, h: 20, radius: 48, label: 'Slip the clerk $40', action: () => {
       if (!state.flags.dmvTicket) { toast('Corruption requires paperwork. Get a number first.'); return; }
       if (state.money < 40) { toast('Forty bucks. Even graft has a price floor.'); return; }
       state.money -= 40;
@@ -8529,7 +9056,7 @@ function dmvInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I beat the system! I PAID the system, but it FEELS like beating! …This is how the world works, isn’t it. I’m going to be sick.' : 'Forty bucks to skip a line. Cheapest favor in Jersey. Uh — New York. Wherever we are.' }
       ]);
     } },
-    { x: 180, y: 190, w: 40, h: 22, radius: 36, label: 'Sit and wait', action: () => {
+    { x: 150, y: 272, w: 40, h: 22, radius: 40, label: 'Sit and wait', action: () => {
       if (!state.flags.dmvTicket) { toast('The chairs are for ticket-holders. Even the chairs have rules here.'); return; }
       const serving = state.flags.dmvServing || 41;
       if (state.flags.dmvTicket <= serving) { toast('Your number is UP — get to the window before the clerk notices joy.'); return; }
@@ -8540,10 +9067,10 @@ function dmvInteractions() {
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'An elderly man two chairs down has a sandwich in a foil wrapper older than your car.' : 'A wiseguy never waits. And yet. The things we do for vanity plates.' }
       ]);
     } },
-    { x: 40, y: 146, w: 40, h: 30, radius: 34, label: 'Organ donor poster', action: () => {
+    { x: 600, y: 142, w: 34, h: 40, radius: 38, label: 'The poster wall', action: () => {
       startDialog([{ speaker: 'narrator', text: '"BE AN ORGAN DONOR — SOMEONE IS WAITING." Someone is also waiting for their license renewal, and has been since Tuesday, and frankly their organs are starting to feel like a renewable resource.' }]);
     } },
-    { x: 320, y: 320, w: 160, h: 26, radius: 40, label: 'The forms', action: () => {
+    { x: 26, y: 214, w: 34, h: 60, radius: 42, label: 'The forms', action: () => {
       startDialog([
         { speaker: 'narrator', text: 'Form MV-82. Form MV-44. Form MV-37C, which is a form explaining that you have completed the wrong forms. A pen is chained to the table. The chain is the most secure object in the state of New York.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'There’s a form for the forms! It’s PERFECT! It’s the perfect system — nothing can ever go wrong because nothing can ever HAPPEN!' : 'This is why the family uses fixers. God bless the fixers.' }
@@ -9934,8 +10461,10 @@ function updateMonte(dt) {
 }
 
 function drawMonte() {
-  px(ctx, 0, 0, 640, 416, '#1c1710');
-  px(ctx, 0, 200, 640, 216, '#2c2419');
+  if (!drawMgBackdrop(sceneArt.mgMonte, 640, 416, .6)) {
+    px(ctx, 0, 0, 640, 416, '#1c1710');
+    px(ctx, 0, 200, 640, 216, '#2c2419');
+  }
   outlineText(ctx, 'THREE-CARD MONTE', 320, 60, '#ffe78a', 12, 'center');
   const m = state.monte;
   if (!m) return;
@@ -11589,7 +12118,7 @@ function drawPlayer() {
   const kind = state.player.kind;
   if (state.player.inCar) {
     const angles = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
-    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0);
+    drawCar(state.player.x, state.player.y, state.player.carColor || '#8f1f2e', false, angles[state.player.dir] || 0, state.player.carModel);
     if ((state.player.carDamage || 0) >= 2) {
       for (let i = 0; i < 3; i++) {
         const ph = (state.time * .9 + i * .33) % 1;
@@ -11992,7 +12521,61 @@ function drawPeptides() {
   outlineText(ctx, g.dizzy > .62 ? `DIZZY: CONTROLS REVERSED · ${g.message}` : g.message, 286, 20, g.dizzy > .62 ? '#ff9d9d' : '#fff', 8);
 }
 
-function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
+function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0, model = null) {
+  const mapped = CAR_SPRITE_MAP[color];
+  const spriteName = model || mapped || 'sedan';
+  const needsTint = !!(model && color && mapped !== model);
+  const img = carSprites[spriteName];
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (angle) ctx.rotate(angle);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath();
+    ctx.ellipse(1, 2, 15, 21, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // night headlight beams ahead of the hood
+    if (typeof isNight === 'function' && isNight()) {
+      ctx.fillStyle = 'rgba(255,240,180,.10)';
+      ctx.beginPath();
+      ctx.moveTo(-9, -18);
+      ctx.lineTo(9, -18);
+      ctx.lineTo(20, -58);
+      ctx.lineTo(-20, -58);
+      ctx.closePath();
+      ctx.fill();
+    }
+    const w = 30;
+    const h = Math.round(w * img.naturalHeight / img.naturalWidth);
+    if (needsTint) {
+      // resprayed: draw onto a scratch canvas and tint, so the body shape stays the stolen model
+      if (!drawCar._scratch) {
+        drawCar._scratch = document.createElement('canvas');
+        drawCar._scratch.width = 40;
+        drawCar._scratch.height = 80;
+      }
+      const sc = drawCar._scratch;
+      const scx = sc.getContext('2d');
+      scx.clearRect(0, 0, 40, 80);
+      scx.drawImage(img, (40 - w) / 2, (80 - h) / 2, w, h);
+      scx.globalCompositeOperation = 'source-atop';
+      scx.fillStyle = color;
+      scx.globalAlpha = .45;
+      scx.fillRect(0, 0, 40, 80);
+      scx.globalAlpha = 1;
+      scx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(sc, -20, -40);
+    } else {
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    }
+    ctx.restore();
+    if (target) {
+      ctx.strokeStyle = '#ffe78a';
+      ctx.strokeRect(x - 16.5, y - 22.5, 33, 45);
+    }
+    return;
+  }
   if (angle) {
     ctx.save();
     ctx.translate(x, y);
@@ -12489,6 +13072,8 @@ function render() {
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'pinball') drawPinball();
+  else if (state.mode === 'poker') drawPoker();
+  else if (state.mode === 'kitchen') drawKitchen();
   else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
@@ -12604,7 +13189,7 @@ function update(dt) {
     document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   }
   if (state.help && consume(cancelCodes)) state.help = false;
-  if (consume(['Escape', 'KeyP', 'KeyM'])) {
+  if (state.mode !== 'kitchen' && consume(['Escape', 'KeyP', 'KeyM'])) {
     if (state.mode === 'menu') closeMenu();
     else openMenu();
   }
@@ -12660,7 +13245,7 @@ function update(dt) {
     state.help = !state.help;
     pressed.clear();
   }
-  if (!['title', 'ending'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
+  if (!['title', 'ending', 'kitchen'].includes(state.mode) && !(state.player.inCar && state.mode === 'explore') && consume(['KeyR'])) {
     const nowT = performance.now();
     if (state._resetArmT && nowT - state._resetArmT < 1500) {
       state._resetArmT = 0;
@@ -12928,6 +13513,10 @@ function update(dt) {
     updateSkeeball(dt);
   } else if (state.mode === 'pinball') {
     updatePinball(dt);
+  } else if (state.mode === 'poker') {
+    updatePoker(dt);
+  } else if (state.mode === 'kitchen') {
+    updateKitchen(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
   } else if (state.mode === 'roulette') {
