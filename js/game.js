@@ -2320,6 +2320,42 @@ function updateBrawler(dt) {
 
 }
 
+function updateWasted(dt) {
+  if (!state.wasted) return;
+  state.wasted.t += dt;
+  if (state.wasted.t > 3.4) {
+    const spots = { hub: [350, 200], njstreet: [320, 240], nyc: [320, 250], queens: [400, 250], meadow: [400, 300], pines: [320, 300], shore: [400, 250], ac: [400, 250] };
+    const spot = spots[state.scene] || [320, 250];
+    state.player.x = spot[0]; state.player.y = spot[1];
+    state.player.inCar = null;
+    state.flags.hp = 2;
+    const fine = Math.floor(state.money * .1);
+    state.money -= fine;
+    state.flags.heat = 0;
+    state.brawler = null;
+    state.wasted = null;
+    toast('You wake up in a hospital gown and a bill. -$' + fine);
+    saveProgress();
+  }
+}
+
+function drawWasted() {
+  if (!state.wasted) return;
+  const t = state.wasted.t;
+  const a = Math.min(1, t * 1.4);
+  ctx.fillStyle = `rgba(0,0,0,${a * .92})`;
+  ctx.fillRect(0, 0, 640, 360);
+  if (t > .5) {
+    const sc = Math.min(1, (t - .5) * 2);
+    ctx.save();
+    ctx.translate(320, 170);
+    ctx.scale(sc, sc);
+    outlineText(ctx, 'WASTED', 0, 0, '#c03028', 34, 'center');
+    ctx.restore();
+    if (t > 1.6) outlineText(ctx, 'the meadowlands hospital is not covered by your plan', 320, 210, '#8a8a92', 8, 'center');
+  }
+}
+
 function drawBrawler() {
   const b = state.brawler;
   if (!b) return;
@@ -2405,7 +2441,8 @@ function updateHubEvents(dt) {
         let knock = 30;
         while (knock > 0 && blockedAt(p.x + c.dir * knock, p.y)) knock -= 6;
         if (knock > 0) p.x += c.dir * knock;
-        state.flags.hp = Math.max(1, (state.flags.hp || 3) - 1);
+        state.flags.hp = Math.max(0, (state.flags.hp || 3) - 1);
+        if ((state.flags.hp || 3) <= 0 && !state.wasted) state.wasted = { t: 0 };
         audio.sfx('crash');
       }
     }
@@ -11739,7 +11776,8 @@ const PARKED_CARS = {
     { id: 'nyc1', x: 300, y: 240, color: '#2848a0', speed: 205, name: 'an ex-cop cruiser', desc: 'A blue cruiser-ish sedan with a spotlight bracket and a thinly veiled past.', line: 'Ex-cop car. Still smells like authority and stale coffee.' }
   ],
   queens: [
-    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' }
+    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' },
+    { id: 'q2', x: 150, y: 242, color: '#e8e4da', speed: 150, name: 'a mail truck', desc: 'A United States postal truck, driver\u2019s door open, engine ticking. Bundles of mail in the back — catalogues, mostly, and something that is definitely a jury summons.', line: 'A mail truck. FEDERAL vehicle. Newman is going to have a complete meltdown and honestly that alone is worth the gas.' }
   ]
 };
 const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
@@ -11863,6 +11901,7 @@ function render() {
   if (state.mode === 'explore') drawPrompt(nearestInteraction());
   drawPhoneIncoming();
   if (state.mode !== 'menu') drawDialog();
+  drawWasted();
   drawHelp();
 }
 
@@ -11936,6 +11975,7 @@ function checkMissionHeatBreach() {
 }
 
 function update(dt) {
+  if (state.wasted) { updateWasted(dt); return; }
   state.frameCount = (state.frameCount || 0) + 1;
   const overlayMode = ['menu', 'fasttravel', 'dialogue'].includes(state.mode);
   if (state._overlayMode !== overlayMode) {
