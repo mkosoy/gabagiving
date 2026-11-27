@@ -420,10 +420,11 @@ function menuEntries() {
         const work = [];
         if (state.flags.bigOneDone) work.push('Newman (neighborhood) — odd jobs, the mail never ends');
         if (state.flags.kramericaBookDone) work.push('Kramer (Manhattan) — Kramerica errands');
-        if (state.flags.turkeyTaxDone) work.push('Silvio (the Bing) — collections');
+        if (state.flags.fixedRaceDone) work.push('Silvio (the Bing) — collections');
         if (state.flags.saunaSerenityDone) work.push('Frank (Queens) — Festivus errands');
         work.push('The counter guy at Ray’s (Manhattan) — pie deliveries, ALWAYS hiring');
-        if (work.length) {
+        if (!state.flags.freeRoam) lines.push({ speaker: 'system', text: 'You’re mid-story — the work directory unlocks in the open world. MENU → Open world anytime.' });
+        else if (work.length) {
           lines.push({ speaker: 'system', text: 'REPEATABLE WORK:' });
           for (const wl of work) lines.push({ speaker: 'system', text: '· ' + wl });
         }
