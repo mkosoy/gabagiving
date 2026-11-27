@@ -3660,6 +3660,7 @@ function updateExplore(dt) {
 
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
+  if (moving && state.playerPose && !state.dialog) state.playerPose = null;
   state.idleT = moving || state.dialog ? 0 : (state.idleT || 0) + dt;
   if (state.flags.pendingSurprise && !state.dialog && !state.phone) {
     state.flags.pendingSurprise = false;
@@ -5663,6 +5664,9 @@ function drawMonks() {
     // waitress with coffee pot
     const wob = Math.sin(state.time * .8);
     drawPerson(ctx, 320 + wob * 170, 82, 'womanC', wob > 0 ? 'right' : 'left', state.frame * 1.8);
+    // regulars at the counter stools
+    drawPerson(ctx, 262, 148, 'manA', 'up', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 412, 148, 'manC', 'up', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
     // pie carousel glint
     const glint = (Math.sin(state.time * 2.4) + 1) / 2;
     px(ctx, 210, 44, 26, 3, `rgba(255,240,180,${.25 + glint * .5})`);
@@ -5815,7 +5819,7 @@ function monksInteractions() {
 function drawSoup() {
   if (drawSceneArt(sceneArt.soup, 640, 416)) {
     // the Soup Man glares from behind the counter
-    drawPerson(ctx, 180 + Math.sin(state.time * .5) * 18, 120, 'artie', 'right', state.frame, { pose: 'stand' });
+    drawPerson(ctx, 180 + Math.sin(state.time * .5) * 18, 112, 'soupNazi', 'right', state.frame, { pose: 'stand' });
     // steam rises off the pots
     for (let i = 0; i < 3; i++) {
       const sy = (state.time * 26 + i * 40) % 70;
@@ -5936,13 +5940,13 @@ function drawYankees() {
   if (drawSceneArt(sceneArt.yankees, 640, 416)) {
     // Steinbrenner paces in front of the big desk, trembling with fury
     const pace = Math.sin(state.time * .7);
-    const sx2 = 322 + pace * 70;
+    const sx2 = 322 + pace * 38;
     const shake = Math.sin(state.time * 13) * 1.2;
-    drawPerson(ctx, sx2 + shake, 152, 'steinbrenner', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
+    drawPerson(ctx, sx2 + shake, 196, 'steinbrenner', pace > 0 ? 'right' : 'left', state.frame * 1.8, { pose: 'angry' });
     // steam of rage
     if (Math.sin(state.time * 2) > .6) {
-      px(ctx, sx2 - 5, 150, 3, 6, 'rgba(255,120,90,.5)');
-      px(ctx, sx2 + 9, 150, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 - 5, 181, 3, 6, 'rgba(255,120,90,.5)');
+      px(ctx, sx2 + 9, 181, 3, 6, 'rgba(255,120,90,.5)');
     }
     // George sleeping under his desk when scheme active
     if (state.flags.deskNap) {
@@ -8725,6 +8729,10 @@ function drawBodega() {
   px(ctx, cx + 12, 56, 1, 1, '#e8b822');
   px(ctx, cx + 14, 56, 1, 1, '#e8b822');
   if (Math.floor(state.time * 2) % 4 === 0) px(ctx, cx + 2, 68, 10, 2, '#3a3430'); // tail twitch
+  // the clerk behind the register, watching the aisle like a hawk
+  drawPerson(ctx, 372, 118, 'manC', 'down', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
+  // a neighbor browsing the cereals, forever undecided
+  drawPerson(ctx, 270 + Math.sin(state.time * .4) * 5, 240, 'womanD', 'left', state.frame * .5, {});
   outlineText(ctx, 'Exit', 24, 380, '#ffe78a', 7, 'left');
 }
 
@@ -9162,6 +9170,7 @@ function dmvInteractions() {
       if (state.flags.dmvTicket <= serving) { toast('Your number is UP — get to the window before the clerk notices joy.'); return; }
       state.flags.dmvServing = serving + 1;
       audio.sfx('door');
+      state.player.x = 148; state.player.y = 290; state.player.dir = 'up'; state.playerPose = 'sit';
       startDialog([
         { speaker: 'narrator', text: 'You wait. Time passes the way it does here — geologically. A number is called. The display advances by exactly one. Someone’s legend ends at the window in silence.' },
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'An elderly man two chairs down has a sandwich in a foil wrapper older than your car.' : 'A wiseguy never waits. And yet. The things we do for vanity plates.' }
@@ -9515,6 +9524,10 @@ function cabinInteractions() {
 
 function drawTaffy() {
   if (drawSceneArt(sceneArt.taffy, 640, 416)) {
+    // the counter man, a browser at the case, a kid hypnotized by the puller
+    drawPerson(ctx, 430 - state.camera.x, 288 - state.camera.y, 'manB', 'down', Math.floor(state.time * .3), {});
+    drawPerson(ctx, 480 - state.camera.x, 232 - state.camera.y, 'womanA', 'up', state.frame * .5, {});
+    drawPerson(ctx, 152 - state.camera.x, 218 - state.camera.y, 'manC', 'up', 0, {});
     const pull2 = Math.sin(state.time * 2.4) * 6;
     ctx.save();
     ctx.globalAlpha = .35;
@@ -9635,7 +9648,10 @@ function drawSlice() {
     ctx.fill();
     ctx.restore();
     const pgx = 300 + Math.sin(state.time * .7) * 60;
-    drawPerson(ctx, pgx - state.camera.x, 100 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'walk' });
+    drawPerson(ctx, pgx - state.camera.x, 116 - state.camera.y, 'bobby', 'down', state.frame, { pose: 'sit', sitClip: .42 });
+    // a couple of slice-eaters at the tables
+    drawPerson(ctx, 116 - state.camera.x, 258 - state.camera.y, 'manC', 'right', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 478 - state.camera.x, 262 - state.camera.y, 'womanA', 'left', 0, { pose: 'sit', sitClip: .55 });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#3a2a22');
@@ -12282,7 +12298,7 @@ function drawPlayer() {
     }
     return;
   }
-  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose } : {});
+  drawPerson(ctx, state.player.x, state.player.y, kind, state.player.dir, state.frame, state.playerPose ? { pose: state.playerPose, sitClip: .55 } : {});
   if (state.flags.hasBat && state.scene === 'apartment') drawBat(ctx, state.player.x + 17, state.player.y + 11, -0.7);
 }
 
