@@ -1512,6 +1512,24 @@ function drawIceCream() {
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
 }
 
+function drawLawnmower() {
+  if (state.scene !== 'hub' || isNight()) return;
+  const t = state.time * .5;
+  const lane = Math.floor(t / 4) % 4;
+  const dir = Math.floor(t / 4) % 2 === 0 ? 1 : -1;
+  const prog = (t % 4) / 4;
+  const mx = dir === 1 ? 90 + prog * 130 : 220 - prog * 130;
+  const my = 70 + lane * 14;
+  // freshly mowed stripes behind
+  for (let i = 0; i < lane; i++) px(ctx, 90, 70 + i * 14, 130, 12, 'rgba(70,130,50,.35)');
+  px(ctx, 90, 70 + lane * 14, dir === 1 ? (prog * 130) : 130 - (prog * 130), 12, 'rgba(70,130,50,.35)');
+  // the mower man
+  px(ctx, mx - 4, my - 12, 8, 9, '#d8c9a0');
+  px(ctx, mx - 3, my - 16, 6, 5, '#caa07a');
+  px(ctx, mx + (dir === 1 ? 3 : -8), my - 8, 6, 5, '#c0392b');
+  if (Math.random() < .02) audio.sfx && null;
+}
+
 function drawKite() {
   if (!['shore', 'ac'].includes(state.scene) || isNight()) return;
   const t = state.time;
@@ -7404,6 +7422,7 @@ function drawWorld() {
   drawPackages();
   drawFireworks();
   drawKite();
+  drawLawnmower();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
