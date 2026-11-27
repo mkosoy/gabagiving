@@ -7017,6 +7017,207 @@ function initSkeeball() {
   audio.sfx('pickup');
 }
 
+
+// ——— the diner pinball machine: "GABAGOOL WIZARD" ———
+function initPinball() {
+  if ((state.flags.tribute || 0) < 2) { toast('Two bucks a play. The machine takes crumpled singles and the occasional button.'); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 2);
+  state.pin = { x: 404, y: 330, vx: 0, vy: 0, score: 0, balls: 3, launched: false, charging: false, power: 0, lf: 0, rf: 0, msg: '', msgT: 0, over: false, overT: 0, flash: 0 };
+  state.mode = 'pinball';
+  audio.sfx('pickup');
+}
+
+function updatePinball(dt) {
+  const g = state.pin;
+  if (!g) { state.mode = 'explore'; return; }
+  if (g.over) {
+    g.overT += dt;
+    if (g.overT > 2) {
+      state.mode = 'explore';
+      const sc = g.score;
+      state.pin = null;
+      if (sc >= 3000) {
+        state.flags.tribute = (state.flags.tribute || 0) + 50;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'The machine spits a stream of tickets nobody has ever seen before. The waitress counts them twice, eyebrows climbing. $50 — you are, as of this moment, the Gabagool Wizard of record. The previous record holder was a long-haul trucker. He still never looked at anyone.' }]);
+      } else if (sc >= 1500) {
+        state.flags.tribute = (state.flags.tribute || 0) + 20;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'Respectable. The machine reluctantly prints tickets for $20. The jukebox plays a little piano riff, which is the closest this diner has to applause.' }]);
+      } else {
+        startDialog([{ speaker: 'narrator', text: 'The machine eats your two dollars with a sound like a small mechanical shrug. Pinball is a cruel mistress. The pie watches, saying nothing.' }]);
+      }
+    }
+    return;
+  }
+  g.flash = Math.max(0, g.flash - dt);
+  g.msgT = Math.max(0, g.msgT - dt);
+  g.lf = down(['ArrowLeft', 'KeyF']) ? 1 : 0;
+  g.rf = down(['ArrowRight', 'KeyE']) ? 1 : 0;
+  if (!g.launched) {
+    if (down(['Space', 'KeyE', 'KeyB'])) { g.charging = true; g.power = Math.min(1, g.power + dt * 1.3); }
+    else if (g.charging) {
+      g.launched = true;
+      g.vy = -(420 + g.power * 300);
+      g.charging = false;
+      audio.sfx('honk');
+    }
+    if (consume(['Escape', 'KeyM']) && g.balls === 3 && !g.score) { state.pin = null; state.mode = 'explore'; }
+    return;
+  }
+  // physics
+  g.vy += 620 * dt;
+  g.x += g.vx * dt;
+  g.y += g.vy * dt;
+  // walls: table inner 232..392, top 30, lane divider x=392 from y 62 down, lane right edge 416
+  if (g.x < 238) { g.x = 238; g.vx = Math.abs(g.vx) * .82; }
+  if (g.x > 410) { g.x = 410; g.vx = -Math.abs(g.vx) * .82; }
+  if (g.y < 34) { g.y = 34; g.vy = Math.abs(g.vy) * .82; if (g.x > 390) { g.vx = -140 - Math.random() * 60; g.msg = 'AROUND THE TOP!'; g.msgT = 1; } }
+  // lane divider: ball in lane (x>392) below y=62 can't re-enter play field going down; once over the top it's in play
+  if (g.x > 392 && g.x < 396 && g.y > 62 && g.vx < 0) { g.vx = 0; g.x = 396; }
+  if (g.x >= 388 && g.x < 392 && g.y > 62) { g.x = 388; g.vx = -Math.abs(g.vx) * .5; }
+  // bumpers — three, score 50 each hit
+  const bumpers = [[278, 96, 15], [336, 76, 15], [306, 150, 15]];
+  for (const [bx, by, br] of bumpers) {
+    const d = Math.hypot(g.x - bx, g.y - by);
+    if (d < br + 5) {
+      const ang = Math.atan2(g.y - by, g.x - bx);
+      const sp = Math.max(260, Math.hypot(g.vx, g.vy) * 1.05);
+      g.vx = Math.cos(ang) * sp;
+      g.vy = Math.sin(ang) * sp;
+      g.x = bx + Math.cos(ang) * (br + 5.5);
+      g.y = by + Math.sin(ang) * (br + 5.5);
+      g.score += 50;
+      g.flash = .12;
+      g.msg = '+50';
+      g.msgT = .5;
+      audio.sfx('pickup');
+    }
+  }
+  // rollover targets — two little lanes worth 100 each, one-time per ball
+  if (!g.rollHit) g.rollHit = {};
+  const rolls = [[250, 200, 'L'], [368, 200, 'R']];
+  for (const [rx, ry, id] of rolls) {
+    if (!g.rollHit[id] && Math.hypot(g.x - rx, g.y - ry) < 12) {
+      g.rollHit[id] = true;
+      g.score += 100;
+      g.msg = 'ROLLOVER +100';
+      g.msgT = .8;
+      audio.sfx('cash');
+    }
+  }
+  // flippers: pivot zones at bottom — left pivot (286,318), right pivot (356,318)
+  if (g.y > 296 && g.y < 330) {
+    if (g.lf && g.x > 258 && g.x < 300 && g.vy > 0) {
+      g.vy = -330 - Math.random() * 60;
+      g.vx = 60 + Math.random() * 80;
+      audio.sfx('smash');
+    }
+    if (g.rf && g.x > 342 && g.x < 384 && g.vy > 0) {
+      g.vy = -330 - Math.random() * 60;
+      g.vx = -(60 + Math.random() * 80);
+      audio.sfx('smash');
+    }
+  }
+  // dead flipper zone — ball resting on unpressed flipper rolls toward center drain
+  if (g.y > 316 && g.y < 336) {
+    if (g.x > 262 && g.x < 310 && !g.lf) g.vx += 90 * dt;
+    if (g.x > 332 && g.x < 380 && !g.rf) g.vx -= 90 * dt;
+  }
+  // drain
+  if (g.y > 352) {
+    g.balls -= 1;
+    audio.sfx('denied');
+    if (g.balls <= 0) {
+      g.over = true;
+      g.overT = 0;
+    } else {
+      g.x = 404; g.y = 330; g.vx = 0; g.vy = 0; g.launched = false; g.power = 0; g.rollHit = null;
+      g.msg = 'BALL ' + (4 - g.balls) + ' — SHOOT AGAIN';
+      g.msgT = 1.6;
+    }
+  }
+}
+
+function drawPinball() {
+  const g = state.pin;
+  px(ctx, 0, 0, 640, 360, '#14101c');
+  // the machine
+  px(ctx, 220, 14, 204, 340, '#3a2030');
+  px(ctx, 226, 20, 192, 328, '#221420');
+  // backglass
+  px(ctx, 236, 24, 172, 34, '#1a2a4a');
+  outlineText(ctx, 'GABAGOOL WIZARD', 322, 40, '#ffd23e', 10, 'center');
+  outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
+  // playfield
+  px(ctx, 232, 62, 160, 286, '#2a1a3a');
+  // lane divider + lane
+  px(ctx, 392, 62, 4, 286, '#4a3040');
+  px(ctx, 396, 62, 20, 286, '#1a1020');
+  outlineText(ctx, 'PLUNGER', 406, 76, '#8a6a5a', 6, 'center');
+  // top arc hint
+  px(ctx, 232, 62, 160, 4, '#5a4a6a');
+  // bumpers
+  const bumpers = [[278, 96, 15, '#ff5a4a'], [336, 76, 15, '#ffd23e'], [306, 150, 15, '#5ab8ff']];
+  for (const [bx, by, br, col] of bumpers) {
+    const glow = g.flash ? .5 : .2;
+    ctx.save();
+    ctx.globalAlpha = glow + Math.sin(state.time * 4 + bx) * .1;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(bx, by, br + 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    px(ctx, bx - br, by - br, br * 2, br * 2, col);
+    px(ctx, bx - br + 4, by - br + 4, br * 2 - 8, br * 2 - 8, '#fff8');
+  }
+  // rollovers
+  for (const [rx, ry, id] of [[250, 200, 'L'], [368, 200, 'R']]) {
+    const lit = g.rollHit && g.rollHit[id];
+    px(ctx, rx - 4, ry - 4, 8, 8, lit ? '#9be59b' : '#4a6a4a');
+  }
+  // flippers
+  const la = g.lf ? -0.7 : 0.3;
+  const ra = g.rf ? -0.7 : 0.3;
+  ctx.save();
+  ctx.strokeStyle = '#e8d24a';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(286, 318);
+  ctx.lineTo(286 + Math.cos(la) * 34, 318 + Math.sin(la) * 34 * .4 - (g.lf ? 10 : 0));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(356, 318);
+  ctx.lineTo(356 - Math.cos(ra) * 34, 318 + Math.sin(ra) * 34 * .4 - (g.rf ? 10 : 0));
+  ctx.stroke();
+  ctx.restore();
+  // ball
+  if (!g.over) {
+    px(ctx, g.x - 3, g.y - 3, 6, 6, '#e8e8f0');
+    px(ctx, g.x - 2, g.y - 2, 2, 2, '#fff');
+  }
+  // plunger power meter
+  if (!g.launched && !g.over) {
+    px(ctx, 428, 330 - (g.power || 0) * 100, 8, (g.power || 0) * 100, '#ff5a4a');
+    outlineText(ctx, g.charging ? 'RELEASE!' : 'hold E/B to plunge', 320, 360 - 8, '#8a8a92', 8, 'center');
+  }
+  outlineText(ctx, 'balls: ' + g.balls, 480, 100, '#fff', 10, 'left');
+  outlineText(ctx, 'F/◀ left flipper', 480, 130, '#8a8a92', 8, 'left');
+  outlineText(ctx, 'A/▶ right flipper', 480, 144, '#8a8a92', 8, 'left');
+  outlineText(ctx, '1500+ pays $20', 480, 170, '#5a6a5a', 8, 'left');
+  outlineText(ctx, '3000+ pays $50', 480, 184, '#5a6a5a', 8, 'left');
+  outlineText(ctx, 'multiball is a myth', 480, 210, '#4a4a52', 7, 'left');
+  if (g.msgT > 0) outlineText(ctx, g.msg, 320, 290, '#ffd23e', 12, 'center');
+  if (g.over) {
+    px(ctx, 200, 130, 240, 90, '#000a');
+    outlineText(ctx, 'GAME OVER', 320, 160, '#ff5a4a', 18, 'center');
+    outlineText(ctx, 'final score ' + g.score, 320, 190, '#fff', 11, 'center');
+  }
+  // the machine's legs, because a machine with no visible legs is a floating machine
+  px(ctx, 226, 348, 8, 10, '#111');
+  px(ctx, 410, 348, 8, 10, '#111');
+}
+
 function updateSkeeball(dt) {
   const s = state.skee;
   if (!s) { state.mode = 'explore'; return; }
@@ -8174,6 +8375,10 @@ function dinerInteractions() {
       state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 10);
       state.armCd = state.time + 120;
       initArmWrestle('trucker');
+    } },
+    { x: 554, y: 260, w: 26, h: 30, radius: 40, label: 'Pinball — $2', action: () => {
+      if (state.scene !== 'diner') return;
+      initPinball();
     } },
     { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
       if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
@@ -11923,6 +12128,7 @@ function render() {
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'skeeball') drawSkeeball();
+  else if (state.mode === 'pinball') drawPinball();
   else if (state.mode === 'danceoff') drawDanceOff();
   else if (state.mode === 'roulette') drawRoulette();
   else if (state.mode === 'craps') drawCraps();
@@ -12359,6 +12565,8 @@ function update(dt) {
     updateDarts(dt);
   } else if (state.mode === 'skeeball') {
     updateSkeeball(dt);
+  } else if (state.mode === 'pinball') {
+    updatePinball(dt);
   } else if (state.mode === 'danceoff') {
     updateDanceOff(dt);
   } else if (state.mode === 'roulette') {
