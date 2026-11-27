@@ -754,70 +754,145 @@ function drawTrivia() {
 }
 
 const FT_NODES = [
-  { id: 'hub', x: 245, y: 122, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale’s, Vesuvio' },
-  { id: 'nyc', x: 432, y: 118, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk’s, the soup stand, Jerry’s, Kramer' },
-  { id: 'pines', x: 218, y: 210, dx: 384, dy: 210, name: 'The Pine Barrens', flavor: 'GARDEN STATE PARKWAY · SOUTH', desc: 'snow, mist, and the Russian' },
-  { id: 'shore', x: 335, y: 262, dx: 384, dy: 220, name: 'Jersey Shore', flavor: 'GARDEN STATE PARKWAY · EXIT 88', desc: 'boardwalk, gulls, skeeball' },
-  { id: 'ac', x: 280, y: 312, dx: 380, dy: 220, name: 'Atlantic City', flavor: 'ATLANTIC CITY EXPRESSWAY', desc: 'neon, slots, rolling chairs' }
+  { id: 'hub', x: 258, y: 108, dx: 320, dy: 250, name: 'North Caldwell', flavor: 'GARDEN STATE PARKWAY', desc: 'the neighborhood — Newman, Satriale\'s, Vesuvio' },
+  { id: 'nyc', x: 552, y: 102, dx: 300, dy: 250, name: 'Manhattan', flavor: 'HOLLAND TUNNEL', desc: 'Monk\'s, the soup stand, Jerry\'s, the bodega' },
+  { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
+  { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
+  { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' },
+  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' }
 ];
 
 function drawFastTravel() {
-  // backdrop
-  ctx.fillStyle = 'rgba(6,10,18,.94)';
-  ctx.fillRect(60, 34, 520, 306);
+  // full-screen road map — the state of New Jersey, Thanksgiving eve
+  ctx.fillStyle = '#0a0f16';
+  ctx.fillRect(0, 0, 640, 360);
+  // paper
+  ctx.fillStyle = '#0e1a12';
+  ctx.fillRect(14, 8, 612, 344);
   ctx.strokeStyle = '#d4a017';
   ctx.lineWidth = 2;
-  ctx.strokeRect(60, 34, 520, 306);
-  ctx.fillStyle = '#ffd23e';
-  ctx.font = 'bold 13px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('THE GARDEN STATE — click a destination', 320, 62);
+  ctx.strokeRect(14, 8, 612, 344);
 
-  // water: the Hudson + the Atlantic
+  // water: the Hudson river + the Atlantic
   ctx.fillStyle = '#12283d';
-  ctx.fillRect(388, 74, 60, 224);
-  ctx.fillRect(360, 270, 190, 60);
+  ctx.fillRect(448, 16, 88, 240);
+  ctx.fillRect(380, 288, 246, 64);
+  ctx.fillRect(536, 16, 90, 336);
   ctx.fillStyle = '#1a3a55';
-  for (let wy = 80; wy < 290; wy += 18) {
-    ctx.fillRect(392 + (wy % 36 === 0 ? 6 : 0), wy, 30, 2);
+  for (let wy = 24; wy < 340; wy += 16) {
+    ctx.fillRect(452 + (wy % 32 === 0 ? 8 : 0), wy, 34, 2);
+    if (wy > 280) ctx.fillRect(388 + (wy % 32 === 0 ? 10 : 0), wy, 60, 2);
   }
   ctx.fillStyle = '#7fb8dd';
   ctx.font = '8px monospace';
-  ctx.fillText('HUDSON', 418, 200);
-  ctx.fillText('ATLANTIC', 460, 306);
+  ctx.textAlign = 'center';
+  ctx.save();
+  ctx.translate(474, 140);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('H U D S O N   R I V E R', 0, 0);
+  ctx.restore();
+  ctx.fillText('A T L A N T I C   O C E A N', 500, 330);
 
-  // landmasses: jersey mainland + the manhattan strip
-  ctx.fillStyle = '#1d2b1a';
-  ctx.fillRect(80, 74, 300, 200);
-  ctx.fillRect(80, 250, 180, 40);
-  ctx.fillRect(462, 84, 26, 150);
+  // jersey landmass — rough silhouette
+  ctx.fillStyle = '#16281a';
+  ctx.beginPath();
+  ctx.moveTo(60, 20);
+  ctx.lineTo(446, 20);
+  ctx.lineTo(446, 150);
+  ctx.lineTo(440, 210);
+  ctx.lineTo(420, 250);
+  ctx.lineTo(390, 280);
+  ctx.lineTo(350, 300);
+  ctx.lineTo(300, 320);
+  ctx.lineTo(240, 330);
+  ctx.lineTo(120, 336);
+  ctx.lineTo(60, 330);
+  ctx.closePath();
+  ctx.fill();
+  // sandy hook + shore strip
+  ctx.fillRect(410, 180, 14, 80);
+  // manhattan strip
+  ctx.fillStyle = '#241f14';
+  ctx.fillRect(538, 40, 34, 150);
+  ctx.fillStyle = '#c9a86a';
+  ctx.font = '7px monospace';
+  ctx.save();
+  ctx.translate(528, 120);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('M A N H A T T A N', 0, 0);
+  ctx.restore();
 
-  // the Parkway — spine of the state
-  ctx.strokeStyle = '#caa53d';
+  // decorative roads: turnpike (I-95) + parkway spine
+  ctx.strokeStyle = 'rgba(150,150,140,.35)';
   ctx.lineWidth = 2;
-  ctx.setLineDash([5, 4]);
+  ctx.setLineDash([]);
   ctx.beginPath();
-  ctx.moveTo(245, 122);
-  ctx.lineTo(218, 210);
-  ctx.lineTo(335, 262);
-  ctx.lineTo(280, 312);
+  ctx.moveTo(150, 20);
+  ctx.lineTo(200, 120);
+  ctx.lineTo(230, 220);
+  ctx.lineTo(260, 330);
   ctx.stroke();
-  // the tunnel — through the Hudson
-  ctx.strokeStyle = '#e8722a';
+  ctx.fillStyle = 'rgba(180,180,170,.5)';
+  ctx.font = '7px monospace';
+  ctx.fillText('NJ TURNPIKE', 178, 120);
+
+  // the Garden State Parkway — spine of the state
+  ctx.strokeStyle = '#caa53d';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([6, 4]);
   ctx.beginPath();
-  ctx.moveTo(245, 122);
-  ctx.lineTo(432, 118);
+  ctx.moveTo(258, 108);
+  ctx.lineTo(222, 196);
+  ctx.lineTo(310, 230);
+  ctx.lineTo(400, 248);
+  ctx.stroke();
+  // AC expressway
+  ctx.strokeStyle = '#8ab';
+  ctx.beginPath();
+  ctx.moveTo(400, 248);
+  ctx.lineTo(322, 318);
+  ctx.stroke();
+  // the tunnel — under the Hudson
+  ctx.strokeStyle = '#e8722a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(258, 108);
+  ctx.lineTo(446, 100);
+  ctx.setLineDash([3, 5]);
+  ctx.lineTo(552, 102);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.fillStyle = '#e8722a';
+  ctx.font = '7px monospace';
+  ctx.fillText('HOLLAND TUNNEL', 350, 92);
+
+  // towns/landmarks
+  ctx.fillStyle = '#6f8f6f';
+  ctx.font = '7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Newark', 320, 62);
+  ctx.fillText('Jersey City', 390, 80);
+  ctx.fillText('Sandy Hook', 424, 178);
+  ctx.fillText('EXIT 13', 296, 118);
+  ctx.fillStyle = '#4a5';
+  ctx.fillRect(316, 58, 3, 3);
+  ctx.fillRect(386, 76, 3, 3);
 
   // region nodes
   FT_NODES.forEach((n, i) => {
     const sel = i === (state.ftSel || 0);
     const here = n.id === state.scene;
     const pulse = (Math.sin(state.time * 4) + 1) / 2;
+    if (sel) {
+      ctx.strokeStyle = `rgba(255,210,62,${.4 + pulse * .5})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 13 + pulse * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.fillStyle = here ? '#3a6' : sel ? '#ffd23e' : '#c33';
     ctx.beginPath();
-    ctx.arc(n.x, n.y, sel ? 8 + pulse * 2 : 6, 0, Math.PI * 2);
+    ctx.arc(n.x, n.y, sel ? 7 : 5.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 1;
@@ -825,21 +900,34 @@ function drawFastTravel() {
     ctx.fillStyle = sel || here ? '#fff3c4' : '#ddd';
     ctx.font = (sel ? 'bold ' : '') + '9px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(n.name + (here ? '  (here)' : ''), n.x, n.y - 12);
+    ctx.fillText(n.name + (here ? '  ★ you are here' : ''), n.x, n.y - 12);
   });
 
-  // selected flavor text
+  // header + footer
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE GARDEN STATE — THANKSGIVING EVE', 320, 28);
   const cur = FT_NODES[state.ftSel || 0];
   if (cur) {
     ctx.fillStyle = '#9ab';
     ctx.font = '9px monospace';
-    ctx.fillText(cur.desc, 320, 309);
+    ctx.fillText(cur.desc, 320, 330);
     ctx.fillStyle = '#e8722a';
-    ctx.fillText('route: ' + cur.flavor, 320, 321);
+    ctx.fillText('route: ' + cur.flavor, 320, 341);
   }
   ctx.fillStyle = '#666';
   ctx.font = '8px monospace';
-  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 320, 332);
+  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 108, 341);
+  // legend
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'left';
+  ctx.font = '7px monospace';
+  ctx.fillText('— — GSP', 30, 306);
+  ctx.fillStyle = '#e8722a';
+  ctx.fillText('—— tunnel', 30, 316);
+  ctx.fillStyle = '#8ab';
+  ctx.fillText('— — expressway', 30, 326);
   ctx.textAlign = 'left';
 }
 
@@ -849,6 +937,7 @@ const EXIT_HINTS = {
   pines: '↑ NORTH: back to the neighborhood · → EAST: the Shore · T: map',
   shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
   ac: '← WEST: the Shore · T: map',
+  meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · T: map',
   njstreet: 'T: map · the neighborhood hub is the center of everything'
 };
 
@@ -1089,6 +1178,16 @@ const scenes = {
     ],
     draw: drawAC,
     interactions: acInteractions
+  },
+  meadow: {
+    w: 768, h: 416, label: 'The Meadowlands · Race Day', music: 'club',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      r(280,60,220,130), r(540,8,220,110), r(8,8,180,90),
+      r(600,240,120,90), r(60,280,110,80)
+    ],
+    draw: drawMeadow,
+    interactions: meadowInteractions
   },
   pines: {
     w: 768, h: 416, label: 'The Pine Barrens · South Jersey', music: 'dream',
@@ -5071,6 +5170,9 @@ function travelHub(place) {
 
 function hubInteractions() {
   const list = [
+    { x: 10, y: 210, w: 26, h: 90, radius: 46, label: '← West: the Meadowlands', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'West on Route 3. The reeds get taller, the lots get bigger, and suddenly you can hear hooves. The Meadowlands.' }], () => startTransit('meadow', 700, 250, 'ROUTE 3 · EAST'));
+    } },
     { x: 420, y: 340, w: 60, h: 34, radius: 44, label: 'Pay’n’Spray', action: () => {
       if (!state.player.inCar) { toast('Drive a car in first. The garage only does cars.'); return; }
       if ((state.flags.heat || 0) <= 0 && !state.player.carDamage) { toast('Car’s clean. Nothing to spray.'); return; }
@@ -6606,6 +6708,104 @@ function bodegaInteractions() {
   ];
 }
 
+function drawMeadow() {
+  px(ctx, 0, 0, 768, 416, '#23301f');
+  // swampy flatlands
+  for (let i = 0; i < 30; i++) {
+    const gx = (i * 97) % 760;
+    const gy = 150 + (i * 61) % 250;
+    px(ctx, gx, gy, 8, 3, '#2e4530');
+  }
+  // stadium silhouette northeast
+  px(ctx, 548, 8, 212, 104, '#2b2f38');
+  px(ctx, 560, 18, 188, 84, '#343945');
+  ctx.fillStyle = '#8f97a8';
+  ctx.font = 'bold 8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE MEADOWLANDS', 654, 62);
+  const lit = Math.sin(state.time * 2) > 0;
+  px(ctx, 560, 30, 188, 3, lit ? '#ffe9a0' : '#6a6a55');
+  // grandstand west
+  px(ctx, 8, 8, 180, 84, '#4a3f35');
+  px(ctx, 16, 16, 164, 66, '#5d5044');
+  ctx.fillStyle = '#d8c9a8';
+  ctx.fillText('GRANDSTAND · RACING', 98, 34);
+  ctx.fillStyle = '#ffd23e';
+  ctx.font = '7px monospace';
+  ctx.fillText('POST TIME 7:00', 98, 48);
+  // the racetrack oval infield
+  px(ctx, 280, 60, 220, 130, '#6b543a');
+  px(ctx, 296, 74, 188, 102, '#3a5a34');
+  px(ctx, 330, 96, 120, 58, '#6b543a');
+  px(ctx, 344, 108, 92, 34, '#3a5a34');
+  // horses going around the rail
+  for (let h = 0; h < 3; h++) {
+    const ang = state.time * .5 + h * 2.1;
+    const hx = 390 + Math.cos(ang) * 72 - state.camera.x;
+    const hy = 125 + Math.sin(ang) * 42 - state.camera.y;
+    px(ctx, hx, hy, 8, 5, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+    px(ctx, hx + 6, hy - 2, 3, 3, ['#6a4a2a', '#3a3a3a', '#8a6a4a'][h]);
+  }
+  // parking lot rows with cars
+  px(ctx, 20, 120, 500, 60, '#3a3a3a');
+  for (let c = 0; c < 9; c++) {
+    px(ctx, 40 + c * 52, 132, 30, 14, ['#7a2a2a','#2a4a7a','#b8a888','#3a3a3a','#777','#2848a0','#6a5a2a','#4a4a4a','#8a3a5a'][c]);
+  }
+  // tailgate smoke
+  for (let s = 0; s < 4; s++) {
+    const sy = 300 - ((state.time * 20 + s * 18) % 60);
+    ctx.save();
+    ctx.globalAlpha = .3;
+    px(ctx, 110 + s * 4 - state.camera.x, sy - state.camera.y, 4, 4, '#aaa');
+    ctx.restore();
+  }
+  // drunk fans milling near tailgate
+  const fx = 150 + Math.sin(state.time * .3) * 30;
+  drawPerson(ctx, fx - state.camera.x, 320 - state.camera.y, 'manA', 'down', state.frame, { pose: 'walk' });
+  drawHighwaySign(660, 150, ['NJ TURNPIKE', '← NORTH CALDWELL']);
+  drawHighwaySign(60, 200, ['ROUTE 3 WEST', '← THE NEIGHBORHOOD']);
+  ctx.textAlign = 'left';
+}
+
+function meadowInteractions() {
+  return [
+    { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← West: the neighborhood', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'West on Route 3, past the reeds and the things the reeds keep secret. The neighborhood is ten minutes and a world away.' }], () => startTransit('hub', 60, 250, 'ROUTE 3 · WEST'));
+    } },
+    { x: 730, y: 210, w: 36, h: 90, radius: 46, label: 'Tunnel → Manhattan', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'East toward the skyline. The tunnel swallows you whole and spits you out in a place where the coffee costs four dollars.' }], () => startTransit('nyc', 60, 250, 'LINCOLN TUNNEL · EAST'));
+    } },
+    { x: 98, y: 100, w: 80, h: 30, radius: 46, label: 'Betting window — the ponies', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The real track, the real odds, the same four horses somehow. The teller doesn’t ask questions. The teller has seen everything twice.' }], () => initRacing());
+    } },
+    { x: 110, y: 310, w: 40, h: 30, radius: 42, label: 'Tailgate — sausage and peppers', action: () => {
+      if ((state.flags.tailgateFood || 0) > 2) { startDialog([{ speaker: 'narrator', text: 'The grill guy squints. "You again? Buddy. It’s Thanksgiving. Go home." The grill is closed to you now. This is somehow the saddest thing that has ever happened.' }]); return; }
+      state.flags.tailgateFood = (state.flags.tailgateFood || 0) + 1;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A stranger hands George a sausage and peppers off a tailgate grill, no questions asked. Free food. No obligation. No social contract. George has finally reached the promised land, and it is a parking lot off Route 3.' },
+        { speaker: 'george', text: 'You see this? THIS is living! A man cooks meat in a parking lot and just GIVES it to you! Why do we even have restaurants?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tailgate sausage and peppers. Onions done right. Tony eats it leaning on somebody’s El Camino and for four minutes there is no heat, no crews, no nothing. Just the Meadowlands wind and a sandwich.' },
+        { speaker: 'tony', text: 'This is better than half the restaurants I know. Don’t tell Artie. He’d genuinely never recover.' }
+      ]);
+    } },
+    { x: 640, y: 150, w: 60, h: 40, radius: 44, label: 'Stadium gate', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The stadium is dark — Thanksgiving, no game. A security guard the size of a freezer shakes his head before you even reach the gate. Behind him, an arena full of empty seats sits in the dark, dreaming of a halftime show.' }]);
+    } },
+    { x: 370, y: 130, w: 60, h: 30, radius: 44, label: 'Track rail — watch the workout', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You lean on the rail as the horses pound past, close enough to feel it in your sternum. One of them — the dark one, third out — runs like it personally owes somebody money. You make a mental note. The mental note is worth exactly nothing.' }]);
+    } },
+    { x: 60, y: 300, w: 110, h: 60, radius: 40, label: 'Sleep in the car', action: () => {
+      if (!state.player.inCar) { toast('You need to drive a car in here first.'); return; }
+      state.time += 30;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'You crack the window, tilt the seat back, and sleep the parking-lot sleep of a person with nothing to prove. You wake up slightly later. The Meadowlands has not moved. Nothing has changed. It is perfect.' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -6733,6 +6933,8 @@ function acInteractions() {
 
 function drawShore() {
   if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
+  drawHighwaySign(60, 158, ['GSP NORTH', '← THE BARRENS']);
+  drawHighwaySign(640, 158, ['AC EXPRESSWAY', 'ATLANTIC CITY →']);
   // rolling wave animation along the blocked beach edge
   for (let i = 0; i < 8; i++) {
     const wx = 30 + i * 95 + Math.sin(state.time * 1.2 + i) * 14;
@@ -6890,6 +7092,8 @@ function shoreInteractions() {
 }
 
 function drawPines() {
+  drawHighwaySign(40, 150, ['GSP NORTH', '← NORTH CALDWELL']);
+  drawHighwaySign(620, 150, ['EXIT 88', 'THE SHORE →']);
   if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
   // drifting mist
   for (let i = 0; i < 4; i++) {
@@ -7182,6 +7386,7 @@ function drawNyc() {
   if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
+  drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
   // persistent reactive taxis — they brake and honk at jaywalkers
   if (!state.nycCars) updateNycTaxis(0);
   for (const c of (state.nycCars || [])) {
