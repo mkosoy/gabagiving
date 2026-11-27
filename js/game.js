@@ -4503,7 +4503,7 @@ function hubInteractions() {
         ]);
       }
     } },
-    { x: 500, y: 130, w: 44, h: 30, radius: 40, label: 'AJ’s lemonade stand', action: () => {
+    { x: 680, y: 150, w: 44, h: 30, radius: 42, label: 'AJ’s lemonade stand', action: () => {
       if (state.money < 4) { toast('AJ’s lemonade is $4. Yes, really. No, he will not negotiate.'); return; }
       state.money -= 4;
       audio.sfx('pickup');
