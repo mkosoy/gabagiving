@@ -7141,6 +7141,10 @@ function cabinInteractions() {
       const won = Math.random() < .5;
       startDialog([{ speaker: 'narrator', text: won ? 'You play checkers against yourself and win. You also lose. Somewhere in the Barrens, a balance is maintained. You feel smarter and dumber at the same time.' : 'You play checkers against yourself and lose. To yourself. You demand a rematch. You lose that too. The Barrens does this to people.' }]);
     } },
+    { x: 200, y: 340, w: 60, h: 30, radius: 42, label: 'The cabin logbook', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'A water-stained logbook sits by the door. Entries going back thirty years, most of them in handwriting you halfway recognize. “NOV 94 — cold. nobody died.” “NOV 03 — cold. nobody died.” “NOV 16 — cold. Almost died. didn’t.” You add your own entry. It says the same thing. Tradition is tradition.' }]);
+    } },
     { x: 550, y: 130, w: 60, h: 40, radius: 40, label: 'Take the top bunk', action: () => {
       state.time += 20;
       audio.sfx('pickup');
@@ -7223,6 +7227,10 @@ function taffyInteractions() {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'A free fudge sample, cut with the precision of a woman who has cut ten thousand of them and resents maybe six thousand. It’s incredible. You briefly understand why people retire here.' }]);
     } },
+    { x: 120, y: 200, w: 60, h: 30, radius: 42, label: 'The storm shelf', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'A high shelf holds a single dusty box labeled 1962 — the taffy that survived the great storm, when the ocean came through the front door and left through the back. The box is not for sale. It has never been for sale. It is the shop’s horcrux.' }]);
+    } },
     { x: 320, y: 160, w: 50, h: 30, radius: 40, label: 'Shoo the seagull', action: () => {
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
       startDialog([{ speaker: 'narrator', text: 'You shoo the seagull. The seagull relocates exactly four feet to the left and screams at you with its whole body. The other customers are now watching YOU like you’re the problem. (+0.2 heat, somehow)' }]);
@@ -7296,6 +7304,18 @@ function sliceInteractions() {
     { x: 490, y: 130, w: 80, h: 30, radius: 44, label: 'Watch the oven', action: () => {
       audio.sfx('pickup');
       startDialog([{ speaker: 'narrator', text: 'The pie goes in pale and comes out blistered in ninety seconds. The oven guy does it with a long peel and zero wasted motion, like a card sharp. You watch three rotations. It never stops being a little bit magic.' }]);
+    } },
+    { x: 90, y: 200, w: 60, h: 30, radius: 42, label: 'The wall of fame', action: () => {
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'Signed photos line the wall — celebrities, athletes, three different mayors, and one photo of a man nobody can identify who is simply labeled CHAMPION. Legend says he ate nine slices. Legend also says he is still here, in a way. He’s in the booth. He never left.' }]);
+    } },
+    { x: 560, y: 130, w: 60, h: 30, radius: 42, label: 'Ask what makes it original', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George asks the counter guy what makes this Ray’s the ORIGINAL Ray’s. The counter guy does not look up. “Famous Original,” he says, with the energy of a man who has answered this exact question four hundred thousand times. George presses. This is a mistake. The answer is a twenty-minute lecture that somehow contains no information at all.' },
+        { speaker: 'george', text: 'But WHO IS RAY?! …What do you mean “Ray is a concept”?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony asks what makes it the original. The counter guy shrugs the shrug of a thousand identical shifts. “Famous Original Ray’s. It’s famous. It’s original. You want the slice or you want a philosophy class?” Tony respects the economy of it, and takes the slice.' }
+      ]);
     } },
     { x: 540, y: 280, w: 60, h: 30, radius: 42, label: 'Take the booth', action: () => {
       state.time += 4;
