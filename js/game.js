@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -828,6 +828,18 @@ function costanzaInteractions() {
         { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
         { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
         { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
+      ]);
+    } else if (!state.mission && state.flags.serenityTapesDone && !state.flags.featsOfStrengthDone && state.flags.freeRoam) {
+      startMission('featsOfStrength');
+      startDialog([
+        { speaker: 'steinbrenner', text: 'It’s time. FESTIVUS IS NOT OVER UNTIL YOU PIN ME. I don’t care what month it is — the feats don’t wait for the calendar! Train first. You’ll need it.' },
+        { speaker: 'system', text: 'Mission accepted: FEATS OF STRENGTH. Festivus, for the rest of us.' }
+      ]);
+    } else if (!state.mission && !state.flags.serenityTapesDone && state.flags.freeRoam) {
+      startMission('serenityTapes');
+      startDialog([
+        { speaker: 'steinbrenner', text: 'You look tense. EVERYBODY looks tense. My serenity tapes — I had a whole system, and now they’re scattered! George borrowed one for a work thing. WORK. Hah! Bring them back and there’s money in it — serenity pays, kid!' },
+        { speaker: 'system', text: 'Mission accepted: SERENITY NOW. Insanity later is not a valid strategy.' }
       ]);
     } else startDialog([{ speaker: 'steinbrenner', text: 'INSANITY LATER! …That’s the sequel tape.' }]);
   } },
@@ -2213,6 +2225,24 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 320, y: 290, radius: 60, objective: 'BIG MOUTH: tail the courier — close enough to see, far enough to breathe', label: 'Tail the courier' }
     ]
   },
+  serenityTapes: {
+    title: 'SERENITY NOW',
+    payout: 170, heat: 0, timeLimit: 220,
+    steps: [
+      { scene: 'costanza', x: 340, y: 120, radius: 70, objective: 'FRANK: the tapes — SERENITY NOW. Get them from the den', label: 'tapes found — the man on the tape is screaming' },
+      { scene: 'yankees', x: 480, y: 150, radius: 70, objective: 'FRANK: George’s copy is at the stadium — INSANITY LATER is NOT a valid strategy', label: 'copy recovered' },
+      { scene: 'costanza', x: 480, y: 90, radius: 80, objective: 'FRANK: return them before your mother starts the airing of grievances EARLY', label: 'serenity achieved, briefly' }
+    ]
+  },
+  featsOfStrength: {
+    title: 'FEATS OF STRENGTH',
+    payout: 300, heat: .5,
+    steps: [
+      { scene: 'costanza', x: 340, y: 120, radius: 70, objective: 'FRANK: Festivus is not over until you PIN ME. Warm up at the pole', label: 'aluminum pole — very high strength-to-weight ratio' },
+      { scene: 'club', x: 400, y: 250, radius: 80, objective: 'FRANK: train with Slippery Pete — DO NOT LET HIM PIN YOU TOO, IT COSTS $25', label: 'training complete — forearms of spite' },
+      { scene: 'costanza', x: 480, y: 90, radius: 80, objective: 'FRANK: FESTIVUS IS NOT OVER UNTIL YOU PIN ME', label: 'Festivus — for the rest of us' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2287,6 +2317,14 @@ function advanceMission() {
       bottleRun: [
         { speaker: 'kramer', text: 'TEN CENTS A BOTTLE! In Michigan, Jerry — er, boss — TEN CENTS! The math is UNBEATABLE! Sure, the gas costs more than the refund, and the tunnel tolls, and the truck rental — but the VOLUME! We make it up in volume!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove glass bottles through the Holland Tunnel for a net LOSS and I’d do it again! That’s the Kramerica difference!' : 'Hauled empty bottles across state lines for a guy who doesn’t know what a margin is. I’ve laundered money with less risk. Here’s your cut — don’t spend it all in Michigan.' }
+      ],
+      serenityTapes: [
+        { speaker: 'frank', text: 'SERENITY NOW! You did good, kid. The man on those tapes? That’s Lloyd Braun’s uncle. HE knows serenity. And for the record — I don’t yell. I PROJECT. $170, and your mother never finds out.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Dad, the tape is just a man SCREAMING serenity! That’s not serenity, that’s rage with better branding! …I feel great actually! SERENITY NOW!' : 'Frank Costanza’s anger management program. I’ve seen worse techniques. Most of ’em mine, actually.' }
+      ],
+      featsOfStrength: [
+        { speaker: 'frank', text: 'You couldn’t pin me! NOBODY pins me! …Okay, you pinned me. FESTIVUS IS OVER. Take the $300 — it was in the aluminum pole. THAT’S where I keep the holiday fund, Estelle!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I PINNED HIM! I pinned my own father at feats of strength! Do you understand what this means?! IT MEANS NOTHING GOOD, BUT IT HAPPENED!' : 'Pinned the old man. Respectfully. Frank Costanza’s got a grip like a bear trap — this guy coulda been in the family.' }
       ],
       libraryRun: [
         { speaker: 'newman', text: 'Twenty-three years! “Tropic of Cancer,” overdue since before you were born! The library cop — Mr. Bookman — has been WAITING. And now the trail goes cold. HEE hee hee! You have no idea what you’ve done for the postal community!' },
