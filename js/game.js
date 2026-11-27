@@ -8872,6 +8872,21 @@ function drawNyc() {
 
 function nycInteractions() {
   return [
+    { x: 120, y: 250, w: 16, h: 30, radius: 36, label: 'The parking meter', action: () => {
+      if (state.flags['meterCd'] > state.time) { toast('This one’s already been liberated. The city moves slow, but it moves.'); return; }
+      state.flags.meterCd = state.time + 90;
+      const take = 2 + Math.floor(Math.random() * 5);
+      state.money += take;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 12, `+$${take} · heat +`, '#ffd23e');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: `George rocks the meter back and forth until it coughs up $${take} in quarters like a metal slot machine that hates him slightly less than the casino does. A meter maid two blocks away senses a disturbance.` },
+        { speaker: 'george', text: 'It’s not stealing! It’s — the meter was already loose! I’m performing MAINTENANCE. They should PAY me.' }
+      ] : [
+        { speaker: 'narrator', text: `One open-handed slap and the meter spits $${take} in change onto the asphalt. Tony pockets it without breaking stride. Somewhere, a meter maid's pencil snaps.` }
+      ]);
+    } },
     { x: 605, y: 120, w: 80, h: 40, radius: 44, label: 'The red chicken light', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'The red neon glow of the chicken sign washes over the street like a sunset that only sells one thing. George feels his pupils dilate and his resolve weaken. He doesn’t even like the chicken. Nobody likes the chicken. That’s not what it’s about.' },
