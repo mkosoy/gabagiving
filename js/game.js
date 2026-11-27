@@ -759,7 +759,8 @@ const FT_NODES = [
   { id: 'pines', x: 222, y: 196, dx: 300, dy: 250, name: 'Pine Barrens', flavor: 'GSP SOUTH — EXIT 63', desc: 'the woods. nobody looks inside the box' },
   { id: 'shore', x: 400, y: 248, dx: 300, dy: 250, name: 'The Shore', flavor: 'EXIT 88 — THE BOARDWALK', desc: 'off-season boardwalk, skeeball, the pier' },
   { id: 'ac', x: 322, y: 318, dx: 300, dy: 250, name: 'Atlantic City', flavor: 'AC EXPRESSWAY', desc: 'neon, high-roller slots, the loan shark' },
-  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' }
+  { id: 'meadow', x: 348, y: 84, dx: 300, dy: 250, name: 'The Meadowlands', flavor: 'ROUTE 3 · RACE DAY', desc: 'the track, the tailgate, the stadium — real ponies' },
+  { id: 'queens', x: 555, y: 210, dx: 300, dy: 250, name: 'Queens', flavor: 'THE 7 TRAIN', desc: 'the Costanzas, the sauna, the shampoo factory' }
 ];
 
 function drawFastTravel() {
@@ -938,6 +939,7 @@ const EXIT_HINTS = {
   shore: '← WEST: the Pine Barrens · → EAST: Atlantic City · T: map',
   ac: '← WEST: the Shore · T: map',
   meadow: '← WEST: Route 3 home · EAST: tunnel to Manhattan · T: map',
+  queens: '← WEST: subway to Manhattan · T: map',
   njstreet: 'T: map · the neighborhood hub is the center of everything'
 };
 
@@ -1188,6 +1190,16 @@ const scenes = {
     ],
     draw: drawMeadow,
     interactions: meadowInteractions
+  },
+  queens: {
+    w: 768, h: 416, label: 'Queens · The Costanzas’ Turf', music: 'house',
+    colliders: [
+      r(0,0,768,8), r(0,0,8,416), r(760,0,8,416),
+      r(40,30,180,110), r(300,30,180,110), r(560,30,170,110),
+      r(8,300,752,116)
+    ],
+    draw: drawQueens,
+    interactions: queensInteractions
   },
   casino: {
     w: 640, h: 416, label: 'The Dunes Casino · Atlantic City', music: 'club',
@@ -5207,7 +5219,7 @@ function leaveOutside() {
 
 function travelHub(place) {
   // remember which outdoor region we came from so interior exits return correctly
-  const outdoors = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow'];
+  const outdoors = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
   if (outdoors.includes(state.scene) && !outdoors.includes(place)) {
     state.returnTo = null;
     const bx = Math.max(20, state.player.x);
@@ -7161,6 +7173,71 @@ function casinoInteractions() {
   ];
 }
 
+function drawQueens() {
+  px(ctx, 0, 0, 768, 416, '#3d3830');
+  // row houses — brick, aluminum siding, ambition
+  const houses = [[40, '#7a4a3a'], [300, '#6a5a4a'], [560, '#5a6a7a']];
+  for (const [hx, hc] of houses) {
+    px(ctx, hx, 30, 180, 110, hc);
+    px(ctx, hx + 10, 40, 160, 20, '#4a3a30');
+    px(ctx, hx + 70, 90, 40, 50, '#3a2a20');
+    for (let wx = 0; wx < 3; wx++) {
+      px(ctx, hx + 16 + wx * 56, 66, 24, 18, '#c9b86a');
+      px(ctx, hx + 16 + wx * 56, 66, 24, 3, '#e8d89a');
+    }
+  }
+  // the Costanza house gets a lawn ornament
+  px(ctx, 130, 150, 10, 14, '#e8e8e8');
+  px(ctx, 132, 146, 6, 6, '#d8d8d8');
+  // the street — double parked as god intended
+  px(ctx, 0, 180, 768, 70, '#333');
+  for (let c = 0; c < 5; c++) {
+    px(ctx, 90 + c * 140, 196, 44, 18, ['#7a2a2a','#2a4a7a','#b8a888','#4a4a4a','#6a5a2a'][c]);
+    if (c % 2 === 0) px(ctx, 100 + c * 140, 222, 44, 18, ['#2848a0','#5a5a5a','#8a3a5a'][c % 3]);
+  }
+  // power lines, always
+  for (let pl = 0; pl < 4; pl++) px(ctx, 0, 20 + pl * 6, 768, 1, '#1a1a1a');
+  // pedestrians hauling dry cleaning and grievances
+  const gx = 200 + Math.sin(state.time * .25) * 140;
+  drawPerson(ctx, gx - state.camera.x, 290 - state.camera.y, 'womanC', Math.sin(state.time * .25) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
+  const gx2 = 600 - Math.sin(state.time * .31) * 120;
+  drawPerson(ctx, gx2 - state.camera.x, 270 - state.camera.y, 'manA', Math.sin(state.time * .31) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
+  drawHighwaySign(620, 250, ['SUBWAY →', 'MANHATTAN']);
+  ctx.fillStyle = '#d8c9a8';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('QUEENS — where the Costanzas hold court', 384, 24);
+  ctx.textAlign = 'left';
+}
+
+function queensInteractions() {
+  return [
+    { x: 4, y: 210, w: 40, h: 90, radius: 46, label: '← Subway: Manhattan', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The 7 train rattles toward Manhattan. A man is eating soup out of a thermos in direct violation of several unwritten rules. Nobody stops him. This is Queens’ gift to the world: the absence of rules nobody wrote down.' }], () => startTransit('nyc', 60, 250, 'THE 7 TRAIN · WESTBOUND'));
+    } },
+    { x: 130, y: 150, w: 60, h: 40, radius: 46, label: 'The Costanza house', action: () => {
+      travelHub('costanza');
+    } },
+    { x: 390, y: 150, w: 60, h: 40, radius: 44, label: 'The sauna', action: () => {
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      state.time += 3;
+      audio.sfx('pickup');
+      startDialog([{ speaker: 'narrator', text: 'Ten minutes in the sauna next to a man who speaks no English and sweats like it’s a competitive sport. You emerge lighter, dumber, and slightly less wanted. (−0.5 heat)' }]);
+    } },
+    { x: 640, y: 150, w: 60, h: 40, radius: 44, label: 'The shampoo factory', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The shampoo factory where George once almost had a job, or did have a job, or was fired from a job — the records are unclear because George may have set fire to the records. The smell of ten thousand gallons of industrial conditioner hangs over the block like a haunted meadow.' },
+        { speaker: 'george', text: 'I could have been somebody here. I WAS somebody here. Briefly. Then the incident. …I don’t want to talk about the incident.' }
+      ] : [
+        { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
+      ]);
+    } },
+    { x: 300, y: 290, w: 60, h: 30, radius: 42, label: 'Double-parked Buick', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'A Buick double-parked so perfectly perpendicular to reality it can only belong to a man with nothing left to lose. There is a bumper sticker. It says SERENITY NOW. The irony is load-bearing.' }]);
+    } }
+  ];
+}
+
 function drawAC() {
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
@@ -7881,6 +7958,9 @@ function nycInteractions() {
     } },
     { x: 200, y: 120, w: 60, h: 40, radius: 44, label: 'Famous Original Ray’s', action: () => {
       startDialog([{ speaker: 'narrator', text: 'Which Ray’s is the real Ray’s is a question that has ended friendships. This one has the good oven. Inside: heat, grease, glory.' }], () => travelHub('slice'));
+    } },
+    { x: 730, y: 210, w: 34, h: 90, radius: 46, label: 'Subway → Queens', action: () => {
+      startDialog([{ speaker: 'narrator', text: 'The 7 train east. The skyline slides backward and the rent drops a thousand dollars a mile. Somewhere out there, Frank Costanza is already angry about something. You can feel it, like thunder.' }], () => startTransit('queens', 60, 250, 'THE 7 TRAIN · EASTBOUND'));
     } },
     { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
