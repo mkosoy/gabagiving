@@ -3920,6 +3920,37 @@ function updateExplore(dt) {
       if (d < jd) { jackTarget = c; jd = d; }
     }
   }
+  // parked cars — the quiet kind of grand theft auto
+  if (!p.inCar && state.flags.freeRoam && (state.interactCooldown || 0) <= 0) {
+    const spots = PARKED_CARS[state.scene];
+    if (spots) {
+      for (const s of spots) {
+        if ((state['parkedCd' + s.id] || 0) > state.time) continue;
+        if (Math.hypot(p.x - s.x, p.y - s.y) < 36 && interactPressed()) {
+          state.interactCooldown = .8;
+          state['parkedCd' + s.id] = state.time + 240;
+          p.inCar = true;
+          p.speed = Math.round(s.speed * (state.flags.engineTune ? 1.15 : 1));
+          p.carColor = s.color;
+          p.carDamage = 0; p.carV = 0;
+          if (!blockedAt(s.x + 9, s.y - 2)) { p.x = s.x + 9; p.y = s.y - 2; }
+          state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
+          const alarm = Math.random() < .4;
+          if (alarm) {
+            state.flags.heat = Math.min(5, (state.flags.heat || 0) + .8);
+            audio.sfx('honk'); audio.sfx('denied');
+            spawnEffect(s.x, s.y - 18, 'ALARM!', '#ff5a5a');
+          } else audio.sfx('door');
+          spawnEffect(s.x, s.y - 8, s.name.toUpperCase(), '#ffe78a');
+          startDialog([
+            { speaker: 'narrator', text: `${s.desc} Keys in the visor — New Jersey and Queens run on trust and poor judgment. ${alarm ? 'The alarm screams for exactly as long as it takes you to remember you do not care.' : 'No alarm. Nobody ever locks anything worth stealing.'}` },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? (alarm ? 'EVERYBODY RELAX! It’s my car! I mean — it WILL be my car! Once I move it!' : 'Parked, unlocked, keys in the visor. This city WANTS me to succeed!') : (alarm ? 'Yeah, yeah. Sing me a song. You’re mine now.' : s.line) }
+          ]);
+          break;
+        }
+      }
+    }
+  }
   if (jackTarget && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam && interactPressed()) {
     // GTA carjacking: yank a driver out of a passing car
     const jack = jackTarget;
@@ -10938,12 +10969,23 @@ function drawObjectiveArrow() {
   outlineText(ctx, `${Math.max(1, Math.round(dist / 40)) * 5}m`, ax, ay + 12, '#ffe78a', 6, 'center');
 }
 
+function drawParkedCars() {
+  const spots = PARKED_CARS[state.scene];
+  if (!spots) return;
+  for (const s of spots) {
+    if ((state['parkedCd' + s.id] || 0) > state.time) continue;
+    px(ctx, s.x - 2, s.y + 12, 40, 8, 'rgba(0,0,0,.25)');
+    drawCar(s.x, s.y, s.color);
+  }
+}
+
 function drawWorld() {
   const scene = scenes[state.scene];
   if (!scene) return;
   ctx.save();
   ctx.translate(-Math.round(state.camera.x), -Math.round(state.camera.y));
   scene.draw();
+  drawParkedCars();
   drawAmbient();
   drawSchemeProps();
   drawCop();
@@ -11558,6 +11600,18 @@ function drawMenu() {
   if (scroll + MAXROWS < entries.length) outlineText(ctx, '▼ more', 320, 344, '#e8d493', 7, 'center');
 }
 
+const PARKED_CARS = {
+  hub: [
+    { id: 'hub1', x: 350, y: 238, color: '#3d6b35', speed: 190, name: 'a sensible sedan', desc: 'A forest-green sedan, five years old, Baby on Board sign long faded.', line: 'Keys in the visor. In THIS neighborhood. Somebody’s getting a stern note.' },
+    { id: 'hub2', x: 1000, y: 240, color: '#b8a888', speed: 160, name: 'a wood-paneled station wagon', desc: 'A wood-paneled wagon parked at a careless angle, like the owner gave up mid-park.', line: 'The wagon. Slow, invisible, unstoppable. Like erosion.' }
+  ],
+  nyc: [
+    { id: 'nyc1', x: 300, y: 240, color: '#2848a0', speed: 205, name: 'an ex-cop cruiser', desc: 'A blue cruiser-ish sedan with a spotlight bracket and a thinly veiled past.', line: 'Ex-cop car. Still smells like authority and stale coffee.' }
+  ],
+  queens: [
+    { id: 'q1', x: 400, y: 240, color: '#a02828', speed: 230, name: 'a CORVETTE', desc: 'A red Corvette parked outside a Queens rowhouse, the single most optimistic object in the borough.', line: 'Somebody’s midlife crisis, curbside, unlocked. I’m doing them a favor. This was a cry for help.' }
+  ]
+};
 const OUTDOOR_SCENES = ['hub', 'nyc', 'njstreet', 'pines', 'shore', 'ac', 'meadow', 'queens'];
 function weatherRain() {
   if (!OUTDOOR_SCENES.includes(state.scene)) return 0;
