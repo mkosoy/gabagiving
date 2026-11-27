@@ -57,6 +57,9 @@ const sceneArt = {
   mgDarts: loadArt('./assets/mg-darts.webp'),
   mgMonte: loadArt('./assets/mg-monte.webp'),
   mgRoulette: loadArt('./assets/mg-roulette.webp'),
+  mgSlots: loadArt('./assets/mg-slots.webp'),
+  mgDanceoff: loadArt('./assets/mg-danceoff.webp'),
+  mgHorsetrack: loadArt('./assets/mg-horsetrack.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
   map: loadArt('./assets/bg-map.webp'),
   casino: loadArt('./assets/bg-casino.webp'),
@@ -7080,9 +7083,11 @@ function updateRacing(dt) {
 function drawRacing() {
   const r = state.racing;
   if (!r) return;
-  ctx.fillStyle = '#1a120b';
-  ctx.fillRect(0, 0, 640, 360);
-  ctx.fillStyle = '#2a1d10';
+  if (!drawMgBackdrop(sceneArt.mgHorsetrack, 640, 360, .35)) {
+    ctx.fillStyle = '#1a120b';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  ctx.fillStyle = 'rgba(26,18,11,.75)';
   ctx.fillRect(60, 60, 520, 240);
   ctx.strokeStyle = '#c9a227';
   ctx.lineWidth = 2;
@@ -7612,8 +7617,10 @@ function updateDanceOff(dt) {
 function drawDanceOff() {
   const d = state.dance;
   if (!d) return;
-  ctx.fillStyle = '#160a20';
-  ctx.fillRect(0, 0, 640, 360);
+  if (!drawMgBackdrop(sceneArt.mgDanceoff, 640, 360, .35)) {
+    ctx.fillStyle = '#160a20';
+    ctx.fillRect(0, 0, 640, 360);
+  }
   // disco floor
   for (let fx = 0; fx < 8; fx++) for (let fy = 0; fy < 3; fy++) {
     const hue = (state.time * 90 + fx * 45 + fy * 90) % 360;
@@ -7892,7 +7899,9 @@ function drawCraps() {
 
 function drawSlots() {
   const s = state.slots;
-  px(ctx, 0, 0, 640, 416, '#16101e');
+  if (!drawMgBackdrop(sceneArt.mgSlots, 640, 416, .45)) {
+    px(ctx, 0, 0, 640, 416, '#16101e');
+  }
   outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
   // machine body
   px(ctx, 170, 90, 300, 210, '#3a2a4a');
