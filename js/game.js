@@ -10519,14 +10519,15 @@ function drawArmWrestle() {
   px(ctx, 220, 200, 200, 16, '#6b4f2a');
   px(ctx, 220, 216, 200, 8, '#4a3520');
   drawPerson(ctx, 250, 185, state.player.kind === 'george' ? 'george' : 'tonyMax', 'right', state.frame * .5, {});
-  drawPerson(ctx, 390, 185, 'silvio', 'left', state.frame * .5, {});
+  const oppKind = { trucker: 'trucker', bouncer: 'cop', silvio: 'silvio' }[a.opp] || 'silvio';
+  drawPerson(ctx, 390, 185, oppKind, 'left', state.frame * .5, {});
   const hx = 320 + (a.power - .5) * 90;
   px(ctx, hx - 8, 176, 16, 14, '#d5a075');
   px(ctx, hx - 8, 176, 16, 14, '#c08a60');
   px(ctx, 120, 290, 400, 22, '#1a1020');
   px(ctx, 122, 292, 396 * a.power, 18, a.power > .62 ? '#4a8f3d' : a.power > .38 ? '#e8b822' : '#c02828');
   outlineText(ctx, 'YOU', 112, 304, '#8ffff2', 7, 'right');
-  outlineText(ctx, 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
+  outlineText(ctx, { trucker: 'THE TRUCKER', bouncer: 'SLIPPERY PETE', silvio: 'SILVIO' }[a.opp] || 'SLIPPERY PETE', 528, 304, '#ff8a7a', 7, 'left');
   if (!a.done) {
     outlineText(ctx, 'MASH E TO WIN', 320, 340, '#ffe78a', 10, 'center');
     outlineText(ctx, `${Math.max(0, a.duration - a.t).toFixed(1)}`, 320, 258, '#fffbe8', 10, 'center');
