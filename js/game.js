@@ -7239,9 +7239,21 @@ function drawBodega() {
 }
 
 function robRegister(place, flavor) {
+  const rc = state.flags.robCount || 0;
+  if (rc >= 3 && Math.random() < .5) {
+    startDialog([
+      { speaker: 'narrator', text: 'The clerk squints at you before you even reach the counter. His hand is already under the register — on the silent alarm, not the cash.' },
+      { speaker: 'clerk', text: 'YOU. I know your face. My cousin at the other store, he knows your face too. We got a GROUP CHAT, my friend. You want to buy something? Fine. Anything else — the cops are already bored of coming here.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A group chat! They’re ORGANIZED! Since when are the clerks organized?!' : 'A group chat. The REGISTER GUYS got a network now. World’s going soft and digital at the same time. I need a new racket.' }
+    ]);
+    state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
+    audio.sfx('denied');
+    return;
+  }
   const key = 'registerCd_' + place;
   if ((state[key] || 0) > state.time) { toast('You just hit this place. Even you got rules. Come back later.'); return; }
   state[key] = state.time + 120;
+  state.flags.robCount = (state.flags.robCount || 0) + 1;
   const take = 40 + Math.floor(Math.random() * 50);
   state.money += take;
   state.flags.heat = Math.min(5, (state.flags.heat || 0) + 2);
