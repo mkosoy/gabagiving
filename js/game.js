@@ -3737,7 +3737,7 @@ function updateExplore(dt) {
     }
   }
   // reckless driving — speeding through the neighborhood draws heat
-  if (state.player.inCar && (state.player.carV || 0) > 1.6 && ['hub', 'queens', 'njstreet'].includes(state.scene) && !state.dialog) {
+  if (state.player.inCar && Math.abs(state.player.carV || 0) > .85 && ['hub', 'queens', 'njstreet'].includes(state.scene) && !state.dialog) {
     state.recklessT = (state.recklessT || 0) + dt;
     if (state.recklessT > 6) {
       state.recklessT = 0;
