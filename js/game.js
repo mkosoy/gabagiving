@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -4729,6 +4729,24 @@ function hubInteractions() {
           { speaker: 'narrator', text: 'The doors are open. The bag is there. And the guard — a man built like a filing cabinet with a mustache — looks up from his hot dog with the speed of a man who was never eating a hot dog at all. You walk away whistling. You have never whistled before. It shows.' },
           { speaker: 'narrator', text: 'The mustache follows you for three blocks. The heat is very much on.' }
         ]);
+      }
+    } },
+    { x: 750, y: 210, w: 36, h: 26, radius: 40, label: 'Check the mail', action: () => {
+      if (state.flags.mailCd && state.time < state.flags.mailCd) { toast('No new mail. Even the subpoenas are resting.'); return; }
+      state.flags.mailCd = state.time + 45;
+      audio.sfx('pickup');
+      const roll = Math.random();
+      if (roll < .25) {
+        state.money += 15;
+        audio.sfx('cash');
+        startDialog([{ speaker: 'narrator', text: 'The mail: a coupon insert, three catalogs, and — jammed in the middle — a rebate check for $15 made out to a name very close to but legally distinct from yours. Close enough. Thank you, mail fraud, hero of the people.' }]);
+      } else if (roll < .5) {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'A jury summons for Anthony Soprano. George holds it gingerly, like it might detonate.' },
+          { speaker: 'george', text: 'I should NOT be touching this. This is evidence of ME touching evidence! …I’m keeping it as a souvenir.' }
+        ] : [{ speaker: 'narrator', text: 'A jury summons. Tony regards it the way a man regards a rain cloud — annoyed, unhurried, already knowing a guy who knows a guy. Into the gutter it goes. The gutter is full of them.' }]);
+      } else {
+        startDialog([{ speaker: 'narrator', text: 'Victoria’s Secret catalog, a carpet cleaner flyer, and a handwritten card from someone named “Uncle Pat in the Joint” that just says EVERYTHING IS FINE in aggressively cheerful handwriting. Nothing is fine. You put it back carefully.' }]);
       }
     } },
     { x: 640, y: 140, w: 40, h: 30, radius: 42, label: 'Light the grill', action: () => {
