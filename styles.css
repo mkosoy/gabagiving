@@ -99,13 +99,16 @@ html, body {
 #touchButtons {
   pointer-events: auto;
   position: absolute;
-  right: calc(22px + env(safe-area-inset-right));
+  right: calc(10px + env(safe-area-inset-right));
   bottom: calc(26px + env(safe-area-inset-bottom));
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-end;
   gap: 10px;
 }
+#stripCol, #abCol { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#stripCol button { width: 46px !important; height: 46px !important; border-radius: 50%; font-size: 14px !important; }
+#btnS { font-size: 9px !important; background: rgba(40,120,60,.72) !important; }
 #touchButtons button {
   width: 64px;
   height: 64px;
@@ -118,44 +121,10 @@ html, body {
   background: rgba(154,64,42,.78) !important;
 }
 #btnB { background: rgba(53,91,150,.72) !important; }
-#btnS {
-  position: fixed;
-  pointer-events: auto;
-  border-radius: 50% !important;
-  right: calc(10px + env(safe-area-inset-right));
-  top: calc(238px + env(safe-area-inset-top));
-  width: 52px !important;
-  height: 52px !important;
-  font-size: 10px !important;
-  background: rgba(40,120,60,.72) !important;
-}
-#btnR, #btnF {
-  position: fixed;
-  pointer-events: auto;
-  border-radius: 50% !important;
-  right: calc(10px + env(safe-area-inset-right));
-  width: 52px !important;
-  height: 52px !important;
-  font-size: 18px !important;
-}
-#btnR {
-  top: calc(178px + env(safe-area-inset-top));
-  background: rgba(67,116,73,.72) !important;
-}
-#btnF {
-  top: calc(118px + env(safe-area-inset-top));
-  background: rgba(55,116,130,.72) !important;
-}
-@media (min-width: 600px) {
-  #touchButtons { right: calc(84px + env(safe-area-inset-right)); }
-}
 @media (pointer: coarse), (max-width: 850px) {
   #touchControls { display: block; }
 }
 @media (max-height: 430px) {
-  #btnF { top: calc(56px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); }
-  #btnR { top: calc(56px + env(safe-area-inset-top)); right: calc(70px + env(safe-area-inset-right)); }
-  #btnS { top: calc(56px + env(safe-area-inset-top)); right: calc(130px + env(safe-area-inset-right)); }
   #stickZone { transform: scale(.78); transform-origin: bottom left; }
   #touchButtons { transform: scale(.82); transform-origin: bottom right; }
 }
