@@ -60,6 +60,9 @@ const sceneArt = {
   mgMonte: loadArt('./assets/mg-monte.webp'),
   mgRoulette: loadArt('./assets/mg-roulette.webp'),
   mgSlots: loadArt('./assets/mg-slots.webp'),
+  mgClaw: loadArt('./assets/bg-mgclaw.webp'),
+  mgStrength: loadArt('./assets/bg-mgstrength.webp'),
+  mgArmwrestle: loadArt('./assets/bg-mgarmwrestle.webp'),
   mgDanceoff: loadArt('./assets/mg-danceoff.webp'),
   mgHorsetrack: loadArt('./assets/mg-horsetrack.webp'),
   ac: loadArt('./assets/bg-ac.webp'),
@@ -818,9 +821,10 @@ function drawFishing() {
 }
 
 function drawClaw() {
+  const bgDim = drawMgBackdrop(sceneArt.mgClaw, 640, 416, 0.45);
   const cl = state.claw;
   if (!cl) return;
-  ctx.fillStyle = 'rgba(8,6,12,.9)';
+  ctx.fillStyle = 'rgba(8,6,12,.82)';
   ctx.fillRect(170, 70, 300, 260);
   ctx.strokeStyle = '#d4a017';
   ctx.strokeRect(170, 70, 300, 260);
@@ -7860,9 +7864,10 @@ function updateSlots(dt) {
 }
 
 function drawStrength() {
+  const bgDim = drawMgBackdrop(sceneArt.mgStrength, 640, 416, 0.4);
   const st = state.strength;
   if (!st) return;
-  ctx.fillStyle = 'rgba(8,6,12,.88)';
+  ctx.fillStyle = 'rgba(8,6,12,.8)';
   ctx.fillRect(180, 60, 280, 240);
   ctx.strokeStyle = '#d4a017';
   ctx.strokeRect(180, 60, 280, 240);
@@ -10409,7 +10414,8 @@ function updateArmWrestle(dt) {
 }
 
 function drawArmWrestle() {
-  px(ctx, 0, 0, 640, 416, '#171019');
+  const bgDim = drawMgBackdrop(sceneArt.mgArmwrestle, 640, 416, 0.5);
+  if (!bgDim) px(ctx, 0, 0, 640, 416, '#171019');
   outlineText(ctx, 'ARM WRESTLING · THE BING', 320, 56, '#ffe78a', 12, 'center');
   const a = state.armwrestle;
   if (!a) return;
