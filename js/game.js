@@ -7694,8 +7694,8 @@ function meadowInteractions() {
     { x: 400, y: 330, w: 90, h: 40, radius: 52, inCarOk: true, label: 'The chop shop — cash for cars', action: () => {
       if (!state.player.inCar) { toast('The chop shop only talks to people who arrive IN something. With four wheels. That they don’t plan to leave with.'); return; }
       if ((state.chopCd || 0) > state.time) { toast('The chop shop is hot right now — literally, there’s smoke. Come back in a couple minutes.'); return; }
-      const sp = state.player.speed || 160;
-      const tier = sp >= 220 ? ['the Vette', 110] : sp >= 195 ? ['the cruiser', 85] : sp >= 175 ? ['the sedan', 60] : ['the wagon', 45];
+      const cc2 = state.player.carColor || '';
+      const tier = cc2 === '#a02828' ? ['the Vette', 110] : cc2 === '#2848a0' ? ['the cruiser', 85] : cc2 === '#3d6b35' ? ['the sedan', 60] : ['the wagon', 45];
       const pay = tier[1] + Math.floor(Math.random() * 20);
       state.money += pay;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
@@ -7708,6 +7708,7 @@ function meadowInteractions() {
       audio.sfx('door');
       const sc = scenes[state.scene];
       if (sc) audio.setMusic(sc.music);
+      saveWorld();
       spawnEffect(state.player.x + 8, state.player.y - 12, `+$${pay}`, '#9fe89a');
       startDialog([
         { speaker: 'narrator', text: `The garage door is open exactly enough. A man in a welding mask looks at ${tier[0]}, looks at you, looks at the Meadowlands beyond you both, and names a number without a single word being exchanged about provenance. $${pay}. The car will be seventeen cars by Tuesday. The welding mask does not care about your feelings.` },
