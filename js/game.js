@@ -305,7 +305,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2254,6 +2254,25 @@ function updateBrawler(dt) {
       audio.sfx('smash');
     }
   }
+  // the turkey defends its person
+  const tk = state.turkey;
+  if (tk && tk.friend && b.hp > 0 && !tk.enraged && !tk.racing) {
+    tk.peckT = (tk.peckT || 0) - dt;
+    const td = Math.hypot(tk.x - b.x, tk.y - b.y);
+    if (td > 22) {
+      const ang = Math.atan2(b.y - tk.y, b.x - tk.x);
+      tk.x += Math.cos(ang) * 92 * dt;
+      tk.y += Math.sin(ang) * 92 * dt;
+    } else if (tk.peckT <= 0) {
+      tk.peckT = 1.6;
+      b.hp -= .5;
+      b.hitT = .4;
+      spawnEffect(b.x + 6, b.y - 14, 'PECK!', '#ffe78a');
+      audio.sfx('turkey');
+      b.bark = ['THE BIRD! NOT THE BIRD!', 'IT’S IN MY EYES!', 'WHO TRAINED THIS THING?!'][Math.floor(Math.random() * 3)];
+      b.barkT = 1.4;
+    }
+  }
 }
 
 function drawBrawler() {
@@ -2710,6 +2729,14 @@ const MISSION_DEFS = {
       { scene: 'costanza', x: 140, y: 140, radius: 60, objective: 'Report back to Frank', label: 'Frank' }
     ]
   },
+  leoScarf: {
+    title: 'THE RE-GIFT',
+    payout: 15, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'apartment', x: 320, y: 250, radius: 80, objective: 'Retrieve the scarf from Jerry’s apartment — quietly', label: 'the scarf' },
+      { scene: 'queens', x: 560, y: 210, radius: 50, objective: 'Return the scarf to Uncle Leo — say NOTHING about the monogram', label: 'Uncle Leo' }
+    ]
+  },
   jerrysFavor: {
     title: 'THE FAVOR',
     payout: 20, heat: 0, timeLimit: 0,
@@ -2868,6 +2895,10 @@ function advanceMission() {
       kramerJob: [
         { speaker: 'kramer', text: 'GIDDY UP! Another successful Kramerica transaction. You know what that makes this quarter? Positive. In SOME columns. The important columns are confidential, buddy.' },
         { speaker: 'system', text: 'KRAMERICA ERRAND COMPLETE. Kramerica Industries endures.' }
+      ],
+      leoScarf: [
+        { speaker: 'narrator', text: 'Leo sniffs the scarf once, decisively. “Still got the gift smell! Danny will never know. You’re a good boy. The eyebrows never lie.” He presses $15 into your hand. It is, somehow, also damp.' },
+        { speaker: 'system', text: 'THE RE-GIFT COMPLETE. The circle of giving continues, minus the giving.' }
       ],
       frankJob: [
         { speaker: 'womanB', text: 'You did it? Without incident? In THIS neighborhood? Frank, he did it without incident!' },
@@ -3067,6 +3098,10 @@ function updateMission(dt) {
         kramerJob: [
           { speaker: 'narrator', text: 'The Kramerica cargo changes hands. Legally ambiguous, structurally unsound, somehow profitable. The Kramerica way.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a Kramerica VP now! Of logistics! There’s no pay but the TITLE, Jerry, the TITLE!' : 'Guy runs an empire outta his neighbor’s apartment. I seen worse organizational structures. Mine, for instance.' }
+        ],
+        leoScarf: [
+          { speaker: 'narrator', text: 'The scarf. Cashmere-ish. Monogrammed “J.S.” — or is it? On closer inspection the monogram is stitched OVER another monogram. This scarf has been gifted before. Possibly several times. Possibly since the 1970s.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A re-gift in PROGRESS?! I’m a courier of BETRAYAL! …I’ll still take the fifteen.' : 'In my business we call this inventory redistribution. Leo’s a natural.' }
         ],
         frankJob: [
           { speaker: 'narrator', text: 'Errand accomplished. Somewhere in Queens, a vein in a man’s neck relaxes by roughly four percent.' },
@@ -7868,6 +7903,15 @@ function queensInteractions() {
       ]);
     } },
     { x: 560, y: 210, w: 30, h: 40, radius: 42, label: 'Uncle Leo', action: () => {
+      if (!state.mission && state.flags.freeRoam && !state.flags.leoScarfDone) {
+        startMission('leoScarf');
+        startDialog([
+          { speaker: 'narrator', text: '“GEORG—” Leo stops. Corrects himself. “You! Person! A favor! I gave Jerry a scarf. BEAUTIFUL scarf. I need it back. For SAFEKEEPING. Not for re-gifting. Why would you think re-gifting? Who says re-gifting?!”' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'You want me to STEAL a gift?! …How much?' : 'Fifteen bucks to lift a scarf from a comedian. I’ve done worse for less. Don’t tell anybody I said that.' },
+          { speaker: 'system', text: 'Mission accepted: THE RE-GIFT. $15. The eyebrows never lie.' }
+        ]);
+        return;
+      }
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'Uncle Leo spots you from forty yards. There is no escape. There has never been an escape. “GEORGIE! HELLO!” The eyebrows are doing most of the waving.' },
         { speaker: 'george', text: 'Uncle Leo! What — how — I have to go, I have a thing! A big thing! Vandelay business!' },
@@ -7877,7 +7921,7 @@ function queensInteractions() {
         { speaker: 'tony', text: 'Yeah, I know Jerry. Tell him… actually, tell him nothing. You never saw me. Here’s twenty for the trouble — buy yourself a spray tan or whatever you people do.' },
         { speaker: 'narrator', text: 'Leo takes the $20 with both hands and the expression of a man who has never once questioned money. “You’re a good boy! I can tell! The eyebrows never lie!” Somehow YOU are down $20. You’re not sure how that happened. He’s GOOD. −$20' }
       ]);
-      if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20);
+      if (!state.mission && Math.random() < .35) { if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20); }
     } },
     { x: 330, y: 245, w: 50, h: 26, radius: 44, inCarOk: true, label: 'The contested parking space', action: () => {
       if (!state.player.inCar) {
