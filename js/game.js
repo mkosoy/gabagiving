@@ -3736,6 +3736,20 @@ function updateExplore(dt) {
       else if (Math.random() < .4) spawnEffect(p.x + 8, p.y - 46, '“…dispatch to nothing. quiet night. too quiet.”', '#9ac8ff');
     }
   }
+  // reckless driving — speeding through the neighborhood draws heat
+  if (state.player.inCar && (state.player.carV || 0) > 1.6 && ['hub', 'queens', 'njstreet'].includes(state.scene) && !state.dialog) {
+    state.recklessT = (state.recklessT || 0) + dt;
+    if (state.recklessT > 6) {
+      state.recklessT = 0;
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .25);
+      spawnEffect(state.player.x + 8, state.player.y - 24, 'reckless! heat +', '#ff9a7a');
+      audio.sfx('honk');
+      if (!state.flags.recklessWarned) {
+        state.flags.recklessWarned = true;
+        toast('You’re driving like a maniac in a residential area. People are writing down plate numbers. Slow down or enjoy the heat.');
+      }
+    }
+  } else state.recklessT = Math.max(0, (state.recklessT || 0) - dt * 2);
   // leaving a borrowed car takes priority over other interactions
   if (p.inCar && !(nearestInteraction() && nearestInteraction().inCarOk) && interactPressed()) {
     p.inCar = false;
