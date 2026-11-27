@@ -4020,6 +4020,15 @@ function clubInteractions() {
         { speaker: 'tony', text: 'Horses. The one thing in this world that runs honest. Everything else — meh.' }
       ], () => initRacing());
     } });
+    list.push({ x: 520, y: 180, w: 40, h: 40, radius: 28, label: 'Dartboard', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The Bing’s dartboard. Someone has thrown a dart into the “wasted” region of a family photo pinned beside it. Nobody remembers whose family.' },
+        { speaker: 'george', text: 'Darts! A game of pure geometry! I have a mathematically perfect throw — high elbow, dead wrist, ZERO follow-through! The follow-through is a scam!' }
+      ] : [
+        { speaker: 'narrator', text: 'The dartboard. Silvio once hit a bullseye from the door. Nobody saw it. Everyone agreed they saw it.' },
+        { speaker: 'tony', text: 'Darts at the Bing. The only place in Jersey where sharp objects flyin’ is a game and not a Tuesday.' }
+      ], () => initDarts());
+    } });
     list.push({ x: 520, y: 250, w: 80, h: 50, radius: 28, label: 'Blackjack table', action: () => {
       if ((state.flags.tribute || 0) < 50) {
         startDialog([{ speaker: 'narrator', text: 'The dealer doesn’t even look up. "Fifty minimum." The felt has seen men cry for less.' }]);
@@ -4925,6 +4934,19 @@ function hubInteractions() {
         { speaker: 'aj', text: '…This is the best day of my life and I don’t know why.' }
       ]);
     } },
+    ...(isNight() ? [] : [{ x: 420, y: 170, w: 60, h: 30, radius: 40, label: 'Ice cream truck', action: () => {
+      if ((state.flags.tribute || 0) < 5) { startDialog([{ speaker: 'narrator', text: 'The ice cream man eyes your empty hands. Five dollars. The soft serve waits for no one.' }]); return; }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 5);
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'A vanilla-chocolate twist, structural integrity questionable. George inhales it in the time most people take to unwrap it. The heat of the streets fades a little.' },
+        { speaker: 'george', text: 'The twist cone is a marvel of engineering! TWO flavors, ONE cone! This is what the Soviets never understood!' }
+      ] : [
+        { speaker: 'narrator', text: 'A soft serve, eaten in silence, leaning on the truck. For ninety seconds, Tony Soprano has no problems. Heat drops.' },
+        { speaker: 'tony', text: 'When I was a kid the truck only had two flavors. Now there’s forty. That’s not progress — that’s confusion with sprinkles.' }
+      ]);
+    } }]),
     { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
       if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
       state.money -= 8;
@@ -5478,6 +5500,104 @@ function drawRacing() {
     ctx.fillStyle = won ? '#6f6' : '#f66';
     ctx.fillText(won ? 'YOUR HORSE WINS — +$70 tribute! SPACE to leave' : r.horses[r.winner].name + ' takes it. The house sends regards. SPACE to leave', 320, 330);
   }
+  ctx.textAlign = 'left';
+}
+
+function initDarts() {
+  if ((state.flags.tribute || 0) < 15) { startDialog([{ speaker: 'narrator', text: 'Darts is fifteen a round — the board has standards. You are short.' }]); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 15);
+  state.darts = { throws: [], cur: { axis: 'x', x: 0, y: 0, dir: 1 }, total: 0, phase: 'aim', t: 0 };
+  state.mode = 'darts';
+  audio.sfx('pickup');
+}
+
+function updateDarts(dt) {
+  const d = state.darts;
+  if (!d) { state.mode = 'explore'; return; }
+  d.t += dt;
+  if (d.phase === 'aim') {
+    const c = d.cur;
+    if (c.axis === 'x' || c.axis === 'y') {
+      const v = (c.axis === 'x' ? c.x : c.y) + dt * 1.4 * c.dir;
+      if (v > 1) c.dir = -1; else if (v < -1) c.dir = 1;
+      if (c.axis === 'x') c.x = Math.max(-1, Math.min(1, v)); else c.y = Math.max(-1, Math.min(1, v));
+    }
+    if (consume(['Space', 'Enter', 'KeyE'])) {
+      if (c.axis === 'x') { c.axis = 'y'; audio.sfx('punch'); }
+      else {
+        // throw lands
+        const dist = Math.sqrt(c.x * c.x + c.y * c.y) + (Math.random() - .5) * .12;
+        let score = 0;
+        if (dist < .12) score = 50;
+        else if (dist < .3) score = 25;
+        else if (dist < .55) score = 15;
+        else if (dist < .8) score = 8;
+        else score = 2;
+        d.throws.push({ x: c.x, y: c.y, score });
+        d.total += score;
+        audio.sfx(score >= 25 ? 'cash' : 'punch');
+        if (d.throws.length >= 3) { d.phase = 'done'; if (d.total >= 60) { state.flags.tribute = (state.flags.tribute || 0) + 50; audio.sfx('cash'); } }
+        else d.cur = { axis: 'x', x: 0, y: 0, dir: 1 };
+      }
+    }
+    if (consume(['Escape', 'KeyM']) && !d.throws.length) { state.darts = null; state.mode = 'explore'; }
+    return;
+  }
+  if (d.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'Escape', 'KeyM'])) { state.darts = null; state.mode = 'explore'; }
+}
+
+function drawDarts() {
+  const d = state.darts;
+  if (!d) return;
+  ctx.fillStyle = '#171008';
+  ctx.fillRect(0, 0, 640, 360);
+  ctx.fillStyle = '#c9a227';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('DARTS AT THE BING — three throws, 60+ pays $50', 320, 40);
+  const cx = 320, cy = 195, R = 110;
+  // board rings
+  const rings = [[1, '#4a3728'], [.8, '#8b2233'], [.55, '#2a5c34'], [.3, '#8b2233'], [.12, '#ffd23e']];
+  for (const [r, col] of rings) {
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = '#000';
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+    ctx.stroke();
+  }
+  // landed darts
+  for (const t of d.throws) {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(cx + t.x * R - 2, cy + t.y * R - 2, 5, 5);
+  }
+  // aim crosshair
+  if (d.phase === 'aim') {
+    const ax = cx + d.cur.x * R, ay = cy + d.cur.y * R;
+    ctx.strokeStyle = d.cur.axis === 'x' ? '#ffd23e' : '#4ef';
+    ctx.beginPath();
+    if (d.cur.axis === 'x') { ctx.moveTo(ax, cy - R); ctx.lineTo(ax, cy + R); }
+    else { ctx.moveTo(cx - R, ay); ctx.lineTo(cx + R, ay); }
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px monospace';
+    ctx.fillText(d.cur.axis === 'x' ? 'SPACE locks the horizontal…' : 'SPACE throws!', 320, 330);
+  } else {
+    ctx.fillStyle = d.total >= 60 ? '#6f6' : '#f66';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('TOTAL ' + d.total + (d.total >= 60 ? ' — 60+! The board pays $50. SPACE' : ' — the board keeps your money. SPACE'), 320, 330);
+  }
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#aaa';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  if (d.phase === 'aim') ctx.fillText('throw ' + (d.throws.length + 1) + ' of 3 · total ' + d.total, 320, 60);
   ctx.textAlign = 'left';
 }
 
@@ -8814,6 +8934,7 @@ function render() {
   else if (state.mode === 'blackjack') drawBlackjack();
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'racing') drawRacing();
+  else if (state.mode === 'darts') drawDarts();
   else if (state.mode === 'craps') drawCraps();
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
@@ -9201,6 +9322,8 @@ function update(dt) {
     updateSlots(dt);
   } else if (state.mode === 'racing') {
     updateRacing(dt);
+  } else if (state.mode === 'darts') {
+    updateDarts(dt);
   } else if (state.mode === 'goosechase') {
     updateGooseChase(dt);
   } else if (state.mode === 'bonus') {
