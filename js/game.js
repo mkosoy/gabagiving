@@ -2254,6 +2254,25 @@ function updateBrawler(dt) {
       audio.sfx('smash');
     }
   }
+  // the turkey defends its person
+  const tk = state.turkey;
+  if (tk && tk.friend && b.hp > 0 && !tk.enraged && !tk.racing) {
+    tk.peckT = (tk.peckT || 0) - dt;
+    const td = Math.hypot(tk.x - b.x, tk.y - b.y);
+    if (td > 22) {
+      const ang = Math.atan2(b.y - tk.y, b.x - tk.x);
+      tk.x += Math.cos(ang) * 92 * dt;
+      tk.y += Math.sin(ang) * 92 * dt;
+    } else if (tk.peckT <= 0) {
+      tk.peckT = 1.6;
+      b.hp -= .5;
+      b.hitT = .4;
+      spawnEffect(b.x + 6, b.y - 14, 'PECK!', '#ffe78a');
+      audio.sfx('turkey');
+      b.bark = ['THE BIRD! NOT THE BIRD!', 'IT’S IN MY EYES!', 'WHO TRAINED THIS THING?!'][Math.floor(Math.random() * 3)];
+      b.barkT = 1.4;
+    }
+  }
 }
 
 function drawBrawler() {
