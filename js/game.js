@@ -8188,7 +8188,7 @@ function dinerInteractions() {
           { speaker: 'narrator', text: 'In the corner booth, a man in a members-only jacket does not look up. He never looks up. That’s the thing about him.' }
         ]);
       } else {
-        startDialog([{ speaker: 'narrator', text: ['The jukebox plays something Sinatra-adjacent. Nobody objects.', 'Deep Purple this time. The truckers approve.', 'The little piano riff again. The whole diner goes quiet for exactly one bar, out of respect.'][Math.floor(Math.random() * 3)] }]);
+        startDialog([{ speaker: 'narrator', text: ['The jukebox plays something Sinatra-adjacent. Nobody objects.', 'Deep Purple this time. The truckers approve.', 'The little piano riff again. The whole diner goes quiet for exactly one bar, out of respect.', 'Something with a mandolin. The members-only guy nods along like he’s at the opera. Maybe he is. Nobody here knows what the opera sounds like.'][Math.floor(Math.random() * 3)] }]);
       }
     } },
     { x: 100, y: 330, w: 40, h: 34, radius: 42, label: 'The guy in the members-only jacket', action: () => {
