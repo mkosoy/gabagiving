@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd'];
 function saveWorld() {
   try {
     const out = {};
@@ -2179,6 +2179,15 @@ const MISSION_DEFS = {
       { scene: 'hub', x: 560, y: 210, radius: 52, objective: 'Report back to Newman. It never happened.', label: 'Finish the job' }
     ]
   },
+  bottleRun: {
+    title: 'THE BOTTLE RUN',
+    payout: 320, heat: .5, timeLimit: 240,
+    steps: [
+      { scene: 'nyc', x: 500, y: 200, radius: 60, objective: 'KRAMERICA: collect the bottles at the bodega', label: 'bottles acquired — 10 cents each in Michigan!' },
+      { scene: 'hub', x: 320, y: 250, radius: 90, objective: 'KRAMERICA: haul the bottles through the tunnel — NO SUDDEN STOPS', label: 'bottles secured' },
+      { scene: 'hub', x: 560, y: 210, radius: 60, objective: 'KRAMERICA: meet the Michigan connection', label: 'the refund is real' }
+    ]
+  },
   kramericaBook: {
     title: 'THE COFFEE TABLE BOOK',
     payout: 280, heat: 1,
@@ -2228,7 +2237,7 @@ const MISSION_DEFS = {
   }
 };
 const MISSION_CHAIN = ['packageJob', 'bigSalad', 'catalogCaper', 'soupNaziRun', 'cannonball', 'ryeExpress', 'heatMagnet', 'pineFresh', 'bigOne'];
-const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'kramericaBook'];
+const KRAMER_CHAIN = ['muffinTops', 'bladderRun', 'bottleRun', 'kramericaBook'];
 function nextKramerMission() {
   return KRAMER_CHAIN.find((id) => !state.flags[id + 'Done']);
 }
@@ -2265,6 +2274,10 @@ function advanceMission() {
       ] : [
         { speaker: 'narrator', text: 'Tony reports the delivery. $200 for an hour of driving. Honest work, dishonest cargo.' },
         { speaker: 'tony', text: 'You never ask what’s in the box. That’s rule one. Rule two is you take the cash and forget the box.' }
+      ],
+      bottleRun: [
+        { speaker: 'kramer', text: 'TEN CENTS A BOTTLE! In Michigan, Jerry — er, boss — TEN CENTS! The math is UNBEATABLE! Sure, the gas costs more than the refund, and the tunnel tolls, and the truck rental — but the VOLUME! We make it up in volume!' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I drove glass bottles through the Holland Tunnel for a net LOSS and I’d do it again! That’s the Kramerica difference!' : 'Hauled empty bottles across state lines for a guy who doesn’t know what a margin is. I’ve laundered money with less risk. Here’s your cut — don’t spend it all in Michigan.' }
       ],
       catalogCaper: [
         { speaker: 'newman', text: 'The Yankee organization will RECEIVE their L.L. Bean catalogs. Eventually. In bulk. Unsorted. Hee hee hee.' },
