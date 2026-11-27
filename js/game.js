@@ -1238,8 +1238,12 @@ function updateAmbient(dt) {
     let spd = n.fleeing ? n.speed * 2.2 : n.speed;
     if (!n.barkT && Math.random() < dt * .008) {
       const idle = state.scene === 'nyc'
-        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again']
-        : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!'];
+        ? ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
+        : state.scene === 'shore' || state.scene === 'ac'
+          ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
+          : state.scene === 'pines'
+            ? ['quiet out here…', 'too quiet', 'pine fresh, they say']
+            : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!', 'in-laws incoming', 'turkey’s in the oven', 'happy thanksgiving!'];
       n.bark = idle[Math.floor(Math.random() * idle.length)];
       n.barkT = 1.8;
     }
