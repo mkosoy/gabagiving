@@ -309,7 +309,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp'];
 function saveWorld() {
   try {
     const out = {};
@@ -7857,7 +7857,7 @@ function dinerInteractions() {
     { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
       if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
       state.money -= 1;
-      audio.sfx('coin');
+      audio.sfx('cash');
       if (!state.flags.jukeboxFinale) {
         state.flags.jukeboxFinale = true;
         startDialog([
@@ -7884,8 +7884,8 @@ function dinerInteractions() {
       }
     } },
     { x: 270, y: 240, w: 70, h: 40, radius: 44, label: 'Slide into a booth', action: () => {
-      if ((state.flags.boothCd || 0) > state.time) { toast('You just got up. Even sitting has a cooldown.'); return; }
-      state.flags.boothCd = state.time + 60;
+      if ((state.boothCd || 0) > state.time) { toast('You just got up. Even sitting has a cooldown.'); return; }
+      state.boothCd = state.time + 60;
       const hadHeat = (state.flags.heat || 0) > 0;
       if (hadHeat) state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
       audio.sfx('success');
