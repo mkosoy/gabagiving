@@ -2134,6 +2134,18 @@ function missionStep() {
   return MISSION_DEFS[state.mission.id].steps[state.mission.step];
 }
 
+function updateHeatDecay(dt) {
+  const h = state.flags.heat || 0;
+  if (h > 0 && !state.cop) {
+    state.heatDecayT = (state.heatDecayT || 0) + dt;
+    const interval = state.player.inCar ? 26 : 18;
+    if (state.heatDecayT >= interval) {
+      state.heatDecayT = 0;
+      state.flags.heat = Math.max(0, h - .25);
+    }
+  } else state.heatDecayT = 0;
+}
+
 function updateBanking(dt) {
   if ((state.flags.banked || 0) > 0) {
     state.bankAccrual = (state.bankAccrual || 0) + dt;
@@ -2754,6 +2766,7 @@ function updateExplore(dt) {
 
   updateMission(dt);
   updateBanking(dt);
+  updateHeatDecay(dt);
   const inter = nearestInteraction();
   if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
@@ -5431,7 +5444,8 @@ function acInteractions() {
     { x: 250, y: 150, w: 60, h: 40, radius: 42, label: 'High-roller slots', action: () => {
       if (state.money < 50) { toast('High-roller slots are $50 a pull.'); return; }
       state.money -= 50;
-      const roll = Math.random();
+      const night = isNight();
+      const roll = Math.random() * (night ? .82 : 1); // the house gets generous after dark — or seems to
       audio.sfx('spin');
       if (roll < .04) {
         state.money += 1000;
