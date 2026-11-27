@@ -178,6 +178,11 @@ export class AudioSys {
 
   sfx(name) {
     if (!this.ctx || !this.enabled) return;
+    if (name === 'splash') {
+      this.noise(.3, .03, 0, 900);
+      setTimeout(() => this.noise(.2, .02, 0, 500), 120);
+      return;
+    }
     if (name === 'confirm') {
       this.tone(520, .07, 'square', .035);
       this.tone(780, .08, 'square', .025, .06);

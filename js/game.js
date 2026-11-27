@@ -281,7 +281,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','kramericaBookDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -608,6 +608,25 @@ function drawDialog() {
     px(ctx, ax + 2, ay + 4, 6, 4, '#fff1a6');
     px(ctx, ax + 4, ay + 8, 2, 3, '#fff1a6');
   }
+}
+
+function drawFishing() {
+  const f = state.fishing;
+  if (!f) return;
+  ctx.fillStyle = 'rgba(8,10,16,.85)';
+  ctx.fillRect(190, 300, 260, 44);
+  ctx.strokeStyle = '#8fd8ff';
+  ctx.strokeRect(190, 300, 260, 44);
+  ctx.fillStyle = '#f5efdc';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  if (f.phase === 'cast') ctx.fillText('…waiting for a bite…', 320, 325);
+  else {
+    ctx.fillStyle = '#ffd23e';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText('BITE! — press E NOW!', 320, 325);
+  }
+  ctx.textAlign = 'left';
 }
 
 function drawClaw() {
@@ -1363,7 +1382,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -1381,6 +1400,7 @@ function updateCop(dt) {
     spawnEffect(c.x, c.y, 'HEAT CLEARED', '#8ffff2');
     state.cop = null;
     state.cop2 = null;
+    state.copCar = null;
     return;
   }
   // wanted escalation: a second unit joins at high heat
@@ -1390,6 +1410,31 @@ function updateCop(dt) {
     audio.sfx('honk');
   }
   if (heat < backupAt - .5 && state.cop2) state.cop2 = null;
+  // heat 4+: a patrol car joins in — the only thing in Jersey that drives worse than you
+  if (heat >= 4 && !state.copCar) {
+    state.copCar = { x: state.scene === 'nyc' ? 30 : 60, y: 60, angle: 0, flashT: 0 };
+    spawnEffect(state.player.x + 8, state.player.y - 34, 'PATROL CAR INBOUND!', '#ff6a6a');
+    audio.sfx('honk');
+  }
+  if (heat < 3.5 && state.copCar) state.copCar = null;
+  if (state.copCar) {
+    const cc = state.copCar;
+    cc.flashT += dt;
+    const pdx = state.player.x - cc.x, pdy = state.player.y - cc.y;
+    const pdist = Math.hypot(pdx, pdy) || 1;
+    const cspd = 168;
+    cc.x += pdx / pdist * cspd * dt;
+    cc.y += pdy / pdist * cspd * dt;
+    cc.angle = Math.atan2(pdy, pdx) + Math.PI / 2;
+    if (pdist < 26 && state.player.inCar) {
+      state.player.carV = (state.player.carV || 1) * .25;
+      state.player.carDamage = (state.player.carDamage || 0) + 1;
+      spawnEffect(state.player.x, state.player.y - 20, 'RAMMED!', '#ff8e8e');
+      audio.sfx('crash');
+      cc.x -= pdx / pdist * 30;
+      cc.y -= pdy / pdist * 30;
+    }
+  }
   const p = state.player;
   const maxHeat = (state.flags.heat || 0) >= 4.5;
   const speed = (p.inCar ? 150 : 120) * (maxHeat ? 1.3 : 1);
@@ -1415,6 +1460,7 @@ function updateCop(dt) {
     if (c.bustT > (maxHeat ? .5 : .8)) {
       state.cop = null;
       state.cop2 = null;
+      state.copCar = null;
       state.flags.heat = 0;
       p.inCar = false;
       p.speed = p.kind === 'george' ? 96 : 88;
@@ -1510,6 +1556,18 @@ function drawIceCream() {
   drawCar(ic.x, ic.y, '#fff0f5', false, Math.PI / 2);
   px(ctx, ic.x - 8, ic.y - 12, 16, 4, '#ff8ab0');
   px(ctx, ic.x - 3, ic.y - 18, 6, 6, '#ffe78a');
+}
+
+function drawUmbrellaGuy() {
+  if (state.scene !== 'nyc' || !weatherRain()) return;
+  const t = state.time * .8;
+  const ux = 640 - (t * 60 % 700);
+  const uy = 330 + Math.sin(t * 2) * 3;
+  px(ctx, ux - 3, uy - 14, 6, 10, '#4a4a52');
+  px(ctx, ux - 3, uy - 18, 6, 5, '#caa07a');
+  // inside-out umbrella, tragic and proud
+  px(ctx, ux - 8, uy - 26, 16, 4, '#222');
+  px(ctx, ux - 2, uy - 24, 4, 8, '#666');
 }
 
 function drawLawnmower() {
@@ -1637,7 +1695,7 @@ function drawTailCourier() {
 
 function drawCop() {
   if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
-  for (const c of [state.cop, state.cop2].filter(Boolean)) {
+  for (const c of [state.cop, state.cop2, state.copCar].filter(Boolean)) {
     drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
     const phase = Math.floor(c.flashT * 6) % 2;
@@ -3826,6 +3884,22 @@ function drawVesuvio() {
 
 function vesuvioInteractions() {
   const list = [
+    { x: 300, y: 120, w: 44, h: 34, radius: 44, label: 'Grappa for the kitchen', action: () => {
+      if (state.money < 30) { toast('Grappa for the whole kitchen runs $30.'); return; }
+      state.money -= 30;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .75);
+      audio.sfx('cash');
+      spawnEffect(state.player.x, state.player.y - 16, 'SALUTE!', '#ffd23e');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George buys the kitchen a round of grappa. Artie emerges, red-faced and glowing, and hugs him like family. In this restaurant, for this one night, George Costanza is family.' },
+        { speaker: 'artie', text: 'The man! THE MAN! Anything — anything — you ever need, George. Private table. Off-menu. The good chairs!' },
+        { speaker: 'george', text: 'The GOOD chairs? …Why are there bad chairs? WHAT DO YOU KNOW ABOUT THE CHAIRS?' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony sends grappa to the kitchen. Artie comes out weeping with gratitude — a grown man crying over distilled stems and skins, and everyone present respects it.' },
+        { speaker: 'artie', text: 'Tony. TONY. You remember the little guys. THAT’S why they say what they say about you.' },
+        { speaker: 'tony', text: 'What do they say? …No, seriously. What exactly are they saying? Tell me everything.' }
+      ]);
+    } },
     { x: 280, y: 330, w: 80, h: 40, radius: 46, label: 'The Feast', action: () => {
       if (!state.flags.bigOneDone || !state.flags.kramericaBookDone || !state.flags.pineRunnerDone) {
         toast('Something’s being prepared here. Finish the crews’ work first — Newman, Kramer, Silvio.');
@@ -4474,6 +4548,43 @@ function hubInteractions() {
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'It’s a federal offense?! It’s MAIL! Who reads mail! I was BORROWING the mail!' : 'Relax, mailman. I was checking for anthrax. Community service. You’re welcome.' }
         ]);
       }
+    } },
+    { x: 400, y: 100, w: 56, h: 34, radius: 44, label: 'The idling armored car', action: () => {
+      if (state.flags.armoredDone) { toast('The armored car route changed after the incident. Wonder whose fault that is.'); return; }
+      state.flags.armoredDone = true;
+      const roll = Math.random();
+      if (roll < .35) {
+        state.money += 320;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.5);
+        audio.sfx('cash');
+        spawnEffect(state.player.x, state.player.y - 16, '+$320', '#ffd23e');
+        startDialog([
+          { speaker: 'narrator', text: 'The doors are open. The guard is buying a hot dog. The bag is just — there. Your hand moves before your brain does, the way it has since 1978. $320 in worn twenties. You walk away at a completely casual pace that fools absolutely no one.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’M A CRIMINAL NOW! I’ve crossed over! There’s no going back! …Do they validate parking?' : 'Guard’s buying a hot dog. On the job. In my day that was a sit-down offense. You know what — the hot dog guy is getting a taste of this. Everybody eats.' }
+        ]);
+      } else {
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + 3);
+        audio.sfx('denied');
+        spawnEffect(state.player.x, state.player.y - 16, 'THE GUARD LOOKS UP', '#ff8e8e');
+        startDialog([
+          { speaker: 'narrator', text: 'The doors are open. The bag is there. And the guard — a man built like a filing cabinet with a mustache — looks up from his hot dog with the speed of a man who was never eating a hot dog at all. You walk away whistling. You have never whistled before. It shows.' },
+          { speaker: 'narrator', text: 'The mustache follows you for three blocks. The heat is very much on.' }
+        ]);
+      }
+    } },
+    { x: 680, y: 150, w: 44, h: 30, radius: 42, label: 'AJ’s lemonade stand', action: () => {
+      if (state.money < 4) { toast('AJ’s lemonade is $4. Yes, really. No, he will not negotiate.'); return; }
+      state.money -= 4;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George pays $4 for a Dixie cup of lemon-adjacent water, served by a fifteen-year-old with the dead eyes of a man who has never once been asked to work.' },
+        { speaker: 'george', text: 'Four dollars! It’s WATER with a lemon ACCENT! …I’ll take two.' },
+        { speaker: 'aj', text: 'Supply and demand, dude. Dad says I have an entrepreneurial spirit. Dad also bought most of the inventory.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony pays $4 for lemonade without blinking, tips another four, and tells the kid to keep the lemonade.' },
+        { speaker: 'tony', text: 'It’s not about the lemonade, AJ. It’s never about the lemonade. You’re learning. That’s good. That’s the whole thing right there.' },
+        { speaker: 'aj', text: '…This is the best day of my life and I don’t know why.' }
+      ]);
     } },
     { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
       if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
@@ -5622,6 +5733,12 @@ function shoreInteractions() {
       audio.sfx('door');
       spawnEffect(state.player.x + 8, state.player.y - 8, 'CART ACQUIRED', '#ffe78a');
       startDialog([{ speaker: 'narrator', text: 'A golf cart. Off-season, off-leash, barely off-road. It tops out at “brisk walk” but it is technically a vehicle, and technically is the best kind.' }]);
+    } },
+    { x: 380, y: 140, w: 44, h: 34, radius: 42, label: 'Fish off the pier', action: () => {
+      if (state.mode === 'fishing') return;
+      state.mode = 'fishing';
+      state.fishing = { phase: 'cast', t: 1.5 + Math.random() * 3, window: 0 };
+      audio.sfx('pickup');
     } },
     { x: 560, y: 160, w: 44, h: 40, radius: 42, label: 'Claw machine', action: () => {
       if (state.mode === 'claw') return;
@@ -7498,6 +7615,7 @@ function drawWorld() {
   drawFireworks();
   drawKite();
   drawLawnmower();
+  drawUmbrellaGuy();
   drawIceCream();
   drawWildTurkey();
   drawHubEventProps();
@@ -8164,6 +8282,7 @@ function render() {
   else if (state.mode === 'fasttravel') drawFastTravel();
   else if (state.mode === 'trivia') drawTrivia();
   else if (state.mode === 'claw') drawClaw();
+  else if (state.mode === 'fishing') drawFishing();
   else if (state.mode === 'strength') drawStrength();
   else if (state.mode === 'goosechase') drawGooseChase();
   else if (state.mode === 'bonus') drawBonus();
@@ -8359,6 +8478,39 @@ function update(dt) {
         };
         startDialog([{ speaker: 'narrator', text: lines[st.result] }]);
         state.strength = null;
+      }
+    }
+  } else if (state.mode === 'fishing') {
+    const f = state.fishing;
+    if (!f) { state.mode = 'explore'; return; }
+    if (f.phase === 'cast') {
+      f.t -= dt;
+      if (f.t <= 0) { f.phase = 'bite'; f.window = .7; audio.sfx('splash'); spawnEffect(170, 200, '!', '#8fd8ff'); }
+    } else if (f.phase === 'bite') {
+      f.window -= dt;
+      if (consume(['KeyE', 'Space'])) {
+        state.mode = 'explore';
+        state.fishing = null;
+        const roll = Math.random();
+        audio.sfx('cash');
+        if (roll < .12) {
+          state.money += 85;
+          startDialog([{ speaker: 'narrator', text: 'You yank at exactly the right moment — a striped bass, a beauty, thirty inches of pure fight. The pier applauds. A man in a bucket hat pays you $85 for it on the spot because this is the Jersey Shore and everything is for sale.' }]);
+        } else if (roll < .45) {
+          state.money += 18;
+          startDialog([{ speaker: 'narrator', text: 'A sea robin — ugly, edible, technically a fish. The bait shop gives you $18 for it without making eye contact.' }]);
+        } else if (roll < .6) {
+          startDialog(state.player.kind === 'george' ? [
+            { speaker: 'narrator', text: 'You reel in a boot. Inside the boot: a smaller boot. George stares at the nested boots with the hollow eyes of a man confronting a metaphor.' },
+            { speaker: 'george', text: 'A boot. In a boot. That’s my life. That’s literally — I’m the small boot, Jerry! THE SMALL BOOT!' }
+          ] : [{ speaker: 'narrator', text: 'Tony reels in a boot containing a smaller boot. He nods slowly. He has questions for the ocean. He decides, wisely, not to ask them.' }]);
+        } else {
+          startDialog([{ speaker: 'narrator', text: 'Seaweed. A tremendous, triumphant mound of seaweed. The gulls are impressed. Nobody else is.' }]);
+        }
+      } else if (f.window <= 0) {
+        state.mode = 'explore';
+        state.fishing = null;
+        startDialog([{ speaker: 'narrator', text: 'The bite comes and goes — you feel the line go slack with the particular emptiness of a missed fish. Somewhere below, a fish tells the story differently.' }]);
       }
     }
   } else if (state.mode === 'claw') {
