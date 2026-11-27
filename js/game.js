@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2567,6 +2567,15 @@ const MISSION_DEFS = {
       { scene: 'melfi', x: 170, y: 200, radius: 60, objective: 'Report back to Dr. Melfi — heat under 3 the whole way', label: 'Dr. Melfi' }
     ]
   },
+  paulieShoe: {
+    title: 'THE MISSING SHOE',
+    payout: 190, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'pines', x: 260, y: 260, radius: 60, objective: 'Search the deep treeline in the Pine Barrens for Paulie’s shoe', label: 'the treeline' },
+      { scene: 'pines', x: 500, y: 180, radius: 60, objective: 'Check the frozen pond — maybe it flew far', label: 'the frozen pond' },
+      { scene: 'club', x: 396, y: 182, radius: 46, objective: 'Bring whatever you found back to Paulie at the Bing', label: 'Paulie' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2698,6 +2707,11 @@ function advanceMission() {
         { speaker: 'melfi', text: 'You returned it. Without violence, without threats, without — and I want you to hear the significance of this — a SINGLE police interaction. Tony, this is what progress looks like. It’s boring and it’s progress.' },
         { speaker: 'tony', text: 'Two hundred and twenty bucks to walk a watch across the river like a civilian. You know what the worst part is? …I feel GOOD about it. What’re you doing to me?' },
         { speaker: 'system', text: 'MISSION PASSED — THE SHRINK RAP. Impulse control: one (1) time.' }
+      ],
+      paulieShoe: [
+        { speaker: 'narrator', text: 'The shoe is not in the treeline. The shoe is not at the pond. What IS at the pond: one (1) frozen footprint, size extra-wide, leading in a circle. You bring Paulie a pinecone, a frozen sock of indeterminate ownership, and the truth.' },
+        { speaker: 'paulie', text: 'A SOCK?! I don’t wanna hear about no sock! That shoe was ITALIAN! …The Russian’s still out there, you know. Guy took my shoe AND my dignity. Here — hundred ninety. For the search. And hey — you see a guy out there with an interior decorator’s eye, you know what to do.' },
+        { speaker: 'system', text: 'MISSION PASSED — THE MISSING SHOE. Some pines are just barren.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2867,6 +2881,10 @@ function updateMission(dt) {
         artiesMenu: [
           { speaker: 'narrator', text: 'Behind the counter, under the scale, behind the good prosciutto: the reserve gabagool. Wrapped in butcher paper, then in a second layer of butcher paper, then in silence. The kid at the counter hands it over like it weighs exactly what it weighs.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is meat heavier when it’s a favor?! There should be a study!' : 'The reserve. Means Artie’s desperate. Means he pays happy. Everybody wins — especially the veal.' }
+        ],
+        paulieShoe: [
+          { speaker: 'narrator', text: 'You part the frozen brush where Paulie swears — SWEARS — he was only slightly disoriented. Nothing but frost, a rusted can of something unlabeled, and the deep suspicion that the trees are laughing.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m shoe-hunting in a haunted forest! For PAULIE! He doesn’t even tip!' : 'The shoe’s a size extra-wide. The forest is four hundred acres. This is what we in the business call a long shot.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -4438,7 +4456,20 @@ function clubInteractions() {
     audio.sfx('pickup');
   } });
   if (!talked.christopher) list.push({ x: 202, y: 182, w: 40, h: 42, label: 'Christopher', action: () => clubTalk('christopher') });
-  if (!talked.paulie) list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => clubTalk('paulie') });
+  list.push({ x: 396, y: 182, w: 40, h: 42, label: 'Paulie', action: () => {
+    if (!state.mission && state.flags.freeRoam && state.flags.fixedRaceDone && !state.flags.paulieShoeDone) {
+      startMission('paulieShoe');
+      startDialog([
+        { speaker: 'paulie', text: 'I been waitin’ for somebody I can trust. Couple months back — hypothetical — a guy loses a shoe in the Pine Barrens. ITALIAN shoe. Hand-stitched. The circumstances are nobody’s business but they involve a Russian and a severe underestimation of a civilian. Go find it. $190. And if anybody asks — it’s YOUR shoe.' },
+        { speaker: 'system', text: 'Mission accepted: THE MISSING SHOE. The Pine Barrens keep what they keep.' }
+      ]);
+      return;
+    }
+    if (!talked.paulie) { clubTalk('paulie'); return; }
+    startDialog([
+      { speaker: 'paulie', text: state.flags.paulieShoeDone ? 'Still no shoe. I wear the galoshes now. My mother says they’re “sensible.” It’s the worst thing she’s ever said to me.' : ['Heh? Oh. Don’t sneak up like that.', 'Wings are growin’ in nice. Very regal.', 'You hear that? Sounds like pine trees. Laughing.'][Math.floor((state.time / 30) % 3)] }
+    ]);
+  } });
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
     if (!state.mission && state.flags.bigMouthDone && !state.flags.pineRunnerDone && state.flags.freeRoam) {
       startMission('pineRunner');
