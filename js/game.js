@@ -2105,7 +2105,7 @@ function updateKramerCycle(dt) {
 }
 
 function updateBrawler(dt) {
-  if ((state.scene !== 'hub' && state.scene !== 'nyc') || !state.flags.freeRoam) { state.brawler = null; return; }
+  if (!['hub', 'nyc', 'meadow', 'queens'].includes(state.scene) || !state.flags.freeRoam) { state.brawler = null; return; }
   const p = state.player;
   if (!state.brawler && Math.random() < dt * .02) {
     const inNyc = state.scene === 'nyc';
@@ -3468,12 +3468,31 @@ function updateExplore(dt) {
     state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
     audio.sfx('door'); audio.sfx('crash');
     spawnEffect(p.x + 8, p.y - 10, 'OUT OF THE CAR!', '#ff9a7a');
-    const victim = { kind: ['womanC', 'womanD', 'womanB'][Math.floor(Math.random() * 3)], x: jack.x + 4, y: jack.y - 18, region: { x: 40, y: 40, w: 600, h: 300 }, speed: 46, tx: jack.x - 120, ty: jack.y - 60, pause: 0, dir: 'down', barkT: 2.4, diveT: 0, fleeing: true, bark: state.player.kind === 'george' ? 'MY CAR! That’s a lease!' : 'please — I have a family — take the car!' };
-    ambientFor(state.scene).push(victim);
-    startDialog([
-      { speaker: 'narrator', text: 'You open the door. The driver opens his mouth, thinks better of it, and exits through it.' },
-      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m not stealing — I’m relocating! That’s a thing! People relocate cars!' : 'You shoulda locked the door, pal. First rule of Jersey.' }
-    ]);
+    const roll = Math.random();
+    if (roll < .12) {
+      // unmarked cop car. bad choice.
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1.4);
+      audio.sfx('honk');
+      startDialog([
+        { speaker: 'narrator', text: 'The driver flashes a badge, sighs the sigh of a man whose paperwork just doubled, and radios it in. Unmarked unit. Of course.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A COP?! I thought the mustache was a fashion choice! I want it on the record that I was BORROWING!' : 'Maronn’ — a cop. Nothing personal, officer. It’s a Jersey thing.' }
+      ]);
+    } else if (roll < .27) {
+      // wrong guy to jack: he squares up
+      spawnEffect(jack.x + 8, jack.y - 24, 'BAD PICK!', '#ff6a6a');
+      state.brawler = { x: jack.x + 4, y: jack.y - 18, hp: 3, state: 'prowl', t: 0, tx: jack.x, ty: jack.y, barkT: 2.4, bark: 'You picked the WRONG car, pal!', swingT: 0, hitT: 0 };
+      startDialog([
+        { speaker: 'narrator', text: 'The driver does NOT exit through the door. He exits through his OPTIONS — and he’s all out. He squares up.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is everyone in this state so angry?! It’s a lease — I checked the registration!' : 'Oh, you wanna go? Over a four-cylinder? Fine. FINE.' }
+      ]);
+    } else {
+      const victim = { kind: ['womanC', 'womanD', 'womanB'][Math.floor(Math.random() * 3)], x: jack.x + 4, y: jack.y - 18, region: { x: 40, y: 40, w: 600, h: 300 }, speed: 46, tx: jack.x - 120, ty: jack.y - 60, pause: 0, dir: 'down', barkT: 2.4, diveT: 0, fleeing: true, bark: state.player.kind === 'george' ? 'MY CAR! That’s a lease!' : 'please — I have a family — take the car!' };
+      ambientFor(state.scene).push(victim);
+      startDialog([
+        { speaker: 'narrator', text: 'You open the door. The driver opens his mouth, thinks better of it, and exits through it.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m not stealing — I’m relocating! That’s a thing! People relocate cars!' : 'You shoulda locked the door, pal. First rule of Jersey.' }
+      ]);
+    }
   } else if (!inter && interactPressed() && (state.interactCooldown || 0) <= 0 && state.flags.freeRoam) {
     // small talk: pedestrians answer when you walk up and engage them
     let talker = null; let td = 34;
