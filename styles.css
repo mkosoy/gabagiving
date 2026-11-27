@@ -142,3 +142,24 @@ html, body {
   #stickZone { transform: scale(.78); transform-origin: bottom left; }
   #touchButtons { transform: scale(.82); transform-origin: bottom right; }
 }
+
+#rotateHint {
+  display: none;
+  position: fixed;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  background: rgba(14,18,38,.88);
+  border: 2px solid #ffe78a;
+  color: #ffe78a;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font: 700 12px/1.3 ui-monospace, monospace;
+  text-align: center;
+  max-width: 82vw;
+  backdrop-filter: blur(6px);
+}
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotateHint:not(.dismissed) { display: block; }
+}

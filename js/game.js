@@ -219,6 +219,8 @@ document.getElementById('muteBtn').addEventListener('click', (e) => {
   document.getElementById('muteBtn').textContent = on ? 'Sound' : 'Muted';
   e.currentTarget.blur();
 });
+const rotateHintEl = document.getElementById('rotateHint');
+if (rotateHintEl) rotateHintEl.addEventListener('click', () => rotateHintEl.classList.add('dismissed'));
 document.getElementById('helpBtn').addEventListener('click', (e) => {
   state.help = !state.help;
   e.currentTarget.blur();
