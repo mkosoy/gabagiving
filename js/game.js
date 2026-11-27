@@ -3221,6 +3221,37 @@ function drawMissionHud() {
 }
 
 function updateExplore(dt) {
+  // ambient street events — the world bumps into you once in a while
+  if (!state.dialog && !state.mission && OUTDOOR_SCENES.includes(state.scene) && !state.player.inCar) {
+    state.streetEventT = (state.streetEventT || 20 + Math.random() * 30) - dt;
+    if (state.streetEventT <= 0) {
+      state.streetEventT = 45 + Math.random() * 45;
+      const p = state.player;
+      const geo = p.kind === 'george';
+      const roll = Math.random();
+      if (roll < .3) {
+        const find = 3 + Math.floor(Math.random() * 12);
+        state.money += find;
+        audio.sfx('cash');
+        spawnEffect(p.x + 8, p.y - 12, `+$${find}`, '#9fe89a');
+        toast(geo ? `A crumpled $${find} on the sidewalk! You check both ways. Nobody saw. It's yours now. YOURS.` : `You spot a crumpled $${find} on the pavement. You pick it up smooth, like it was always yours. Because now it is.`);
+      } else if (roll < .55) {
+        spawnEffect(p.x + 8, p.y - 12, 'SPLAT', '#e8e4da');
+        toast(geo ? 'A pigeon. Direct hit. On the JACKET. This is why you can’t have nice things. This is EXACTLY why.' : 'A pigeon gets you right on the shoulder. You look up. The pigeon is already gone. Somehow that’s the disrespectful part.');
+      } else if (roll < .75) {
+        toast(geo ? 'A guy brushes past you — “watch it, huh?” — and is gone before you can think of a comeback. You think of one eleven seconds later. It was PERFECT.' : 'Some guy shoulder-checks you and keeps walking. You memorize the back of his head. It’s a long list. He’s on it now.');
+      } else if (roll < .9) {
+        toast('Somewhere nearby a car alarm starts up, wails for exactly long enough to become part of you, then stops.');
+      } else {
+        const skid = 1 + Math.floor(Math.random() * 4);
+        state.money += skid;
+        audio.sfx('cash');
+        spawnEffect(p.x + 8, p.y - 12, `+$${skid}`, '#9fe89a');
+        toast(`You fish $${skid} in change out of a storm drain grate with a bit of chewing gum on a stick. Worth it.`);
+      }
+    }
+  }
+
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
   state.idleT = moving || state.dialog ? 0 : (state.idleT || 0) + dt;
