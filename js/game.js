@@ -2380,6 +2380,92 @@ function drawWasted() {
   }
 }
 
+
+// ——— taxi fares: anybody with a car is a cab in this economy ———
+function updateFares(dt) {
+  if (!state.flags.freeRoam || !OUTDOOR_SCENES.includes(state.scene)) { state.fare = null; return; }
+  const p = state.player;
+  // the yellow cab in Manhattan has its own deeper gypsy-cab mode — don't compete with it
+  if (state.scene === 'nyc' && p.carColor === '#e8b822') return;
+  if (!p.inCar) { if (state.fare && state.fare.stage === 'aboard') { /* they bail */ state.fare = null; toast('Your fare bails. People talk. This is why nobody stops.'); } return; }
+  if (!state.fare) {
+    state.fareT = (state.fareT || 8) - dt;
+    if (state.fareT <= 0) {
+      state.fareT = 25 + Math.random() * 25;
+      // spawn a fare at the road edge ahead of the player
+      const fx = Math.max(120, Math.min(1160, p.x + (Math.random() < .5 ? -1 : 1) * (140 + Math.random() * 160)));
+      const spots = { hub: [330, 700, 1100], nyc: [330, 550, 900], queens: [330, 500, 800] };
+      const dests = { hub: [[1200, 238, 'the tunnel'], [150, 238, 'the west side'], [885, 160, 'the diner']], nyc: [[620, 236, 'Jerry’s'], [150, 240, 'the park'], [1100, 240, 'the bridge and tunnel crowd']], queens: [[500, 240, 'the sauna'], [200, 240, 'the boulevard'], [700, 240, 'the Costanza place — no wait, anywhere BUT']] };
+      const dl = dests[state.scene];
+      if (!dl) return;
+      const d = dl[Math.floor(Math.random() * dl.length)];
+      state.fare = { x: fx, y: 236, stage: 'hail', dx: d[0], dy: d[1], dname: d[2], t: 0, pay: 30 + Math.floor(Math.random() * 40) };
+    }
+    return;
+  }
+  const f = state.fare;
+  f.t += dt;
+  if (f.stage === 'hail') {
+    if (f.t > 30) { state.fare = null; return; } // gives up
+    const d = Math.hypot(p.x - f.x, p.y - f.y);
+    if (d < 42 && Math.abs(p.carV || 0) < .35) {
+      f.stage = 'aboard';
+      f.t = 0;
+      f.limit = 45;
+      audio.sfx('door');
+      spawnEffect(f.x, f.y - 14, 'WHERE TO?', '#ffe78a');
+      startDialog([{ speaker: 'narrator', text: 'A passenger slides in. "' + f.dname + ', and step on it." No hello. This is the tri-state area; hello is implied by the absence of hostility. The meter — your meter — is running. ish.' }]);
+    }
+    return;
+  }
+  if (f.stage === 'aboard') {
+    if (f.t > f.limit) {
+      state.fare = null;
+      audio.sfx('denied');
+      startDialog([{ speaker: 'narrator', text: 'Too slow. The passenger mutters something anatomical, pays nothing, and is gone at the next light. In this economy, punctuality is the whole product.' }]);
+      return;
+    }
+    const d = Math.hypot(p.x - f.dx, p.y - f.dy);
+    if (d < 46 && Math.abs(p.carV || 0) < .4) {
+      const quick = f.t < f.limit * .55;
+      const tip = quick ? Math.floor(f.pay * .5) : 0;
+      state.money += f.pay + tip;
+      audio.sfx('cash');
+      spawnEffect(p.x + 8, p.y - 18, 'FARE +$' + (f.pay + tip), '#9be59b');
+      state.stats.fares = (state.stats.fares || 0) + 1;
+      startDialog([{ speaker: 'narrator', text: 'The passenger peels off bills without looking at you — the highest form of respect available — and is gone. ' + (quick ? 'A tip, even. You drove like you meant it.' : 'No tip. You drove like a person with nowhere to be.') }]);
+      state.fare = null;
+    }
+  }
+}
+
+function drawFares() {
+  const f = state.fare;
+  if (!f || state.scene !== undefined && !OUTDOOR_SCENES.includes(state.scene)) return;
+  if (f.stage === 'hail') {
+    // waving figure at the curb
+    const wave = Math.sin(state.time * 8) * 4;
+    px(ctx, f.x - 4, f.y - 14, 8, 12, '#d0a060');
+    px(ctx, f.x - 3, f.y - 20, 6, 6, '#e8c8a0');
+    px(ctx, f.x + 4, f.y - 18 - wave, 2, 8, '#d0a060');
+    outlineText(ctx, 'TAXI!', f.x, f.y - 26, '#ffd23e', 7, 'center');
+  } else if (f.stage === 'aboard') {
+    // destination marker — pulsing chevron + distance ticker
+    const pulse = 1 + Math.sin(state.time * 5) * .2;
+    ctx.save();
+    ctx.fillStyle = '#ffd23e';
+    ctx.globalAlpha = .85;
+    ctx.beginPath();
+    ctx.moveTo(f.dx, f.dy - 26 * pulse);
+    ctx.lineTo(f.dx - 7, f.dy - 38 * pulse);
+    ctx.lineTo(f.dx + 7, f.dy - 38 * pulse);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    outlineText(ctx, 'fare: ' + Math.max(0, Math.ceil(f.limit - f.t)) + 's', f.dx, f.dy - 44 * pulse, '#ffd23e', 7, 'center');
+  }
+}
+
 function drawBrawler() {
   const b = state.brawler;
   if (!b) return;
@@ -3658,7 +3744,7 @@ function updateExplore(dt) {
         audio.sfx('door');
       }
     }
-  } else if (state.fare) {
+  } else if (state.fare && (state.fare.stage === 'pickup' || state.fare.stage === 'dropoff')) {
     state.fare = null;
     state.fareCd = 8;
   }
@@ -6148,6 +6234,7 @@ function stealRandomCar() {
     { speed: 230, color: '#a02828', name: 'a CORVETTE', line: state.player.kind === 'george' ? 'A CORVETTE! Midlife crisis complete! I’ve never felt so alive and so doomed!' : 'Red Corvette. Subtle as a heart attack. Perfect.' },
     { speed: 190, color: '#3d6b35', name: 'a sensible sedan', line: state.player.kind === 'george' ? 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' : 'Nice car. Means it’s my car now. That’s how that works.' },
     { speed: 160, color: '#b8a888', name: 'a wood-paneled station wagon', line: state.player.kind === 'george' ? 'A station wagon. Wood paneling. This is exactly the car I deserve and I hate it!' : 'A wagon. Slow. But nobody — NOBODY — suspects the wagon.' },
+    { speed: 200, color: '#e8b822', name: 'a yellow cab', line: state.player.kind === 'george' ? 'A CAB! I’m a cab driver now! Do I need a license? I don’t have a regular license!' : 'Yellow cab. In Manhattan this thing is invisible — and the back seat pays cash.' },
     { speed: 205, color: '#2848a0', name: 'an unmarked-looking cruiser', line: state.player.kind === 'george' ? 'Is this a cop car? It LOOKS like a cop car. If it’s a cop car I’m just — test driving it! For the city!' : 'Ex-cop car. Still got the spotlight. Heh.' }
   ];
   const car = fleet[Math.floor(Math.random() * fleet.length)];
@@ -11488,6 +11575,7 @@ function drawWorld() {
   drawRussian();
   drawTailCourier();
   drawBrawler();
+  drawFares();
   drawCash();
   drawInteractionMarkers();
   drawPlayer();
@@ -12291,6 +12379,7 @@ function checkMissionHeatBreach() {
 
 function update(dt) {
   if (state.wasted) { updateWasted(dt); return; }
+  updateFares(dt);
   state.frameCount = (state.frameCount || 0) + 1;
   const overlayMode = ['menu', 'fasttravel', 'dialogue'].includes(state.mode);
   if (state._overlayMode !== overlayMode) {
