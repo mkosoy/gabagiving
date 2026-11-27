@@ -4503,6 +4503,20 @@ function hubInteractions() {
         ]);
       }
     } },
+    { x: 500, y: 130, w: 44, h: 30, radius: 40, label: 'AJ’s lemonade stand', action: () => {
+      if (state.money < 4) { toast('AJ’s lemonade is $4. Yes, really. No, he will not negotiate.'); return; }
+      state.money -= 4;
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George pays $4 for a Dixie cup of lemon-adjacent water, served by a fifteen-year-old with the dead eyes of a man who has never once been asked to work.' },
+        { speaker: 'george', text: 'Four dollars! It’s WATER with a lemon ACCENT! …I’ll take two.' },
+        { speaker: 'aj', text: 'Supply and demand, dude. Dad says I have an entrepreneurial spirit. Dad also bought most of the inventory.' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony pays $4 for lemonade without blinking, tips another four, and tells the kid to keep the lemonade.' },
+        { speaker: 'tony', text: 'It’s not about the lemonade, AJ. It’s never about the lemonade. You’re learning. That’s good. That’s the whole thing right there.' },
+        { speaker: 'aj', text: '…This is the best day of my life and I don’t know why.' }
+      ]);
+    } },
     { x: 100, y: 120, w: 50, h: 34, radius: 42, label: 'Yard sale', action: () => {
       if (state.money < 8) { toast('Everything at the yard sale costs $8. Everything.'); return; }
       state.money -= 8;
