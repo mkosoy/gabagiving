@@ -1432,6 +1432,12 @@ function drawCash() {
 
 function drawAmbient() {
   const list = ambientFor(state.scene);
+  if (state.mugger) {
+    const mg = state.mugger;
+    drawPerson(ctx, mg.x, mg.y, 'manB', 'down', state.frame * 1.2, {});
+    px(ctx, mg.x + 3, mg.y + 2, 11, 4, '#2a2a30');
+    outlineText(ctx, mg.phase === 'demand' ? 'MONEY. NOW.' : '…', mg.x + 8, mg.y - 10, '#ff8e8e', 6, 'center');
+  }
   for (const n of list) {
     const frame = n.moving ? state.frame * 1.6 : state.frame * .5;
     drawPerson(ctx, n.x, n.y, n.kind, n.dir, frame, n.diveT > 0 ? { pose: 'lean' } : {});
@@ -2835,6 +2841,52 @@ function updateExplore(dt) {
     state.fare = null;
     state.fareCd = 8;
   }
+  // the occasional Manhattan mugger — this is canon, not commentary
+  if (state.scene === 'nyc' && !state.player.inCar) {
+    state.muggerT = (state.muggerT || 40) - dt;
+    if (!state.mugger && state.muggerT <= 0) {
+      const ang = Math.random() * Math.PI * 2;
+      state.mugger = { x: state.player.x + Math.cos(ang) * 220, y: state.player.y + Math.sin(ang) * 160, phase: 'approach', t: 0 };
+    }
+    const mg = state.mugger;
+    if (mg) {
+      const md = Math.hypot(mg.x - state.player.x, mg.y - state.player.y);
+      if (consume(['KeyF']) && md < 40) {
+        // you do not mug a man from North Caldwell
+        state.mugger = null; state.muggerT = 90 + Math.random() * 60;
+        const grab = 8 + Math.floor(Math.random() * 15);
+        state.money += grab;
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+        audio.sfx('punch');
+        spawnEffect(state.player.x, state.player.y - 20, `HE DROPPED $${grab}!`, '#ffe78a');
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George swings with the desperate accuracy of a man defending his exact-change. The mugger, unprepared for resistance of any kind, drops loose cash and flees.' },
+          { speaker: 'george', text: 'THAT’S RIGHT! I’m a NEW YORKER! I’ve been bumped into by THOUSANDS! I know violence!' }
+        ] : [
+          { speaker: 'narrator', text: 'The mugger picks the one guy in Manhattan who does this professionally. Bad luck follows some people like a tail. He drops cash running.' },
+          { speaker: 'tony', text: 'You believe this guy? In MY city? …Alright, it’s not my city. It’s nobody’s city. That’s the whole point of the city.' }
+        ]);
+      }
+      if (mg.phase === 'approach') {
+        if (md > 26) { mg.x += ((state.player.x - mg.x) / md) * 66 * dt; mg.y += ((state.player.y - mg.y) / md) * 66 * dt; }
+        else {
+          mg.phase = 'demand'; mg.t = 3.2;
+          audio.sfx('denied');
+          spawnEffect(state.player.x, state.player.y - 20, '“YOUR MONEY. NOW.”', '#ff8e8e');
+        }
+      } else if (mg.phase === 'demand') {
+        mg.t -= dt;
+        if (mg.t <= 0) {
+          const loss = Math.min(state.money, 25);
+          state.money -= loss;
+          spawnEffect(state.player.x, state.player.y - 20, loss > 0 ? `MUGGED! -$${loss}` : 'MUGGED! — you were broke, awkward for everyone', '#ff8e8e');
+          if (loss > 0) startDialog([{ speaker: 'narrator', text: 'A man with a scarf over his face takes twenty-five dollars and vanishes into a crowd of witnesses who are suddenly all very interested in a pretzel cart. Welcome to Manhattan.' }]);
+          else startDialog([{ speaker: 'narrator', text: 'The mugger finds nothing. You both stand there in the failure of it. He leaves first, which somehow makes it worse.' }]);
+          state.mugger = null; state.muggerT = 75 + Math.random() * 60;
+        }
+      }
+    }
+  } else if (state.mugger) { state.mugger = null; state.muggerT = 40; }
   state.worldSaveT = (state.worldSaveT || 0) + dt;
   if (state.worldSaveT > 8) { state.worldSaveT = 0; saveWorld(); }
   if (state.flags.heat > 0 && state.mode === 'explore') state.flags.heat = Math.max(0, state.flags.heat - dt * (state.player.kind === 'george' ? .022 : .03));
