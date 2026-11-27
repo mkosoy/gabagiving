@@ -2346,6 +2346,7 @@ function updateWasted(dt) {
     state.player.x = spot[0]; state.player.y = spot[1];
     state.player.inCar = null;
     state.player.carColor = null;
+    state.player.carName = null;
     state.player.speed = state.player.kind === 'george' ? 96 : 88;
     state.flags.hp = 2;
     const fine = Math.floor(state.money * .1);
@@ -3933,6 +3934,7 @@ function updateExplore(dt) {
   if (p.inCar && !(nearestInteraction() && nearestInteraction().inCarOk) && interactPressed()) {
     p.inCar = false;
     p.carColor = null;
+    p.carName = null;
     p.speed = p.kind === 'george' ? 96 : 88;
     state.carRadio = undefined;
     const sc = scenes[state.scene];
@@ -4044,6 +4046,7 @@ function updateExplore(dt) {
           p.inCar = true;
           p.speed = Math.round(s.speed * (state.flags.engineTune ? 1.15 : 1));
           p.carColor = s.color;
+          p.carName = s.name;
           p.carDamage = 0; p.carV = 0;
           if (!blockedAt(s.x + 9, s.y - 2)) { p.x = s.x + 9; p.y = s.y - 2; }
           state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
@@ -6151,6 +6154,7 @@ function stealRandomCar() {
   state.player.inCar = true;
   state.player.speed = Math.round(car.speed * (state.flags.engineTune ? 1.15 : 1));
   state.player.carColor = car.color;
+  state.player.carName = car.name;
   state.player.carDamage = 0;
   state.player.carV = 0;
   audio.sfx('door');
@@ -6190,6 +6194,44 @@ function hubInteractions() {
       if (state.cop2) state.cop2 = null;
       audio.sfx('cash');
       startDialog([{ speaker: 'narrator', text: 'Forty minutes of compressed air and no questions. The car comes out a different color; the heat stays in the paint fumes. The mechanic’s name tag says HESH but it is not Hesh. Do not ask.' }]);
+    } },
+    { x: 490, y: 340, w: 50, h: 30, radius: 42, label: 'The export list', action: () => {
+      const want = state.exportWant;
+      if (!want || want.until < state.time) {
+        const kinds = [
+          ['corvette', 'a red Corvette', 250],
+          ['mail', 'a mail truck — don’t ask. a guy in Ohio collects them', 200],
+          ['cruiser', 'an ex-cop cruiser', 180],
+          ['wagon', 'a wood-paneled wagon — the overseas market is strange and wealthy', 150],
+          ['sedan', 'a sensible sedan', 130]
+        ];
+        const k = kinds[Math.floor(Math.random() * kinds.length)];
+        state.exportWant = { key: k[0], label: k[1], pay: k[2], until: state.time + 600 };
+        startDialog([
+          { speaker: 'narrator', text: 'The mechanic slides a greasy index card across the counter. The EXPORT LIST. This week’s market: ' + k[1] + '. Pays $' + k[2] + ', no questions, no paperwork, no returns. The card smells like transmission fluid and opportunity.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A car-finding LIST! Like a scavenger hunt, but grand theft! Finally — a crime with STRUCTURE!' : 'Yeah, yeah. I know the drill. Don’t scratch it on the way in — I don’t pay extra for detail work.' }
+        ]);
+        return;
+      }
+      if (!state.player.inCar) { toast('The list wants ' + want.label + ' — drive it in. $' + want.pay + '.'); return; }
+      const cn = (state.player.carName || '') + ' ' + (state.player.carColor || '');
+      const keys = { corvette: /corvette/i, mail: /mail/i, cruiser: /cruiser/i, wagon: /wagon/i, sedan: /sedan/i };
+      if (!keys[want.key] || !keys[want.key].test(state.player.carName || '')) {
+        toast('The mechanic shakes his head — not the car on the list. He wants ' + want.label + '.');
+        return;
+      }
+      state.money += want.pay;
+      state.exportWant = null;
+      state.player.inCar = false;
+      state.player.carColor = null;
+      state.player.carName = null;
+      state.player.speed = state.player.kind === 'george' ? 96 : 88;
+      audio.sfx('cash');
+      spawnEffect(state.player.x + 8, state.player.y - 16, 'EXPORTED +$' + want.pay, '#ffd23e');
+      startDialog([
+        { speaker: 'narrator', text: 'The mechanic circles the car once, nods twice, and it vanishes into the shop before the door finishes rolling. Somewhere — a port, a container ship, a market you will never see — it becomes someone else’s problem. $' + want.pay + ', cash, in an envelope that is somehow already greasy.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m an EXPORTER now! Vandelay Industries — import AND export! The circle is complete!' : 'Easy money. The car never existed. I never existed. Nobody exists. Get me another list.' }
+      ]);
     } },
     { x: 420, y: 300, w: 60, h: 30, radius: 40, label: 'Engine tune', action: () => {
       if (state.flags.engineTune) { toast('Already tuned. She purrs. Don’t push your luck.'); return; }
