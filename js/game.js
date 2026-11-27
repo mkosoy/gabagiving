@@ -2574,7 +2574,7 @@ const MISSION_DEFS = {
     payout: 190, heat: 0, timeLimit: 0,
     steps: [
       { scene: 'pines', x: 260, y: 260, radius: 60, objective: 'Search the deep treeline in the Pine Barrens for Paulie’s shoe', label: 'the treeline' },
-      { scene: 'pines', x: 500, y: 180, radius: 60, objective: 'Check the frozen pond — maybe it flew far', label: 'the frozen pond' },
+      { scene: 'pines', x: 240, y: 385, radius: 64, objective: 'Check the frozen pond — maybe it flew far', label: 'the frozen pond' },
       { scene: 'club', x: 396, y: 182, radius: 46, objective: 'Bring whatever you found back to Paulie at the Bing', label: 'Paulie' }
     ]
   },
@@ -10689,6 +10689,7 @@ function startGame() {
 function checkMissionHeatBreach() {
   const m = state.mission;
   if (!m || !MISSION_DEFS[m.id] || !MISSION_DEFS[m.id].maxHeat) return;
+  if (state.mode === 'transit') return; // let the trip finish — the failure fires on arrival
   if ((state.flags.heat || 0) >= MISSION_DEFS[m.id].maxHeat) {
     state.mission = null;
     audio.sfx('denied');
