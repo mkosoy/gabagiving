@@ -696,15 +696,26 @@ function drawDialog() {
 function drawToast() {
   const tm = state.toastMsg;
   if (!tm) return;
-  ctx.fillStyle = 'rgba(10,10,16,.88)';
-  const w2 = Math.min(560, tm.text.length * 6 + 30);
-  ctx.fillRect((640 - w2) / 2, 366, w2, 24);
-  ctx.strokeStyle = '#d4a017';
-  ctx.strokeRect((640 - w2) / 2, 366, w2, 24);
-  ctx.fillStyle = '#f5efdc';
   ctx.font = '10px monospace';
+  const maxW = 540;
+  const words = String(tm.text).split(' ');
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test;
+  }
+  if (line) lines.push(line);
+  const h2 = 16 + lines.length * 13;
+  const w2 = Math.min(600, Math.max(...lines.map((l) => ctx.measureText(l).width)) + 30);
+  const y0 = 330 - h2;
+  ctx.fillStyle = 'rgba(10,10,16,.88)';
+  ctx.fillRect((640 - w2) / 2, y0, w2, h2);
+  ctx.strokeStyle = '#d4a017';
+  ctx.strokeRect((640 - w2) / 2, y0, w2, h2);
+  ctx.fillStyle = '#f5efdc';
   ctx.textAlign = 'center';
-  ctx.fillText(tm.text, 320, 382);
+  lines.forEach((l, i) => ctx.fillText(l, 320, y0 + 16 + i * 13));
   ctx.textAlign = 'left';
 }
 
