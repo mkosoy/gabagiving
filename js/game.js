@@ -392,6 +392,20 @@ function menuEntries() {
       }, open: true
     });
   }
+  entries.push({
+    label: 'Criminal record', hint: 'your career in numbers — the feds wish they had this',
+    act: () => {
+      closeMenu();
+      const s = state.stats || {};
+      const lines = [
+        { speaker: 'narrator', text: `CRIMINAL RECORD — ${state.player.kind === 'george' ? 'Costanza, George L.' : 'Soprano, Anthony J.'} — compilation of the season’s activities to date:` },
+        { speaker: 'system', text: `Cars “borrowed”: ${s.carsStolen || 0} · Punches thrown: ${s.punches || 0} · Missions completed: ${s.missions || 0}` },
+        { speaker: 'system', text: `Cash on hand: $${state.money} · Current heat: ${(state.flags.heat || 0).toFixed(1)} stars · Gabagool packages: ${[0,1,2,3,4,5,6,7,8,9,10,11].filter(i => state.flags['pkg' + i]).length}/12` },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'This is a résumé! If you squint, and lie, and notarize it — it’s a RÉSUMÉ!' : 'You know what the feds got? Paperwork. What I got? A legacy. Big difference. Both admissible, unfortunately.' }
+      ];
+      startDialog(lines);
+    }, open: true
+  });
   const chapters = [
     ['house', 'Ch.1 — Tony’s House'],
     ['rome', 'Ch.2 — Rome & Augustus'],
@@ -2588,6 +2602,30 @@ const MISSION_DEFS = {
       { scene: 'club', x: 202, y: 182, radius: 46, objective: 'Report back to Christopher — tell him NOTHING was read', label: 'Christopher' }
     ]
   },
+  oddJob: {
+    title: 'ODD JOB',
+    payout: 80, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 250, radius: 60, objective: 'Deliver the parcel', label: 'the drop' },
+      { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
+    ]
+  },
+  kramerJob: {
+    title: 'KRAMERICA ERRAND',
+    payout: 70, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'monks', x: 320, y: 250, radius: 60, objective: 'Kramerica business — make the pickup', label: 'the pickup' },
+      { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
+    ]
+  },
+  collection: {
+    title: 'THE COLLECTION',
+    payout: 100, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 250, radius: 60, objective: 'Collect the envelope', label: 'the envelope' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2729,6 +2767,18 @@ function advanceMission() {
         { speaker: 'christopher', text: 'You didn’t read it. Swear. SWEAR. …Okay. Okay. Because the part where the mobster’s mother is ALSO his therapist — that’s fiction. That’s pure fiction, it’s not — people wouldn’t understand the layers. Here. $210. You’re a good friend of mine, you know that?' },
         { speaker: 'narrator', text: 'Three copies of “BARKATHTON” — a revenge epic about a man whose dog is elected senator — are gone forever. Cinema mourns quietly, not knowing why.' },
         { speaker: 'system', text: 'MISSION PASSED — THE SCREENPLAY. Some stories must never be told.' }
+      ],
+      oddJob: [
+        { speaker: 'newman', text: 'Delivered. On time. Undamaged. Unopened — mostly certain. The mail machine grinds on, and you, my friend, are a very small but very reliable cog. Hee hee.' },
+        { speaker: 'system', text: 'ODD JOB COMPLETE. There will always be another parcel. The mail is eternal.' }
+      ],
+      kramerJob: [
+        { speaker: 'kramer', text: 'GIDDY UP! Another successful Kramerica transaction. You know what that makes this quarter? Positive. In SOME columns. The important columns are confidential, buddy.' },
+        { speaker: 'system', text: 'KRAMERICA ERRAND COMPLETE. Kramerica Industries endures.' }
+      ],
+      collection: [
+        { speaker: 'silvio', text: 'Moist envelope, correct amount, no discussion. You know what that is? That’s a dying art, kid. Half the guys today would’ve opened it. You didn’t open it. …You didn’t, right? Don’t answer. That’s the other half of the art.' },
+        { speaker: 'system', text: 'THE COLLECTION COMPLETE. The tribute flows.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2906,6 +2956,18 @@ function updateMission(dt) {
         screenplay: [
           { speaker: 'narrator', text: 'A hundred pages, still warm from the club office printer. The title page reads “BARKATHTON — by C.M.” You burn it without reading a word, which is either loyalty or a crime against comedy. Page forty-three curls away last: “the dog filibusters for nine hours…”' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A dog senator is ridiculous. A dog COMPTROLLER — now that has teeth. I should write my own!' : 'I didn’t read nothin’. I burned it with my eyes closed. …The dog part was almost good, though. I’m not made of stone.' }
+        ],
+        oddJob: [
+          { speaker: 'narrator', text: 'The parcel changes hands. No names. No questions. Somewhere, a sorting machine hums with approval.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Delivered! I’m a machine! A very tired, underpaid machine!' : 'Yeah, yeah. Next one. The mail’s eternal — so’s my cut.' }
+        ],
+        kramerJob: [
+          { speaker: 'narrator', text: 'The Kramerica cargo changes hands. Legally ambiguous, structurally unsound, somehow profitable. The Kramerica way.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a Kramerica VP now! Of logistics! There’s no pay but the TITLE, Jerry, the TITLE!' : 'Guy runs an empire outta his neighbor’s apartment. I seen worse organizational structures. Mine, for instance.' }
+        ],
+        collection: [
+          { speaker: 'narrator', text: 'The envelope is handed over with both hands and zero eye contact. It is damp. It is always damp. Nobody knows why. Nobody asks why. That’s the business.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is it damp?! WHY is it always damp?!' : 'Count it later. You never count in front of them. That’s respect.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -4510,6 +4572,24 @@ function clubInteractions() {
         { speaker: 'silvio', text: 'Last thing. You’re hot right now — I may have made you hot, details. The heat dies in the Pine Barrens. Get there before the clock does. $300, and don’t stop for the geese.' },
         { speaker: 'system', text: 'Mission accepted: PINE RUNNER. The heat is ON — drive south!' }
       ]);
+    } else if (!state.mission && state.flags.fixedRaceDone && state.flags.freeRoam) {
+      const drops = [
+        { scene: 'vesuvio', x: 320, y: 250, radius: 60, name: 'Vesuvio — Artie’s expecting you. He’s always expecting you. That’s the problem with Artie' },
+        { scene: 'satriale', x: 320, y: 200, radius: 60, name: 'the pork store — the back office, not the counter' },
+        { scene: 'slice', x: 320, y: 200, radius: 60, name: 'Ray’s in the city — the ORIGINAL Ray’s. they know which one' },
+        { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop on the boardwalk — even the shore pays tribute in season. it’s ALWAYS season' }
+      ];
+      const drop = drops[Math.floor(Math.random() * drops.length)];
+      MISSION_DEFS.collection.payout = 90 + Math.floor(Math.random() * 50);
+      MISSION_DEFS.collection.steps = [
+        { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Collect the envelope — ${drop.name.split('—')[0].trim()}`, label: 'the envelope' },
+        { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
+      ];
+      startMission('collection');
+      startDialog([
+        { speaker: 'silvio', text: `Collections, kid. ${drop.name}. Don’t count it in front of them — that’s respect. $${MISSION_DEFS.collection.payout} for the walk.` },
+        { speaker: 'system', text: 'Mission accepted: THE COLLECTION. Repeatable — the tribute never sleeps.' }
+      ]);
     } else if (!state.mission && state.flags.gravyChainDone && !state.flags.fixedRaceDone && state.flags.freeRoam) {
       startMission('fixedRace');
       startDialog([
@@ -5761,6 +5841,29 @@ function hubInteractions() {
         startDialog([
           offers[mid],
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      }
+      else if (!state.mission && state.flags.bigOneDone && state.flags.freeRoam) {
+        // repeatable odd jobs — the mail never ends
+        const drops = [
+          { scene: 'vesuvio', x: 320, y: 250, radius: 60, name: 'Vesuvio — “kitchen supplies”, do not shake it' },
+          { scene: 'satriale', x: 320, y: 200, radius: 60, name: 'Satriale’s — it’s cold. why is it cold. don’t ask' },
+          { scene: 'bodega', x: 320, y: 200, radius: 60, name: 'the Manhattan bodega — the usual spot' },
+          { scene: 'cabin', x: 180, y: 300, radius: 60, name: 'the cabin in the Pines — yes, THAT Pines. hee hee' },
+          { scene: 'costanza', x: 320, y: 260, radius: 70, name: 'the Costanza house — ring twice, ignore the shouting' },
+          { scene: 'slice', x: 320, y: 200, radius: 60, name: 'Ray’s — the original. probably. they all say that' },
+          { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop — it smells like sugar and secrets' }
+        ];
+        const drop = drops[Math.floor(Math.random() * drops.length)];
+        MISSION_DEFS.oddJob.payout = 60 + Math.floor(Math.random() * 50);
+        MISSION_DEFS.oddJob.steps = [
+          { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Deliver the parcel — ${drop.name.split('—')[0].trim()}`, label: 'the drop' },
+          { scene: 'hub', x: 552, y: 220, radius: 52, objective: 'Report back to Newman', label: 'Newman' }
+        ];
+        startMission('oddJob');
+        startDialog([
+          { speaker: 'newman', text: `The legend returns! Perfect timing — a parcel needs legs. ${drop.name}. $${MISSION_DEFS.oddJob.payout}. The mail never ends, my friend. It NEVER. ENDS.` },
+          { speaker: 'system', text: 'Mission accepted: ODD JOB. Repeatable work — the mail is eternal.' }
         ]);
       }
       else if (state.flags.bigOneDone) startDialog([
@@ -7553,6 +7656,11 @@ function drawQueens() {
     const qx2 = 600 - Math.sin(state.time * .31) * 120;
     drawPerson(ctx, qx2 - state.camera.x, 270 - state.camera.y, 'manA', Math.sin(state.time * .31) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
     drawHighwaySign(620, 250, ['SUBWAY →', 'MANHATTAN']);
+    // Frank is home. Frank is always home. Frank is always audible.
+    if (Math.sin(state.time * .5) > .92) {
+      const franks = ['SERENITY NOW!', 'MY MOVING TRUCK!', 'THE GARAGE, ESTELLE!', 'INSPECTOR? WHAT INSPECTOR!'];
+      outlineText(ctx, franks[Math.floor(state.time / 9) % franks.length], 120 - state.camera.x, 58 - state.camera.y, '#ffd23e', 6, 'left');
+    }
     // drifting autumn leaves
     for (let lf = 0; lf < 5; lf++) {
       const lx = ((lf * 173 + state.time * 22) % 790) - state.camera.x;
@@ -8562,6 +8670,25 @@ function nycInteractions() {
         startDialog([
           offers[mid],
           { speaker: 'system', text: `Mission accepted: ${MISSION_DEFS[mid].title}. Follow the objective banner.` }
+        ]);
+      } else if (!state.mission && state.flags.kramericaBookDone && state.flags.freeRoam) {
+        const drops = [
+          { scene: 'monks', x: 320, y: 250, radius: 60, name: 'Monk’s — a business lunch. The business is confidential. The lunch is soup' },
+          { scene: 'bodega', x: 320, y: 200, radius: 60, name: 'the bodega — they take anything, buddy. ANYTHING' },
+          { scene: 'yankees', x: 320, y: 300, radius: 62, name: 'the Yankees office — tell them Kramerica sends regards. They don’t know us yet. They will' },
+          { scene: 'soup', x: 320, y: 200, radius: 60, name: 'the Soup Man — follow the rules. Kramerica cannot afford another ban' },
+          { scene: 'queens', x: 390, y: 160, radius: 60, name: 'the sauna in Queens — steam it. don’t ask. it’s a process' }
+        ];
+        const drop = drops[Math.floor(Math.random() * drops.length)];
+        MISSION_DEFS.kramerJob.payout = 60 + Math.floor(Math.random() * 60);
+        MISSION_DEFS.kramerJob.steps = [
+          { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Kramerica errand — ${drop.name.split('—')[0].trim()}`, label: 'the pickup' },
+          { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
+        ];
+        startMission('kramerJob');
+        startDialog([
+          { speaker: 'kramer', text: `Buddy! Kramerica Industries has a situation — a GOOD situation. ${drop.name}. $${MISSION_DEFS.kramerJob.payout}. Giddy up!` },
+          { speaker: 'system', text: 'Mission accepted: KRAMERICA ERRAND. Repeatable — the empire never sleeps.' }
         ]);
       } else startDialog([
         { speaker: 'kramer', text: state.player.kind === 'george' ? 'Georgie! You look tired. Kramerica Industries is hiring, you know. No benefits, no salary, but the adrenaline — top shelf.' : 'You got the look, buddy. Waste management, huh? I can smell opportunity. And other things. It’s the bladder, don’t ask.' }
