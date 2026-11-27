@@ -3775,7 +3775,7 @@ function nearestInteraction() {
     }
   } });
   }
-  if (state.flags.freeRoam && state.scene !== 'hub' && state.scene !== 'nyc') {
+  if (state.flags.freeRoam && !OUTDOOR_SCENES.includes(state.scene)) {
   list.push({ x: 272, y: 378, w: 116, h: 34, label: 'Exit → Neighborhood', action: () => {
       if (state.returnTo && scenes[state.returnTo.scene]) leaveOutside();
       else enterHub(false);
@@ -5484,6 +5484,7 @@ function grabStash(key) {
 
 function leaveOutside() {
   const r = state.returnTo;
+  state.returnTo = null;
   if (r && r.scene !== state.scene && scenes[r.scene]) {
     setScene(r.scene, r.x, r.y);
     state.mode = 'explore';
