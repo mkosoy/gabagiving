@@ -2618,6 +2618,14 @@ const MISSION_DEFS = {
       { scene: 'nyc', x: 300, y: 232, radius: 52, objective: 'Report back to Kramer', label: 'Kramer' }
     ]
   },
+  collection: {
+    title: 'THE COLLECTION',
+    payout: 100, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'vesuvio', x: 320, y: 250, radius: 60, objective: 'Collect the envelope', label: 'the envelope' },
+      { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
+    ]
+  },
   pineRunner: {
     title: 'PINE RUNNER',
     payout: 300, heat: 0, timeLimit: 200,
@@ -2767,6 +2775,10 @@ function advanceMission() {
       kramerJob: [
         { speaker: 'kramer', text: 'GIDDY UP! Another successful Kramerica transaction. You know what that makes this quarter? Positive. In SOME columns. The important columns are confidential, buddy.' },
         { speaker: 'system', text: 'KRAMERICA ERRAND COMPLETE. Kramerica Industries endures.' }
+      ],
+      collection: [
+        { speaker: 'silvio', text: 'Moist envelope, correct amount, no discussion. You know what that is? That’s a dying art, kid. Half the guys today would’ve opened it. You didn’t open it. …You didn’t, right? Don’t answer. That’s the other half of the art.' },
+        { speaker: 'system', text: 'THE COLLECTION COMPLETE. The tribute flows.' }
       ],
       gravyChain: [
         { speaker: 'silvio', text: 'Hot, spiced, unspilled. You know what you are? You’re a gravy professional. There’s maybe six of you in the country. $260, and the first plate’s on the house.' },
@@ -2952,6 +2964,10 @@ function updateMission(dt) {
         kramerJob: [
           { speaker: 'narrator', text: 'The Kramerica cargo changes hands. Legally ambiguous, structurally unsound, somehow profitable. The Kramerica way.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a Kramerica VP now! Of logistics! There’s no pay but the TITLE, Jerry, the TITLE!' : 'Guy runs an empire outta his neighbor’s apartment. I seen worse organizational structures. Mine, for instance.' }
+        ],
+        collection: [
+          { speaker: 'narrator', text: 'The envelope is handed over with both hands and zero eye contact. It is damp. It is always damp. Nobody knows why. Nobody asks why. That’s the business.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Why is it damp?! WHY is it always damp?!' : 'Count it later. You never count in front of them. That’s respect.' }
         ],
         turkeyTax: [
           { speaker: 'artie', text: 'The donation. Sure. It’s just — business is slow, and — here. Here it is. Tell Silvio the veal was perfect.' },
@@ -4555,6 +4571,24 @@ function clubInteractions() {
       startDialog([
         { speaker: 'silvio', text: 'Last thing. You’re hot right now — I may have made you hot, details. The heat dies in the Pine Barrens. Get there before the clock does. $300, and don’t stop for the geese.' },
         { speaker: 'system', text: 'Mission accepted: PINE RUNNER. The heat is ON — drive south!' }
+      ]);
+    } else if (!state.mission && state.flags.fixedRaceDone && state.flags.freeRoam) {
+      const drops = [
+        { scene: 'vesuvio', x: 320, y: 250, radius: 60, name: 'Vesuvio — Artie’s expecting you. He’s always expecting you. That’s the problem with Artie' },
+        { scene: 'satriale', x: 320, y: 200, radius: 60, name: 'the pork store — the back office, not the counter' },
+        { scene: 'slice', x: 320, y: 200, radius: 60, name: 'Ray’s in the city — the ORIGINAL Ray’s. they know which one' },
+        { scene: 'taffy', x: 320, y: 200, radius: 60, name: 'the taffy shop on the boardwalk — even the shore pays tribute in season. it’s ALWAYS season' }
+      ];
+      const drop = drops[Math.floor(Math.random() * drops.length)];
+      MISSION_DEFS.collection.payout = 90 + Math.floor(Math.random() * 50);
+      MISSION_DEFS.collection.steps = [
+        { scene: drop.scene, x: drop.x, y: drop.y, radius: drop.radius, objective: `Collect the envelope — ${drop.name.split('—')[0].trim()}`, label: 'the envelope' },
+        { scene: 'club', x: 304, y: 132, radius: 46, objective: 'Bring the envelope to Silvio', label: 'Silvio' }
+      ];
+      startMission('collection');
+      startDialog([
+        { speaker: 'silvio', text: `Collections, kid. ${drop.name}. Don’t count it in front of them — that’s respect. $${MISSION_DEFS.collection.payout} for the walk.` },
+        { speaker: 'system', text: 'Mission accepted: THE COLLECTION. Repeatable — the tribute never sleeps.' }
       ]);
     } else if (!state.mission && state.flags.gravyChainDone && !state.flags.fixedRaceDone && state.flags.freeRoam) {
       startMission('fixedRace');
