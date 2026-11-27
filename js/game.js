@@ -8151,7 +8151,7 @@ function dinerInteractions() {
     } },
     { x: 460, y: 112, w: 56, h: 28, radius: 40, label: 'Pie case', action: () => {
       startDialog([
-        { speaker: 'narrator', text: 'The pie case rotates slowly, eternally. Apple. Cherry. Lemon meringue with structural integrity issues. A coconut cream that has witnessed things.' },
+        { speaker: 'narrator', text: 'The pie case rotates slowly, eternally. Apple. Cherry. Lemon meringue with structural integrity issues. A coconut cream that has witnessed things. Today’s blue-light special: ' + ['shoo-fly pie, which the waitress describes as “an acquired taste, like vinyl or New Jersey”', 'the turkey pot pie — seasonal, enormous, structurally ambitious', 'the same four pies as always. The rotation is a lie. The pies are forever'][Math.floor(state.time / 120) % 3] + '.' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'The rotating case is genius. The pies can’t hide! Exposure! Total exposure!' : 'Pie’s been rotating since the Eisenhower administration, probably.' }
       ]);
     } },
