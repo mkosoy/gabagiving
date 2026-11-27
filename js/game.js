@@ -5027,8 +5027,10 @@ function clubInteractions() {
   list.push({ x: 304, y: 132, w: 40, h: 42, label: 'Silvio', action: () => {
     if (!state.mission && state.flags.freeRoam && state.flags.bigScoreDone && !state.flags.soupSummitDone) {
       startMission('soupSummit');
+      state.money += 12;
       startDialog([
         { speaker: 'silvio', text: 'Competitive intelligence. There’s a soup operation in Manhattan — you know the one. Lines around the block. A dictator with a ladle. Artie’s losing customers to a COUNTER.' },
+        { speaker: 'silvio', text: 'Here — twelve bucks, expense account. EXACT change, remember. You come back with soup or you come back with twelve bucks. You do NOT come back with explanations.' },
         { speaker: 'silvio', text: 'Get me two containers — mulligatawny and the crab bisque — unshaken, unspilled, and you do NOT anger the man. Artie tastes, we assess. This is industrial espionage, soup division. $260. And kid — exact change.' },
         { speaker: 'system', text: 'Mission accepted: THE SOUP SUMMIT. Two worlds. One ladle.' }
       ]);
