@@ -5446,7 +5446,7 @@ const steinbrennerRants = [
 
 function yankeesInteractions() {
   return [
-    { x: 60, y: 300, w: 60, h: 40, radius: 44, label: 'The bobblehead shelf', action: () => {
+    { x: 140, y: 386, w: 46, h: 22, radius: 30, label: 'The bobblehead shelf', action: () => {
       audio.sfx('pickup');
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'A shelf of Yankees bobbleheads nods in perfect sync with the office air conditioning. George recognizes every face. He nods back, once, at one of them. It keeps nodding. He nods again. He is in a relationship now.' },
@@ -5456,7 +5456,7 @@ function yankeesInteractions() {
         { speaker: 'narrator', text: 'A wall of bobbleheads nodding in the draft. Tony nods back once, out of respect for the posture. One of them is slightly newer than the rest. Even the shelf has a guy who just made his bones.' }
       ]);
     } },
-    { x: 540, y: 120, w: 60, h: 50, radius: 44, label: 'The cotton uniforms file', action: () => {
+    { x: 490, y: 55, w: 40, h: 30, radius: 30, label: 'The cotton uniforms file', action: () => {
       if (!state.flags.cottonUniformsDone) { toast('The file cabinet is locked. Something about it feels — breathable, yet secure.'); return; }
       audio.sfx('pickup');
       startDialog([
@@ -5464,7 +5464,7 @@ function yankeesInteractions() {
         { speaker: 'system', text: 'A piece of Yankees history. Polyester never had a chance.' }
       ]);
     } },
-    { x: 300, y: 340, w: 90, h: 34, radius: 44, label: 'The stadium seats view', action: () => {
+    { x: 330, y: 386, w: 60, h: 22, radius: 30, label: 'The stadium seats view', action: () => {
       audio.sfx('pickup');
       startDialog([
         { speaker: 'narrator', text: 'Through the office window: the stadium seats in the rain, empty, row on row. Somewhere down there a tarp crew is losing a fight with geometry. It’s the off-season. Even the hot dogs are asleep. You stand there a while. It’s not a bad view for an office that smells faintly of calzone.' },
