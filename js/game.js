@@ -6333,7 +6333,6 @@ function melfiInteractions() {
   list.push({ x: 300, y: 8, w: 200, h: 110, radius: 40, label: 'Diplomas', action: () => startDialog([
     { speaker: 'narrator', text: 'Degrees in psychiatry, psychoanalysis, and — framed identically, suspiciously — a certificate for a rye bread of the month club.' }
   ]) });
-  list.push({ x: 560, y: 150, w: 72, h: 190, radius: 42, label: 'Chaise', action: () => {
     list.push({ x: 330, y: 320, w: 46, h: 26, radius: 34, label: 'The tissue box', action: () => {
       audio.sfx('pickup');
       startDialog(state.player.kind === 'george' ? [
@@ -6350,6 +6349,7 @@ function melfiInteractions() {
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fifty minutes! It should be sixty! Everyone knows an hour is sixty minutes! The therapy hour is fifty! Where does the other ten minutes GO? Somebody is SKIMMING!' : 'Time’s up means time’s up. Even here. Especially here.' }
       ]);
     } });
+  list.push({ x: 560, y: 150, w: 72, h: 190, radius: 42, label: 'Chaise', action: () => {
     if (state.player.kind === 'george') startDialog([
       { speaker: 'george', text: 'A recliner you can nap on during a session you’re paying for? Finally — a healthcare model that works.' }
     ]);
