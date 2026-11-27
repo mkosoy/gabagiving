@@ -9212,6 +9212,9 @@ function drawDiner() {
     drawPerson(ctx, 462 - state.camera.x, 204 - state.camera.y, 'trucker', 'up', 0, { pose: 'sit' });
     drawPerson(ctx, 480 - state.camera.x, 296 - state.camera.y, 'waitress', 'left', state.frame * .5, {});
     drawPerson(ctx, 128 - state.camera.x, 330 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'sit' });
+    // the booth couple that has been sharing one milkshake since the Carter administration
+    drawPerson(ctx, 516 - state.camera.x, 322 - state.camera.y, 'manA', 'left', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 576 - state.camera.x, 322 - state.camera.y, 'womanA', 'right', 0, { pose: 'sit', sitClip: .55 });
     // the GABAGOOL WIZARD itself
     const pc = objArt.pinballcab;
     if (pc && pc.complete && pc.naturalWidth) {
@@ -12223,6 +12226,9 @@ function drawClub() {
     drawPerson(ctx, 218 + Math.sin(state.time * .9) * 1.5, 196, 'christopher', 'right', state.frame, { pose: 'sit', sitClip: .55 });
     drawPerson(ctx, 408 + Math.sin(state.time * 1.2) * 1.5, 196, 'paulie', 'left', state.frame + 1, { pose: 'sit', sitClip: .55 });
     drawPerson(ctx, 320 + Math.sin(state.time * .7) * 1.5, 148, 'silvio', 'down', state.frame + 2, { pose: 'sit', sitClip: .5 });
+    // the barfly who has been here since the renovation and possibly before it
+    drawPerson(ctx, 492, 96, 'manC', 'up', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 540, 96, 'womanD', 'up', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#160e1e');
