@@ -24,6 +24,16 @@ function loadArt(src) {
   img.src = src + (src.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
   return img;
 }
+const carSprites = {};
+const CAR_SPRITE_MAP = {
+  '#8f1f2e': 'sedan', '#7e2733': 'sedan', '#a02828': 'corvette', '#e8b822': 'cab',
+  '#2848a0': 'cruiser', '#e8e4da': 'mailtruck', '#b8a888': 'wagon', '#3d6b35': 'sedan-green2',
+  '#4a5e78': 'sedan-bluegray', '#6e5540': 'sedan-brown', '#556b4f': 'sedan-green', '#7a4a55': 'sedan-maroon'
+};
+for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
+  carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
+}
+
 const sceneArt = {
   house: loadArt('./assets/bg-house-v2.webp'),
   hub: loadArt('./assets/bg-njhub.webp'),
@@ -12425,6 +12435,38 @@ function drawPeptides() {
 }
 
 function drawCar(x, y, color = '#8f1f2e', target = false, angle = 0) {
+  const spriteName = CAR_SPRITE_MAP[color] || 'sedan';
+  const img = carSprites[spriteName];
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (angle) ctx.rotate(angle);
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath();
+    ctx.ellipse(1, 2, 15, 21, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // night headlight beams ahead of the hood
+    if (typeof isNight === 'function' && isNight()) {
+      ctx.fillStyle = 'rgba(255,240,180,.10)';
+      ctx.beginPath();
+      ctx.moveTo(-9, -18);
+      ctx.lineTo(9, -18);
+      ctx.lineTo(20, -58);
+      ctx.lineTo(-20, -58);
+      ctx.closePath();
+      ctx.fill();
+    }
+    const w = 30;
+    const h = Math.round(w * img.naturalHeight / img.naturalWidth);
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    ctx.restore();
+    if (target) {
+      ctx.strokeStyle = '#ffe78a';
+      ctx.strokeRect(x - 16.5, y - 22.5, 33, 45);
+    }
+    return;
+  }
   if (angle) {
     ctx.save();
     ctx.translate(x, y);
