@@ -423,7 +423,10 @@ function menuEntries() {
         if (state.flags.turkeyTaxDone) work.push('Silvio (the Bing) — collections');
         if (state.flags.saunaSerenityDone) work.push('Frank (Queens) — Festivus errands');
         work.push('The counter guy at Ray’s (Manhattan) — pie deliveries, ALWAYS hiring');
-        if (work.length) lines.push({ speaker: 'system', text: 'REPEATABLE WORK:\n' + work.join('\n') });
+        if (work.length) {
+          lines.push({ speaker: 'system', text: 'REPEATABLE WORK:' });
+          for (const wl of work) lines.push({ speaker: 'system', text: '· ' + wl });
+        }
         else lines.push({ speaker: 'system', text: 'Nothing repeatable yet — finish story jobs and the phone fills up with work.' });
       }
       const doneCnt = ['packageJobDone','bigSaladDone','ryeExpressDone','turkeyTaxDone','bigMouthDone','gravyChainDone','fixedRaceDone','serenityTapesDone','featsOfStrengthDone','saunaSerenityDone','calzoneProtocolDone','cottonUniformsDone','kramericaBookDone','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','jerrysFavorDone','trackSystemDone'].filter(f => state.flags[f]).length;
