@@ -8777,6 +8777,15 @@ function updateBlackjack(dt) {
       bj.t = 0;
     }
     if (!hitDir && !standDir) bj.stickLock = false;
+    // double down — exactly two cards, one more in the hole, double or nothing
+    if (!bj.doubled && bj.player.length === 2 && (state.flags.tribute || 0) >= 50 && consume(['KeyF'])) {
+      state.flags.tribute -= 50;
+      bj.doubled = true;
+      bj.player.push(bjCard());
+      audio.sfx('smash');
+      if (bjTotal(bj.player) > 21) { bj.phase = 'done'; bj.result = 'bust'; bj.t = 0; audio.sfx('denied'); }
+      else { bj.phase = 'dealer'; bj.t = 0; }
+    }
   } else if (bj.phase === 'dealer') {
     if (bj.t > .7) {
       bj.t = 0;
@@ -8790,17 +8799,18 @@ function updateBlackjack(dt) {
     }
   } else if (bj.phase === 'done' && bj.t > 1.8) {
     const r = bj.result;
+    const dbl = bj.doubled ? 2 : 1;
     state.mode = 'explore';
     state.blackjack = null;
     if (r === 'win') {
-      state.flags.tribute = (state.flags.tribute || 0) + 100;
+      state.flags.tribute = (state.flags.tribute || 0) + 100 * dbl;
       audio.sfx('cash');
-      spawnEffect(state.player.x + 8, state.player.y - 8, '+$100 · BLACKJACK PAYS', '#8ffff2');
+      spawnEffect(state.player.x + 8, state.player.y - 8, '+$' + 100 * dbl + ' · BLACKJACK PAYS', '#8ffff2');
       startDialog([
         { speaker: 'narrator', text: state.player.kind === 'george' ? 'George wins! He immediately asks the dealer about the surrender rule, the insurance rule, and whether tips are mandatory.' : 'Tony wins. The dealer slides the chips over. He has been instructed, at length, to be very fast about it.' }
       ]);
     } else if (r === 'push') {
-      state.flags.tribute = (state.flags.tribute || 0) + 50;
+      state.flags.tribute = (state.flags.tribute || 0) + 50 * dbl;
       startDialog([{ speaker: 'narrator', text: 'Push. Nobody wins. Somehow the least satisfying outcome in all of gambling.' }]);
     } else {
       startDialog([
@@ -8847,7 +8857,8 @@ function drawBlackjack() {
   bjDrawHand(bj.player, 290, 300, false);
   outlineText(ctx, `YOU · ${bjTotal(bj.player)}`, 320, 344, '#fffbe8', 8, 'center');
   if (bj.phase === 'player') {
-    outlineText(ctx, 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
+    const canDbl = state.blackjack && !state.blackjack.doubled && state.blackjack.player.length === 2 && (state.flags.tribute || 0) >= 50;
+    outlineText(ctx, canDbl ? 'A / E = HIT · D / S = STAND · F = DOUBLE DOWN' : 'A / E = HIT · D / S = STAND', 320, 386, '#ffe78a', 9, 'center');
   } else if (bj.phase === 'done') {
     const msg = { win: 'YOU WIN! +$100', bust: 'BUST — HOUSE TAKES IT', lose: 'DEALER WINS', push: 'PUSH — BET RETURNED' }[bj.result];
     outlineText(ctx, msg, 320, 386, bj.result === 'win' ? '#8ffff2' : bj.result === 'push' ? '#ffe78a' : '#ff8a7a', 10, 'center');
@@ -10486,6 +10497,15 @@ function drawShore() {
       else px(ctx, gx + 4, gy - 1, 3, 1, '#e8e8e0');
     }
   }
+  // boardwalk life — off-season but never empty
+  drawPerson(ctx, 465 - state.camera.x, 218 - state.camera.y, 'manB', 'down', 0, { pose: 'sit', sitClip: .55 });
+  drawPerson(ctx, 448 - state.camera.x, 218 - state.camera.y, 'womanF', 'down', 0, { pose: 'sit', sitClip: .55 });
+  const swx = 120 + ((state.time * 11) % 520);
+  drawPerson(ctx, swx - state.camera.x, 262 - state.camera.y, 'womanE', 'right', state.frame, { pose: 'walk' });
+  const swx2 = 640 - ((state.time * 9) % 500);
+  drawPerson(ctx, swx2 - state.camera.x, 276 - state.camera.y, 'manC', 'left', state.frame + 2, { pose: 'walk' });
+  // a kid hypnotized by the arcade cabinet glow, going nowhere
+  drawPerson(ctx, 172 - state.camera.x, 128 - state.camera.y, 'manC', 'up', Math.floor(state.time * .6) % 2, { pose: 'stand' });
   outlineText(ctx, '← north', 24, 200, '#ffe78a', 7, 'left');
 }
 
