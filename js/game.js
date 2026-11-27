@@ -5648,6 +5648,21 @@ function bodegaInteractions() {
         ]);
       } else startDialog([{ speaker: 'narrator', text: 'More coffee? Your heart says yes. Your other organs are holding a vote.' }]);
     } },
+    { x: 200, y: 60, w: 50, h: 34, radius: 40, label: 'Browse the magazines', action: () => {
+      audio.sfx('pickup');
+      if (Math.random() < .3) {
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+        startDialog([{ speaker: 'narrator', text: 'The bodega owner materializes beside you with the silent speed of a man who has caught ten thousand magazine browsers. “This is not a LIBRARY,” he says, in the tone of a man saying it for the ten-thousand-and-first time. You buy a pack of gum out of shame. It costs $4.' }]);
+        state.money = Math.max(0, state.money - 4);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George reads an entire magazine article about organizational productivity while standing in a bodega aisle, unpaid, the way nature intended.' },
+          { speaker: 'george', text: 'Twelve tips! I only need eleven! The twelfth was “buy the magazine” — nice try, BIG MAGAZINE!' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony flips through a fishing magazine, examines a centerfold of a largemouth bass, nods with genuine respect, and puts it back perfectly straight. Even browsing, there are standards.' }
+        ]);
+      }
+    } },
     { x: 460, y: 40, w: 80, h: 60, radius: 44, label: 'Pet the cat', action: () => {
       audio.sfx('turkey');
       startDialog([
