@@ -5264,6 +5264,30 @@ function travelHub(place) {
   startDialog([{ speaker: 'narrator', text: d[3] }]);
 }
 
+function stealRandomCar() {
+  if (state.player.inCar) return;
+  const fleet = [
+    { speed: 230, color: '#a02828', name: 'a CORVETTE', line: state.player.kind === 'george' ? 'A CORVETTE! Midlife crisis complete! I’ve never felt so alive and so doomed!' : 'Red Corvette. Subtle as a heart attack. Perfect.' },
+    { speed: 190, color: '#3d6b35', name: 'a sensible sedan', line: state.player.kind === 'george' ? 'Borrowing. Permanent borrowing. Vandelay Industries has a fleet, technically.' : 'Nice car. Means it’s my car now. That’s how that works.' },
+    { speed: 160, color: '#b8a888', name: 'a wood-paneled station wagon', line: state.player.kind === 'george' ? 'A station wagon. Wood paneling. This is exactly the car I deserve and I hate it!' : 'A wagon. Slow. But nobody — NOBODY — suspects the wagon.' },
+    { speed: 205, color: '#2848a0', name: 'an unmarked-looking cruiser', line: state.player.kind === 'george' ? 'Is this a cop car? It LOOKS like a cop car. If it’s a cop car I’m just — test driving it! For the city!' : 'Ex-cop car. Still got the spotlight. Heh.' }
+  ];
+  const car = fleet[Math.floor(Math.random() * fleet.length)];
+  state.player.inCar = true;
+  state.player.speed = car.speed;
+  state.player.carColor = car.color;
+  state.player.carDamage = 0;
+  state.player.carV = 0;
+  audio.sfx('door');
+  audio.sfx('honk');
+  state.stats.carsStolen = (state.stats.carsStolen || 0) + 1;
+  spawnEffect(state.player.x + 8, state.player.y - 8, state.player.kind === 'george' ? 'BORROWED' : 'MY CAR NOW', '#ffe78a');
+  startDialog([
+    { speaker: 'narrator', text: `It's ${car.name}. Keys in the ignition, because New Jersey.` },
+    { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: car.line }
+  ]);
+}
+
 function hubInteractions() {
   const list = [
     { x: 10, y: 210, w: 26, h: 90, radius: 46, label: '← West: the Meadowlands', action: () => {
@@ -6874,6 +6898,9 @@ function meadowInteractions() {
     { x: 98, y: 100, w: 80, h: 30, radius: 46, label: 'Betting window — the ponies', action: () => {
       startDialog([{ speaker: 'narrator', text: 'The real track, the real odds, the same four horses somehow. The teller doesn’t ask questions. The teller has seen everything twice.' }], () => initRacing());
     } },
+    { x: 280, y: 150, w: 60, h: 30, radius: 44, label: 'Borrow a parking-lot car', hidden: () => !!state.player.inCar, action: () => {
+      stealRandomCar();
+    } },
     { x: 110, y: 310, w: 40, h: 30, radius: 42, label: 'Tailgate — sausage and peppers', action: () => {
       if ((state.flags.tailgateFood || 0) > 2) { startDialog([{ speaker: 'narrator', text: 'The grill guy squints. "You again? Buddy. It’s Thanksgiving. Go home." The grill is closed to you now. This is somehow the saddest thing that has ever happened.' }]); return; }
       state.flags.tailgateFood = (state.flags.tailgateFood || 0) + 1;
@@ -7236,6 +7263,9 @@ function queensInteractions() {
       ] : [
         { speaker: 'narrator', text: 'A shampoo factory. Tony regards it with the deep suspicion of a man who has never once trusted a business that is exactly what it appears to be.' }
       ]);
+    } },
+    { x: 230, y: 210, w: 60, h: 30, radius: 44, label: 'Borrow a street car', hidden: () => !!state.player.inCar, action: () => {
+      stealRandomCar();
     } },
     { x: 300, y: 290, w: 60, h: 30, radius: 42, label: 'Double-parked Buick', action: () => {
       startDialog([{ speaker: 'narrator', text: 'A Buick double-parked so perfectly perpendicular to reality it can only belong to a man with nothing left to lose. There is a bumper sticker. It says SERENITY NOW. The irony is load-bearing.' }]);
