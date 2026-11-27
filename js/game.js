@@ -309,7 +309,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup'];
 function saveWorld() {
   try {
     const out = {};
@@ -5535,6 +5535,23 @@ function drawSoup() {
 
 function soupInteractions() {
   return [
+    { x: 420, y: 130, w: 60, h: 30, radius: 38, label: 'Ask about the bread', action: () => {
+      audio.sfx('denied');
+      state.flags.heat = Math.min(5, (state.flags.heat || 0) + .3);
+      if (!state.flags.noSoup) {
+        state.flags.noSoup = true;
+        startDialog([
+          { speaker: 'narrator', text: 'You ask about the bread. The line goes silent. Somewhere in the back, a ladle stops mid-stir. The man looks at you the way a hanging judge looks at a vocabulary test.' },
+          { speaker: 'soupnazi', text: 'NO SOUP FOR YOU! Come back — NEVER. One year! You are BANNED. The bread is not for you. NOTHING is for you. NEXT!' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'BANNED?! For a bread INQUIRY?! This is a constitutional issue! There are amendments!' : 'I been thrown outta better places by worse people. You ain’t seen the last of me. …He’s right though. I seen the last of the bread.' }
+        ]);
+      } else {
+        startDialog([
+          { speaker: 'narrator', text: 'You ask about the bread AGAIN. The audacity hangs in the air like a violated prime directive.' },
+          { speaker: 'soupnazi', text: 'TWO YEARS! You want three? KEEP TALKING. NEXT!' }
+        ]);
+      }
+    } },
     { x: 490, y: 268, w: 40, h: 28, radius: 30, label: 'The rules sign', action: () => {
       audio.sfx('pickup');
       startDialog([
@@ -5543,6 +5560,7 @@ function soupInteractions() {
       ]);
     } },
     { x: 300, y: 352, w: 46, h: 26, radius: 30, label: 'The eating counter — soup $6', action: () => {
+      if (state.flags.noSoup && Math.random() < .5) { startDialog([{ speaker: 'narrator', text: 'The man glares at you over the ladle. He remembers. He ALWAYS remembers. The soup tastes, if anything, more defiant.' }]); }
       if (state.money < 6) { toast('Soup is six dollars, exact change, move to the left.'); return; }
       state.money -= 6;
       audio.sfx('pickup');
