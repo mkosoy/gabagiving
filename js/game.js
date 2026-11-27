@@ -316,7 +316,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','pkg10','pkg11','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound','artiesMenuDone','shrinkRapDone','paulieShoeDone','screenplayDone','engineTune','jerrysFavorDone','leoScarfDone','robCount','stash','hp','sitDownDone','bigScoreDone','soupSummitDone','noSoup','truckerSystemDone','assmanDone'];
 function saveWorld() {
   try {
     const out = {};
@@ -2805,6 +2805,15 @@ const MISSION_DEFS = {
       { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the route to Kramer', label: 'Kramer' }
     ]
   },
+  assman: {
+    title: 'THE ASSMAN',
+    payout: 240, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'queens', x: 150, y: 242, radius: 52, objective: 'Spot the car with the ASSMAN plates — last seen in Queens', label: 'the plates' },
+      { scene: 'nyc', x: 300, y: 240, radius: 52, objective: 'The car moved — Manhattan. Plates don’t lie', label: 'the plates again' },
+      { scene: 'apartment', x: 300, y: 232, radius: 50, objective: 'Report the truth to Kramer', label: 'Kramer' }
+    ]
+  },
   artiesMenu: {
     title: 'THE LAST SUPPLY',
     payout: 280, heat: 0, timeLimit: 0,
@@ -3009,6 +3018,10 @@ function advanceMission() {
       truckerSystem: [
         { speaker: 'kramer', text: 'The service road! Of course! Trucks avoid the tolls, the tolls avoid the trucks, and Kramerica avoids BOTH — it’s the circle of freight, buddy! The logistics division is ALIVE! $190 — and I’m naming the route after you. Well — after the trucker. Well — it’s gonna have a name, that’s the point!' },
         { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'I’m a logistics pioneer! They’ll write case studies! Bad ones! But still!' : 'Interviewed a trucker, drove a service road, got paid. Easiest money since the last time somebody paid me to drive around. Which is often. It’s a good racket.' }
+      ],
+      assman: [
+        { speaker: 'kramer', text: 'You saw it?! With your own eyes! The DMV made those plates for ME, buddy — a clerical error, a beautiful mistake — and now they’re out there, on some other man’s car, living their best life. Some proctologist is driving around with MY destiny on his bumper. Well. Let him have it. I’ve moved on. I’m the ASSMAN of the mind now. $240.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Wait — the plates were supposed to be HIS? The universe almost gave KRAMER the respect he never earned! …I’m going to start ordering vanity plates for everyone I know. This is a GOLDMINE of confusion!' : 'Two boroughs of driving to look at a license plate. This city makes philosopers of us all — or at least guys who read bumpers for money.' }
       ],
       calzoneProtocol: [
         { speaker: 'steinbrenner', text: 'The calzone! Hot, folded, POINTLESS geometry in any other context. You know what I admire, kid? Follow-through. Most people today — no follow-through. $210, and take a napkin.' },
@@ -3291,6 +3304,10 @@ function updateMission(dt) {
         truckerSystem: [
           { speaker: 'narrator', text: 'The trucker doesn’t look up from his coffee, but he talks. Forty years of roads in one monologue: the service road behind the Meadowlands — no tolls, no scales, no troopers, just reeds and the occasional smell of money being laundered. “You didn’t hear it from me,” he says, to nobody, because he never looked at you.' },
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Fascinating! The trucker economy! A shadow logistics network hiding in plain sight! I must document everything!' : 'Truckers and my crew got the same road-map, turns out. Small world. No — small TOLLS.' }
+        ],
+        assman: [
+          { speaker: 'narrator', text: 'And there it is — parked plain as day. A cream-colored sedan wearing plates that read, in bold state-issue blue: ASSMAN. A man in a white coat gets out, locks it, and walks into a medical building with the serenity of someone who has made peace with his plates.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A DOCTOR. Of course a doctor has them! A proctologist — it has to be! It’s TOO PERFECT!' : 'A doctor. The plates belong to a doctor. I don’t know what I expected but it wasn’t a guy with a stethoscope.' }
         ],
         bigScore: [
           { speaker: 'narrator', text: 'The bodega register never stood a chance. The cat watches from the counter with the detached interest of a creature that has seen eleven robberies this month. Lotto scratchers rain like confetti.' },
@@ -9999,6 +10016,12 @@ function nycInteractions() {
         startDialog([
           { speaker: 'kramer', text: 'Buddy — Kramerica Logistics has a problem. The tolls are eating us alive. ALIVE! But the truckers — the truckers know every road in Jersey. Every shortcut. Every no-scale zone. There’s a guy at the Endgame Diner — truckers always know. Interview him. Verify the route. Logistics, buddy — it’s about to be a SCIENCE.' },
           { speaker: 'system', text: 'Mission accepted: THE TRUCKER SYSTEM. The shadow freight network awaits.' }
+        ]);
+      } else if (!state.mission && state.flags.truckerSystemDone && !state.flags.assmanDone && state.flags.freeRoam) {
+        startMission('assman');
+        startDialog([
+          { speaker: 'kramer', text: 'Buddy — sit down. Sensitive matter. You know the DMV? Circus of incompetence. They printed vanity plates — ASSMAN — beautiful plates — and they were meant for ME. Clerical error! Now they’re OUT THERE, buddy, on somebody else’s car. I need you to find them. I need closure. I need to know who’s driving my legacy. $240 for closure.' },
+          { speaker: 'system', text: 'Mission accepted: THE ASSMAN. Find the plates.' }
         ]);
       } else if (!state.mission && state.flags.kramericaBookDone && state.flags.freeRoam) {
         const drops = [
