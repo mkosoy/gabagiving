@@ -11038,6 +11038,7 @@ function update(dt) {
     else openMenu();
   }
   if (state.mode === 'menu') {
+    if (!state.menu) { state.mode = 'explore'; return; }
     const entries = menuEntries();
     state.menuStickT = (state.menuStickT || 0) - dt;
     const mi = moveInput();
