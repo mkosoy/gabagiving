@@ -1662,7 +1662,7 @@ function shoveNearest() {
     const brickHit = (state.flags.brick || 0) > 0;
     if (brickHit) state.flags.brick -= 1;
     const batDmg = state.flags.hasBat && state.flags.freeRoam;
-    bw.hp -= brickHit ? 2 : batDmg ? (state.player.kind === 'george' ? 1.75 : 2.5) : (state.player.kind === 'george' ? 1 : 1.5);
+    bw.hp -= brickHit ? Math.max(2, batDmg ? (state.player.kind === 'george' ? 1.75 : 2.5) : 0) : batDmg ? (state.player.kind === 'george' ? 1.75 : 2.5) : (state.player.kind === 'george' ? 1 : 1.5);
     bw.hitT = .5;
     bw.x += (bw.x - state.player.x) * .3 * comboMul;
     bw.y += (bw.y - state.player.y) * .3 * comboMul;
