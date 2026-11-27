@@ -6733,6 +6733,8 @@ function acInteractions() {
 
 function drawShore() {
   if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
+  drawHighwaySign(60, 158, ['GSP NORTH', '← THE BARRENS']);
+  drawHighwaySign(640, 158, ['AC EXPRESSWAY', 'ATLANTIC CITY →']);
   // rolling wave animation along the blocked beach edge
   for (let i = 0; i < 8; i++) {
     const wx = 30 + i * 95 + Math.sin(state.time * 1.2 + i) * 14;
@@ -6890,6 +6892,8 @@ function shoreInteractions() {
 }
 
 function drawPines() {
+  drawHighwaySign(40, 150, ['GSP NORTH', '← NORTH CALDWELL']);
+  drawHighwaySign(620, 150, ['EXIT 88', 'THE SHORE →']);
   if (!drawSceneArt(sceneArt.pines, 768, 416)) px(ctx, 0, 0, 768, 416, '#2a3324');
   // drifting mist
   for (let i = 0; i < 4; i++) {
@@ -7182,6 +7186,7 @@ function drawNyc() {
   if (!drawSceneArt(sceneArt.nyc, 768, 416)) {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
+  drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
   // persistent reactive taxis — they brake and honk at jaywalkers
   if (!state.nycCars) updateNycTaxis(0);
   for (const c of (state.nycCars || [])) {
