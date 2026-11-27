@@ -1544,7 +1544,11 @@ function updateAmbient(dt) {
           : ['these streets…', 'cab! CAB!', 'I’m walkin’ here!', 'best city on earth', 'rent’s due again', 'parade traffic was murder', 'turkey price this year — forget about it']
         : state.scene === 'shore' || state.scene === 'ac'
           ? ['boardwalk’s empty — perfect', 'off-season is the best season', 'turkey on the beach, why not', 'the gulls are thankful for nothing']
-          : state.scene === 'pines'
+          : state.scene === 'queens'
+            ? ['the 7 is delayed AGAIN', 'serenity now! serenity now!', 'that’s my spot. that’s MY SPOT', 'the curtain saw everything', 'queens — the borough of kings']
+            : state.scene === 'meadow'
+              ? ['the four horse is a criminal', 'big race tonight', 'sausage and peppers, two dollars', 'I had the winner. I HAD him']
+              : state.scene === 'pines' 
             ? ['quiet out here…', 'too quiet', 'pine fresh, they say']
             : ['lovely evening', 'smells like gravy', 'quiet night tonight', 'somebody double-parked', 'gabagool!', 'in-laws incoming', 'turkey’s in the oven', 'happy thanksgiving!'];
       n.bark = idle[Math.floor(Math.random() * idle.length)];
