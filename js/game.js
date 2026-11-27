@@ -94,6 +94,7 @@ canvas.addEventListener('pointerdown', (e) => {
     const rect = canvas.getBoundingClientRect();
     const vx = (e.clientX - rect.left) / rect.width * W;
     const vy = (e.clientY - rect.top) / rect.height * H;
+    if (vx >= W - 48 && vy <= 34) { pressed.add('Escape'); return; }
     for (let ni = 0; ni < FT_NODES.length; ni++) {
       const n = FT_NODES[ni];
       if (Math.hypot(vx - n.x, vy - n.y) < 24) {
@@ -405,6 +406,7 @@ function menuEntries() {
     label: 'Cell phone — jobs & messages', hint: state.mission ? 'a job is ACTIVE — check it' : 'your mission tracker',
     act: () => {
       closeMenu();
+      if (state.dialogue) { toast('Finish the conversation first.'); return; }
       const lines = [];
       if (state.mission) {
         const def = MISSION_DEFS[state.mission.id] || {};
@@ -422,7 +424,6 @@ function menuEntries() {
     label: 'World map — pick a destination', hint: 'the big Garden State atlas, tap a place twice',
     act: () => {
       closeMenu();
-      state.flags.freeRoam = true;
       state.mode = 'fasttravel';
       state.ftSel = 0;
       pressed.clear();
@@ -920,7 +921,17 @@ function drawFastTravel() {
   ctx.fillStyle = '#888';
   ctx.font = '8px monospace';
   ctx.textAlign = 'left';
-  ctx.fillText('↑↓ or CLICK choose · E travel · T close', 12, 344);
+  ctx.fillText(usingTouchControls ? 'tap a place twice to drive there' : '↑↓ or CLICK choose · E travel · T close', 12, 344);
+  // touch close button — top right
+  ctx.fillStyle = 'rgba(180,40,40,.85)';
+  ctx.fillRect(W - 44, 8, 34, 22);
+  ctx.strokeStyle = '#fff';
+  ctx.strokeRect(W - 44, 8, 34, 22);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('✕', W - 27, 23);
+  ctx.textAlign = 'left';
   ctx.textAlign = 'left';
 }
 
@@ -5506,7 +5517,14 @@ function loseProduceGame() {
 
 function enterHub(first = false) {
   state.flags.freeRoam = true;
-  if (!state.flags.helpSeen) { state.flags.helpSeen = true; state.help = true; }
+  if (!state.flags.helpSeen) {
+    state.flags.helpSeen = true;
+    state.help = true;
+    startDialog([
+      { speaker: 'system', text: 'WELCOME TO THE OPEN WORLD. The F button PUNCHES people — some fight back, some drop wallets. A interacts. The stick moves. MENU has the world map, your cell phone (jobs), and your criminal record.' },
+      { speaker: 'system', text: 'People with a ! overhead are hiring. The pulsing beacon marks your current job. Everything else is yours to steal.' }
+    ]);
+  }
   if (state.player.kind !== 'george') state.player.kind = 'tonyMax';
   state.player.speed = state.player.kind === 'george' ? 96 : 88;
   setScene('hub', 320, 214);
@@ -11058,7 +11076,7 @@ function update(dt) {
     if (consume(['KeyE', 'Space', 'Enter'])) {
       const n = FT_NODES[state.ftSel];
       if (n.id === state.scene) { state.mode = 'explore'; toast('You’re already here.'); }
-      else startTransit(n.id, n.dx, n.dy, n.flavor);
+      else { state.flags.freeRoam = true; startTransit(n.id, n.dx, n.dy, n.flavor); }
       pressed.clear();
       return;
     }
