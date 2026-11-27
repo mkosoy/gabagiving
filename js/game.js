@@ -8122,6 +8122,7 @@ function drawDinerRegulars() {
 }
 
 function dinerInteractions() {
+  // arm-wrestle the trucker — diner tradition
   return [
     { x: 30, y: 350, w: 60, h: 60, radius: 44, label: 'Leave', action: leaveOutside },
     { x: 200, y: 112, w: 56, h: 28, radius: 40, label: 'Coffee ($2)', action: () => {
@@ -8155,6 +8156,13 @@ function dinerInteractions() {
       ]);
     } },
     { x: 520, y: 110, w: 40, h: 28, radius: 38, label: 'Rob the register', action: () => robRegister('diner', 'You empty the diner’s register into a napkin dispenser in six seconds flat. The truckers do not look up. Truckers never look up — it’s in the union contract. The waitress sighs the sigh of a woman restocking a pie case for the third time tonight.') },
+    { x: 200, y: 92, w: 30, h: 20, radius: 34, label: 'Arm-wrestle the trucker — $10', action: () => {
+      if ((state.armCd || 0) > state.time) { startDialog([{ speaker: 'narrator', text: 'The trucker is still finishing his pie. Arm-wrestling etiquette — and make no mistake, there IS etiquette — demands you let a man finish his pie.' }]); return; }
+      if ((state.flags.tribute || 0) < 10) { toast('Ten bucks. The trucker does not wrestle for free. Nobody in here does anything for free.'); return; }
+      state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 10);
+      state.armCd = state.time + 120;
+      initArmWrestle('trucker');
+    } },
     { x: 585, y: 190, w: 40, h: 30, radius: 42, label: 'Jukebox ($1)', action: () => {
       if (state.money < 1) { toast('A dollar for the jukebox. Even nostalgia has a cover charge.'); return; }
       state.money -= 1;
@@ -9223,8 +9231,8 @@ function pinesInteractions() {
   ];
 }
 
-function initArmWrestle() {
-  state.armwrestle = { power: .5, t: 0, duration: 8, done: false, resultT: 0, won: false };
+function initArmWrestle(opp) {
+  state.armwrestle = { power: .5, t: 0, duration: 8, done: false, resultT: 0, won: false, opp: opp || 'bouncer' };
   state.mode = 'armwrestle';
   audio.sfx('confirm');
 }
@@ -9239,9 +9247,17 @@ function updateArmWrestle(dt) {
       state.mode = 'explore';
       state.armwrestle = null;
       if (won) {
-        state.flags.tribute = (state.flags.tribute || 0) + 75;
+        state.flags.tribute = (state.flags.tribute || 0) + (a.opp === 'trucker' ? 40 : 75);
         audio.sfx('cash');
-        startDialog(state.player.kind === 'george' ? [
+        if (a.opp === 'trucker') {
+          startDialog(state.player.kind === 'george' ? [
+            { speaker: 'narrator', text: 'The trucker’s hand hits the formica. The whole diner applauds — all three of them. The waitress compacts her disbelief into a single nod. He pays up without a word, still never looking at you.' },
+            { speaker: 'george', text: 'I beat a TRUCKER! A man whose forearms shift GEARS! I am basically a longshoreman!' }
+          ] : [
+            { speaker: 'narrator', text: 'The trucker goes down slow, like a bridge demolition. Forty bucks on the counter. He nods once, finishes his pie, and tells the waitress you’re “okay for a Jersey guy.” From him that is canonization.' },
+            { speaker: 'tony', text: 'Good match. Tell your union I said hello. The pie’s on him — I mean me. It’s on me.' }
+          ]);
+        } else startDialog(state.player.kind === 'george' ? [
           { speaker: 'narrator', text: 'GEORGE WINS! The Bing erupts! Somewhere, a single tear rolls down a bouncer’s cheek.' },
           { speaker: 'george', text: 'FIFTY YEARS of repressed rage, all in the wrist! I could arm-wrestle GOD right now!' }
         ] : [
@@ -9249,7 +9265,12 @@ function updateArmWrestle(dt) {
           { speaker: 'tony', text: 'Tell Paulie he owes me seventy-five bucks. Also tell him he owes me a new table, but he already knew that.' }
         ]);
       } else {
-        startDialog(state.player.kind === 'george' ? [
+        if (a.opp === 'trucker') {
+          startDialog([
+            { speaker: 'narrator', text: 'The trucker’s arm does not so much move as relocate your hand. Somewhere in the Midwest, a load of produce arrives on time. He finishes his pie like nothing occurred, because for him nothing did.' },
+            { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He had LEVERAGE! His whole life is leverage! I want a rematch with a smaller trucker!' : 'Guy’s got a piston for an arm. Nobody speak of this.' }
+          ]);
+        } else startDialog(state.player.kind === 'george' ? [
           { speaker: 'narrator', text: 'The bouncer barely moved. George’s hand hit the table with the sound of a damp sock.' },
           { speaker: 'george', text: 'My hand slipped! There was lotion! WHO HAS LOTION in a strip club?!' }
         ] : [
