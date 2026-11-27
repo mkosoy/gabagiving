@@ -8659,6 +8659,18 @@ function drawTransit() {
   else if (tr.t > tr.dur - 1.2) outlineText(ctx, hh[1], 320, 96, '#8ffff2', 11, 'center');
   if (tr.flavor && tr.t > 1.4 && tr.t <= tr.dur - 1.2) outlineText(ctx, tr.flavor, 320, 96, '#9d8fc9', 8, 'center');
   if (tr && tr.event) {
+    if (tr.event.key === 'deer') {
+      const dArt = animalArt.deer;
+      if (dArt && dArt.complete && dArt.naturalWidth) {
+        const asp = dArt.naturalHeight / dArt.naturalWidth;
+        const dw = 64;
+        const dart2 = Math.min(1, (tr.eventT || 0) * 2);
+        ctx.save();
+        ctx.globalAlpha = dart2;
+        ctx.drawImage(dArt, 320 - dw / 2, 96 - dw * asp * .3, dw, dw * asp);
+        ctx.restore();
+      }
+    }
     ctx.fillStyle = 'rgba(8,6,12,.85)';
     ctx.fillRect(90, 150, 460, 100);
     ctx.strokeStyle = '#ffd23e';
