@@ -756,6 +756,13 @@ function drawHelp() {
 function r(x, y, w, h) { return { x, y, w, h }; }
 function costanzaInteractions() {
   return [
+  { x: 480, y: 90, w: 44, h: 34, radius: 40, label: 'Frank’s computer', action: () => {
+    audio.sfx('pickup');
+    startDialog([
+      { speaker: 'narrator', text: 'Frank Costanza’s computer: a 1997 desktop running a solitaire win streak of 41 games and a document titled SERENITY NOW — VOLUME 2 (LOUDER). The mouse is taped to the desk. For control.' },
+      { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'He’s been writing the sequel! “Serenity now, insanity later” was just VOLUME ONE! I’m in the acknowledgments! WHY AM I IN THE ACKNOWLEDGMENTS?' : 'Guy’s got a system for solitaire, rage issues, and a son who lives at home. Frank Costanza is three bad breaks from being in my crew.' }
+    ]);
+  } },
   { x: 40, y: 140, w: 60, h: 130, radius: 44, label: 'Festivus pole', action: () => {
     if (!state.flags.festivus) {
       state.flags.festivus = true;
