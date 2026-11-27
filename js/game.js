@@ -7567,6 +7567,11 @@ function drawQueens() {
     const qx2 = 600 - Math.sin(state.time * .31) * 120;
     drawPerson(ctx, qx2 - state.camera.x, 270 - state.camera.y, 'manA', Math.sin(state.time * .31) > 0 ? 'left' : 'right', state.frame + 2, { pose: 'walk' });
     drawHighwaySign(620, 250, ['SUBWAY →', 'MANHATTAN']);
+    // Frank is home. Frank is always home. Frank is always audible.
+    if (Math.sin(state.time * .5) > .92) {
+      const franks = ['SERENITY NOW!', 'MY MOVING TRUCK!', 'THE GARAGE, ESTELLE!', 'INSPECTOR? WHAT INSPECTOR!'];
+      outlineText(ctx, franks[Math.floor(state.time / 9) % franks.length], 120 - state.camera.x, 58 - state.camera.y, '#ffd23e', 6, 'left');
+    }
     // drifting autumn leaves
     for (let lf = 0; lf < 5; lf++) {
       const lx = ((lf * 173 + state.time * 22) % 790) - state.camera.x;
