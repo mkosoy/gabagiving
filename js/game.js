@@ -302,7 +302,7 @@ function saveProgress() {
   } catch (e) { /* storage unavailable */ }
 }
 
-const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
+const WORLD_FLAGS = ['humanFund','marbleRye','trashEclair','deskNap','soupLesson','fakeDisability','cheapInvites','fedGeese','pawnedWatch','elaineDance','therapyDone','marineBiologist','festivus','serenityNow','packageHeist','latexExport','oilBladder','derekMission','derekCash','derekPaid','cashStash1','cashStash2','cashStash3','tribute','boughtPaper','atePretzel','baniaBit','russianFound','pinesCarLooted','pinesTalkedPaulie','pinesTalkedChris','gooseCaught','gotCoffee','russianSeen','packageJobDone','catalogCaperDone','ryeExpressDone','pineFreshDone','libraryRunDone','serenityTapesDone','featsOfStrengthDone','calzoneProtocolDone','cottonUniformsDone','urbanSombreroDone','jPetermanBurmaDone','turkeyTaxDone','heatMagnetDone','bigSaladDone','soupNaziRunDone','muffinTopsDone','bladderRunDone','cannonballDone','bigOneDone','bigMouthDone','pineRunnerDone','gravyChainDone','fixedRaceDone','trackSystemDone','saunaSerenityDone','kramericaBookDone','bottleRunDone','feastDone','acLoan','pkg0','pkg1','pkg2','pkg3','pkg4','pkg5','pkg6','pkg7','pkg8','pkg9','newmanCaught','helpSeen','whaleHero','fountainDive','banked','deskNap','armoredDone','trotCd','metalChat','mailCd','mapHintShown','tailgateFood','cabinBeans','fudgeSample','cabinFound'];
 function saveWorld() {
   try {
     const out = {};
@@ -816,6 +816,32 @@ function drawFastTravel() {
     ctx.fillText(label, n.x, n.y - 13);
   });
 
+  // active mission objective pulses on the atlas
+  if (state.mission && MISSION_DEFS[state.mission.id]) {
+    const mstep = MISSION_DEFS[state.mission.id].steps[state.mission.step];
+    if (mstep) {
+      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac' };
+      const targetScene = hostRegion[mstep.scene] || mstep.scene;
+      const target = FT_NODES.find((n) => n.id === targetScene);
+      if (target) {
+        const mp = (Math.sin(state.time * 5) + 1) / 2;
+        ctx.strokeStyle = `rgba(255,90,90,${.5 + mp * .5})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(target.x, target.y - 22 - mp * 4);
+        ctx.lineTo(target.x + 9, target.y - 8 - mp * 4);
+        ctx.lineTo(target.x, target.y + 6 - mp * 4);
+        ctx.lineTo(target.x - 9, target.y - 8 - mp * 4);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = '#ff9a9a';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('OBJECTIVE', target.x, target.y - 28 - mp * 4);
+      }
+    }
+  }
+
   // header + footer backing bar
   ctx.fillStyle = 'rgba(6,10,18,.78)';
   ctx.fillRect(0, 0, 640, 24);
@@ -917,6 +943,12 @@ function costanzaInteractions() {
         { speaker: 'steinbrenner', text: 'SERENITY NOW! SERENITY NOW! The doctor gave me a relaxation tape. Listen: “serenity nowww”… you feel calmer?' },
         { speaker: 'narrator', text: 'Oddly enough, screaming serenity actually lowers everyone’s stress. Heat drops.' },
         { speaker: 'womanB', text: 'Frank, the neighbors can HEAR you! The Fudges called twice!' }
+      ]);
+    } else if (!state.mission && state.flags.featsOfStrengthDone && !state.flags.saunaSerenityDone && state.flags.freeRoam) {
+      startMission('saunaSerenity');
+      startDialog([
+        { speaker: 'steinbrenner', text: 'The tapes are USELESS now — USELESS! The serenity is being DRAINED. I know where it’s going. THE SAUNA. That steam isn’t steam — it’s MY CALM. And the shampoo people are in on it. Investigate! $240 and my gratitude — both worthless, GO!' },
+        { speaker: 'system', text: 'Mission accepted: STEAM OF SERENITY. The calm must flow.' }
       ]);
     } else if (!state.mission && state.flags.serenityTapesDone && !state.flags.featsOfStrengthDone && state.flags.freeRoam) {
       startMission('featsOfStrength');
@@ -1634,7 +1666,7 @@ function isNight() {
 }
 
 function updateCop(dt) {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene)) { state.cop = null; state.cop2 = null; state.copCar = null; return; }
   const heat = state.flags.heat || 0;
   // night makes the law jumpy — they come out earlier and backup arrives sooner
   const spawnAt = isNight() ? 2.2 : 3;
@@ -2037,7 +2069,7 @@ function drawTailCourier() {
 }
 
 function drawCop() {
-  if (!['hub', 'nyc', 'pines', 'shore'].includes(state.scene)) return;
+  if (!['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene)) return;
   for (const c of [state.cop, state.cop2, state.copCar].filter(Boolean)) {
     drawCar(c.x, c.y, c.color || '#e8ecf2', false, c.angle || 0);
     // flashing lightbar
@@ -2497,6 +2529,15 @@ const MISSION_DEFS = {
       { scene: 'meadow', x: 370, y: 130, radius: 46, objective: 'Watch the race — the system cannot lose', label: 'the track rail' }
     ]
   },
+  saunaSerenity: {
+    title: 'STEAM OF SERENITY',
+    payout: 240, heat: 0, timeLimit: 0,
+    steps: [
+      { scene: 'queens', x: 390, y: 160, radius: 46, objective: 'Test the sauna — is it stealing Frank’s serenity?', label: 'the sauna' },
+      { scene: 'queens', x: 640, y: 160, radius: 46, objective: 'Investigate the shampoo factory runoff', label: 'the shampoo factory' },
+      { scene: 'costanza', x: 140, y: 150, radius: 44, objective: 'Report back to Frank', label: 'Frank' }
+    ]
+  },
   fixedRace: {
     title: 'THE FIXED RACE',
     payout: 320, heat: 1, timeLimit: 0,
@@ -2617,6 +2658,11 @@ function advanceMission() {
         { speaker: 'narrator', text: 'The railbird in the cap — Kramer’s oracle — sells you the system for five dollars: “Always bet the horse that looks like it knows something.” You study the field. One horse, fourth from the rail, unmistakably looks like it knows something. You bet it. It comes in second. SECOND. The system has never come in second before. The railbird is inconsolable. You are somehow up anyway — place money is money.' },
         { speaker: 'kramer', text: 'Second?! It never comes in second! That’s not — the SYSTEM doesn’t DO second! …Although. Huh. You know what, second place money is still money, buddy. The system evolves. THE SYSTEM EVOLVES!' },
         { speaker: 'system', text: 'MISSION PASSED — THE TRACK SYSTEM. Place money is money. $280.' }
+      ],
+      saunaSerenity: [
+        { speaker: 'narrator', text: 'The sauna checks out — just steam. The shampoo factory checks out — just chemicals and broken dreams. There is no serenity theft. There never was. The tapes were eaten by the garage sale guy in 1994, if anyone is keeping score.' },
+        { speaker: 'steinbrenner', text: 'NOTHING?! You found NOTHING?! …Huh. So the tapes just DON’T WORK. Interesting. Very interesting. That means the serenity was inside me all along. SERENITY NOW! …Nope. Nope, it’s gone. Here’s your money. GET OUT OF MY HOUSE.' },
+        { speaker: 'system', text: 'MISSION PASSED — STEAM OF SERENITY. $240. The calm was inside him all along. Briefly.' }
       ],
       fixedRace: [
         { speaker: 'narrator', text: 'You put the fifty down. You watch the rail. CRANBERRY SAUCE — the surest thing in the history of sure things — breaks dead last, shows briefly in the middle, and finishes last again with the enthusiasm of a horse that knows something you don’t.' },
@@ -8150,7 +8196,7 @@ function nycInteractions() {
         { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
       ]);
     } },
-    { x: 200, y: 120, w: 60, h: 40, radius: 44, label: 'Famous Original Ray’s', action: () => {
+    { x: 200, y: 150, w: 60, h: 40, radius: 52, label: 'Famous Original Ray’s', action: () => {
       startDialog([{ speaker: 'narrator', text: 'Which Ray’s is the real Ray’s is a question that has ended friendships. This one has the good oven. Inside: heat, grease, glory.' }], () => travelHub('slice'));
     } },
     { x: 730, y: 210, w: 34, h: 90, radius: 46, label: 'Subway → Queens', action: () => {
@@ -8178,7 +8224,20 @@ function nycInteractions() {
           { speaker: 'tony', text: 'Two dollars for bad news. At least the bagels here are honest.' }
         ]);
         audio.sfx('pickup');
-      } else startDialog([{ speaker: 'narrator', text: 'Same headlines. Somehow worse the second time.' }]);
+      } else {
+        const headlines = [];
+        if (state.flags.fixedRaceDone) headlines.push('FIXED RACE FIXED BY RIVAL FIX — HORSE BLAMES NOBODY');
+        if (state.flags.gravyChainDone) headlines.push('GRAVY SHORTAGE AVERTED — STRIP CLUB THANKSGIVING SAVED');
+        if (state.flags.trackSystemDone) headlines.push('LOCAL SYSTEM COMES IN SECOND — SYSTEM EVOLVES, SAYS MAN IN CAP');
+        if (state.flags.libraryRunDone) headlines.push('23-YEAR OVERDUE BOOK RETURNED — LIBRARY COP RETIRES TRIUMPHANT');
+        if (state.flags.turkeyTaxDone) headlines.push('TURKEY PRICES UP — ENVELOPES UNRELATED, INSIST RESTAURANTS');
+        if (state.flags.heatMagnetDone) headlines.push('MAIL THIEF AT LARGE — POSTAL INSPECTOR "VERY SURE THIS TIME"');
+        if (state.flags.cottonUniformsDone) headlines.push('YANKEES UNIFORMS BREATHE AGAIN — COTTON INDUSTRY REJOICES');
+        headlines.push('TURKEY PRICES THIS YEAR — FORGET ABOUT IT');
+        if (state.flags.heat >= 3) headlines.unshift('MANHUNT — ARMED AND GABAGOOLY');
+        const pick2 = headlines[Math.floor((state.time / 40) % headlines.length)];
+        startDialog([{ speaker: 'narrator', text: 'Today’s headline: ' + pick2 + '. The paper costs two dollars. The ink costs extra, spiritually.' }]);
+      }
     } },
     { x: 600, y: 290, w: 90, h: 46, radius: 44, label: 'Payphone', hidden: () => !!state.flags.latexExport, action: () => {
       if (state.player.kind === 'george') {
@@ -9596,7 +9655,7 @@ function drawBeacon() {
 }
 
 function drawMinimap() {
-  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac'].includes(state.scene) || state.mode !== 'explore') return;
+  if (!state.flags.freeRoam || !['hub', 'nyc', 'pines', 'shore', 'ac', 'meadow', 'queens'].includes(state.scene) || state.mode !== 'explore') return;
   const mx = 8, my = H - 46, mw = 110, mh = 34;
   const sceneW = state.scene === 'hub' ? 1280 : 768;
   const sx = mw / sceneW, sy = mh / 416;
