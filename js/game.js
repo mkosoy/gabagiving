@@ -7803,7 +7803,7 @@ function queensInteractions() {
       ] : [
         { speaker: 'narrator', text: 'An elderly man with prominent eyebrows waves at you like you owe him money. “HELLO! You look like a man of IMPORTANCE! My nephew — Jerry Seinfeld — you know him? BIG star! VERY big!”' },
         { speaker: 'tony', text: 'Yeah, I know Jerry. Tell him… actually, tell him nothing. You never saw me. Here’s twenty for the trouble — buy yourself a spray tan or whatever you people do.' },
-        { speaker: 'narrator', text: 'Leo takes the $20 with both hands and the expression of a man who has never once questioned money. “You’re a good boy! I can tell! The eyebrows never lie!” +$20 …wait, you gave him $20. −$20. You’re not sure how that happened either. He’s GOOD.' }
+        { speaker: 'narrator', text: 'Leo takes the $20 with both hands and the expression of a man who has never once questioned money. “You’re a good boy! I can tell! The eyebrows never lie!” Somehow YOU are down $20. You’re not sure how that happened. He’s GOOD. −$20' }
       ]);
       if (state.player.kind === 'george') state.money += 2; else state.money = Math.max(0, state.money - 20);
     } },
