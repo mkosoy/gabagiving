@@ -4709,6 +4709,17 @@ function hubInteractions() {
         ]);
       }
     } },
+    { x: 640, y: 140, w: 40, h: 30, radius: 42, label: 'Light the grill', action: () => {
+      audio.sfx('pickup');
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .3);
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George lights the Soprano family grill with the confidence of a man who has never met propane. The flame whoomp— a modest fireball. His eyebrows survive. Barely. The smell of lighter fluid and ambition fills North Caldwell.' },
+        { speaker: 'george', text: 'I’M GRILLING NOW! I have a grill AND a system! The system is: meat, then more meat! Why does no one respect the system?!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony lights the grill one-handed, fluid-perfect, first click. This is a man who has grilled through three decades and two indictments. The coals know him. The neighborhood smells it and collectively relaxes.' },
+        { speaker: 'tony', text: 'Thanksgiving, a grill, the smell of charcoal. This is the stuff they can never take from you. The Feds can have the rest. Not this.' }
+      ]);
+    } },
     { x: 680, y: 150, w: 44, h: 30, radius: 42, label: 'AJ’s lemonade stand', action: () => {
       if (state.money < 4) { toast('AJ’s lemonade is $4. Yes, really. No, he will not negotiate.'); return; }
       state.money -= 4;
@@ -4974,6 +4985,19 @@ function drawMelfiOffice() {
 
 function melfiInteractions() {
   const list = [];
+  list.push({ x: 430, y: 120, w: 50, h: 34, radius: 40, label: 'Order the big salad', action: () => {
+    if (state.money < 9) { toast('The big salad is $9. Big salad, big price.'); return; }
+    state.money -= 9;
+    audio.sfx('pickup');
+    state.flags.heat = Math.max(0, (state.flags.heat || 0) - .2);
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'narrator', text: 'The big salad arrives. It is, objectively, a large salad. George watches the waitress hand it over and feels the ancient rage — WHO gets credit? The buyer or the hander-over?' },
+      { speaker: 'george', text: 'Did YOU see who ordered it? YOU saw me! Tell people! The credit! THE CREDIT IS MINE!' },
+      { speaker: 'narrator', text: 'The waitress has already forgotten him. The salad is very good.' }
+    ] : [
+      { speaker: 'narrator', text: 'Tony orders the big salad. The waitress does not ask if he means it literally. Nobody at Monk’s asks Tony Soprano anything twice. It is a very large salad. Tony finishes it. This impresses no one, which is its own kind of power.' }
+    ]);
+  } });
   list.push({ x: 170, y: 200, w: 120, h: 90, radius: 40, label: 'Your chair', action: () => {
     if (state.player.kind === 'george') {
       startDialog([
@@ -5623,6 +5647,21 @@ function bodegaInteractions() {
           { speaker: 'tony', text: 'Two bucks. In Jersey this is a dollar. In Manhattan it’s two. That’s the whole economy in one cup.' }
         ]);
       } else startDialog([{ speaker: 'narrator', text: 'More coffee? Your heart says yes. Your other organs are holding a vote.' }]);
+    } },
+    { x: 200, y: 60, w: 50, h: 34, radius: 40, label: 'Browse the magazines', action: () => {
+      audio.sfx('pickup');
+      if (Math.random() < .3) {
+        state.flags.heat = Math.min(5, (state.flags.heat || 0) + .2);
+        startDialog([{ speaker: 'narrator', text: 'The bodega owner materializes beside you with the silent speed of a man who has caught ten thousand magazine browsers. “This is not a LIBRARY,” he says, in the tone of a man saying it for the ten-thousand-and-first time. You buy a pack of gum out of shame. It costs $4.' }]);
+        state.money = Math.max(0, state.money - 4);
+      } else {
+        startDialog(state.player.kind === 'george' ? [
+          { speaker: 'narrator', text: 'George reads an entire magazine article about organizational productivity while standing in a bodega aisle, unpaid, the way nature intended.' },
+          { speaker: 'george', text: 'Twelve tips! I only need eleven! The twelfth was “buy the magazine” — nice try, BIG MAGAZINE!' }
+        ] : [
+          { speaker: 'narrator', text: 'Tony flips through a fishing magazine, examines a centerfold of a largemouth bass, nods with genuine respect, and puts it back perfectly straight. Even browsing, there are standards.' }
+        ]);
+      }
     } },
     { x: 460, y: 40, w: 80, h: 60, radius: 44, label: 'Pet the cat', action: () => {
       audio.sfx('turkey');
