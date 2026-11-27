@@ -4974,6 +4974,19 @@ function drawMelfiOffice() {
 
 function melfiInteractions() {
   const list = [];
+  list.push({ x: 430, y: 120, w: 50, h: 34, radius: 40, label: 'Order the big salad', action: () => {
+    if (state.money < 9) { toast('The big salad is $9. Big salad, big price.'); return; }
+    state.money -= 9;
+    audio.sfx('pickup');
+    state.flags.heat = Math.max(0, (state.flags.heat || 0) - .2);
+    startDialog(state.player.kind === 'george' ? [
+      { speaker: 'narrator', text: 'The big salad arrives. It is, objectively, a large salad. George watches the waitress hand it over and feels the ancient rage — WHO gets credit? The buyer or the hander-over?' },
+      { speaker: 'george', text: 'Did YOU see who ordered it? YOU saw me! Tell people! The credit! THE CREDIT IS MINE!' },
+      { speaker: 'narrator', text: 'The waitress has already forgotten him. The salad is very good.' }
+    ] : [
+      { speaker: 'narrator', text: 'Tony orders the big salad. The waitress does not ask if he means it literally. Nobody at Monk’s asks Tony Soprano anything twice. It is a very large salad. Tony finishes it. This impresses no one, which is its own kind of power.' }
+    ]);
+  } });
   list.push({ x: 170, y: 200, w: 120, h: 90, radius: 40, label: 'Your chair', action: () => {
     if (state.player.kind === 'george') {
       startDialog([
