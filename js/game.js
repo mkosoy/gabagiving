@@ -1390,6 +1390,12 @@ const ambientSpecs = {
     { kind: 'womanD', x: 1100, y: 180, region: { x: 660, y: 140, w: 500, h: 50 }, speed: 28 },
     { kind: 'bobby', x: 420, y: 260, region: { x: 300, y: 230, w: 260, h: 80 }, speed: 22, npc: 'newman' }
   ],
+  meadow: [
+    { kind: 'bobby', x: 200, y: 300, region: { x: 100, y: 260, w: 300, h: 90 }, speed: 26 },
+    { kind: 'womanA', x: 350, y: 330, region: { x: 120, y: 280, w: 400, h: 80 }, speed: 30 },
+    { kind: 'christopher', x: 480, y: 290, region: { x: 300, y: 250, w: 240, h: 90 }, speed: 28 },
+    { kind: 'womanC', x: 150, y: 210, region: { x: 80, y: 190, w: 380, h: 60 }, speed: 32 }
+  ],
   shore: [
     { kind: 'womanD', x: 200, y: 240, region: { x: 80, y: 150, w: 500, h: 160 }, speed: 24 },
     { kind: 'bobby', x: 500, y: 260, region: { x: 120, y: 150, w: 500, h: 160 }, speed: 20 }
