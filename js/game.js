@@ -32,6 +32,7 @@ const CAR_SPRITE_MAP = {
   '#e8e4d8': 'mailtruck', '#dcd8cc': 'mailtruck', '#c03838': 'corvette', '#31445e': 'sedan-bluegray'
 };
 const animalArt = {}; for (const n of ['horse', 'turkey', 'seagull', 'deer']) animalArt[n] = loadArt('./assets/sprites/' + n + '.webp');
+const objArt = {}; for (const n of ['pinballcab', 'jukebox', 'pooltable', 'slotmachine', 'arcade']) objArt[n] = loadArt('./assets/sprites/obj-' + n + '.webp');
 for (const n of ['sedan', 'corvette', 'cab', 'cruiser', 'mailtruck', 'wagon', 'sedan-bluegray', 'sedan-brown', 'sedan-green', 'sedan-maroon', 'sedan-green2']) {
   carSprites[n] = loadArt('./assets/cars/' + n + '.webp');
 }
@@ -7394,6 +7395,18 @@ function updatePinball(dt) {
   }
 }
 
+function drawPinballCabinetArt() {
+  const cArt = objArt.pinballcab;
+  if (cArt && cArt.complete && cArt.naturalWidth) {
+    const asp = cArt.naturalHeight / cArt.naturalWidth;
+    for (const fx of [96, 470]) {
+      ctx.save();
+      ctx.globalAlpha = .8;
+      ctx.drawImage(cArt, fx, 130, 74, 74 * asp);
+      ctx.restore();
+    }
+  }
+}
 function drawPinball() {
   const g = state.pin;
   px(ctx, 0, 0, 640, 360, '#14101c');
@@ -7406,7 +7419,8 @@ function drawPinball() {
   outlineText(ctx, 'score ' + g.score, 322, 52, g.flash ? '#fff' : '#9be59b', 8, 'center');
   // playfield
   if (sceneArt.mgPinball && sceneArt.mgPinball.complete && sceneArt.mgPinball.naturalWidth) {
-    ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
+    drawPinballCabinetArt();
+  ctx.drawImage(sceneArt.mgPinball, 232, 62, 160, 286);
   } else {
     px(ctx, 232, 62, 160, 286, '#2a1a3a');
   }
@@ -7918,9 +7932,18 @@ function drawSlots() {
     px(ctx, 0, 0, 640, 416, '#16101e');
   }
   outlineText(ctx, 'SLOTS · THE BING BACK CORNER', 320, 44, '#ffe78a', 11, 'center');
-  // machine body
-  px(ctx, 170, 90, 300, 210, '#3a2a4a');
-  px(ctx, 178, 98, 284, 130, '#241a30');
+  // machine body — painted cabinet when art is up
+  const sArt = objArt.slotmachine;
+  if (sArt && sArt.complete && sArt.naturalWidth) {
+    const asp = sArt.naturalHeight / sArt.naturalWidth;
+    const mw = 340;
+    ctx.save();
+    ctx.globalAlpha = .55;
+    ctx.drawImage(sArt, 150, 78, mw, mw * asp);
+    ctx.restore();
+  }
+  px(ctx, 170, 90, 300, 210, 'rgba(30,20,42,.82)');
+  px(ctx, 178, 98, 284, 130, 'rgba(20,14,28,.9)');
   px(ctx, 178, 96, 284, 4, '#c8a040');
   // reels
   for (let i = 0; i < 3; i++) {
