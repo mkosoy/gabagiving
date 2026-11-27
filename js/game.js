@@ -426,6 +426,7 @@ function menuEntries() {
         if (state.flags.fixedRaceDone) work.push('Silvio (the Bing) — collections');
         if (state.flags.saunaSerenityDone) work.push('Frank (Queens) — Festivus errands');
         work.push('The counter guy at Ray’s (Manhattan) — pie deliveries, ALWAYS hiring');
+        work.push('The chop shop (Meadowlands, drive in) — cash for borrowed cars');
         if (!state.flags.freeRoam) lines.push({ speaker: 'system', text: 'You’re mid-story — the work directory unlocks in the open world. MENU → Open world anytime.' });
         else if (work.length) {
           lines.push({ speaker: 'system', text: 'REPEATABLE WORK:' });
@@ -7695,7 +7696,7 @@ function meadowInteractions() {
       if (!state.player.inCar) { toast('The chop shop only talks to people who arrive IN something. With four wheels. That they don’t plan to leave with.'); return; }
       if ((state.chopCd || 0) > state.time) { toast('The chop shop is hot right now — literally, there’s smoke. Come back in a couple minutes.'); return; }
       const cc2 = state.player.carColor || '';
-      const tier = cc2 === '#a02828' ? ['the Vette', 110] : cc2 === '#2848a0' ? ['the cruiser', 85] : cc2 === '#3d6b35' ? ['the sedan', 60] : ['the wagon', 45];
+      const tier = cc2 === '#a02828' ? ['the Vette', 110] : cc2 === '#2848a0' ? ['the cruiser', 85] : cc2 === '#3d6b35' ? ['the sedan', 60] : cc2 === '#b8a888' ? ['the wagon', 45] : ((state.player.speed || 160) >= 190 ? ['the unfamiliar ride — nice one', 70] : ['the unfamiliar ride', 50]);
       const pay = tier[1] + Math.floor(Math.random() * 20);
       state.money += pay;
       state.flags.heat = Math.min(5, (state.flags.heat || 0) + 1);
