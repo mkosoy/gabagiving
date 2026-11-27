@@ -7599,6 +7599,29 @@ function drawNyc() {
     px(ctx, 0, 0, 768, 416, '#5a4a3a');
   }
   drawHighwaySign(60, 168, ['HOLLAND TUNNEL', '← NEW JERSEY']);
+  // Kenny Roger's Roasters — the red neon chicken that never sleeps
+  px(ctx, 560, 40, 90, 50, '#2a1a1a');
+  const rglow = .55 + Math.sin(state.time * 3) * .2;
+  ctx.save();
+  ctx.globalAlpha = rglow;
+  px(ctx, 568, 48, 74, 8, '#ff2a1a');
+  px(ctx, 568, 62, 74, 8, '#ff2a1a');
+  ctx.restore();
+  ctx.fillStyle = '#ffb0a0';
+  ctx.font = 'bold 7px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('KENNY’S ROASTERS', 605, 56);
+  ctx.fillText('CHICKEN CHICKEN', 605, 70);
+  if (typeof isNight === 'function' && isNight()) {
+    ctx.save();
+    ctx.globalAlpha = .12 + Math.sin(state.time * 3) * .04;
+    ctx.fillStyle = '#ff3a2a';
+    ctx.beginPath();
+    ctx.arc(605, 120, 130, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.textAlign = 'left';
   // persistent reactive taxis — they brake and honk at jaywalkers
   if (!state.nycCars) updateNycTaxis(0);
   for (const c of (state.nycCars || [])) {
@@ -7691,6 +7714,14 @@ function drawNyc() {
 
 function nycInteractions() {
   return [
+    { x: 605, y: 120, w: 80, h: 40, radius: 44, label: 'The red chicken light', action: () => {
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'The red neon glow of the chicken sign washes over the street like a sunset that only sells one thing. George feels his pupils dilate and his resolve weaken. He doesn’t even like the chicken. Nobody likes the chicken. That’s not what it’s about.' },
+        { speaker: 'george', text: 'It’s the light, Jerry. THE LIGHT. It gets in your head and it rearranges things!' }
+      ] : [
+        { speaker: 'narrator', text: 'A chicken place bathing the whole block in red neon at all hours. Tony has shaken down vending machines with more dignity than this signage. The chicken, he is forced to admit, smells incredible.' }
+      ]);
+    } },
     { x: 100, y: 200, w: 52, h: 44, radius: 42, label: 'Monk’s Café', action: () => travelHub('monks') },
     { x: 410, y: 196, w: 52, h: 40, radius: 42, label: 'Soup stand', action: () => travelHub('soup') },
     { x: 624, y: 200, w: 52, h: 44, radius: 42, label: 'Jerry’s apartment', action: () => travelHub('apartment') },
