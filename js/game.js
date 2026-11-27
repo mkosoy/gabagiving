@@ -2286,11 +2286,16 @@ function updateBrawler(dt) {
       b.swingT = 1.1;
       b.moving = false;
       if ((state.flags.hp || 3) <= 1) {
-        state.flags.hp = 3;
-        state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
-        spawnEffect(p.x, p.y - 18, '-$40 ROBBED', '#ff6a6a');
-        b.bark = 'THANKS FOR THE DONATION!';
-        b.barkT = 1.8;
+        if (Math.random() < .5) {
+          state.flags.hp = 0;
+          if (!state.wasted) state.wasted = { t: 0 };
+        } else {
+          state.flags.hp = 3;
+          state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 40);
+          spawnEffect(p.x, p.y - 18, '-$40 ROBBED', '#ff6a6a');
+          b.bark = 'THANKS FOR THE DONATION!';
+          b.barkT = 1.8;
+        }
       } else {
         state.flags.hp = (state.flags.hp || 3) - 1;
         spawnEffect(p.x, p.y - 18, 'OOF', '#ff6a6a');
@@ -2334,7 +2339,7 @@ function updateWasted(dt) {
     state.flags.heat = 0;
     state.brawler = null;
     state.wasted = null;
-    toast('You wake up in a hospital gown and a bill. -$' + fine);
+    toast(state.player.kind === 'george' ? 'You wake up in a hospital gown. The nurse says you were very loud about the gown. -$' + fine : 'You wake up in a hospital gown and a bill. -$' + fine);
     saveProgress();
   }
 }
