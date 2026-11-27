@@ -8142,7 +8142,7 @@ function pinesInteractions() {
       }
       setScene('cabin', 320, 360);
     } },
-    { x: 500, y: 240, w: 60, h: 60, radius: 50, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
+    { x: 460, y: 330, w: 60, h: 50, radius: 50, label: 'Shore →', action: () => startTransit('shore', 80, 210, null) },
     { x: 300, y: 380, w: 130, h: 26, radius: 48, label: '← Drive back north', action: () => {
       audio.sfx('honk');
       startDialog([{ speaker: 'narrator', text: 'The pines shrink in the mirror. Whatever happened back there stays back there. That’s the rule of the Barrens.' }], () => startTransit('hub', 640, 380, null));
