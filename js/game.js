@@ -5546,7 +5546,7 @@ function soupInteractions() {
           { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'BANNED?! For a bread INQUIRY?! This is a constitutional issue! There are amendments!' : 'I been thrown outta better places by worse people. You ain’t seen the last of me. …He’s right though. I seen the last of the bread.' }
         ]);
       } else {
-        state.flags.noSoup = (state.flags.noSoup || 1) + 1;
+        state.flags.noSoup = (typeof state.flags.noSoup === 'number' ? state.flags.noSoup : 1) + 1;
         const yrs = ['ONE', 'TWO', 'THREE', 'FIVE', 'TEN'][Math.min(4, state.flags.noSoup - 1)];
         startDialog([
           { speaker: 'narrator', text: 'You ask about the bread AGAIN. The audacity hangs in the air like a violated prime directive.' },
