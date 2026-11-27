@@ -2803,6 +2803,7 @@ function updateExplore(dt) {
           state.flags.heat = 0;
           if (state.cop) state.cop = null;
           if (state.cop2) state.cop2 = null;
+          if (state.copCar) state.copCar = null;
           audio.sfx('success');
           spawnEffect(state.player.x, state.player.y - 20, 'SERENITY NOW — heat cleared', '#8ffff2');
           state.cheatBuf = '';
@@ -2810,6 +2811,12 @@ function updateExplore(dt) {
           state.money += 50;
           audio.sfx('pickup');
           spawnEffect(state.player.x, state.player.y - 20, '+$50 — leftovers money', '#ffe78a');
+          state.cheatBuf = '';
+        } else if (state.cheatBuf.endsWith('BIZARRO')) {
+          state.money = Math.max(0, state.money - 50);
+          audio.sfx('success');
+          spawnEffect(state.player.x, state.player.y - 20, 'BIZARRO WORLD — you pay THEM. goodbye $50', '#c09aff');
+          startDialog([{ speaker: 'narrator', text: 'In the Bizarro world, crime pays YOU negative money. Up is down. Cats chase dogs. Newman is a humanitarian. You feel strangely at peace, and fifty dollars poorer.' }]);
           state.cheatBuf = '';
         }
       }
