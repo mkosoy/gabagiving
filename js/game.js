@@ -57,6 +57,7 @@ const sceneArt = {
   mgPinball: loadArt('./assets/mg-pinball.webp'),
   mgSkeeball: loadArt('./assets/mg-skeeball.webp'),
   mgDarts: loadArt('./assets/mg-darts.webp'),
+  mgPool: loadArt('./assets/mg-pool.webp'),
   mgMonte: loadArt('./assets/mg-monte.webp'),
   mgRoulette: loadArt('./assets/mg-roulette.webp'),
   mgSlots: loadArt('./assets/mg-slots.webp'),
@@ -5222,6 +5223,11 @@ function clubInteractions() {
     audio.sfx('cash');
     startDialog([{ speaker: 'narrator', text: `Silvio opens the safe and hands you $${amt} in bills that have never met a serial number database. “Spend it in good health. Or bad health. Health is your business.”` }]);
   } });
+  list.push({ x: 520, y: 310, w: 90, h: 54, radius: 52, label: 'Pool — $20 a rack', action: () => {
+      startDialog([
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Pool! I am excellent at pool! I once sank three balls in one game! Separately! Across the whole game! But they went in!' : 'The felt of truth. Every problem in this room has been worked out over this table at one time or another. Chalk up.' }
+      ], () => initPool());
+    } });
   list.push({ x: 300, y: 320, w: 60, h: 34, radius: 42, label: 'Executive game — $20 ante', action: () => {
       if (!state.flags.freeRoam) return;
       startDialog([
@@ -7199,6 +7205,229 @@ function drawRacing() {
     ctx.fillText(won ? 'YOUR HORSE WINS — +$70 tribute! SPACE to leave' : r.horses[r.winner].name + ' takes it. The house sends regards. SPACE to leave', 320, 330);
   }
   ctx.textAlign = 'left';
+}
+
+// ---------- Pool: THE FELT OF TRUTH ----------
+function initPool() {
+  if ((state.flags.tribute || 0) < 20) { startDialog([{ speaker: 'narrator', text: 'Pool is twenty a rack. The felt has standards. You are short.' }]); return; }
+  state.flags.tribute = Math.max(0, (state.flags.tribute || 0) - 20);
+  // table coords: x 40..600, y 70..330 in screen space. pockets at 6 spots.
+  state.pool = {
+    balls: [
+      { x: 170, y: 200, vx: 0, vy: 0, c: '#f5f0e0', cue: true, sunk: false },
+      { x: 420, y: 200, vx: 0, vy: 0, c: '#c03a3a', sunk: false },
+      { x: 446, y: 188, vx: 0, vy: 0, c: '#3a6ac0', sunk: false },
+      { x: 446, y: 212, vx: 0, vy: 0, c: '#e8c832', sunk: false },
+      { x: 472, y: 200, vx: 0, vy: 0, c: '#8a4ab0', sunk: false }
+    ],
+    aim: 0, power: 0, powerOn: false, powerDir: 1, phase: 'aim', strokes: 0, t: 0, scratched: false, msg: null
+  };
+  state.mode = 'pool';
+  audio.sfx('pickup');
+}
+
+const POOL_T = { x1: 48, y1: 78, x2: 592, y2: 322, r: 9, pr: 15 };
+function poolPockets() {
+  const t = POOL_T;
+  return [
+    { x: t.x1, y: t.y1 }, { x: (t.x1 + t.x2) / 2, y: t.y1 - 2 }, { x: t.x2, y: t.y1 },
+    { x: t.x1, y: t.y2 }, { x: (t.x1 + t.x2) / 2, y: t.y2 + 2 }, { x: t.x2, y: t.y2 }
+  ];
+}
+
+function updatePool(dt) {
+  const p = state.pool;
+  if (!p) { state.mode = 'explore'; return; }
+  p.t += dt;
+  if (p.phase === 'aim') {
+    // rotate aim with arrows/stick
+    const rot = (down(['ArrowLeft', 'KeyA']) ? -1 : 0) + (down(['ArrowRight', 'KeyD']) ? 1 : 0) + (Math.abs(axis.x) > .4 ? axis.x * .7 : 0);
+    if (rot) p.aim += rot * dt * 2.2;
+    if (!p.powerOn) {
+      if (consume(['Space', 'Enter', 'KeyE', 'KeyB'])) { p.powerOn = true; p.power = 0; p.powerDir = 1; audio.sfx('blip'); }
+    } else {
+      p.power += p.powerDir * dt * 1.5;
+      if (p.power > 1) { p.power = 1; p.powerDir = -1; }
+      if (p.power < 0) { p.power = 0; p.powerDir = 1; }
+      if (consume(['Space', 'Enter', 'KeyE', 'KeyB'])) {
+        // strike
+        const cue = p.balls[0];
+        const sp = 240 + p.power * 560;
+        cue.vx = Math.cos(p.aim) * sp;
+        cue.vy = Math.sin(p.aim) * sp;
+        p.strokes++;
+        p.powerOn = false; p.power = 0;
+        p.phase = 'roll';
+        audio.sfx('punch');
+      }
+    }
+    if (consume(['Escape', 'KeyM'])) { state.pool = null; state.mode = 'explore'; }
+    return;
+  }
+  if (p.phase === 'roll') {
+    const t = POOL_T, r = t.r;
+    const pockets = poolPockets();
+    let moving = false;
+    for (const b of p.balls) {
+      if (b.sunk) continue;
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      const fr = Math.pow(.36, dt);
+      b.vx *= fr; b.vy *= fr;
+      if (Math.abs(b.vx) < 4 && Math.abs(b.vy) < 4) { b.vx = 0; b.vy = 0; } else moving = true;
+      // rails
+      if (b.x < t.x1 + r && b.vx < 0) { b.x = t.x1 + r; b.vx = -b.vx * .72; }
+      if (b.x > t.x2 - r && b.vx > 0) { b.x = t.x2 - r; b.vx = -b.vx * .72; }
+      if (b.y < t.y1 + r && b.vy < 0) { b.y = t.y1 + r; b.vy = -b.vy * .72; }
+      if (b.y > t.y2 - r && b.vy > 0) { b.y = t.y2 - r; b.vy = -b.vy * .72; }
+      // pockets
+      for (const pk of pockets) {
+        const dd = Math.hypot(b.x - pk.x, b.y - pk.y);
+        if (dd < t.pr) {
+          b.sunk = true; b.vx = 0; b.vy = 0;
+          if (b.cue) { p.scratched = true; audio.sfx('thud'); } else audio.sfx('cash');
+          break;
+        }
+      }
+    }
+    // ball-ball collisions
+    for (let i = 0; i < p.balls.length; i++) {
+      for (let j = i + 1; j < p.balls.length; j++) {
+        const a = p.balls[i], b = p.balls[j];
+        if (a.sunk || b.sunk) continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dd = Math.hypot(dx, dy);
+        if (dd > 0 && dd < r * 2) {
+          const nx = dx / dd, ny = dy / dd;
+          const overlap = r * 2 - dd;
+          a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+          b.x += nx * overlap / 2; b.y += ny * overlap / 2;
+          const dvx = b.vx - a.vx, dvy = b.vy - a.vy;
+          const rel = dvx * nx + dvy * ny;
+          if (rel < 0) {
+            const imp = -rel * .94;
+            a.vx -= imp * nx; a.vy -= imp * ny;
+            b.vx += imp * nx; b.vy += imp * ny;
+            audio.sfx('blip');
+          }
+        }
+      }
+    }
+    if (!moving) {
+      // respot scratched cue ball
+      if (p.scratched) {
+        const cue = p.balls[0];
+        cue.sunk = false; cue.x = 170; cue.y = 200; cue.vx = 0; cue.vy = 0;
+        p.scratched = false;
+        p.strokes++; // a scratch costs you — house rules, Silvio's rules, same rules
+      }
+      const left = p.balls.filter(b => !b.cue && !b.sunk).length;
+      if (left === 0) {
+        p.phase = 'done';
+        const par = 6;
+        if (p.strokes <= par - 2) { state.flags.tribute = (state.flags.tribute || 0) + 90; p.msg = 'under par — $90. The room applauds with its eyebrows.'; }
+        else if (p.strokes <= par) { state.flags.tribute = (state.flags.tribute || 0) + 45; p.msg = 'par or better — $45. Respectable. Paulie is taking notes.'; }
+        else { p.msg = 'over par. The felt keeps your twenty. The felt has a retirement fund.'; }
+        audio.sfx(p.strokes <= par ? 'cash' : 'buzzer');
+      } else {
+        p.phase = 'aim';
+      }
+    }
+    return;
+  }
+  if (p.phase === 'done' && consume(['Space', 'Enter', 'KeyE', 'KeyB', 'Escape', 'KeyM'])) { state.pool = null; state.mode = 'explore'; }
+}
+
+function drawPool() {
+  const p = state.pool;
+  if (!p) return;
+  if (!drawMgBackdrop(sceneArt.mgPool, 640, 360, .25)) {
+    ctx.fillStyle = '#141018';
+    ctx.fillRect(0, 0, 640, 360);
+  }
+  const t = POOL_T;
+  // rails + felt
+  ctx.fillStyle = '#5a3a22';
+  ctx.fillRect(t.x1 - 14, t.y1 - 14, (t.x2 - t.x1) + 28, (t.y2 - t.y1) + 28);
+  ctx.fillStyle = '#7a5232';
+  ctx.fillRect(t.x1 - 10, t.y1 - 10, (t.x2 - t.x1) + 20, (t.y2 - t.y1) + 20);
+  ctx.fillStyle = '#1e6b3a';
+  ctx.fillRect(t.x1, t.y1, t.x2 - t.x1, t.y2 - t.y1);
+  ctx.fillStyle = 'rgba(255,255,255,.04)';
+  ctx.fillRect(t.x1, t.y1, t.x2 - t.x1, (t.y2 - t.y1) / 2);
+  // pockets
+  for (const pk of poolPockets()) {
+    ctx.fillStyle = '#0a0a0c';
+    ctx.beginPath();
+    ctx.arc(pk.x, pk.y, t.pr - 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // aim line
+  const cue = p.balls[0];
+  if (p.phase === 'aim' && !cue.sunk) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245,240,220,.5)';
+    ctx.setLineDash([4, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cue.x, cue.y);
+    ctx.lineTo(cue.x + Math.cos(p.aim) * 90, cue.y + Math.sin(p.aim) * 90);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // cue stick behind
+    ctx.strokeStyle = '#c8a060';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cue.x - Math.cos(p.aim) * 14, cue.y - Math.sin(p.aim) * 14);
+    ctx.lineTo(cue.x - Math.cos(p.aim) * 64, cue.y - Math.sin(p.aim) * 64);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.restore();
+  }
+  // balls
+  for (const b of p.balls) {
+    if (b.sunk) continue;
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath();
+    ctx.ellipse(b.x + 1, b.y + 2, t.r - 1, t.r - 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = b.c;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, t.r - 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.45)';
+    ctx.beginPath();
+    ctx.arc(b.x - 2, b.y - 2, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // HUD
+  ctx.fillStyle = '#e8c25a';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE FELT OF TRUTH', 320, 24);
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#b8a88a';
+  const left = p.balls.filter(b => !b.cue && !b.sunk).length;
+  ctx.fillText('strokes ' + p.strokes + ' · par 6 · ' + left + ' on the felt · $20 in', 320, 40);
+  if (p.phase === 'aim') {
+    if (p.powerOn) {
+      ctx.fillStyle = '#222';
+      ctx.fillRect(220, 336, 200, 12);
+      ctx.fillStyle = p.power > .8 ? '#d84040' : '#e8c832';
+      ctx.fillRect(222, 338, 196 * p.power, 8);
+      ctx.strokeStyle = '#888';
+      ctx.strokeRect(220.5, 336.5, 199, 11);
+    }
+    ctx.fillStyle = '#c8c8d0';
+    ctx.font = '9px monospace';
+    ctx.fillText('◀ ▶ aim · ' + (p.powerOn ? 'E again to strike — release is everything' : 'E to draw the cue back') + ' · M walks away', 320, 356);
+  } else if (p.phase === 'done') {
+    ctx.fillStyle = '#e8c25a';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(p.msg || '', 320, 210);
+    ctx.font = '9px monospace';
+    ctx.fillStyle = '#c8c8d0';
+    ctx.fillText(p.strokes + ' strokes · E to leave the table', 320, 232);
+  }
 }
 
 function initDarts() {
@@ -12297,6 +12526,19 @@ function drawClub() {
     // the barfly who has been here since the renovation and possibly before it
     drawPerson(ctx, 492, 96, 'manC', 'up', 0, { pose: 'sit', sitClip: .55 });
     drawPerson(ctx, 540, 96, 'womanD', 'up', Math.floor(state.time * .3), { pose: 'sit', sitClip: .55 });
+    // the pool table — green felt island on the right side of the floor
+    const pt = objArt.pooltable;
+    if (pt && pt.complete && pt.naturalWidth) {
+      const asp = pt.naturalHeight / pt.naturalWidth;
+      const pw = 96;
+      ctx.drawImage(pt, 520 - pw / 2 - state.camera.x, 310 - (pw * asp) / 2 - state.camera.y, pw, pw * asp);
+    } else {
+      px(ctx, 480 - state.camera.x, 290 - state.camera.y, 84, 42, '#5a3a22');
+      px(ctx, 484 - state.camera.x, 294 - state.camera.y, 76, 34, '#1e6b3a');
+    }
+    // a couple of players circling it, one lining up a shot
+    drawPerson(ctx, 480 - state.camera.x, 330 - state.camera.y, 'manB', 'right', Math.floor(state.time * .5) % 2, { pose: 'stand' });
+    drawPerson(ctx, 570 - state.camera.x, 292 - state.camera.y, 'womanG', 'left', 0, { pose: 'lean' });
     return;
   }
   px(ctx, 0, 0, 640, 416, '#160e1e');
@@ -13305,6 +13547,7 @@ function render() {
   else if (state.mode === 'slots') drawSlots();
   else if (state.mode === 'racing') drawRacing();
   else if (state.mode === 'darts') drawDarts();
+  else if (state.mode === 'pool') drawPool();
   else if (state.mode === 'skeeball') drawSkeeball();
   else if (state.mode === 'pinball') drawPinball();
   else if (state.mode === 'poker') drawPoker();
@@ -13742,6 +13985,8 @@ function update(dt) {
     updateSlots(dt);
   } else if (state.mode === 'racing') {
     updateRacing(dt);
+  } else if (state.mode === 'pool') {
+    updatePool(dt);
   } else if (state.mode === 'darts') {
     updateDarts(dt);
   } else if (state.mode === 'skeeball') {
