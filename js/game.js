@@ -7982,7 +7982,14 @@ function dinerInteractions() {
       audio.sfx('success');
       startDialog([
         { speaker: 'narrator', text: 'You slide into the booth. Vinyl squeaks. Somewhere a trucker is explaining the government to nobody.' + (hadHeat ? ' Twenty minutes of coffee later, the heat on you fades a little. Nobody looks for anybody in a diner. It’s a law of physics.' : '') },
-        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A booth! See, a booth is a little apartment you rent by the hour. With pie access!' : 'Every important conversation I ever had happened in a booth. There’s a reason for that.' }
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'A booth! See, a booth is a little apartment you rent by the hour. With pie access!' : 'Every important conversation I ever had happened in a booth. There’s a reason for that.' },
+        { speaker: 'narrator', text: 'From the counter, a trucker is saying — ' + [
+          '“— buried out in the Pines, I’m telling you. Things out there ain’t been found since the war. Any war.”',
+          '“— Gabagool Park. Middle of suburbia. Who hides something in a PARK? Somebody who knows nobody looks in parks, that’s who.”',
+          '“— twelve of them, scattered across the whole state. You ask me, it’s a scavenger hunt for guys who ain’t afraid of paperwork.”',
+          '“— the radio station out of Secaucus. The POLICE band. Illegal as sin and twice as informative.”',
+          '“— a cabin, deep past the clearing. Smoke coming out the chimney in August. Nobody asks. You don’t ask in the Pines.”'
+        ][Math.floor(Math.random() * 5)] }
       ]);
     } },
     { x: 380, y: 120, w: 40, h: 26, radius: 40, label: 'The waitress', action: () => {
