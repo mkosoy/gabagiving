@@ -5612,6 +5612,19 @@ function drawAC() {
 function acInteractions() {
   return [
     { x: 8, y: 210, w: 24, h: 90, radius: 44, label: '← Drive north', action: () => startTransit('shore', 700, 250, 'GARDEN STATE PARKWAY · NORTH') },
+    { x: 450, y: 150, w: 56, h: 36, radius: 42, label: 'The $19.99 buffet', action: () => {
+      if (state.money < 20) { toast('The buffet is $19.99 plus dignity, payable in advance.'); return; }
+      state.money -= 20;
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      audio.sfx('pickup');
+      startDialog(state.player.kind === 'george' ? [
+        { speaker: 'narrator', text: 'George approaches the buffet with a strategy: proteins first, no filler, visit structure optimized. Forty minutes later he is weeping gently into a bread pudding. The system has beaten him. It beats everyone.' },
+        { speaker: 'george', text: 'The crab legs are TIME-GATED! They ration the crab legs! That’s not a buffet, that’s a crab-leg LOTTERY! …I’ll take a plate for the road. Two plates. A tray!' }
+      ] : [
+        { speaker: 'narrator', text: 'Tony does the buffet the way he does everything: no wasted motion. Plate one, meat. Plate two, meat adjacent. Plate three is dessert because Tony Soprano contains multitudes. The carving station guy gives him the respect slice — the end cut. The fat cap. The one they save.' },
+        { speaker: 'tony', text: 'Nineteen ninety-nine. In this economy? This is the last honest deal in America. Don’t tell nobody. Actually — tell Paulie nothing, he’d move in.' }
+      ]);
+    } },
     { x: 250, y: 150, w: 60, h: 40, radius: 42, label: 'High-roller slots', action: () => {
       if (state.money < 50) { toast('High-roller slots are $50 a pull.'); return; }
       state.money -= 50;
