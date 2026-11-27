@@ -997,9 +997,10 @@ function drawHelp() {
   outlineText(ctx, 'Interact / advance: E, Space, Enter, or A', 174, 122, '#fff', 9);
   outlineText(ctx, 'Minigames: use the same action button', 174, 140, '#fff', 9);
   outlineText(ctx, 'B switches Tony / George in free roam', 174, 158, '#fff', 9);
-  outlineText(ctx, 'F: PUNCH people (some fight back!) · horn in cars', 174, 172, '#ffe78a', 9);
-  outlineText(ctx, 'MENU: world map · cell phone jobs · open world anytime', 174, 186, '#fff', 9);
-  outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 200, '#fff', 9);
+  outlineText(ctx, 'F: PUNCH people (some fight back!) · horn in cars', 174, 170, '#ffe78a', 9);
+  outlineText(ctx, 'Shift / RUN button: sprint · mattress at home hides cash from busted fines', 174, 182, '#fff', 9);
+  outlineText(ctx, 'MENU: world map · cell phone jobs · open world anytime', 174, 194, '#fff', 9);
+  outlineText(ctx, 'H or ? toggles this card — cheats exist. Type them.', 174, 206, '#fff', 9);
   const st = state.stats;
   outlineText(ctx, `lifetime: ${st.punches || 0} punches · ${st.carsStolen || 0} cars borrowed · ${st.missions || 0} missions`, 320, 214, '#8fb8ff', 8, 'center');
   outlineText(ctx, 'Click ? again to close', 320, 228, '#ffe78a', 8, 'center');
@@ -3993,7 +3994,7 @@ function houseInteractions() {
   if (s === 6 && !state.flags.freeRoam) list.push({ x: 316, y: 386, w: 42, h: 22, label: 'Get groceries', action: leaveForGroceries });
   if (state.flags.freeRoam) list.push({ x: 500, y: 60, w: 44, h: 50, radius: 46, label: 'Mattress — stash cash', action: () => {
     if (state.money < 20) { startDialog([{ speaker: 'narrator', text: 'The mattress. King size, queen problems. You need at least $20 on you to make a deposit worth hiding. Every dollar you carry is a dollar the cops can fine — what’s in the mattress, they never find.' }]); return; }
-    const amt = Math.min(state.money, 20 + Math.floor((state.flags.stash || 0) * 0) + Math.floor(state.money * .25));
+    const amt = Math.max(20, Math.floor(state.money * .25));
     state.money -= amt;
     state.flags.stash = (state.flags.stash || 0) + amt;
     audio.sfx('cash');
