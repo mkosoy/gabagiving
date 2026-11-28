@@ -10302,6 +10302,29 @@ function cinemaInteractions() {
         { speaker: 'narrator', text: 'Posters in glowing frames: a heist picture, a giant shark, a space opera, and — new this week — an indie darling called BARKATHON, about a man, a dog, and the screenplay that destroyed them both. You have a strange feeling you’ve heard that title somewhere. In a dream. In a nightmare. In Queens.' }
       ]);
     } },
+    { x: 420, y: 130, w: 80, h: 60, radius: 52, label: 'Theater doors — the feature', action: () => {
+      if ((state.money || 0) < 11) { toast('Tickets are $11. The dark is not free.'); return; }
+      state.money -= 11;
+      audio.sfx('pickup');
+      const films = [
+        [
+          { speaker: 'narrator', text: 'The lights go down. The screen crackles to life. EXT. JERSEY TURNPIKE — NIGHT. A car speeds through darkness. A voiceover: "Some scores you don’t walk away from…" — you are immediately, helplessly invested.' },
+          { speaker: 'narrator', text: 'Forty minutes in: the heist goes wrong in a way you did NOT see coming. Someone in the back row gasps so loud the usher comes in. The usher watches the rest of the scene from the aisle. Nobody minds. This is cinema.' },
+          { speaker: 'narrator', text: 'The ending is perfect and you will not describe it to anyone because they have to see it themselves. You sit through the credits out of respect. Two hours gone. Best eleven dollars in the state of New Jersey.' }
+        ],
+        [
+          { speaker: 'narrator', text: 'The lights go down. OPENING TITLE: a dog, in a courtroom, wearing a little tie. Behind you someone whispers "no way." Way. The dog is a lawyer now. You are watching this. You are invested in this.' },
+          { speaker: 'narrator', text: 'The courtroom drama is airtight. The dog’s closing argument — delivered entirely in meaningful barks with subtitles — leaves the gallery in tears. A man three rows down is openly sobbing. It might be you. It’s dark. It’s you.' },
+          { speaker: 'narrator', text: 'You exit into the lobby a changed person, blinking in the light like a man reborn. You will never tell anyone what you saw. You will also never stop thinking about it. BARKATHON. In theaters everywhere now.' }
+        ]
+      ];
+      const film = films[Math.floor(Math.random() * films.length)];
+      startDialog(film, () => {
+        state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+        state.stats.moviesSeen = (state.stats.moviesSeen || 0) + 1;
+        toast('Two hours in the dark. Heat cooled. Nobody found you.');
+      });
+    } },
     { x: 380, y: 245, w: 130, h: 46, radius: 52, label: 'The velvet ropes', action: () => {
       audio.sfx('pickup');
       startDialog([
