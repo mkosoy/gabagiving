@@ -10133,9 +10133,10 @@ function dragonTick() {
   const w = state.dragonWait;
   if (!w || state.scene !== 'dragon') return;
   if (w.parties <= 0) return;
-  const rate = state.playerPose === 'sit' ? .5 : 1; // sitting: each party clears in ~50s equiv — wait feels shorter, numbers tick same, but the sitter gets the bench bonus below
-  w.t = (w.t || 0) + 1;
-  if (w.t % 90 === 0) {
+  w.t = (w.t || 0) + (state.playerPose === 'sit' ? 2 : 1); // ~25s a party standing — the bench, as always, knows things
+  if (!w.nextIn) w.nextIn = 1500;
+  if (w.t >= w.nextIn) {
+    w.nextIn += 1500;
     w.parties--;
     audio.sfx('blip');
     spawnEffect(state.player.x + 8, state.player.y - 10, 'a party gets seated…', '#d8cfc0');
