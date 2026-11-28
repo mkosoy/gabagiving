@@ -76,6 +76,7 @@ const sceneArt = {
   cabin: loadArt('./assets/bg-cabin.webp'),
   poolside: loadArt('./assets/bg-poolside.webp'),
   greengrove: loadArt('./assets/bg-greengrove.webp'),
+  dragon: loadArt('./assets/bg-dragon.webp'),
   meadow: loadArt('./assets/bg-meadow.webp'),
   queens: loadArt('./assets/bg-queens.webp'),
   taffy: loadArt('./assets/bg-taffy.webp'),
@@ -961,7 +962,7 @@ function drawFastTravel() {
   if (state.mission && MISSION_DEFS[state.mission.id]) {
     const mstep = missionStep();
     if (mstep) {
-      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac', greengrove: 'hub' };
+      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac', greengrove: 'hub', dragon: 'nyc' };
       const targetScene = hostRegion[mstep.scene] || mstep.scene;
       const target = FT_NODES.find((n) => n.id === targetScene);
       if (target) {
@@ -1365,6 +1366,15 @@ const scenes = {
     ],
     draw: drawGreenGrove,
     interactions: greengroveInteractions
+  },
+  dragon: {
+    w: 640, h: 416, label: 'The Golden Dragon · Manhattan', music: 'monks',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(20,200,150,90), r(230,240,190,80), r(450,130,110,70), r(60,90,110,60), r(235,180,130,30)
+    ],
+    draw: drawDragon,
+    interactions: dragonInteractions
   },
   dmv: {
     w: 640, h: 416, label: 'Department of Motor Vehicles · Manhattan', music: 'monks',
@@ -3702,6 +3712,7 @@ function updateExplore(dt) {
     }
   }
 
+  if (typeof dragonTick === 'function') dragonTick();
   // anti-stuck beacon: idle players get a glowing hint toward the nearest interaction
   const moving = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].some((k) => keys[k]) || (state.player.movingScript);
   if (moving && state.playerPose && !state.dialog) state.playerPose = null;
@@ -10085,6 +10096,119 @@ function drawBingo() {
   }
 }
 
+function drawDragon() {
+  if (drawSceneArt(sceneArt.dragon, 640, 416)) {
+    // diners at the round tables — they got here before you. they ALWAYS got here before you.
+    drawPerson(ctx, 70 - state.camera.x, 232 - state.camera.y, 'manB', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 126 - state.camera.x, 232 - state.camera.y, 'womanE', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 268 - state.camera.x, 268 - state.camera.y, 'manC', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 322 - state.camera.x, 268 - state.camera.y, 'womanF', 'down', 0, { pose: 'sit', sitClip: .55 });
+    drawPerson(ctx, 380 - state.camera.x, 268 - state.camera.y, 'manA', 'left', 0, { pose: 'sit', sitClip: .55 });
+    // the maitre d', a man who has never once been impressed by a party of any size
+    drawPerson(ctx, 468 - state.camera.x, 168 - state.camera.y, 'artie', 'down', Math.floor(state.time * .5) % 2, { pose: 'stand' });
+    // waiting-count ticker floating by the podium
+    if (state.dragonWait && state.dragonWait.parties > 0) {
+      outlineText(ctx, 'parties ahead: ' + state.dragonWait.parties, 468 - state.camera.x, 200 - state.camera.y, '#ffe78a', 7, 'center');
+    }
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#5a1a1a');
+}
+
+function dragonTick() {
+  // the wait creeps forward in real time; sitting on the bench makes it crawl less slowly
+  const w = state.dragonWait;
+  if (!w || state.scene !== 'dragon') return;
+  if (w.parties <= 0) return;
+  const rate = state.playerPose === 'sit' ? .5 : 1; // sitting: each party clears in ~50s equiv — wait feels shorter, numbers tick same, but the sitter gets the bench bonus below
+  w.t = (w.t || 0) + 1;
+  if (w.t % 90 === 0) {
+    w.parties--;
+    audio.sfx('blip');
+    spawnEffect(state.player.x + 8, state.player.y - 10, 'a party gets seated…', '#d8cfc0');
+    if (w.parties <= 0) {
+      audio.sfx('success');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? '"COSTANZA! Party of—" — they actually said it. They actually called the name. George is already halfway to the table before the second syllable.' : '"SOPRANO. Party of one." The maître d’ says it like a verdict. Your table. YOURS. You try not to look too eager. You fail.' }
+      ]);
+    }
+  }
+}
+
+function dragonInteractions() {
+  const list = [
+    { x: 30, y: 340, w: 80, h: 66, radius: 44, label: 'Leave', action: () => {
+      if (state.dragonWait && state.dragonWait.parties > 0) {
+        startDialog([
+          { speaker: 'narrator', text: 'You push out into the street. Behind you, faintly: "…party of one? …party of—" and then nothing. Your table is gone. Given away. Possibly to a party of TWO, which — and the maître d’ will deny this — is against the entire spirit of the list.' },
+          { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'WAIT — no — I was — THEY CAN’T DO THAT! …they can do that. They just did. They DID do that.' : 'Eh. I wasn’t that hungry. …I was pretty hungry.' }
+        ]);
+        state.dragonWait = null;
+      }
+      leaveOutside();
+    } },
+    { x: 440, y: 150, w: 60, h: 46, radius: 48, label: "The maître d' — put your name in", action: () => {
+      audio.sfx('pickup');
+      if (state.dragonWait && state.dragonWait.parties > 0) {
+        startDialog([{ speaker: 'narrator', text: 'The maître d’ consults the sacred book. "You are on the list. ' + state.dragonWait.parties + ' parties ahead of you. The list does not hurry. The list has never hurried. The list will outlive us all."' }]);
+        return;
+      }
+      if (state.dragonWait && state.dragonWait.parties <= 0) {
+        startDialog([{ speaker: 'narrator', text: 'The maître d’ is already gesturing at a table with the urgency of a man seating royalty. "YOUR table. It has been ready. Please. Before the universe reconsiders."' }]);
+        return;
+      }
+      const parties = 2 + Math.floor(Math.random() * 3);
+      state.dragonWait = { parties, t: 0 };
+      startDialog([
+        { speaker: 'narrator', text: 'The maître d’ writes your name in a leather book the size of a paving stone. "' + parties + ' parties ahead of you. Five, ten minutes." He says it the way men say things they know to be false. The bench by the fish tank creaks in the distance, waiting.' },
+        { speaker: state.player.kind === 'george' ? 'george' : 'tony', text: state.player.kind === 'george' ? 'Five ten minutes! THAT’S NOT A TIME! Those are TWO TIMES! Which is it — five?! Or TEN?! …I’ll be by the fish.' : 'Yeah, I’ll wait. …The fish any good?' }
+      ]);
+    } },
+    { x: 70, y: 100, w: 100, h: 60, radius: 52, label: 'The fish tank', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'The fish drift in their blue-green world, untroubled by the list. One large specimen hovers at the glass and regards you with an expression you recognize from every maître d’ you have ever met. Somewhere in this tank is a fish who knows exactly when you’ll be seated. He is not telling.' }
+      ]);
+    } },
+    { x: 240, y: 180, w: 120, h: 40, radius: 52, label: 'The waiting bench — sit', action: () => {
+      state.player.x = 298; state.player.y = 192; state.player.dir = 'down'; state.playerPose = 'sit';
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'George sits the way only George can sit: fully, committedly, with his whole lower back. The bench creaks acceptance. This is his whole life now. He is at peace with it. He is NOT at peace with it.' : 'Tony sits. The bench was built for smaller men waiting shorter waits. He watches the room the way he watches every room: who’s eating, who’s paying, who’s watching him wait. Force of habit. The fish don’t count. Probably.' }
+      ]);
+    } },
+    { x: 420, y: 110, w: 44, h: 50, radius: 44, label: 'The payphone', action: () => {
+      audio.sfx('pickup');
+      const lines = state.player.kind === 'george' ? [
+        'You drop a quarter. "Ma! Guess where I am! …No. …NO, not that kind of — it’s a restaurant! The wait is part of the — hello? …She hung up. She HUNG UP. On a quarter!"',
+        'You drop a quarter and dial Elaine. "You will not believe the wait they’re giving me — what do you mean TAKE IT?! Nobody TAKES a table! There’s a SYSTEM! There’s a BOOK!"',
+        'You drop a quarter. Wrong number. You say sorry. The wrong number keeps you on the line anyway — he was waiting for a call too. You talk for nine minutes about nothing. Best conversation you’ve had all week.'
+      ] : [
+        'You drop a quarter and call the house. Voice mail. You hang up. You drop another quarter and call it again because that is what the payphone does to a man.',
+        'You drop a quarter and call Silvio. "The list don’t move," you tell him. "Then the list gets whacked," says Silvio, and hangs up, and you spend a minute deciding how much of that was a joke. Twenty percent. Tops.',
+        'The payphone eats your quarter and returns nothing, not even a dial tone. The maître d’ watches this happen and nods slowly, as if a small piece of cosmic order has been restored.'
+      ];
+      startDialog([{ speaker: 'narrator', text: lines[Math.floor(Math.random() * lines.length)] }]);
+    } }
+  ];
+  // when the wait is over — the table itself
+  if (state.dragonWait && state.dragonWait.parties <= 0) {
+    list.push({ x: 300, y: 250, w: 120, h: 70, radius: 64, label: 'Your table — finally', action: () => {
+      state.dragonWait = null;
+      if (state.money < 12 && (state.flags.tribute || 0) < 12) { toast('The check exists even here. $12.'); return; }
+      if (state.money >= 12) state.money -= 12; else state.flags.tribute -= 12;
+      state.flags.hp = Math.min(3, (state.flags.hp || 3) + 2);
+      state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+      state.stats.mealsHad = (state.stats.mealsHad || 0) + 1;
+      audio.sfx('cash');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'Hot and sour soup. Then the chicken, because George does not experiment. It is perfect. It is worth every minute of the wait, and George will be saying so — loudly, to anyone within nine tables — for the rest of the week. (+2 health, −heat, −$12)' : 'The waiter knows. They always know. The good table, the fast course, the tea that never empties. Tony eats like a man who has earned the wait — which, by the ancient laws of the list, he has. (+2 health, −heat, −$12)' }
+      ]);
+    } });
+  }
+  return list;
+}
+
 function drawCabin() {
   if (drawSceneArt(sceneArt.cabin, 640, 416)) {
     ctx.save();
@@ -11487,7 +11611,13 @@ function drawNyc() {
 }
 
 function nycInteractions() {
-  return [
+  const dg = { x: 690, y: 140, w: 60, h: 44, radius: 48, label: 'The Golden Dragon', action: () => {
+    startDialog([
+      { speaker: 'narrator', text: 'Red door, gold lettering, steam on the inside of the windows. THE GOLDEN DRAGON. The smell alone has a waiting list.' }
+    ], () => travelHub('dragon'));
+  } };
+
+  return [ dg,
     { x: 605, y: 120, w: 80, h: 40, radius: 44, label: 'The red chicken light', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'The red neon glow of the chicken sign washes over the street like a sunset that only sells one thing. George feels his pupils dilate and his resolve weaken. He doesn’t even like the chicken. Nobody likes the chicken. That’s not what it’s about.' },
