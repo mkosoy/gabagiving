@@ -77,6 +77,7 @@ const sceneArt = {
   poolside: loadArt('./assets/bg-poolside.webp'),
   greengrove: loadArt('./assets/bg-greengrove.webp'),
   dragon: loadArt('./assets/bg-dragon.webp'),
+  cinema: loadArt('./assets/bg-cinema.webp'),
   meadow: loadArt('./assets/bg-meadow.webp'),
   queens: loadArt('./assets/bg-queens.webp'),
   taffy: loadArt('./assets/bg-taffy.webp'),
@@ -962,7 +963,7 @@ function drawFastTravel() {
   if (state.mission && MISSION_DEFS[state.mission.id]) {
     const mstep = missionStep();
     if (mstep) {
-      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac', greengrove: 'hub', dragon: 'nyc' };
+      const hostRegion = { club: 'hub', vesuvio: 'hub', satriale: 'hub', house: 'hub', monks: 'nyc', soup: 'nyc', apartment: 'nyc', bodega: 'nyc', yankees: 'nyc', slice: 'nyc', costanza: 'queens', cabin: 'pines', taffy: 'shore', casino: 'ac', greengrove: 'hub', dragon: 'nyc', cinema: 'nyc' };
       const targetScene = hostRegion[mstep.scene] || mstep.scene;
       const target = FT_NODES.find((n) => n.id === targetScene);
       if (target) {
@@ -1366,6 +1367,15 @@ const scenes = {
     ],
     draw: drawGreenGrove,
     interactions: greengroveInteractions
+  },
+  cinema: {
+    w: 640, h: 416, label: 'The Paragon · Movie Theater', music: 'dream',
+    colliders: [
+      r(0,0,640,8), r(0,408,640,8), r(0,0,8,416), r(632,0,8,416),
+      r(30,95,220,100), r(460,150,120,120), r(255,60,120,90)
+    ],
+    draw: drawCinema,
+    interactions: cinemaInteractions
   },
   dragon: {
     w: 640, h: 416, label: 'The Golden Dragon · Manhattan', music: 'monks',
@@ -10221,6 +10231,70 @@ function ambientChatter(sceneKey, barks, minX, maxX, y) {
   }
 }
 
+function drawCinema() {
+  if (drawSceneArt(sceneArt.cinema, 640, 416)) {
+    // the ticket taker, a boy of seventeen who has seen everything and been moved by none of it
+    drawPerson(ctx, 515 - state.camera.x, 235 - state.camera.y, 'manC', 'down', Math.floor(state.time * .4) % 2, { pose: 'stand' });
+    // the concessionaire, forever scooping
+    drawPerson(ctx, 150 - state.camera.x, 150 - state.camera.y, 'waitress', 'down', state.frame, { pose: 'work', sitClip: .48 });
+    // a couple sharing popcorn near the ropes
+    drawPerson(ctx, 120 - state.camera.x, 290 - state.camera.y, 'manB', 'right', 0, { pose: 'stand' });
+    drawPerson(ctx, 142 - state.camera.x, 290 - state.camera.y, 'womanE', 'left', 0, { pose: 'stand' });
+    ambientChatter('cinema', ['…no no no — the FIRST one was the good one, this is a cash grab…','…he talked through the whole thing. THE WHOLE THING…','…eleven dollars for popcorn. Eleven. For corn and air…','…shhh — it’s starting — shhh — it’s the logos — SHHH…'], 150, 470, 120);
+    return;
+  }
+  px(ctx, 0, 0, 640, 416, '#2a1420');
+}
+
+function cinemaInteractions() {
+  const list = [
+    { x: 30, y: 340, w: 80, h: 66, radius: 44, label: 'Leave', action: leaveOutside },
+    { x: 60, y: 110, w: 190, h: 90, radius: 64, label: 'The concession stand', action: () => {
+      audio.sfx('pickup');
+      if ((state.money || 0) < 8) { toast('Popcorn is $8. It is always $8. It has never not been $8.'); return; }
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? '"Small popcorn." — "That’s eight dollars." — "SMALL. Popcorn. EIGHT. DOLLARS. It’s corn! It’s corn and hot air! It’s the most honest food there is and you’re charging me like it’s a STEAK!" — George pays the eight dollars. Everyone pays the eight dollars. That is why it is eight dollars.' : '"Large. Extra butter." — Tony does not flinch at the price. You don’t get to be a captain of industry by flinching at popcorn. Besides — the butter alone is doing more for him than Dr. Melfi ever has.' }
+      ], () => {
+        state.money -= 8;
+        state.flags.hp = Math.min(3, (state.flags.hp || 3) + 1);
+        state.stats.popcornBought = (state.stats.popcornBought || 0) + 1;
+        audio.sfx('cash');
+        toast('Popcorn acquired. +1 health. −$8.');
+      });
+    } },
+    { x: 480, y: 215, w: 90, h: 60, radius: 52, label: 'The ticket taker — a movie', action: () => {
+      audio.sfx('pickup');
+      const movies = state.player.kind === 'george' ? [
+        'The feature is a prestige drama three and a half hours long. A man behind George narrates every plot point to his date thirty seconds before it happens. George turns around exactly eleven times. He does not say anything. He will say everything, later, at the coffee shop, for a week.',
+        'The feature is a big dumb action picture and it is PERFECT. Things explode. A car explodes. Then a bigger car explodes. George cries a little at the end and doesn’t know why. Best eleven dollars he ever spent.',
+        'The feature is sold out. The NEXT feature is sold out. The only seats left are for a documentary about competitive stamp collecting, first row, the neck-breaker seats. George buys two. He does not know why he bought two.'
+      ] : [
+        'Tony sits in the dark where nobody can find him, which lately is his favorite kind of dark. The picture is about a crew, a score, a rat. He could’ve written it in his sleep. Halfway through, a guy two rows down answers a phone. Tony turns and looks at him once. The phone goes back in the pocket. The power of cinema.',
+        'The feature is a romantic comedy. Tony is there because there was nothing else and the popcorn was already bought. Ninety minutes later he is wiping his eyes and telling himself it’s the butter. It is not the butter. It is never the butter.',
+        'The feature is in Italian with subtitles. Tony doesn’t need the subtitles. He also doesn’t speak Italian. He understands every word anyway — some things you don’t learn, you inherit. Best picture he’s seen in years. He will deny this at the Bing.'
+      ];
+      startDialog([{ speaker: 'narrator', text: movies[Math.floor(Math.random() * movies.length)] }], () => {
+        state.flags.heat = Math.max(0, (state.flags.heat || 0) - .5);
+        state.stats.moviesSeen = (state.stats.moviesSeen || 0) + 1;
+        toast('Two hours in the dark. Heat cooled. Nobody found you. Nobody looked.');
+      });
+    } },
+    { x: 265, y: 75, w: 110, h: 70, radius: 52, label: 'The poster wall', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: 'Posters in glowing frames: a heist picture, a giant shark, a space opera, and — new this week — an indie darling called BARKATHON, about a man, a dog, and the screenplay that destroyed them both. You have a strange feeling you’ve heard that title somewhere. In a dream. In a nightmare. In Queens.' }
+      ]);
+    } },
+    { x: 380, y: 245, w: 130, h: 46, radius: 52, label: 'The velvet ropes', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? 'The velvet ropes guide the line that does not exist. George respects them anyway — a man has to have something. He once spent twenty minutes in a rope line for a matinee of a film he didn’t want to see, and it was, structurally, the best day of that month.' : 'Red velvet, brass poles, the last theater in the state that still does it right. Tony approves of the ropes. A rope means somebody cares where the line is. Most of Tony’s job, one way or another, is also about where the line is.' }
+      ]);
+    } }
+  ];
+  return list;
+}
+
 function drawCabin() {
   if (drawSceneArt(sceneArt.cabin, 640, 416)) {
     ctx.save();
@@ -11630,7 +11704,12 @@ function nycInteractions() {
     ], () => travelHub('dragon'));
   } };
 
-  return [ dg,
+  const cn = { x: 90, y: 140, w: 60, h: 44, radius: 48, label: 'The Paragon — movies', action: () => {
+    startDialog([
+      { speaker: 'narrator', text: 'THE PARAGON. The marquee hums. Velvet ropes, a popcorn machine glowing like a shrine, and the dark beyond the double doors where nobody can find you for two hours.' }
+    ], () => travelHub('cinema'));
+  } };
+  return [ dg, cn,
     { x: 605, y: 120, w: 80, h: 40, radius: 44, label: 'The red chicken light', action: () => {
       startDialog(state.player.kind === 'george' ? [
         { speaker: 'narrator', text: 'The red neon glow of the chicken sign washes over the street like a sunset that only sells one thing. George feels his pupils dilate and his resolve weaken. He doesn’t even like the chicken. Nobody likes the chicken. That’s not what it’s about.' },
