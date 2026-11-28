@@ -1997,6 +1997,27 @@ function updateCop(dt) {
 function drawHubEventProps() {
   // Green Grove signpost — the brick building set back on the east end
   drawHighwaySign(1120, 108, ['GREEN GROVE', 'RETIREMENT COMMUNITY']);
+  // neighborhood life — a living street, not a backdrop
+  if (state.scene === 'hub' && !isNight()) {
+    // two kids throwing a football back and forth across the lawn
+    const kx = 700, kx2 = 790, ky = 130;
+    drawPerson(ctx, kx, ky, 'manC', 'right', state.frame * .5, { pose: 'stand' });
+    drawPerson(ctx, kx2, ky + 8, 'manC', 'left', state.frame * .5 + 1, { pose: 'stand' });
+    const passT = (state.time % 2.4) / 2.4;
+    const bx = kx + 12 + (kx2 - kx - 24) * (passT < .5 ? passT * 2 : (1 - passT) * 2);
+    const by = ky - 6 - Math.sin((passT < .5 ? passT * 2 : (1 - passT) * 2) * Math.PI) * 22;
+    px(ctx, bx, by, 4, 3, '#8a5a2a');
+    // a dog walker being walked by the dog, as is tradition
+    const dw = 200 + ((state.time * 16) % 900);
+    drawPerson(ctx, dw, 268, 'womanE', 'right', state.frame, { pose: 'walk' });
+    px(ctx, dw + 16, 282, 8, 5, '#6b4a2f');
+    px(ctx, dw + 22, 278, 4, 4, '#6b4a2f');
+    // the leaf-raking neighbor — the pile never shrinks, he never stops
+    const rk = Math.sin(state.time * 1.1) * 4;
+    drawPerson(ctx, 420 + rk, 148, 'manB', 'down', Math.floor(state.time * .9) % 2, { pose: 'work' });
+    px(ctx, 432, 158, 10, 4, '#c86d31');
+    px(ctx, 438, 162, 6, 3, '#d79531');
+  }
   // Newman loiters by the park fence awaiting couriers
   if (state.flags.freeRoam) {
     drawPerson(ctx, 552, 206, 'newman', 'down', state.frame * .5, {});
@@ -9544,6 +9565,18 @@ function drawDiner() {
     drawPerson(ctx, 462 - state.camera.x, 204 - state.camera.y, 'trucker', 'up', 0, { pose: 'sit' });
     drawPerson(ctx, 480 - state.camera.x, 296 - state.camera.y, 'waitress', 'left', state.frame * .5, {});
     drawPerson(ctx, 128 - state.camera.x, 330 - state.camera.y, 'bobby', 'right', Math.floor(state.time * .3) % 2, { pose: 'sit' });
+    // counter chatter — the regulars never actually finish a conversation
+    if (!state.dinerBarkT || state.time > state.dinerBarkT) state.dinerBarkT = state.time + 9 + Math.random() * 8;
+    if (Math.abs((state.dinerBarkT - 4) - state.time) < .05) {
+      const barks = [
+        [462, 188, '…coffee’s hot today. huh. First time since the renovation.'],
+        [320, 188, '…so I says to him — you call that a toll plaza?…'],
+        [480, 280, 'Hon, you want the pie or not? I got four other booths.'],
+        [148, 188, '…the rotator cuff is shot but the pickup league don’t know that…']
+      ];
+      const bk = barks[Math.floor(Math.random() * barks.length)];
+      spawnEffect(bk[0], bk[1], bk[2].slice(0, 34), '#d8cfc0');
+    }
     // the booth couple that has been sharing one milkshake since the Carter administration
     drawPerson(ctx, 516 - state.camera.x, 322 - state.camera.y, 'manA', 'left', 0, { pose: 'sit', sitClip: .55 });
     drawPerson(ctx, 576 - state.camera.x, 322 - state.camera.y, 'womanA', 'right', 0, { pose: 'sit', sitClip: .55 });
