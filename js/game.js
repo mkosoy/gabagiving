@@ -9111,6 +9111,7 @@ function drawTransit() {
 }
 
 function drawBodega() {
+  ambientChatter('bodega', ['…the cat runs this store. The guy at the register works for the cat…','…everything’s a dollar-fifty more after midnight. That’s just science…','…they got everything in here. EVERYTHING. Even the thing you’re thinking of…'], 150, 470, 120);
   if (!drawSceneArt(sceneArt.bodega, 640, 416)) px(ctx, 0, 0, 640, 416, '#4a3a28');
   // the cat shifts position slightly, as cats do
   const cx = 480 + Math.sin(state.time * .3) * 4;
@@ -10538,6 +10539,7 @@ function taffyInteractions() {
 }
 
 function drawSlice() {
+  ambientChatter('slice', ['…fold it. You ALWAYS fold it. That’s the whole thing…','…two dollars a slice since forever. Inflation don’t apply to pizza…','…who IS Ray? Nobody knows. Nobody has ever known…'], 150, 470, 120);
   if (drawSceneArt(sceneArt.slice, 640, 416)) {
     ctx.save();
     ctx.globalAlpha = .12 + Math.sin(state.time * 8) * .04;
@@ -12295,6 +12297,7 @@ function drawNjStreet() {
 }
 
 function drawSatriale() {
+  ambientChatter('satriale', ['…the pork store don’t deliver. The pork store has never delivered…','…capicola. It’s gabagool. We’ve been over this. We’ll be over it again…','…the card game in the back is invite-only and you’re not invited…'], 150, 470, 120);
   const t = state.time;
   const ajX = 350 + Math.sin(t * .85) * 15;
   const ajY = 354 + Math.cos(t * .7) * 4;
