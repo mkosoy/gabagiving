@@ -9252,6 +9252,7 @@ function bodegaInteractions() {
 }
 
 function drawMeadow() {
+  ambientChatter('meadow', ['…the four horse. The FOUR. I had a feeling about the four…','…tailgate’s been going since dawn. Nobody remembers what game…','…you can see the stadium from here. It’s empty. It’s ALWAYS empty…'], 150, 470, 130);
   if (drawSceneArt(sceneArt.meadow, 768, 416)) {
     // horses circling the rail
     for (let h = 0; h < 3; h++) {
@@ -10760,6 +10761,7 @@ function casinoInteractions() {
 }
 
 function drawQueens() {
+  ambientChatter('queens', ['…the space was MINE. I had the space. Everybody saw I had the space…','…Frank is on the lawn again. Nobody make eye contact…','…the mail truck’s been parked there since Tuesday and nobody knows why…'], 150, 470, 120);
   if (drawSceneArt(sceneArt.queens, 768, 416)) {
     const qx = 200 + Math.sin(state.time * .25) * 140;
     drawPerson(ctx, qx - state.camera.x, 290 - state.camera.y, 'womanC', Math.sin(state.time * .25) > 0 ? 'right' : 'left', state.frame, { pose: 'walk' });
@@ -10915,6 +10917,7 @@ function queensInteractions() {
 }
 
 function drawAC() {
+  ambientChatter('ac', ['…up four hundred, down four hundred, it’s a wash. It’s basically winning…','…the rolling chairs’re the only way to travel, I don’t care what anyone says…','…comps is comps. A free breakfast is a free breakfast…'], 150, 470, 130);
   if (drawSceneArt(sceneArt.ac, 768, 416)) {
     const flick = Math.sin(state.time * 7) > .6;
     if (flick) px(ctx, 340 - state.camera.x, 60 - state.camera.y, 60, 6, '#ffd76a');
@@ -11053,6 +11056,7 @@ function acInteractions() {
 }
 
 function drawShore() {
+  ambientChatter('shore', ['…the tides’re turning early this year, mark my words…','…skeeball machine’s rigged. My nephew worked there. Rigged…','…you smell that? Funnel cake and November. That’s the jersey smell…'], 150, 470, 140);
   if (!drawSceneArt(sceneArt.shore, 768, 416)) px(ctx, 0, 0, 768, 416, '#4a4238');
   drawHighwaySign(60, 158, ['GSP NORTH', '← THE BARRENS']);
   drawHighwaySign(640, 158, ['AC EXPRESSWAY', 'ATLANTIC CITY →']);
