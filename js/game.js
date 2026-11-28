@@ -5593,6 +5593,7 @@ function meetAugustusAJ() {
 }
 
 function drawVesuvio() {
+  ambientChatter('vesuvio', ['…the gabagool is a religious experience, I’m telling you…','…he ordered the fish. THE FISH. In a recession…','…Artie hasn’t left that kitchen since the first Bush administration…'], 150, 470, 110);
   if (drawSceneArt(sceneArt.vesuvio, 640, 416)) {
     // Waitress circulates between tables; Artie fusses near the oven.
     const wx = 320 + Math.sin(state.time * .35) * 110;
@@ -5711,6 +5712,7 @@ function vesuvioInteractions() {
 }
 
 function drawMonks() {
+  ambientChatter('monks', ['…the bisque changed my life and I don’t say that lightly…','…no bread for him. He knows what he did…','…I waited forty minutes and I’d wait forty more…'], 150, 470, 110);
   if (drawSceneArt(sceneArt.monks, 640, 416)) {
     // the gang occupies the center booth; Kramer slides in and out
     const boothY = 236 + Math.sin(state.time * 1.6) * 1;
@@ -10209,6 +10211,16 @@ function dragonInteractions() {
   return list;
 }
 
+// ambient room chatter — floating fragments of conversations you will never hear the end of
+function ambientChatter(sceneKey, barks, minX, maxX, y) {
+  const key = 'chatterT_' + sceneKey;
+  if (!state[key] || state.time > state[key]) state[key] = state.time + 8 + Math.random() * 9;
+  if (Math.abs((state[key] - 4) - state.time) < .05) {
+    const bk = barks[Math.floor(Math.random() * barks.length)];
+    spawnEffect(minX + Math.random() * (maxX - minX), y, bk, '#cfc8b8');
+  }
+}
+
 function drawCabin() {
   if (drawSceneArt(sceneArt.cabin, 640, 416)) {
     ctx.save();
@@ -10554,6 +10566,7 @@ function sliceInteractions() {
 }
 
 function drawCasino() {
+  ambientChatter('casino', ['…I’m not down, I’m PRE-down. It’s a completely different thing…','…the buffet’s twelve dollars. TWELVE. They’re basically paying ME…','…red. It’s always red eventually. That’s just math…'], 150, 470, 110);
   if (drawSceneArt(sceneArt.casino, 640, 416)) {
     ctx.save();
     ctx.globalAlpha = .1 + Math.sin(state.time * 2) * .03;
@@ -13040,6 +13053,7 @@ function drawApartment() {
 }
 
 function drawClub() {
+  ambientChatter('club', ['…the Bing don’t close. The Bing has never closed. There is no key…','…Silvio comped the whole table and nobody knows why and nobody asks…','…the band was supposed to be here in 1989…'], 150, 470, 110);
   if (drawSceneArt(sceneArt.club, 640, 416)) {
     drawTurkey(ctx, 320, 204, 1.6, true);
     // Crew members sit around the private table with individual idle motion.
