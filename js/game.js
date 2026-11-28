@@ -6452,6 +6452,20 @@ function stealRandomCar() {
 
 function hubInteractions() {
   const list = [
+    { x: 700, y: 120, w: 100, h: 40, radius: 52, label: 'The football kids', action: () => {
+      audio.sfx('pickup');
+      startDialog([
+        { speaker: 'narrator', text: state.player.kind === 'george' ? '"Mister! Go long!" — George goes long. George has never once in his life gone long successfully. The ball arcs, majestic, inevitable, directly onto a roof. The kids look at him. The roof looks at him. Somewhere a leaf-raker pauses, judgmentally.' : 'The kids run their routes in a game with no score and no clock, the best kind there is. Tony watches one make a diving catch and remembers, uninvited, being nine years old and unafraid of anything. He gives the kid a nod. The kid gives him the ball back like it’s nothing. It is not nothing.' }
+      ]);
+    } },
+    { x: 420, y: 140, w: 70, h: 40, radius: 50, label: 'The leaf pile', action: () => {
+      audio.sfx('pickup');
+      const jump = Math.random() < .3;
+      startDialog([
+        { speaker: 'narrator', text: jump ? 'You jump in the leaf pile. You are a grown adult and you jump in the leaf pile and it is glorious. Somewhere behind you the raker sighs the sigh of a man whose life’s work is a circle. He begins again. He always begins again.' : 'A perfect leaf pile: knee-high, structural, a cathedral of November. The raker regards it the way Michelangelo presumably regarded ceilings. You do not jump in it. Some things are not yours to destroy. The raker nods once, and in that nod is a whole neighborhood.' }
+      ]);
+      if (jump) { state.stats.leafJumps = (state.stats.leafJumps || 0) + 1; state.flags.heat = Math.max(0, (state.flags.heat || 0) - .1); }
+    } },
     { x: 1150, y: 150, w: 60, h: 40, radius: 48, label: 'Green Grove', action: () => {
       startDialog([
         { speaker: 'narrator', text: 'A brick building set back from the road behind a lawn that is mowed within an inch of its life. GREEN GROVE — A RETIREMENT COMMUNITY. Not a nursing home. There is a sign clarifying this. The sign has been corrected so many times the correction has a correction.' },
